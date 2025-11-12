@@ -12,7 +12,8 @@ You may now go ahead and call me a heretic. I don't care.
 * Completely merged _inc folder with sonic1.asm (this is technically diverting from the Hivebrain 2005 style, but I never understood the arbitrary extraction of those files anyway)
 * Removed various junk files, including most project files for community tools (except for SonLVL and SonPLN, courtesy of Speems)
 * Collapsed all revision conditionals to always use JP rev01
-* Re-extracted title card mappings (out of all the things to re-include, why the hell would you do it for the title cards???)
+* Prepended object IDs to mappings files
+* Extracted title card mappings into external files
 * Removed most unused files
 * Moved _tilemaps_ folder stuff into _misc_ folder
 * Renamed some includes to start with _
