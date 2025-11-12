@@ -12,13 +12,16 @@ You may now go ahead and call me a heretic. I don't care.
 * Completely merged _inc folder with sonic1.asm (this is technically diverting from the Hivebrain 2005 style, but I never understood the arbitrary extraction of those files anyway)
 * Removed various junk files, including most project files for community tools (except for SonLVL and SonPLN, courtesy of Speems)
 * Collapsed all revision conditionals to always use JP rev01
-* Prepended object IDs to mappings files
+* Organized all maps and anim scripts to be at the bottom of sonic1.asm in one place
+* Prepended object IDs to mappings and animation script files
 * Extracted title card mappings into external files
+* Split maps for smokey and fiery explosions into their own files
 * Removed most unused files
 * Moved _tilemaps_ folder stuff into _misc_ folder
 * Renamed some includes to start with _
 * Moved sound driver to _sound_ folder
 * Renamed _sonic.asm_ to _sonic1.asm_
+* Separate build and build_and_run scripts
 
 ### Code Style
 * Collapsed multi-empty lines to a single one each
@@ -34,7 +37,7 @@ You may now go ahead and call me a heretic. I don't care.
 * vladikcomper's debugger (thanks to RobiWanKenobi)
 * Enabled a whole bunch of compiler optimizations
 * Removed checksum check and fixheadr.exe
-* Removed ROM padder
+* Removed ROM padder and various hardcoded pads
 * Flag to conveniently enable all cheats
 * Fixed PRESS START BUTTON bug
 
