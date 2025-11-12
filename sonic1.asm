@@ -5268,7 +5268,7 @@ CSon_ShowRun:
 		jsr	(Sonic_Animate).l
 		jmp	(Sonic_LoadGfx).l
 
-		include	"_anim\Continue Screen Sonic.asm"
+		include	"_anim\81 Continue Screen Sonic.asm"
 Map_ContScr:	include	"_maps\80 Continue Screen.asm"
 
 ; ===========================================================================
@@ -5620,7 +5620,7 @@ Obj87_Leap:	; Routine $10
 ESon_Wait4:
 		rts
 
-		include "_anim\Ending Sequence Sonic.asm"
+		include "_anim\87 Ending Sequence Sonic.asm"
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -6029,7 +6029,7 @@ EEgg_Wait:	; Routine 6
 	@nochg:
 		rts
 
-		include "_anim\Try Again & End Eggman.asm"
+		include "_anim\8B Try Again & End Eggman.asm"
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -10716,7 +10716,7 @@ ADoor_Animate:
 	@remember:
 		bra.w	RememberState
 
-		include	"_anim\SBZ Small Door.asm"
+		include	"_anim\2A SBZ Small Door.asm"
 Map_ADoor:	include	"_maps\2A SBZ Small Door.asm"
 
 Obj44_SolidWall:
@@ -11116,7 +11116,7 @@ ExBom_Main:	; Routine 0
 		move.w	#sfx_Bomb,d0
 		jmp	(PlaySound_Special).l	; play exploding bomb sound
 
-		include	"_anim\Ball Hog.asm"
+		include	"_anim\1E Ball Hog.asm"
 Map_Hog:	include	"_maps\1E Ball Hog.asm"
 Map_MisDissolve:include	"_maps\24 Buzz Bomber Missile Dissolve.asm"
 		include	"_maps\3F Explosions.asm"
@@ -11770,7 +11770,7 @@ Crab_BallMove:	; Routine 8
 	@delete:
 		bra.w	DeleteObject
 
-		include	"_anim\Crabmeat.asm"
+		include	"_anim\1F Crabmeat.asm"
 Map_Crab:	include	"_maps\1F Crabmeat.asm"
 ; ===========================================================================
 
@@ -11999,8 +11999,8 @@ Msl_Animate2:
 		bsr.w	DisplaySprite
 		rts
 
-		include	"_anim\Buzz Bomber.asm"
-		include	"_anim\Buzz Bomber Missile.asm"
+		include	"_anim\22 Buzz Bomber.asm"
+		include	"_anim\23 Buzz Bomber Missile.asm"
 Map_Buzz:	include	"_maps\22 Buzz Bomber.asm"
 Map_Missile:	include	"_maps\23 Buzz Bomber Missile.asm"
 
@@ -12418,7 +12418,7 @@ Flash_End:
 Flash_Delete:	; Routine 4
 		bra.w	DeleteObject
 
-		include	"_anim\Rings.asm"
+		include	"_anim\25 Rings.asm"
 Map_Ring:	include	"_maps\25 Rings.asm"
 Map_GRing:	include	"_maps\4B Giant Ring.asm"
 Map_Flash:	include	"_maps\7C Ring Flash.asm"
@@ -12803,7 +12803,7 @@ loc_A4EA:
 		rts
 ; End of function Mon_SolidSides
 
-		include	"_anim\Monitor.asm"
+		include	"_anim\26 Monitor.asm"
 Map_Monitor:	include	"_maps\26 Monitor.asm"
 
 ; ===========================================================================
@@ -12907,8 +12907,8 @@ PSB_PrsStart:	; Routine 2
 		lea	(Ani_PSBTM).l,a1
 		bra.w	AnimateSprite	; "PRESS START" is animated
 
-		include	"_anim\Title Screen Sonic.asm"
-		include	"_anim\Press Start and TM.asm"
+		include	"_anim\0E Title Screen Sonic.asm"
+		include	"_anim\0F Press Start and TM.asm"
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to animate	a sprite using an animation script
@@ -13051,7 +13051,7 @@ Chop_ChgSpeed:	; Routine 2
 	@nochg:
 		rts
 
-		include	"_anim\Chopper.asm"
+		include	"_anim\2B Chopper.asm"
 Map_Chop:	include	"_maps\2B Chopper.asm"
 
 ; ===========================================================================
@@ -13106,7 +13106,7 @@ Jaws_Turn:	; Routine 2
 		bsr.w	SpeedToPos
 		bra.w	RememberState
 
-		include	"_anim\Jaws.asm"
+		include	"_anim\2C Jaws.asm"
 Map_Jaws:	include	"_maps\2C Jaws.asm"
 
 ; ===========================================================================
@@ -13264,7 +13264,7 @@ loc_AE40:
 		rts
 ; End of function Burro_ChkSonic2
 
-		include	"_anim\Burrobot.asm"
+		include	"_anim\2D Burrobot.asm"
 Map_Burro:	include	"_maps\2D Burrobot.asm"
 
 ; ===========================================================================
@@ -13618,7 +13618,7 @@ GFire_Animate:
 		bsr.w	AnimateSprite
 		bra.w	DisplaySprite
 
-		include	"_anim\Burning Grass.asm"
+		include	"_anim\35 Burning Grass.asm"
 Map_LGrass:	include	"_maps\2F MZ Large Grassy Platforms.asm"
 Map_Fire:	include	"_maps\14 Fireballs.asm"
 
@@ -17267,7 +17267,7 @@ Spring_ResetDwn:
 		subq.b	#4,obRoutine(a0) ; goto "Spring_Dwn" routine
 		rts
 
-		include	"_anim\Springs.asm"
+		include	"_anim\41 Springs.asm"
 Map_Spring:	include	"_maps\41 Springs.asm"
 
 ; ===========================================================================
@@ -17438,7 +17438,7 @@ Newt_Action:	; Routine 2
 Newt_Delete:	; Routine 4
 		bra.w	DeleteObject
 
-		include	"_anim\Newtron.asm"
+		include	"_anim\42 Newtron.asm"
 Map_Newt:	include	"_maps\42 Newtron.asm"
 
 ; ===========================================================================
@@ -17599,7 +17599,7 @@ locret_E188:
 		rts
 ; End of function Roll_Stop
 
-		include	"_anim\Roller.asm"
+		include	"_anim\43 Roller.asm"
 Map_Roll:	include	"_maps\43 Roller.asm"
 
 ; ===========================================================================
@@ -17853,7 +17853,7 @@ LBall_Type08:
 LBall_Delete:
 		bra.w	DeleteObject
 
-		include	"_anim\Fireballs.asm"
+		include	"_anim\14 Fireballs.asm"
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -17917,7 +17917,7 @@ Flame_ChkDel:
 		out_of_range.w	DeleteObject
 		bra.w	DisplaySprite
 
-		include	"_anim\Flamethrower.asm"
+		include	"_anim\6D Flamethrower.asm"
 Map_Flame:	include	"_maps\6D Flamethrower.asm"
 
 ; ===========================================================================
@@ -18160,7 +18160,7 @@ Bump_Hit:	; Routine 2
 	@delete:
 		bra.w	DeleteObject
 
-		include	"_anim\Bumper.asm"
+		include	"_anim\47 Bumper.asm"
 Map_Bump:	include	"_maps\47 Bumper.asm"
 
 ; ===========================================================================
@@ -18331,7 +18331,7 @@ TimeBonuses:	dc.w 5000, 5000, 1000, 500, 400, 400, 300, 300,	200, 200
 Sign_Exit:	; Routine 8
 		rts
 
-		include	"_anim\Signpost.asm"
+		include	"_anim\0D Signpost.asm"
 Map_Sign:	include	"_maps\0D Signpost.asm"
 
 ; ===========================================================================
@@ -18774,8 +18774,8 @@ LTag_ChkDel:	; Routine 2
 		rts
 
 Map_LTag:	include	"_maps\54 Lava Tag.asm"
-		include	"_anim\Lava Geyser.asm"
-		include	"_anim\Wall of Lava.asm"
+		include	"_anim\4C Lava Geyser.asm"
+		include	"_anim\4E Wall of Lava.asm"
 Map_Geyser:	include	"_maps\4C Lava Geyser.asm"
 Map_LWall:	include	"_maps\4E Wall of Lava.asm"
 
@@ -18896,7 +18896,7 @@ Moto_Animate:	; Routine 4
 Moto_Delete:	; Routine 6
 		bra.w	DeleteObject
 
-		include	"_anim\Moto Bug.asm"
+		include	"_anim\40 Moto Bug.asm"
 Map_Moto:	include	"_maps\40 Moto Bug.asm"
 
 
@@ -19046,7 +19046,7 @@ Yad_Pause:
 		move.b	#0,obAnim(a0)
 		rts
 
-		include	"_anim\Yadrin.asm"
+		include	"_anim\50 Yadrin.asm"
 Map_Yad:	include	"_maps\50 Yadrin.asm"
 
 ; ---------------------------------------------------------------------------
@@ -19860,7 +19860,7 @@ Bas_Action:	; Routine 2
 		rts
 ; ===========================================================================
 
-		include	"_anim\Basaran.asm"
+		include	"_anim\55 Basaran.asm"
 Map_Bas:	include	"_maps\55 Basaran.asm"
 
 ; ===========================================================================
@@ -21469,7 +21469,7 @@ Flap_OpenClose:	; Routine 2
 	@display:
 		bra.w	RememberState
 
-		include	"_anim\Flapping Door.asm"
+		include	"_anim\0C Flapping Door.asm"
 Map_Flap:	include	"_maps\0C Flapping Door.asm"
 
 ; ===========================================================================
@@ -22112,7 +22112,7 @@ Bom_End:	; Routine 6
 ; ===========================================================================
 Bom_ShrSpeed:	dc.w -$200, -$300, -$100, -$200, $200, -$300, $100, -$200
 
-		include	"_anim\Bomb Enemy.asm"
+		include	"_anim\5F Bomb Enemy.asm"
 Map_Bomb:	include	"_maps\5F Bomb Enemy.asm"
 
 ; ===========================================================================
@@ -22305,7 +22305,7 @@ Orb_ChkDel2:	; Routine 8
 		bpl.w	DeleteObject
 		bra.w	DisplaySprite
 
-		include	"_anim\Orbinaut.asm"
+		include	"_anim\60 Orbinaut.asm"
 Map_Orb:	include	"_maps\60 Orbinaut.asm"
 
 ; ===========================================================================
@@ -22359,7 +22359,7 @@ Harp_Wait:	; Routine 4
 	@chkdel:
 		bra.w	RememberState
 
-		include	"_anim\Harpoon.asm"
+		include	"_anim\16 Harpoon.asm"
 Map_Harp:	include	"_maps\16 Harpoon.asm"
 
 ; ===========================================================================
@@ -23212,7 +23212,7 @@ Bub_ChkSonic:
 		moveq	#0,d0
 		rts
 
-		include	"_anim\Bubbles.asm"
+		include	"_anim\64 Bubbles.asm"
 Map_Bub:	include	"_maps\64 Bubbles.asm"
 
 ; ===========================================================================
@@ -23287,7 +23287,7 @@ loc_12B36:	; Routine 8
 	@animate:
 		bra.s	WFall_Animate
 
-		include	"_anim\Waterfalls.asm"
+		include	"_anim\65 Waterfalls.asm"
 Map_WFall	include	"_maps\65 Waterfalls.asm"
 
 ; ===========================================================================
@@ -24952,7 +24952,7 @@ Sonic_Animate:
 
 ; End of function Sonic_Animate
 
-		include	"_anim\Sonic.asm"
+		include	"_anim\01 Sonic.asm"
 
 ; ---------------------------------------------------------------------------
 ; Sonic graphics loading subroutine
@@ -25363,7 +25363,7 @@ ResumeMusic:
 
 ; ===========================================================================
 
-		include	"_anim\Drowning Countdown.asm"
+		include	"_anim\0A Drowning Countdown.asm"
 Map_Drown:	include	"_maps\0A Drowning Countdown.asm"
 
 ; ===========================================================================
@@ -25530,7 +25530,7 @@ Van_LoadSonic:	; Routine 4
 	@wait:
 		rts
 
-		include	"_anim\Special Stage Entry (Unused).asm"
+		include	"_anim\4A Special Stage Entry (Unused).asm"
 Map_Vanish:	include	"_maps\4A Special Stage Entry (Unused).asm"
 
 ; ===========================================================================
@@ -25569,10 +25569,10 @@ Spla_Display:	; Routine 2
 Spla_Delete:	; Routine 4
 		jmp	(DeleteObject).l	; delete when animation is complete
 
-		include	"_anim\Shield and Invincibility.asm"
+		include	"_anim\38 Shield and Invincibility.asm"
 Map_Shield:	include	"_maps\38 Shield and Invincibility.asm"
 
-		include	"_anim\Water Splash.asm"
+		include	"_anim\08 Water Splash.asm"
 Map_Splash:	include	"_maps\08 Water Splash.asm"
 
 ; ---------------------------------------------------------------------------
@@ -27402,7 +27402,7 @@ Spin_Spinner:	; Routine 4
 	@display:
 		bra.w	RememberState
 
-		include	"_anim\SBZ Spinning Platforms.asm"
+		include	"_anim\69 SBZ Spinning Platforms.asm"
 Map_Trap:	include	"_maps\69 Trapdoor.asm"
 Map_Spin:	include	"_maps\69 SBZ Spinning Platforms.asm"
 
@@ -28046,7 +28046,7 @@ VanP_Appear:	; Routine 4
 	@display:
 		bra.w	RememberState
 
-		include	"_anim\SBZ Vanishing Platforms.asm"
+		include	"_anim\6C SBZ Vanishing Platforms.asm"
 Map_VanP:	include	"_maps\6C SBZ Vanishing Platforms.asm"
 
 ; ===========================================================================
@@ -28101,7 +28101,7 @@ Elec_Shock:	; Routine 2
 	@display:
 		bra.w	RememberState
 
-		include	"_anim\Electrocuter.asm"
+		include	"_anim\6E Electrocuter.asm"
 Map_Elec:	include	"_maps\6E Electrocuter.asm"
 
 ; ===========================================================================
@@ -28303,7 +28303,7 @@ loc_16480:
 loc_16484:
 		jmp	(SpeedToPos).l
 
-		include	"_anim\SBZ Spin Platform Conveyor.asm"
+		include	"_anim\6F SBZ Spin Platform Conveyor.asm"
 
 off_164A6:	dc.w word_164B2-off_164A6, word_164C6-off_164A6, word_164DA-off_164A6
 		dc.w word_164EE-off_164A6, word_16502-off_164A6, word_16516-off_164A6
@@ -28991,7 +28991,7 @@ loc_16CE0:
 		bpl.w	Cat_ChkGone
 		jmp	(DisplaySprite).l
 
-		include	"_anim\Caterkiller.asm"
+		include	"_anim\78 Caterkiller.asm"
 Map_Cat:	include	"_maps\78 Caterkiller.asm"
 
 ; ===========================================================================
@@ -32651,7 +32651,7 @@ loc_199E6:
 SEgg_SwDisplay:
 		jmp	(DisplaySprite).l
 
-		include	"_anim\Eggman - Scrap Brain 2 & Final.asm"
+		include	"_anim\82 Eggman - Scrap Brain 2 & Final.asm"
 Map_SEgg:	include	"_maps\82 Eggman - Scrap Brain 2.asm"
 
 ; ===========================================================================
@@ -33390,7 +33390,7 @@ loc_1A3AC:	; Routine $C
 loc_1A3D0:
 		bra.w	loc_1A2A6
 
-		include	"_anim\FZ Eggman in Ship.asm"
+		include	"_anim\85 FZ Eggman in Ship.asm"
 Map_FZDamaged:	include	"_maps\85 FZ Damaged Eggmobile.asm"
 Map_FZLegs:	include	"_maps\85 FZ Eggmobile Legs.asm"
 
@@ -33799,9 +33799,9 @@ loc_1AA34:
 		subq.w	#1,$38(a1)
 		bra.w	Obj84_Delete
 
-		include	"_anim\Plasma Ball Launcher.asm"
+		include	"_anim\86 Plasma Ball Launcher.asm"
 Map_PLaunch:	include	"_maps\86 Plasma Ball Launcher.asm"
-		include	"_anim\Plasma Balls.asm"
+		include	"_anim\86 Plasma Balls.asm"
 Map_Plasma:	include	"_maps\86 Plasma Balls.asm"
 
 ; ===========================================================================
@@ -34009,7 +34009,7 @@ Pri_EndAct:	; Routine $E
 	@found:
 		rts
 
-		include	"_anim\Prison Capsule.asm"
+		include	"_anim\3E Prison Capsule.asm"
 Map_Pri:	include	"_maps\3E Prison Capsule.asm"
 
 ; ---------------------------------------------------------------------------
