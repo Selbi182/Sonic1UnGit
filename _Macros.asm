@@ -97,6 +97,27 @@ enable_ints:	macro
 		endm
 
 ; ---------------------------------------------------------------------------
+; disable display
+; ---------------------------------------------------------------------------
+
+disable_display:	macro
+		move.w	(v_vdp_buffer1).w,d0		; get buffered copy of VDP register $81
+		andi.b	#%10111111,d0			; clear bit 6 (disable display; fill with background color)
+		move.w	d0,(vdp_control_port).l		; write to VDP
+		endm
+
+; ---------------------------------------------------------------------------
+; enable display
+; ---------------------------------------------------------------------------
+
+enable_display:	macro
+		move.w	(v_vdp_buffer1).w,d0		; get buffered copy of VDP register $81
+		ori.b	#%01000000,d0			; set bit 6 (enable display)
+		move.w	d0,(vdp_control_port).l		; write to VDP
+		endm
+
+
+; ---------------------------------------------------------------------------
 ; long conditional jumps
 ; ---------------------------------------------------------------------------
 
