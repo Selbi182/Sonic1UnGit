@@ -13,6 +13,7 @@ Mus81_GHZ_Header:
 	smpsHeaderPSG       Mus81_GHZ_PSG1,	$D0, $01, $00, fTone_03
 	smpsHeaderPSG       Mus81_GHZ_PSG2,	$D0, $03, $00, fTone_06
 	smpsHeaderPSG       Mus81_GHZ_PSG3,	$00, $03, $00, fTone_04
+
 ; FM1 Data
 Mus81_GHZ_FM1:
 	smpsSetvoice        $02

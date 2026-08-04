@@ -1,0 +1,62 @@
+; ---------------------------------------------------------------------------
+; Sprite mappings - explosion from a badnik or monitor
+; ---------------------------------------------------------------------------
+Map_ExplodeItem:	mappingsTable
+	mappingsTableEntry.w	.explode0
+	mappingsTableEntry.w	.explode1
+	mappingsTableEntry.w	.explode2
+	mappingsTableEntry.w	.explode3
+	mappingsTableEntry.w	.explode4
+
+.explode0:	spriteHeader
+	spritePiece	-$C, -8, 3, 2, 0, 0, 0, 0, 0
+.explode0_End
+
+.explode1:	spriteHeader
+	spritePiece	-$10, -$10, 4, 4, 6, 0, 0, 0, 0
+.explode1_End
+
+.explode2:	spriteHeader
+	spritePiece	-$10, -$10, 4, 4, $16, 0, 0, 0, 0
+.explode2_End
+
+.explode3:	spriteHeader
+	spritePiece	-$14, -$14, 3, 3, $26, 0, 0, 0, 0
+	spritePiece	4, -$14, 2, 2, $2F, 0, 0, 0, 0
+	spritePiece	-$14, 4, 2, 2, $2F, 1, 1, 0, 0
+	spritePiece	-4, -4, 3, 3, $26, 1, 1, 0, 0
+.explode3_End
+
+.explode4:	spriteHeader
+	spritePiece	-$14, -$14, 3, 3, $33, 0, 0, 0, 0
+	spritePiece	4, -$14, 2, 2, $3C, 0, 0, 0, 0
+	spritePiece	-$14, 4, 2, 2, $3C, 1, 1, 0, 0
+	spritePiece	-4, -4, 3, 3, $33, 1, 1, 0, 0
+.explode4_End
+
+	even
+
+; ---------------------------------------------------------------------------
+; Sprite mappings - explosion from when a boss is destroyed
+; This contains some nasty cross-referencing to the main explosion mappings.
+; ---------------------------------------------------------------------------
+Map_ExplodeItem.explode0: equ .explode0
+Map_ExplodeItem.explode3: equ .explode3
+Map_ExplodeItem.explode4: equ .explode4
+
+Map_ExplodeBomb:	mappingsTable
+	mappingsTableEntry.w	Map_ExplodeItem.explode0	; backwards reference
+	mappingsTableEntry.w	.explode_boss1
+	mappingsTableEntry.w	.explode_boss2
+	mappingsTableEntry.w	Map_ExplodeItem.explode3	; backwards reference
+	mappingsTableEntry.w	Map_ExplodeItem.explode4	; backwards reference
+
+.explode_boss1:	spriteHeader
+	spritePiece	-$10, -$10, 4, 4, $40, 0, 0, 0, 0
+.explode_boss1_End
+
+.explode_boss2:	spriteHeader
+	spritePiece	-$10, -$10, 4, 4, $50, 0, 0, 0, 0
+.explode_boss2_End
+
+	even

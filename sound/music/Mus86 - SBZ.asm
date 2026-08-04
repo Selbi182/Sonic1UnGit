@@ -125,6 +125,7 @@ Mus86_SBZ_Loop06:
 	smpsCall            Mus86_SBZ_Call07
 	smpsLoop            $00, $02, Mus86_SBZ_Loop06
 	smpsAlterVol        $08
+	smpsAlterNote       $00
 	smpsJump            Mus86_SBZ_FM3
 
 ; FM4 Data
