@@ -53,13 +53,10 @@ PushB_Main:	; Routine 0
 		move.w	#ArtTile_MZ_Block|Tile_Pal3|Tile_Prio,obGfx(a0) ; set high-priority flag for 4x1 block
 
 	.chkgone:
-		lea	(v_objstate).w,a2			; load respawn table
-		moveq	#0,d0					; clear d0
-		move.b	obRespawnNo(a0),d0			; get respawn index
-		beq.s	PushB_Action				; if it doesn't have one, branch
-		bclr	#7,2(a2,d0.w)				; clear respawn block flag
-		bset	#0,2(a2,d0.w)				; set flag that this block has been loaded before
-		bne.w	DeleteObject				; if it's a reload, delete it (only one block can exist)
+		respawn_entry.s	PushB_Action
+		bclr	#7,(a2)
+		bset	#0,(a2)
+		bne.w	DeleteObject
 ; ---------------------------------------------------------------------------
 
 PushB_Action:	; Routine 2
@@ -104,11 +101,8 @@ PushB_ChkWithinOrigin:
 ; ---------------------------------------------------------------------------
 
 .deleteAndAllowRespawn:
-		lea	(v_objstate).w,a2			; load respawn table
-		moveq	#0,d0					; clear d0
-		move.b	obRespawnNo(a0),d0			; get respawn table index
-		beq.s	.delete					; if it doesn't have one, branch
-		bclr	#0,2(a2,d0.w)				; allow block to respawn
+		respawn_entry.s	.delete
+		bclr	#0,(a2)
 	.delete:
 		bra.w	DeleteObject				; delete block object
 ; ===========================================================================

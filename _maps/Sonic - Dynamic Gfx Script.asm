@@ -1,605 +1,740 @@
-; ---------------------------------------------------------------------------
-; Uncompressed graphics loading array for Sonic
-; ---------------------------------------------------------------------------
-SonicDynPLC_internal:	mappingsTable
-	mappingsTableEntry.w	SonPLC_Null
-	mappingsTableEntry.w	SonPLC_Stand
-	mappingsTableEntry.w	SonPLC_Wait1
-	mappingsTableEntry.w	SonPLC_Wait2
-	mappingsTableEntry.w	SonPLC_Wait3
-	mappingsTableEntry.w	SonPLC_LookUp
-	mappingsTableEntry.w	SonPLC_Walk11
-	mappingsTableEntry.w	SonPLC_Walk12
-	mappingsTableEntry.w	SonPLC_Walk13
-	mappingsTableEntry.w	SonPLC_Walk14
-	mappingsTableEntry.w	SonPLC_Walk15
-	mappingsTableEntry.w	SonPLC_Walk16
-	mappingsTableEntry.w	SonPLC_Walk21
-	mappingsTableEntry.w	SonPLC_Walk22
-	mappingsTableEntry.w	SonPLC_Walk23
-	mappingsTableEntry.w	SonPLC_Walk24
-	mappingsTableEntry.w	SonPLC_Walk25
-	mappingsTableEntry.w	SonPLC_Walk26
-	mappingsTableEntry.w	SonPLC_Walk31
-	mappingsTableEntry.w	SonPLC_Walk32
-	mappingsTableEntry.w	SonPLC_Walk33
-	mappingsTableEntry.w	SonPLC_Walk34
-	mappingsTableEntry.w	SonPLC_Walk35
-	mappingsTableEntry.w	SonPLC_Walk36
-	mappingsTableEntry.w	SonPLC_Walk41
-	mappingsTableEntry.w	SonPLC_Walk42
-	mappingsTableEntry.w	SonPLC_Walk43
-	mappingsTableEntry.w	SonPLC_Walk44
-	mappingsTableEntry.w	SonPLC_Walk45
-	mappingsTableEntry.w	SonPLC_Walk46
-	mappingsTableEntry.w	SonPLC_Run11
-	mappingsTableEntry.w	SonPLC_Run12
-	mappingsTableEntry.w	SonPLC_Run13
-	mappingsTableEntry.w	SonPLC_Run14
-	mappingsTableEntry.w	SonPLC_Run21
-	mappingsTableEntry.w	SonPLC_Run22
-	mappingsTableEntry.w	SonPLC_Run23
-	mappingsTableEntry.w	SonPLC_Run24
-	mappingsTableEntry.w	SonPLC_Run31
-	mappingsTableEntry.w	SonPLC_Run32
-	mappingsTableEntry.w	SonPLC_Run33
-	mappingsTableEntry.w	SonPLC_Run34
-	mappingsTableEntry.w	SonPLC_Run41
-	mappingsTableEntry.w	SonPLC_Run42
-	mappingsTableEntry.w	SonPLC_Run43
-	mappingsTableEntry.w	SonPLC_Run44
-	mappingsTableEntry.w	SonPLC_Roll1
-	mappingsTableEntry.w	SonPLC_Roll2
-	mappingsTableEntry.w	SonPLC_Roll3
-	mappingsTableEntry.w	SonPLC_Roll4
-	mappingsTableEntry.w	SonPLC_Roll5
-	mappingsTableEntry.w	SonPLC_Warp1
-	mappingsTableEntry.w	SonPLC_Warp2
-	mappingsTableEntry.w	SonPLC_Warp3
-	mappingsTableEntry.w	SonPLC_Warp4
-	mappingsTableEntry.w	SonPLC_Stop1
-	mappingsTableEntry.w	SonPLC_Stop2
-	mappingsTableEntry.w	SonPLC_Duck
-	mappingsTableEntry.w	SonPLC_Balance1
-	mappingsTableEntry.w	SonPLC_Balance2
-	mappingsTableEntry.w	SonPLC_Float1
-	mappingsTableEntry.w	SonPLC_Float2
-	mappingsTableEntry.w	SonPLC_Float3
-	mappingsTableEntry.w	SonPLC_Float4
-	mappingsTableEntry.w	SonPLC_Spring
-	mappingsTableEntry.w	SonPLC_Hang1
-	mappingsTableEntry.w	SonPLC_Hang2
-	mappingsTableEntry.w	SonPLC_Leap1
-	mappingsTableEntry.w	SonPLC_Leap2
-	mappingsTableEntry.w	SonPLC_Push1
-	mappingsTableEntry.w	SonPLC_Push2
-	mappingsTableEntry.w	SonPLC_Push3
-	mappingsTableEntry.w	SonPLC_Push4
-	mappingsTableEntry.w	SonPLC_Surf
-	mappingsTableEntry.w	SonPLC_BubStand
-	mappingsTableEntry.w	SonPLC_Death
-	mappingsTableEntry.w	SonPLC_Drown
-	mappingsTableEntry.w	SonPLC_Burnt
-	mappingsTableEntry.w	SonPLC_Shrink1
-	mappingsTableEntry.w	SonPLC_Shrink2
-	mappingsTableEntry.w	SonPLC_Shrink3
-	mappingsTableEntry.w	SonPLC_Shrink4
-	mappingsTableEntry.w	SonPLC_Shrink5
-	mappingsTableEntry.w	SonPLC_Float1
-	mappingsTableEntry.w	SonPLC_Float3
-	mappingsTableEntry.w	SonPLC_Injury
-	mappingsTableEntry.w	SonPLC_GetAir
-	mappingsTableEntry.w	SonPLC_WaterSlide
-
-SonPLC_Null:	dplcHeader
-SonPLC_Null_End
-
-SonPLC_Stand:	dplcHeader
-	dplcEntry	3, 0
-	dplcEntry	8, 3
-	dplcEntry	3, $B
-	dplcEntry	3, $E
-SonPLC_Stand_End
-
-SonPLC_Wait1:	dplcHeader
-	dplcEntry	6, $11
-	dplcEntry	6, $17
-	dplcEntry	3, $1D
-SonPLC_Wait1_End
-
-SonPLC_Wait2:	dplcHeader
-	dplcEntry	6, $20
-	dplcEntry	6, $17
-	dplcEntry	3, $1D
-SonPLC_Wait2_End
-
-SonPLC_Wait3:	dplcHeader
-	dplcEntry	6, $20
-	dplcEntry	6, $17
-	dplcEntry	3, $26
-SonPLC_Wait3_End
-
-SonPLC_LookUp:	dplcHeader
-	dplcEntry	9, $29
-	dplcEntry	3, $B
-	dplcEntry	3, $E
-SonPLC_LookUp_End
-
-SonPLC_Walk11:	dplcHeader
-	dplcEntry	8, $32
-	dplcEntry	6, $3A
-	dplcEntry	6, $40
-	dplcEntry	2, $46
-SonPLC_Walk11_End
-
-SonPLC_Walk12:	dplcHeader
-	dplcEntry	8, $32
-	dplcEntry	$C, $48
-SonPLC_Walk12_End
-
-SonPLC_Walk13:	dplcHeader
-	dplcEntry	6, $54
-	dplcEntry	9, $5A
-SonPLC_Walk13_End
-
-SonPLC_Walk14:	dplcHeader
-	dplcEntry	6, $54
-	dplcEntry	6, $63
-	dplcEntry	6, $69
-	dplcEntry	2, $6F
-SonPLC_Walk14_End
-
-SonPLC_Walk15:	dplcHeader
-	dplcEntry	6, $54
-	dplcEntry	$C, $71
-SonPLC_Walk15_End
-
-SonPLC_Walk16:	dplcHeader
-	dplcEntry	8, $32
-	dplcEntry	4, $7D
-	dplcEntry	6, $81
-SonPLC_Walk16_End
-
-SonPLC_Walk21:	dplcHeader
-	dplcEntry	6, $87
-	dplcEntry	6, $8D
-	dplcEntry	3, $93
-	dplcEntry	6, $96
-	dplcEntry	1, $9C
-SonPLC_Walk21_End
-
-SonPLC_Walk22:	dplcHeader
-	dplcEntry	6, $87
-	dplcEntry	2, $9D
-	dplcEntry	4, $9F
-	dplcEntry	6, $A3
-	dplcEntry	4, $A9
-	dplcEntry	1, $AD
-SonPLC_Walk22_End
-
-SonPLC_Walk23:	dplcHeader
-	dplcEntry	6, $AE
-	dplcEntry	2, $B4
-	dplcEntry	8, $B6
-	dplcEntry	3, $BE
-SonPLC_Walk23_End
-
-SonPLC_Walk24:	dplcHeader
-	dplcEntry	6, $C1
-	dplcEntry	4, $C7
-	dplcEntry	8, $CB
-	dplcEntry	3, $D3
-	dplcEntry	2, $D6
-SonPLC_Walk24_End
-
-SonPLC_Walk25:	dplcHeader
-	dplcEntry	6, $C1
-	dplcEntry	2, $D8
-	dplcEntry	8, $DA
-	dplcEntry	3, $E2
-SonPLC_Walk25_End
-
-SonPLC_Walk26:	dplcHeader
-	dplcEntry	6, $87
-	dplcEntry	2, $9D
-	dplcEntry	1, $93
-	dplcEntry	8, $E5
-	dplcEntry	3, $ED
-SonPLC_Walk26_End
-
-SonPLC_Walk31:	dplcHeader
-	dplcEntry	8, $F0
-	dplcEntry	6, $F8
-	dplcEntry	2, $FE
-	dplcEntry	6, $100
-SonPLC_Walk31_End
-
-SonPLC_Walk32:	dplcHeader
-	dplcEntry	8, $F0
-	dplcEntry	$C, $106
-SonPLC_Walk32_End
-
-SonPLC_Walk33:	dplcHeader
-	dplcEntry	6, $112
-	dplcEntry	9, $118
-SonPLC_Walk33_End
-
-SonPLC_Walk34:	dplcHeader
-	dplcEntry	6, $112
-	dplcEntry	6, $121
-	dplcEntry	2, $127
-	dplcEntry	6, $129
-SonPLC_Walk34_End
-
-SonPLC_Walk35:	dplcHeader
-	dplcEntry	6, $112
-	dplcEntry	$C, $12F
-SonPLC_Walk35_End
-
-SonPLC_Walk36:	dplcHeader
-	dplcEntry	8, $F0
-	dplcEntry	1, $106
-	dplcEntry	9, $13B
-SonPLC_Walk36_End
-
-SonPLC_Walk41:	dplcHeader
-	dplcEntry	6, $144
-	dplcEntry	2, $14A
-	dplcEntry	2, $14C
-	dplcEntry	9, $14E
-	dplcEntry	1, $157
-	dplcEntry	1, $158
-SonPLC_Walk41_End
-
-SonPLC_Walk42:	dplcHeader
-	dplcEntry	6, $144
-	dplcEntry	3, $159
-	dplcEntry	2, $15C
-	dplcEntry	2, $15E
-	dplcEntry	9, $160
-	dplcEntry	1, $157
-SonPLC_Walk42_End
-
-SonPLC_Walk43:	dplcHeader
-	dplcEntry	6, $169
-	dplcEntry	2, $16F
-	dplcEntry	9, $171
-	dplcEntry	2, $17A
-SonPLC_Walk43_End
-
-SonPLC_Walk44:	dplcHeader
-	dplcEntry	6, $17C
-	dplcEntry	3, $182
-	dplcEntry	2, $185
-	dplcEntry	8, $187
-	dplcEntry	3, $18F
-SonPLC_Walk44_End
-
-SonPLC_Walk45:	dplcHeader
-	dplcEntry	6, $17C
-	dplcEntry	2, $192
-	dplcEntry	9, $194
-	dplcEntry	2, $19D
-SonPLC_Walk45_End
-
-SonPLC_Walk46:	dplcHeader
-	dplcEntry	6, $144
-	dplcEntry	9, $19F
-	dplcEntry	2, $15E
-	dplcEntry	2, $1A8
-	dplcEntry	1, $157
-SonPLC_Walk46_End
-
-SonPLC_Run11:	dplcHeader
-	dplcEntry	6, $1AA
-	dplcEntry	$C, $1B0
-SonPLC_Run11_End
-
-SonPLC_Run12:	dplcHeader
-	dplcEntry	6, $54
-	dplcEntry	$C, $1BC
-SonPLC_Run12_End
-
-SonPLC_Run13:	dplcHeader
-	dplcEntry	6, $1AA
-	dplcEntry	$C, $1C8
-SonPLC_Run13_End
-
-SonPLC_Run14:	dplcHeader
-	dplcEntry	6, $54
-	dplcEntry	$C, $1D4
-SonPLC_Run14_End
-
-SonPLC_Run21:	dplcHeader
-	dplcEntry	6, $1E0
-	dplcEntry	2, $1E6
-	dplcEntry	$C, $1E8
-	dplcEntry	1, $1F4
-SonPLC_Run21_End
-
-SonPLC_Run22:	dplcHeader
-	dplcEntry	6, $1F5
-	dplcEntry	2, $1FB
-	dplcEntry	$C, $1FD
-SonPLC_Run22_End
-
-SonPLC_Run23:	dplcHeader
-	dplcEntry	6, $1E0
-	dplcEntry	2, $209
-	dplcEntry	$C, $20B
-	dplcEntry	1, $1F4
-SonPLC_Run23_End
-
-SonPLC_Run24:	dplcHeader
-	dplcEntry	6, $1F5
-	dplcEntry	2, $1FB
-	dplcEntry	$C, $217
-SonPLC_Run24_End
-
-SonPLC_Run31:	dplcHeader
-	dplcEntry	6, $223
-	dplcEntry	$C, $229
-SonPLC_Run31_End
-
-SonPLC_Run32:	dplcHeader
-	dplcEntry	6, $112
-	dplcEntry	$C, $235
-SonPLC_Run32_End
-
-SonPLC_Run33:	dplcHeader
-	dplcEntry	6, $223
-	dplcEntry	$C, $241
-SonPLC_Run33_End
-
-SonPLC_Run34:	dplcHeader
-	dplcEntry	6, $112
-	dplcEntry	$C, $24D
-SonPLC_Run34_End
-
-SonPLC_Run41:	dplcHeader
-	dplcEntry	6, $259
-	dplcEntry	2, $25F
-	dplcEntry	$C, $261
-	dplcEntry	1, $26D
-SonPLC_Run41_End
-
-SonPLC_Run42:	dplcHeader
-	dplcEntry	8, $26E
-	dplcEntry	$C, $276
-SonPLC_Run42_End
-
-SonPLC_Run43:	dplcHeader
-	dplcEntry	6, $259
-	dplcEntry	2, $282
-	dplcEntry	$C, $284
-	dplcEntry	1, $26D
-SonPLC_Run43_End
-
-SonPLC_Run44:	dplcHeader
-	dplcEntry	8, $26E
-	dplcEntry	$C, $290
-SonPLC_Run44_End
-
-SonPLC_Roll1:	dplcHeader
-	dplcEntry	$10, $29C
-SonPLC_Roll1_End
-
-SonPLC_Roll2:	dplcHeader
-	dplcEntry	$10, $2AC
-SonPLC_Roll2_End
-
-SonPLC_Roll3:	dplcHeader
-	dplcEntry	$10, $2BC
-SonPLC_Roll3_End
-
-SonPLC_Roll4:	dplcHeader
-	dplcEntry	$10, $2CC
-SonPLC_Roll4_End
-
-SonPLC_Roll5:	dplcHeader
-	dplcEntry	$10, $2DC
-SonPLC_Roll5_End
-
-SonPLC_Warp1:	dplcHeader
-	dplcEntry	$C, $2EC
-	dplcEntry	3, $2F8
-SonPLC_Warp1_End
-
-SonPLC_Warp2:	dplcHeader
-	dplcEntry	$10, $2FB
-SonPLC_Warp2_End
-
-SonPLC_Warp3:	dplcHeader
-	dplcEntry	$C, $30B
-	dplcEntry	3, $317
-SonPLC_Warp3_End
-
-SonPLC_Warp4:	dplcHeader
-	dplcEntry	$10, $31A
-SonPLC_Warp4_End
-
-SonPLC_Stop1:	dplcHeader
-	dplcEntry	6, $32A
-	dplcEntry	$C, $330
-SonPLC_Stop1_End
-
-SonPLC_Stop2:	dplcHeader
-	dplcEntry	6, $33C
-	dplcEntry	8, $342
-	dplcEntry	2, $34A
-	dplcEntry	1, $34C
-SonPLC_Stop2_End
-
-SonPLC_Duck:	dplcHeader
-	dplcEntry	2, $34D
-	dplcEntry	8, $34F
-	dplcEntry	3, $357
-	dplcEntry	1, $35A
-SonPLC_Duck_End
-
-SonPLC_Balance1:	dplcHeader
-	dplcEntry	3, $35B
-	dplcEntry	3, $35E
-	dplcEntry	$10, $361
-SonPLC_Balance1_End
-
-SonPLC_Balance2:	dplcHeader
-	dplcEntry	$C, $371
-	dplcEntry	8, $37D
-	dplcEntry	1, $71
-SonPLC_Balance2_End
-
-SonPLC_Float1:	dplcHeader
-	dplcEntry	8, $385
-	dplcEntry	4, $38D
-	dplcEntry	3, $391
-SonPLC_Float1_End
-
-SonPLC_Float2:	dplcHeader
-	dplcEntry	9, $394
-SonPLC_Float2_End
-
-SonPLC_Float3:	dplcHeader
-	dplcEntry	8, $39D
-	dplcEntry	1, $3A5
-	dplcEntry	4, $3A6
-SonPLC_Float3_End
-
-SonPLC_Float4:	dplcHeader
-	dplcEntry	8, $3AA
-	dplcEntry	4, $3B2
-	dplcEntry	3, $3B6
-SonPLC_Float4_End
-
-SonPLC_Spring:	dplcHeader
-	dplcEntry	$C, $3B9
-	dplcEntry	2, $3C5
-	dplcEntry	1, $3C7
-SonPLC_Spring_End
-
-SonPLC_Hang1:	dplcHeader
-	dplcEntry	$C, $3C8
-	dplcEntry	4, $3D4
-	dplcEntry	1, $3D8
-	dplcEntry	1, $3D9
-SonPLC_Hang1_End
-
-SonPLC_Hang2:	dplcHeader
-	dplcEntry	$C, $3DA
-	dplcEntry	4, $3E6
-	dplcEntry	1, $3EA
-	dplcEntry	1, $3EB
-SonPLC_Hang2_End
-
-SonPLC_Leap1:	dplcHeader
-	dplcEntry	9, $3EC
-	dplcEntry	2, $3F5
-	dplcEntry	6, $3F7
-	dplcEntry	2, $3FD
-	dplcEntry	1, $3FF
-SonPLC_Leap1_End
-
-SonPLC_Leap2:	dplcHeader
-	dplcEntry	9, $400
-	dplcEntry	2, $409
-	dplcEntry	6, $3F7
-	dplcEntry	2, $3FD
-	dplcEntry	1, $3FF
-SonPLC_Leap2_End
-
-SonPLC_Push1:	dplcHeader
-	dplcEntry	9, $40B
-	dplcEntry	8, $414
-SonPLC_Push1_End
-
-SonPLC_Push2:	dplcHeader
-	dplcEntry	9, $41C
-	dplcEntry	3, $425
-	dplcEntry	2, $428
-SonPLC_Push2_End
-
-SonPLC_Push3:	dplcHeader
-	dplcEntry	9, $42A
-	dplcEntry	8, $433
-SonPLC_Push3_End
-
-SonPLC_Push4:	dplcHeader
-	dplcEntry	9, $41C
-	dplcEntry	3, $43B
-	dplcEntry	2, $43E
-SonPLC_Push4_End
-
-SonPLC_Surf:	dplcHeader
-	dplcEntry	6, $440
-	dplcEntry	$C, $446
-SonPLC_Surf_End
-
-SonPLC_BubStand:	dplcHeader
-	dplcEntry	9, $452
-	dplcEntry	4, $45B
-	dplcEntry	1, $45F
-SonPLC_BubStand_End
-
-SonPLC_Death:	dplcHeader
-	dplcEntry	8, $460
-	dplcEntry	2, $468
-	dplcEntry	$C, $46A
-SonPLC_Death_End
-
-SonPLC_Drown:	dplcHeader
-	dplcEntry	8, $476
-	dplcEntry	2, $47E
-	dplcEntry	6, $480
-	dplcEntry	4, $486
-	dplcEntry	1, $48A
-SonPLC_Drown_End
-
-SonPLC_Burnt:	dplcHeader
-	dplcEntry	8, $48B
-	dplcEntry	2, $47E
-	dplcEntry	6, $493
-	dplcEntry	4, $486
-	dplcEntry	1, $48A
-SonPLC_Burnt_End
-
-SonPLC_Shrink1:	dplcHeader
-	dplcEntry	3, $499
-	dplcEntry	$10, $49C
-SonPLC_Shrink1_End
-
-SonPLC_Shrink2:	dplcHeader
-	dplcEntry	3, $4AC
-	dplcEntry	$C, $4AF
-	dplcEntry	3, $4BB
-SonPLC_Shrink2_End
-
-SonPLC_Shrink3:	dplcHeader
-	dplcEntry	$C, $4BE
-SonPLC_Shrink3_End
-
-SonPLC_Shrink4:	dplcHeader
-	dplcEntry	6, $4CA
-SonPLC_Shrink4_End
-
-SonPLC_Shrink5:	dplcHeader
-	dplcEntry	2, $4D0
-SonPLC_Shrink5_End
-
-SonPLC_Injury:	dplcHeader
-	dplcEntry	$C, $4D2
-	dplcEntry	2, $4DE
-	dplcEntry	4, $4E0
-SonPLC_Injury_End
-
-SonPLC_GetAir:	dplcHeader
-	dplcEntry	6, $4E4
-	dplcEntry	$C, $4EA
-	dplcEntry	2, $6D
-SonPLC_GetAir_End
-
-SonPLC_WaterSlide:	dplcHeader
-	dplcEntry	$10, $4F6
-	dplcEntry	3, $506
-SonPLC_WaterSlide_End
+DPLC_5a58: mappingsTable
+	mappingsTableEntry.w	DPLC_5a58_0
+	mappingsTableEntry.w	DPLC_5a58_1
+	mappingsTableEntry.w	DPLC_5a58_2
+	mappingsTableEntry.w	DPLC_5a58_3
+	mappingsTableEntry.w	DPLC_5a58_4
+	mappingsTableEntry.w	DPLC_5a58_5
+	mappingsTableEntry.w	DPLC_5a58_6
+	mappingsTableEntry.w	DPLC_5a58_7
+	mappingsTableEntry.w	DPLC_5a58_8
+	mappingsTableEntry.w	DPLC_5a58_9
+	mappingsTableEntry.w	DPLC_5a58_10
+	mappingsTableEntry.w	DPLC_5a58_11
+	mappingsTableEntry.w	DPLC_5a58_12
+	mappingsTableEntry.w	DPLC_5a58_13
+	mappingsTableEntry.w	DPLC_5a58_14
+	mappingsTableEntry.w	DPLC_5a58_15
+	mappingsTableEntry.w	DPLC_5a58_16
+	mappingsTableEntry.w	DPLC_5a58_17
+	mappingsTableEntry.w	DPLC_5a58_18
+	mappingsTableEntry.w	DPLC_5a58_19
+	mappingsTableEntry.w	DPLC_5a58_20
+	mappingsTableEntry.w	DPLC_5a58_21
+	mappingsTableEntry.w	DPLC_5a58_22
+	mappingsTableEntry.w	DPLC_5a58_23
+	mappingsTableEntry.w	DPLC_5a58_24
+	mappingsTableEntry.w	DPLC_5a58_25
+	mappingsTableEntry.w	DPLC_5a58_26
+	mappingsTableEntry.w	DPLC_5a58_27
+	mappingsTableEntry.w	DPLC_5a58_28
+	mappingsTableEntry.w	DPLC_5a58_29
+	mappingsTableEntry.w	DPLC_5a58_30
+	mappingsTableEntry.w	DPLC_5a58_31
+	mappingsTableEntry.w	DPLC_5a58_32
+	mappingsTableEntry.w	DPLC_5a58_33
+	mappingsTableEntry.w	DPLC_5a58_34
+	mappingsTableEntry.w	DPLC_5a58_35
+	mappingsTableEntry.w	DPLC_5a58_36
+	mappingsTableEntry.w	DPLC_5a58_37
+	mappingsTableEntry.w	DPLC_5a58_38
+	mappingsTableEntry.w	DPLC_5a58_39
+	mappingsTableEntry.w	DPLC_5a58_40
+	mappingsTableEntry.w	DPLC_5a58_41
+	mappingsTableEntry.w	DPLC_5a58_42
+	mappingsTableEntry.w	DPLC_5a58_43
+	mappingsTableEntry.w	DPLC_5a58_44
+	mappingsTableEntry.w	DPLC_5a58_45
+	mappingsTableEntry.w	DPLC_5a58_46
+	mappingsTableEntry.w	DPLC_5a58_47
+	mappingsTableEntry.w	DPLC_5a58_48
+	mappingsTableEntry.w	DPLC_5a58_49
+	mappingsTableEntry.w	DPLC_5a58_50
+	mappingsTableEntry.w	DPLC_5a58_51
+	mappingsTableEntry.w	DPLC_5a58_52
+	mappingsTableEntry.w	DPLC_5a58_53
+	mappingsTableEntry.w	DPLC_5a58_54
+	mappingsTableEntry.w	DPLC_5a58_55
+	mappingsTableEntry.w	DPLC_5a58_56
+	mappingsTableEntry.w	DPLC_5a58_57
+	mappingsTableEntry.w	DPLC_5a58_58
+	mappingsTableEntry.w	DPLC_5a58_59
+	mappingsTableEntry.w	DPLC_5a58_60
+	mappingsTableEntry.w	DPLC_5a58_61
+	mappingsTableEntry.w	DPLC_5a58_62
+	mappingsTableEntry.w	DPLC_5a58_63
+	mappingsTableEntry.w	DPLC_5a58_64
+	mappingsTableEntry.w	DPLC_5a58_65
+	mappingsTableEntry.w	DPLC_5a58_66
+	mappingsTableEntry.w	DPLC_5a58_67
+	mappingsTableEntry.w	DPLC_5a58_68
+	mappingsTableEntry.w	DPLC_5a58_69
+	mappingsTableEntry.w	DPLC_5a58_70
+	mappingsTableEntry.w	DPLC_5a58_71
+	mappingsTableEntry.w	DPLC_5a58_72
+	mappingsTableEntry.w	DPLC_5a58_73
+	mappingsTableEntry.w	DPLC_5a58_74
+	mappingsTableEntry.w	DPLC_5a58_75
+	mappingsTableEntry.w	DPLC_5a58_76
+	mappingsTableEntry.w	DPLC_5a58_77
+	mappingsTableEntry.w	DPLC_5a58_78
+	mappingsTableEntry.w	DPLC_5a58_79
+	mappingsTableEntry.w	DPLC_5a58_80
+	mappingsTableEntry.w	DPLC_5a58_81
+	mappingsTableEntry.w	DPLC_5a58_82
+	mappingsTableEntry.w	DPLC_5a58_83
+	mappingsTableEntry.w	DPLC_5a58_84
+	mappingsTableEntry.w	DPLC_5a58_85
+	mappingsTableEntry.w	DPLC_5a58_86
+	mappingsTableEntry.w	DPLC_5a58_87
+	mappingsTableEntry.w	DPLC_5a58_88
+	mappingsTableEntry.w	DPLC_5a58_89
+	mappingsTableEntry.w	DPLC_5a58_90
+	mappingsTableEntry.w	DPLC_5a58_91
+	mappingsTableEntry.w	DPLC_5a58_92
+	mappingsTableEntry.w	DPLC_5a58_93
+	mappingsTableEntry.w	DPLC_5a58_94
+	mappingsTableEntry.w	DPLC_5a58_95
+	mappingsTableEntry.w	DPLC_5a58_96
+	mappingsTableEntry.w	DPLC_5a58_97
+	mappingsTableEntry.w	DPLC_5a58_98
+	mappingsTableEntry.w	DPLC_5a58_99
+	mappingsTableEntry.w	DPLC_5a58_100
+	mappingsTableEntry.w	DPLC_5a58_101
+	mappingsTableEntry.w	DPLC_5a58_102
+	mappingsTableEntry.w	DPLC_5a58_103
+	mappingsTableEntry.w	DPLC_5a58_104
+	mappingsTableEntry.w	DPLC_5a58_105
+	mappingsTableEntry.w	DPLC_5a58_106
+	mappingsTableEntry.w	DPLC_5a58_107
+	mappingsTableEntry.w	DPLC_5a58_108
+	mappingsTableEntry.w	DPLC_5a58_109
+
+DPLC_5a58_0:	dplcHeader
+DPLC_5a58_0_End
+
+DPLC_5a58_1:	dplcHeader
+ dplcEntry 3, 0
+ dplcEntry 8, 3
+ dplcEntry 3, $B
+ dplcEntry 3, $E
+DPLC_5a58_1_End
+
+DPLC_5a58_2:	dplcHeader
+ dplcEntry 6, $11
+ dplcEntry 6, $17
+ dplcEntry 3, $1D
+DPLC_5a58_2_End
+
+DPLC_5a58_3:	dplcHeader
+ dplcEntry 6, $20
+ dplcEntry 6, $17
+ dplcEntry 3, $1D
+DPLC_5a58_3_End
+
+DPLC_5a58_4:	dplcHeader
+ dplcEntry 6, $20
+ dplcEntry 6, $17
+ dplcEntry 3, $26
+DPLC_5a58_4_End
+
+DPLC_5a58_5:	dplcHeader
+ dplcEntry 9, $29
+ dplcEntry 3, $B
+ dplcEntry 3, $E
+DPLC_5a58_5_End
+
+DPLC_5a58_6:	dplcHeader
+ dplcEntry 8, $32
+ dplcEntry 6, $3A
+ dplcEntry 6, $40
+ dplcEntry 2, $46
+DPLC_5a58_6_End
+
+DPLC_5a58_7:	dplcHeader
+ dplcEntry 8, $32
+ dplcEntry $C, $48
+DPLC_5a58_7_End
+
+DPLC_5a58_8:	dplcHeader
+ dplcEntry 6, $54
+ dplcEntry 9, $5A
+DPLC_5a58_8_End
+
+DPLC_5a58_9:	dplcHeader
+ dplcEntry 6, $54
+ dplcEntry 6, $63
+ dplcEntry 6, $69
+ dplcEntry 2, $6F
+DPLC_5a58_9_End
+
+DPLC_5a58_10:	dplcHeader
+ dplcEntry 6, $54
+ dplcEntry $C, $71
+DPLC_5a58_10_End
+
+DPLC_5a58_11:	dplcHeader
+ dplcEntry 8, $32
+ dplcEntry 4, $7D
+ dplcEntry 6, $81
+DPLC_5a58_11_End
+
+DPLC_5a58_12:	dplcHeader
+ dplcEntry 6, $87
+ dplcEntry 6, $8D
+ dplcEntry 3, $93
+ dplcEntry 6, $96
+ dplcEntry 1, $9C
+DPLC_5a58_12_End
+
+DPLC_5a58_13:	dplcHeader
+ dplcEntry 6, $87
+ dplcEntry 2, $9D
+ dplcEntry 4, $9F
+ dplcEntry 6, $A3
+ dplcEntry 4, $A9
+ dplcEntry 1, $AD
+DPLC_5a58_13_End
+
+DPLC_5a58_14:	dplcHeader
+ dplcEntry 6, $AE
+ dplcEntry 2, $B4
+ dplcEntry 8, $B6
+ dplcEntry 3, $BE
+DPLC_5a58_14_End
+
+DPLC_5a58_15:	dplcHeader
+ dplcEntry 6, $C1
+ dplcEntry 4, $C7
+ dplcEntry 8, $CB
+ dplcEntry 3, $D3
+ dplcEntry 2, $D6
+DPLC_5a58_15_End
+
+DPLC_5a58_16:	dplcHeader
+ dplcEntry 6, $C1
+ dplcEntry 2, $D8
+ dplcEntry 8, $DA
+ dplcEntry 3, $E2
+DPLC_5a58_16_End
+
+DPLC_5a58_17:	dplcHeader
+ dplcEntry 6, $87
+ dplcEntry 2, $9D
+ dplcEntry 1, $93
+ dplcEntry 8, $E5
+ dplcEntry 3, $ED
+DPLC_5a58_17_End
+
+DPLC_5a58_18:	dplcHeader
+ dplcEntry 8, $F0
+ dplcEntry 6, $F8
+ dplcEntry 2, $FE
+ dplcEntry 6, $100
+DPLC_5a58_18_End
+
+DPLC_5a58_19:	dplcHeader
+ dplcEntry 8, $F0
+ dplcEntry $C, $106
+DPLC_5a58_19_End
+
+DPLC_5a58_20:	dplcHeader
+ dplcEntry 6, $112
+ dplcEntry 9, $118
+DPLC_5a58_20_End
+
+DPLC_5a58_21:	dplcHeader
+ dplcEntry 6, $112
+ dplcEntry 6, $121
+ dplcEntry 2, $127
+ dplcEntry 6, $129
+DPLC_5a58_21_End
+
+DPLC_5a58_22:	dplcHeader
+ dplcEntry 6, $112
+ dplcEntry $C, $12F
+DPLC_5a58_22_End
+
+DPLC_5a58_23:	dplcHeader
+ dplcEntry 8, $F0
+ dplcEntry 1, $106
+ dplcEntry 9, $13B
+DPLC_5a58_23_End
+
+DPLC_5a58_24:	dplcHeader
+ dplcEntry 6, $144
+ dplcEntry 2, $14A
+ dplcEntry 2, $14C
+ dplcEntry 9, $14E
+ dplcEntry 1, $157
+ dplcEntry 1, $158
+DPLC_5a58_24_End
+
+DPLC_5a58_25:	dplcHeader
+ dplcEntry 6, $144
+ dplcEntry 3, $159
+ dplcEntry 2, $15C
+ dplcEntry 2, $15E
+ dplcEntry 9, $160
+ dplcEntry 1, $157
+DPLC_5a58_25_End
+
+DPLC_5a58_26:	dplcHeader
+ dplcEntry 6, $169
+ dplcEntry 2, $16F
+ dplcEntry 9, $171
+ dplcEntry 2, $17A
+DPLC_5a58_26_End
+
+DPLC_5a58_27:	dplcHeader
+ dplcEntry 6, $17C
+ dplcEntry 3, $182
+ dplcEntry 2, $185
+ dplcEntry 8, $187
+ dplcEntry 3, $18F
+DPLC_5a58_27_End
+
+DPLC_5a58_28:	dplcHeader
+ dplcEntry 6, $17C
+ dplcEntry 2, $192
+ dplcEntry 9, $194
+ dplcEntry 2, $19D
+DPLC_5a58_28_End
+
+DPLC_5a58_29:	dplcHeader
+ dplcEntry 6, $144
+ dplcEntry 9, $19F
+ dplcEntry 2, $15E
+ dplcEntry 2, $1A8
+ dplcEntry 1, $157
+DPLC_5a58_29_End
+
+DPLC_5a58_30:	dplcHeader
+ dplcEntry 6, $1AA
+ dplcEntry $C, $1B0
+DPLC_5a58_30_End
+
+DPLC_5a58_31:	dplcHeader
+ dplcEntry 6, $54
+ dplcEntry $C, $1BC
+DPLC_5a58_31_End
+
+DPLC_5a58_32:	dplcHeader
+ dplcEntry 6, $1AA
+ dplcEntry $C, $1C8
+DPLC_5a58_32_End
+
+DPLC_5a58_33:	dplcHeader
+ dplcEntry 6, $54
+ dplcEntry $C, $1D4
+DPLC_5a58_33_End
+
+DPLC_5a58_34:	dplcHeader
+ dplcEntry 6, $1E0
+ dplcEntry 2, $1E6
+ dplcEntry $C, $1E8
+ dplcEntry 1, $1F4
+DPLC_5a58_34_End
+
+DPLC_5a58_35:	dplcHeader
+ dplcEntry 6, $1F5
+ dplcEntry 2, $1FB
+ dplcEntry $C, $1FD
+DPLC_5a58_35_End
+
+DPLC_5a58_36:	dplcHeader
+ dplcEntry 6, $1E0
+ dplcEntry 2, $209
+ dplcEntry $C, $20B
+ dplcEntry 1, $1F4
+DPLC_5a58_36_End
+
+DPLC_5a58_37:	dplcHeader
+ dplcEntry 6, $1F5
+ dplcEntry 2, $1FB
+ dplcEntry $C, $217
+DPLC_5a58_37_End
+
+DPLC_5a58_38:	dplcHeader
+ dplcEntry 6, $223
+ dplcEntry $C, $229
+DPLC_5a58_38_End
+
+DPLC_5a58_39:	dplcHeader
+ dplcEntry 6, $112
+ dplcEntry $C, $235
+DPLC_5a58_39_End
+
+DPLC_5a58_40:	dplcHeader
+ dplcEntry 6, $223
+ dplcEntry $C, $241
+DPLC_5a58_40_End
+
+DPLC_5a58_41:	dplcHeader
+ dplcEntry 6, $112
+ dplcEntry $C, $24D
+DPLC_5a58_41_End
+
+DPLC_5a58_42:	dplcHeader
+ dplcEntry 6, $259
+ dplcEntry 2, $25F
+ dplcEntry $C, $261
+ dplcEntry 1, $26D
+DPLC_5a58_42_End
+
+DPLC_5a58_43:	dplcHeader
+ dplcEntry 8, $26E
+ dplcEntry $C, $276
+DPLC_5a58_43_End
+
+DPLC_5a58_44:	dplcHeader
+ dplcEntry 6, $259
+ dplcEntry 2, $282
+ dplcEntry $C, $284
+ dplcEntry 1, $26D
+DPLC_5a58_44_End
+
+DPLC_5a58_45:	dplcHeader
+ dplcEntry 8, $26E
+ dplcEntry $C, $290
+DPLC_5a58_45_End
+
+DPLC_5a58_46:	dplcHeader
+ dplcEntry $10, $29C
+DPLC_5a58_46_End
+
+DPLC_5a58_47:	dplcHeader
+ dplcEntry $10, $2AC
+DPLC_5a58_47_End
+
+DPLC_5a58_48:	dplcHeader
+ dplcEntry $10, $2BC
+DPLC_5a58_48_End
+
+DPLC_5a58_49:	dplcHeader
+ dplcEntry $10, $2CC
+DPLC_5a58_49_End
+
+DPLC_5a58_50:	dplcHeader
+ dplcEntry $10, $2DC
+DPLC_5a58_50_End
+
+DPLC_5a58_51:	dplcHeader
+ dplcEntry $C, $2EC
+ dplcEntry 3, $2F8
+DPLC_5a58_51_End
+
+DPLC_5a58_52:	dplcHeader
+ dplcEntry $10, $2FB
+DPLC_5a58_52_End
+
+DPLC_5a58_53:	dplcHeader
+ dplcEntry $C, $30B
+ dplcEntry 3, $317
+DPLC_5a58_53_End
+
+DPLC_5a58_54:	dplcHeader
+ dplcEntry $10, $31A
+DPLC_5a58_54_End
+
+DPLC_5a58_55:	dplcHeader
+ dplcEntry 6, $32A
+ dplcEntry $C, $330
+DPLC_5a58_55_End
+
+DPLC_5a58_56:	dplcHeader
+ dplcEntry 6, $33C
+ dplcEntry 8, $342
+ dplcEntry 2, $34A
+ dplcEntry 1, $34C
+DPLC_5a58_56_End
+
+DPLC_5a58_57:	dplcHeader
+ dplcEntry 2, $34D
+ dplcEntry 8, $34F
+ dplcEntry 3, $357
+ dplcEntry 1, $35A
+DPLC_5a58_57_End
+
+DPLC_5a58_58:	dplcHeader
+ dplcEntry 3, $35B
+ dplcEntry 3, $35E
+ dplcEntry $10, $361
+DPLC_5a58_58_End
+
+DPLC_5a58_59:	dplcHeader
+ dplcEntry $C, $371
+ dplcEntry 8, $37D
+ dplcEntry 1, $71
+DPLC_5a58_59_End
+
+DPLC_5a58_60:	dplcHeader
+ dplcEntry 8, $385
+ dplcEntry 4, $38D
+ dplcEntry 3, $391
+DPLC_5a58_60_End
+
+DPLC_5a58_61:	dplcHeader
+ dplcEntry 9, $394
+DPLC_5a58_61_End
+
+DPLC_5a58_62:	dplcHeader
+ dplcEntry 8, $39D
+ dplcEntry 1, $3A5
+ dplcEntry 4, $3A6
+DPLC_5a58_62_End
+
+DPLC_5a58_63:	dplcHeader
+ dplcEntry 8, $3AA
+ dplcEntry 4, $3B2
+ dplcEntry 3, $3B6
+DPLC_5a58_63_End
+
+DPLC_5a58_64:	dplcHeader
+ dplcEntry $C, $3B9
+ dplcEntry 2, $3C5
+ dplcEntry 1, $3C7
+DPLC_5a58_64_End
+
+DPLC_5a58_65:	dplcHeader
+ dplcEntry $C, $3C8
+ dplcEntry 4, $3D4
+ dplcEntry 1, $3D8
+ dplcEntry 1, $3D9
+DPLC_5a58_65_End
+
+DPLC_5a58_66:	dplcHeader
+ dplcEntry $C, $3DA
+ dplcEntry 4, $3E6
+ dplcEntry 1, $3EA
+ dplcEntry 1, $3EB
+DPLC_5a58_66_End
+
+DPLC_5a58_67:	dplcHeader
+ dplcEntry 9, $3EC
+ dplcEntry 2, $3F5
+ dplcEntry 6, $3F7
+ dplcEntry 2, $3FD
+ dplcEntry 1, $3FF
+DPLC_5a58_67_End
+
+DPLC_5a58_68:	dplcHeader
+ dplcEntry 9, $400
+ dplcEntry 2, $409
+ dplcEntry 6, $3F7
+ dplcEntry 2, $3FD
+ dplcEntry 1, $3FF
+DPLC_5a58_68_End
+
+DPLC_5a58_69:	dplcHeader
+ dplcEntry 9, $40B
+ dplcEntry 8, $414
+DPLC_5a58_69_End
+
+DPLC_5a58_70:	dplcHeader
+ dplcEntry 9, $41C
+ dplcEntry 3, $425
+ dplcEntry 2, $428
+DPLC_5a58_70_End
+
+DPLC_5a58_71:	dplcHeader
+ dplcEntry 9, $42A
+ dplcEntry 8, $433
+DPLC_5a58_71_End
+
+DPLC_5a58_72:	dplcHeader
+ dplcEntry 9, $41C
+ dplcEntry 3, $43B
+ dplcEntry 2, $43E
+DPLC_5a58_72_End
+
+DPLC_5a58_73:	dplcHeader
+ dplcEntry 6, $440
+ dplcEntry $C, $446
+DPLC_5a58_73_End
+
+DPLC_5a58_74:	dplcHeader
+ dplcEntry 9, $452
+ dplcEntry 4, $45B
+ dplcEntry 1, $45F
+DPLC_5a58_74_End
+
+DPLC_5a58_75:	dplcHeader
+ dplcEntry 8, $460
+ dplcEntry 2, $468
+ dplcEntry $C, $46A
+DPLC_5a58_75_End
+
+DPLC_5a58_76:	dplcHeader
+ dplcEntry 8, $476
+ dplcEntry 2, $47E
+ dplcEntry 6, $480
+ dplcEntry 4, $486
+ dplcEntry 1, $48A
+DPLC_5a58_76_End
+
+DPLC_5a58_77:	dplcHeader
+ dplcEntry 8, $48B
+ dplcEntry 2, $47E
+ dplcEntry 6, $493
+ dplcEntry 4, $486
+ dplcEntry 1, $48A
+DPLC_5a58_77_End
+
+DPLC_5a58_78:	dplcHeader
+ dplcEntry 3, $499
+ dplcEntry $10, $49C
+DPLC_5a58_78_End
+
+DPLC_5a58_79:	dplcHeader
+ dplcEntry 3, $4AC
+ dplcEntry $C, $4AF
+ dplcEntry 3, $4BB
+DPLC_5a58_79_End
+
+DPLC_5a58_80:	dplcHeader
+ dplcEntry $C, $4BE
+DPLC_5a58_80_End
+
+DPLC_5a58_81:	dplcHeader
+ dplcEntry 6, $4CA
+DPLC_5a58_81_End
+
+DPLC_5a58_82:	dplcHeader
+ dplcEntry 2, $4D0
+DPLC_5a58_82_End
+
+DPLC_5a58_83:	dplcHeader
+ dplcEntry 8, $385
+ dplcEntry 4, $38D
+ dplcEntry 3, $391
+DPLC_5a58_83_End
+
+DPLC_5a58_84:	dplcHeader
+ dplcEntry 8, $39D
+ dplcEntry 1, $3A5
+ dplcEntry 4, $3A6
+DPLC_5a58_84_End
+
+DPLC_5a58_85:	dplcHeader
+ dplcEntry $C, $4D2
+ dplcEntry 2, $4DE
+ dplcEntry 4, $4E0
+DPLC_5a58_85_End
+
+DPLC_5a58_86:	dplcHeader
+ dplcEntry 6, $4E4
+ dplcEntry $C, $4EA
+ dplcEntry 2, $6D
+DPLC_5a58_86_End
+
+DPLC_5a58_87:	dplcHeader
+ dplcEntry $10, $4F6
+ dplcEntry 3, $506
+DPLC_5a58_87_End
+
+DPLC_5a58_88:	dplcHeader
+ dplcEntry $F, $509
+DPLC_5a58_88_End
+
+DPLC_5a58_89:	dplcHeader
+ dplcEntry $F, $518
+DPLC_5a58_89_End
+
+DPLC_5a58_90:	dplcHeader
+ dplcEntry $F, $527
+DPLC_5a58_90_End
+
+DPLC_5a58_91:	dplcHeader
+ dplcEntry $F, $536
+DPLC_5a58_91_End
+
+DPLC_5a58_92:	dplcHeader
+ dplcEntry $F, $545
+DPLC_5a58_92_End
+
+DPLC_5a58_93:	dplcHeader
+ dplcEntry $F, $554
+DPLC_5a58_93_End
+
+DPLC_5a58_94:	dplcHeader
+ dplcEntry $10, $563
+ dplcEntry 3, $573
+DPLC_5a58_94_End
+
+DPLC_5a58_95:	dplcHeader
+ dplcEntry $10, $576
+ dplcEntry 3, $586
+DPLC_5a58_95_End
+
+DPLC_5a58_96:	dplcHeader
+ dplcEntry $10, $589
+ dplcEntry 3, $599
+DPLC_5a58_96_End
+
+DPLC_5a58_97:	dplcHeader
+ dplcEntry $10, $59C
+ dplcEntry 2, $5AC
+DPLC_5a58_97_End
+
+DPLC_5a58_98:	dplcHeader
+ dplcEntry $10, $5AE
+ dplcEntry 7, $5BE
+DPLC_5a58_98_End
+
+DPLC_5a58_99:	dplcHeader
+ dplcEntry $10, $5C5
+ dplcEntry 5, $5D5
+DPLC_5a58_99_End
+
+DPLC_5a58_100:	dplcHeader
+ dplcEntry $10, $5DA
+ dplcEntry 7, $5EA
+DPLC_5a58_100_End
+
+DPLC_5a58_101:	dplcHeader
+ dplcEntry $10, $5F1
+ dplcEntry 5, $601
+DPLC_5a58_101_End
+
+DPLC_5a58_102:	dplcHeader
+ dplcEntry $10, $606
+ dplcEntry 3, $616
+DPLC_5a58_102_End
+
+DPLC_5a58_103:	dplcHeader
+ dplcEntry $10, $619
+ dplcEntry 3, $629
+DPLC_5a58_103_End
+
+DPLC_5a58_104:	dplcHeader
+ dplcEntry $10, $62C
+ dplcEntry 3, $63C
+DPLC_5a58_104_End
+
+DPLC_5a58_105:	dplcHeader
+ dplcEntry $10, $63F
+ dplcEntry 2, $64F
+DPLC_5a58_105_End
+
+DPLC_5a58_106:	dplcHeader
+ dplcEntry $10, $651
+ dplcEntry 7, $661
+DPLC_5a58_106_End
+
+DPLC_5a58_107:	dplcHeader
+ dplcEntry $10, $668
+ dplcEntry 5, $678
+DPLC_5a58_107_End
+
+DPLC_5a58_108:	dplcHeader
+ dplcEntry $10, $67D
+ dplcEntry 7, $68D
+DPLC_5a58_108_End
+
+DPLC_5a58_109:	dplcHeader
+ dplcEntry $10, $694
+ dplcEntry 5, $6A4
+DPLC_5a58_109_End
 
 	even

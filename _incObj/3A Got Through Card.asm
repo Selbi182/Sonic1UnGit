@@ -63,7 +63,13 @@ Got_Loop:
 ; Got_Move:
 Got_MoveIn:
 		; Routine 2
-		moveq	#$10,d1					; set horizontal move-in speed
+		move.w	card_mainX(a0),d1			; get target moving-in X-position
+		sub.w	obX(a0),d1				; calculate difference to current X-position
+		bpl.s	.pos					; is result positive? if yes, branch
+		neg.w	d1					; otherwise, make it positive
+	.pos:	lsr.w	#3,d1					; divide difference by 8
+		addq.w	#1,d1					; set lower cap speed to 1px/frame
+
 		move.w	got_mainX(a0),d0			; get target moving in X-position
 		cmp.w	obX(a0),d0				; has item reached its target position?
 		beq.s	.reachedXTarget				; if yes, branch
@@ -101,6 +107,8 @@ Got_MoveIn:
 		bne.s	.checkOffScreen				; if not, branch
 		addq.b	#2,obRoutine(a0)			; set to Got_Wait (4)
 		move.w	#3*60,obTimeFrame(a0)			; set time delay before tally to 3 seconds
+		move.w	#bgm_GotThrough,d0
+		jsr	(QueueSound2).l	; play "Sonic got through" music
 ; ---------------------------------------------------------------------------
 
 Got_Wait:	; Routine 4, 8, $C
@@ -117,6 +125,20 @@ Got_Wait:	; Routine 4, 8, $C
 Got_Bonus:	; Routine 6
 		bsr.w	DisplaySprite				; keep displaying card sprites
 		move.b	#1,(f_endactbonus).w			; set time/ring bonus HUD update flag
+
+		moveq	#btnABC,d0		; is button A, B, or C...
+		and.b	(v_jpadhold1).w,d0	; ...held?
+		beq.s	.normal			; if not, tick down score tally normally
+
+		add.w	(v_timebonus).w,d0	; add entire remaining time bonus to d0
+		add.w	(v_ringbonus).w,d0	; add entire remaining ring bonus to d0
+		clr.w	(v_timebonus).w		; clear remaining time bonus
+		clr.w	(v_ringbonus).w		; clear remaining ring bonus
+		jsr	(AddPoints).l		; add up the points stored in d0
+		moveq	#0,d0			; set remaining bonus to 0 so that Got_AddBonus gets skipped
+		bra.s	.checkFinished		; skip regular logic
+
+	.normal:
 		moveq	#0,d0					; set ticked-down bonus points to 0 by default
 
 	.timeBonus:
@@ -219,7 +241,13 @@ LevelOrder:
 
 ; Got_Move2: Got_MoveBack:
 Got_SBZ2_MoveOut: ; Routine $E
-		moveq	#2*$10,d1				; set horizontal move-out speed (twice as fast as moving in)
+		move.w	card_mainX(a0),d1			; get target moving-in X-position
+		sub.w	obX(a0),d1				; calculate difference to current X-position
+		bpl.s	.pos					; is result positive? if yes, branch
+		neg.w	d1					; otherwise, make it positive
+	.pos:	lsr.w	#2,d1					; divide difference by 4
+		addq.w	#1,d1					; set lower cap speed to 1px/frame
+
 		move.w	got_finalX(a0),d0			; get target moving-out X-position
 		cmp.w	obX(a0),d0				; has card reached its finish position?
 		beq.s	Got_SBZ2_StartCutscene			; if yes, branch
@@ -231,15 +259,12 @@ Got_SBZ2_MoveOut: ; Routine $E
 
 	; .checkOffScreen:
 		move.w	obX(a0),d0				; get current x-position of card
-		bmi.s	.return					; if it's negative, don't display
 		cmpi.w	#$80+320+64,d0				; has card moved beyond $200 on x-axis (to the right)?
-		bgt.s	.return					; if yes, branch
+		bgt.s	Got_SBZ2_StartCutscene			; if yes, branch
 		cmpi.w	#$80-64+16,d0				; has card moved beyond $50 on the x-axis (to the left)?
-		bgt.w	DisplaySprite				; if not, display card
+		ble.s	Got_SBZ2_StartCutscene			; if yes, branch
+		bra.w	DisplaySprite				; otherwise, keep displaying card
 
-	; locret_C748:
-	.return:
-		rts						; don't display card
 ; ---------------------------------------------------------------------------
 
 	; Got_SBZ2:
@@ -292,19 +317,19 @@ Got_ItemData:
 
 		; Score tally
 		dc.w $520, $120
-		dc.w $EC
+		dc.w $126
 		dc.b 2
 		dc.b 2
 
 		; Time Bonus tally
 		dc.w $540, $120
-		dc.w $FC
+		dc.w $F6
 		dc.b 2
 		dc.b 3
 
 		; Ring Bonus tally
 		dc.w $560, $120
-		dc.w $10C
+		dc.w $106
 		dc.b 2
 		dc.b 4
 

@@ -8,8 +8,6 @@ AnimateLevelGfx:
 		bne.s	.isPaused				; if yes, branch
 
 		lea	(vdp_data_port).l,a6			; prepare VDP data port (shared by all gfx routines)
-		bsr.w	AniArt_GiantRing			; load giant ring graphics, if necessary
-
 		moveq	#0,d0					; clear d0
 		move.b	(v_zone).w,d0				; get current zone ID
 		add.w	d0,d0					; double for word-based indexing
@@ -300,7 +298,7 @@ AniArt_Ending_BigFlower:
 
 		move.b	#8-1,(v_lani1_time).w			; time to display each frame
 		lea	(Art_GhzFlower1).l,a1			; load big flower patterns
-		lea	(v_256x256_def+$4A*chunk_size).w,a2	; load 2nd big flower from RAM (overwriting unused chunk RAM)
+		lea	(Art_EndFlowers+$000).l,a2		; load 2nd big flower from ROM ($000-$3FF)
 		move.b	(v_lani1_frame).w,d0			; get current frame ID
 		addq.b	#1,(v_lani1_frame).w			; increment frame counter
 		andi.w	#1,d0					; there are only 2 frames
@@ -357,7 +355,7 @@ AniArt_Ending_Flower3:
 		lsl.w	#8,d0					; multiply by $100
 		add.w	d0,d0					; multiply by 2
 		locVRAM	ArtTile_GHZ_Flower_3*tile_size		; VRAM address
-		lea	(v_256x256_def+$4C*chunk_size).w,a1	; load special flower patterns from RAM (overwriting unused chunk RAM)
+		lea	(Art_EndFlowers+$400).l,a1		; load special flower patterns A from ROM ($400-$9FF)
 		lea	(a1,d0.w),a1				; jump to appropriate tile
 		move.w	#.size-1,d1				; number of 8x8 tiles
 		bra.w	LoadTiles				; transfer tiles to VRAM
@@ -381,7 +379,7 @@ AniArt_Ending_Flower4:
 		lsl.w	#8,d0					; multiply by $100
 		add.w	d0,d0					; multiply by 2
 		locVRAM	ArtTile_GHZ_Flower_4*tile_size		; VRAM address
-		lea	(v_256x256_def+$4F*chunk_size).w,a1	; load special flower patterns from RAM (overwriting unused chunk RAM)
+		lea	(Art_EndFlowers+$A00).l,a1		; load special flower patterns B from ROM ($A00-$FFF)
 		lea	(a1,d0.w),a1				; jump to appropriate tile
 		move.w	#.size-1,d1				; number of 8x8 tiles
 		bra.w	LoadTiles				; transfer tiles to VRAM
@@ -563,39 +561,3 @@ AniArt_MZMagma:	dc.w	.magma_0123-AniArt_MZMagma		; 0 1 2 3
 		dbf	d1,.magma_F012				; repeat until the column is written
 		rts						; return
 ; End of function AniArt_MZMagma
-
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Animated pattern routine - load uncompressed Giant Ring patterns
-; The graphics are loaded incrementally at 14 tiles per frame.
-; This gets triggered from GRing_Okay by setting v_gfxbigring to:
-; Art_BigRing_size = 98 tiles * tile_size = $C40
-; ---------------------------------------------------------------------------
-
-AniArt_GiantRing:
-		tst.w	(v_gfxbigring).w			; are giant ring graphics set to be loaded?
-		bne.s	.loadTiles				; if so, get to work
-		rts						; nothing to do
-; ---------------------------------------------------------------------------
-
-	.loadTiles:
-		.size:	= 14					; number of tiles to load per frame
-
-		subi.w	#.size*tile_size,(v_gfxbigring).w	; count-down the 14 tiles we're going to load now
-		lea	(Art_BigRing).l,a1			; load uncompressed giant ring patterns
-		moveq	#0,d0					; clear d0
-		move.w	(v_gfxbigring).w,d0			; load current tile offset for giant ring patterns
-		lea	(a1,d0.w),a1				; jump to appropriate tile in patterns
-
-		; Turn VRAM address into VDP command
-		addi.w	#ArtTile_Giant_Ring*tile_size,d0	; advance to starting VRAM address of giant ring
-		lsl.l	#2,d0					; push upper address bits into upper word
-		lsr.w	#2,d0					; send rest back
-		ori.w	#$4000,d0				; set VDP mode bits (VRAM write mode)
-		swap	d0					; align for VDP in order
-		move.l	d0,4(a6)				; send VDP command (write to VRAM at address contained in v_gfxbigring)
-
-		move.w	#.size-1,d1				; number of 8x8 tiles
-		bra.w	LoadTiles				; transfer tiles to VRAM
-; End of function AniArt_GiantRing

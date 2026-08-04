@@ -11,13 +11,22 @@
 ; ===========================================================================
 ; ASSEMBLY OPTIONS:
 
-CheatsEnabled = 0
+Enable_SpindashPeelout:	= 1
+Enable_HomingAttack:	= 1
+Enable_Figure8Sprites:	= 1
+Enable_ExtendedCamera:	= 1
+Enable_InfiniteLives:	= 1
+Enable_AttractRings:	= 1
+
+CheatsEnabled = 1
 ;	| If 1, all in-game cheats (Level Select, Debug Mode, Slow-Motion, Japanese Credits)
 ;	|       will be enabled by default, without requiring any title screen button inputs
 
 ; ===========================================================================
 ; Simplifying macros and functions
 	include	"Macros.asm"
+	include "sound/MegaPCM.Macros.asm"
+
 
 ; ===========================================================================
 ; Equates section - Names for constants
@@ -26,6 +35,14 @@ CheatsEnabled = 0
 ; ===========================================================================
 ; Equates section - Names for variables
 	include	"_Variables.asm"
+
+; ===========================================================================
+; MD Debugger and Error Handler macros
+	include	"_inc/Debugger.asm"
+
+;__DEBUG__: equ "DEB"
+; 	| Comment this in to enable extra debugging tools ("KDebug" and "assert").
+; 	| If commented out, extra tools are disabled to avoid performance penalties.
 
 ; ===========================================================================
 ; Expressing sprite mappings and DPLCs in a portable and human-readable form
@@ -324,8 +341,8 @@ GameInit:
 .clearRAM:	move.l	d7,(a6)+				; clear RAM
 		dbf	d6,.clearRAM				; loop until done
 
+		jsr	(InitDMAQueue).l
 		bsr.w	VDPSetupGame				; initialize (proper) VDP registers
-		bsr.w	DACDriverLoad				; initialize Z80 DAC driver
 		bsr.w	JoypadInit				; initialize controller ports
 		move.b	#id_Sega,(v_gamemode).w			; set first Game Mode to Sega Screen
 
@@ -337,9 +354,22 @@ GameInit:
 		move.b	d0,(f_creditscheat).w			; enable hidden Japanese credits cheat
 	endif
 
+		jsr	(MegaPCM_LoadDriver).l
+		lea	(SampleTable).l,a0
+		jsr	(MegaPCM_LoadSampleTable).l
+		tst.w	d0			; was sample table loaded successfully?
+		beq.s	.SampleTableOk		; if yes, branch
+		if def(__DEBUG__)
+			; for MD Debugger v.2.5 or above
+			RaiseError "MegaPCM_LoadSampleTable returned %<.b d0>", MPCM_Debugger_LoadSampleTableException
+		else
+			illegal
+		endif
+.SampleTableOk:
+
 MainGameLoop:
 		move.b	(v_gamemode).w,d0			; load Game Mode
-		andi.w	#$1C,d0					; limit Game Mode value to $1C max (change to a maximum of 7C to add more game modes)
+		andi.w	#$3C,d0					; limit Game Mode value to $1C max (change to a maximum of 7C to add more game modes)
 		jsr	GameModeArray(pc,d0.w)			; jump to apt location in ROM
 		bra.s	MainGameLoop				; loop indefinitely
 
@@ -362,165 +392,6 @@ id_Special:	gmptr	GM_Special				; Special Stage ($10)
 id_Continue:	gmptr	GM_Continue				; Continue Screen ($14)
 id_Ending:	gmptr	GM_Ending				; End of game sequence ($18)
 id_Credits:	gmptr	GM_Credits				; Credits ($1C)
-
-		rts						; redundant rts
-
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Error handler
-; ---------------------------------------------------------------------------
-
-BusError:	move.b	#2,(v_errortype).w			; set error code
-		bra.s	ErrorHandler_WithAddress		; continue to handler (with pc value)
-; ---------------------------------------------------------------------------
-AddressError:	move.b	#4,(v_errortype).w			; set error code
-		bra.s	ErrorHandler_WithAddress		; continue to handler (with pc value)
-; ---------------------------------------------------------------------------
-IllegalInstr:	move.b	#6,(v_errortype).w			; set error code
-		addq.l	#2,2(sp)				; skip over illegal instruction on recovery
-		bra.s	ErrorHandler_WithoutAddress		; continue to handler
-; ---------------------------------------------------------------------------
-ZeroDivide:	move.b	#8,(v_errortype).w			; set error code
-		bra.s	ErrorHandler_WithoutAddress		; continue to handler
-; ---------------------------------------------------------------------------
-ChkInstr:	move.b	#$A,(v_errortype).w			; set error code
-		bra.s	ErrorHandler_WithoutAddress		; continue to handler
-; ---------------------------------------------------------------------------
-TrapvInstr:	move.b	#$C,(v_errortype).w			; set error code
-		bra.s	ErrorHandler_WithoutAddress		; continue to handler
-; ---------------------------------------------------------------------------
-PrivilegeViol:	move.b	#$E,(v_errortype).w			; set error code
-		bra.s	ErrorHandler_WithoutAddress		; continue to handler
-; ---------------------------------------------------------------------------
-Trace:		move.b	#$10,(v_errortype).w			; set error code
-		bra.s	ErrorHandler_WithoutAddress		; continue to handler
-; ---------------------------------------------------------------------------
-Line1010Emu:	move.b	#$12,(v_errortype).w			; set error code
-		addq.l	#2,2(sp)				; skip over illegal instruction on recovery
-		bra.s	ErrorHandler_WithoutAddress		; continue to handler
-; ---------------------------------------------------------------------------
-Line1111Emu:	move.b	#$14,(v_errortype).w			; set error code
-		addq.l	#2,2(sp)				; skip over illegal instruction on recovery
-		bra.s	ErrorHandler_WithoutAddress		; continue to handler
-; ---------------------------------------------------------------------------
-ErrorExcept:	move.b	#0,(v_errortype).w			; set error code (generic fallback error)
-		bra.s	ErrorHandler_WithoutAddress		; continue to handler
-; ===========================================================================
-
-; loc_43A:
-ErrorHandler_WithAddress:
-		disable_ints					; disable interrupts so we stay here
-		addq.w	#2,sp					; skip sr value
-		move.l	(sp)+,(v_spbuffer).w			; retrieve pc value from before the crash
-		addq.w	#2,sp					; skip second sr value
-		movem.l	d0-a7,(v_regbuffer).w			; backup all registers values from before the crash
-
-		bsr.w	ShowErrorMessage			; write error text to screen
-		move.l	2(sp),d0				; get error address
-		bsr.w	ShowErrorValue				; write value to screen
-		move.l	(v_spbuffer).w,d0			; get origin pc value
-		bsr.w	ShowErrorValue				; write value to screen
-		bra.s	ErrorHandler_TryRecovery		; skip over
-; ===========================================================================
-
-; loc_462:
-ErrorHandler_WithoutAddress:
-		disable_ints					; disable interrupts so we stay here
-		movem.l	d0-a7,(v_regbuffer).w			; backup all registers values from before the crash
-
-		bsr.w	ShowErrorMessage			; write error text to screen
-		move.l	2(sp),d0				; load error address
-		bsr.w	ShowErrorValue				; write value to screen
-; ---------------------------------------------------------------------------
-
-; loc_478:
-ErrorHandler_TryRecovery:
-		bsr.w	ErrorWaitForC				; loop until C has been pressed
-		movem.l	(v_regbuffer).w,d0-a7			; restore registers before exception
-		enable_ints					; enable ints
-		rte						; try resuming normal operation (may or may not work, depending on type of crash)
-; ===========================================================================
-
-ShowErrorMessage:
-		lea	(vdp_data_port).l,a6			; set VDP data port
-		locVRAM	ArtTile_Error_Handler_Font*tile_size	; set target VRAM location for error text font
-		lea	(Art_Text).l,a0				; load error text font
-		move.w	#(Art_Text_end-Art_Text-tile_size)/2-1,d1 ; load font (strangely, this does not load the final tile)
-.loadgfx:	move.w	(a0)+,(a6)				; dump graphics to VRAM
-		dbf	d1,.loadgfx				; loop until font has been loaded
-
-		moveq	#0,d0					; clear d0
-		move.b	(v_errortype).w,d0			; load error code
-		move.w	ErrorText(pc,d0.w),d0			; find offset in error texts array
-		lea	ErrorText(pc,d0.w),a0			; load error text for error code
-		locVRAM	vram_fg+(12*$80)+(2*2)			; write error message directly to plane A nametable (row 12 + column 2 = $C04)
-		moveq	#19-1,d1				; number of characters in error text message (minus 1)
-.showchars:	moveq	#0,d0					; clear d0
-		move.b	(a0)+,d0				; get next character from error text
-		addi.w	#-'0'+ArtTile_Error_Handler_Font,d0	; rebase from ASCII to a VRAM index
-		move.w	d0,(a6)					; write to VRAM
-		dbf	d1,.showchars				; repeat for number of characters
-		rts						; return
-; End of function ShowErrorMessage
-; ===========================================================================
-
-ErrorText:	dc.w .exception-ErrorText			; 0
-		dc.w .bus-ErrorText				; 2
-		dc.w .address-ErrorText				; 4
-		dc.w .illinstruct-ErrorText			; 6
-		dc.w .zerodivide-ErrorText			; 8
-		dc.w .chkinstruct-ErrorText			; $A
-		dc.w .trapv-ErrorText				; $C
-		dc.w .privilege-ErrorText			; $E
-		dc.w .trace-ErrorText				; $10
-		dc.w .line1010-ErrorText			; $12
-		dc.w .line1111-ErrorText			; $14
-
-.exception:	dc.b "ERROR EXCEPTION    "
-.bus:		dc.b "BUS ERROR          "
-.address:	dc.b "ADDRESS ERROR      "
-.illinstruct:	dc.b "ILLEGAL INSTRUCTION"
-.zerodivide:	dc.b "@ERO DIVIDE        "			; Note: @ is Z due to the font arrangement
-.chkinstruct:	dc.b "CHK INSTRUCTION    "
-.trapv:		dc.b "TRAPV INSTRUCTION  "
-.privilege:	dc.b "PRIVILEGE VIOLATION"
-.trace:		dc.b "TRACE              "
-.line1010:	dc.b "LINE 1010 EMULATOR "
-.line1111:	dc.b "LINE 1111 EMULATOR "
-		even
-
-; ===========================================================================
-
-; Input: d0 = number to write (8 digits)
-ShowErrorValue:
-		move.w	#ArtTile_Error_Handler_Font+$A,(a6)	; display "$" symbol
-		moveq	#8-1,d2					; write 8 digits
-	.loop:	rol.l	#4,d0					; shift to next digit
-		bsr.s	.writeDigit				; write number to VRAM
-		dbf	d2,.loop				; loop until done
-		rts						; return
-; ---------------------------------------------------------------------------
-
-.writeDigit:
-		move.w	d0,d1					; make a copy (need to preserve d0 for the loop)
-		andi.w	#$F,d1					; limit digit to one nybble
-		cmpi.w	#$A,d1					; is digit $A-$F?
-		blo.s	.write					; if not, branch
-		addq.w	#7,d1					; adjust tile offset for hex letters
-	.write:	addi.w	#ArtTile_Error_Handler_Font,d1		; add art tile offset
-		move.w	d1,(a6)					; write to VRAM nametable
-		rts						; return
-; End of function ShowErrorValue
-; ===========================================================================
-
-ErrorWaitForC:
-		bsr.w	ReadJoypads				; keep reading joypads
-		cmpi.b	#btnC,(v_jpadpress1).w			; has button C been pressed?
-		bne.w	ErrorWaitForC				; if not, keep looping
-		rts						; return to try recovering execution
-; End of function ErrorWaitForC
-; End of error handler (as a whole)
 
 
 ; ===========================================================================
@@ -634,8 +505,6 @@ VBlank_Lag:
 
 .paletteTransfer:
 		move.w	#1,(f_hblank_pal).w			; set HBlank flag
-		stopZ80						; stop Z80 for CRAM transfers
-		waitZ80						; wait until Z80 has stopped
 		tst.b	(f_wtr_state).w				; is the screen completely underwater?
 		bne.s	.waterAbove 				; if not, branch
 		writeCRAM	v_palette,0			; write regular palette buffer to CRAM
@@ -643,9 +512,9 @@ VBlank_Lag:
 	.waterAbove:
 		writeCRAM	v_palette_water,0		; write water palette buffer to CRAM
 	.waterBelow:
-		move.w	(v_hblank_hreg).w,(a5)			; write HBlank trigger scan line for water palette swap to VDP
-		startZ80					; restart Z80
-
+		move.w	(v_hblank_hreg).w,d0	; get HBlank interrupt counter
+		move.w	d0,(a5)			; write to VDP register ($8Axx)
+		move.b	d0,(v_waterline).w	; copy target scan line ($xx)
 		bra.w	VBlank_Music				; branch back to update sound driver and resume operation
 
 ; ===========================================================================
@@ -679,7 +548,6 @@ VBlank_SegaPCM:
 VBlank_Title:
 		bsr.w	VBlank_StandardTransfers		; do standard screen transfers
 		bsr.w	LoadTilesAsYouMove_BGOnly		; update background tiles as title screen scrolls
-		bsr.w	ProcessPLC_9Tiles			; decompress up to 9 Nemesis-compressed tiles
 
 		tst.w	(v_generictimer).w			; is generic timer set?
 		beq.w	.end					; if not, branch
@@ -714,8 +582,6 @@ VBlank_Paused:
 
 ; loc_C6E: VBla_08:
 VBlank_Levels:
-		stopZ80						; request Z80 stop
-		waitZ80						; wait until Z80 has stopped
 		bsr.w	ReadJoypads				; read joypads and update buffered inputs in RAM
 
 		tst.b	(f_wtr_state).w				; is the screen completely underwater?
@@ -725,18 +591,13 @@ VBlank_Levels:
 	.waterAbove:
 		writeCRAM	v_palette_water,0		; write water palette buffer to CRAM
 	.waterBelow:
-		move.w	(v_hblank_hreg).w,(a5)			; write HBlank trigger scan line for water palette swap to VDP
+		move.w	(v_hblank_hreg).w,d0	; get HBlank interrupt counter
+		move.w	d0,(a5)			; write to VDP register ($8Axx)
+		move.b	d0,(v_waterline).w	; copy target scan line ($xx)
 
 		writeVRAM	v_hscrolltablebuffer,vram_hscroll ; transfer H-scroll buffer table to actual H-scroll VRAM
 		writeVRAM	v_spritetablebuffer,vram_sprites  ; transfer sprite buffer table to actual sprites VRAM
-
-		tst.b	(f_sonframechg).w			; has Sonic's sprite changed?
-		beq.s	.nochg					; if not, branch
-		writeVRAM	v_sgfx_buffer,ArtTile_Sonic*tile_size ; load new Sonic gfx
-		move.b	#0,(f_sonframechg).w			; clear Sonic gfx update flag
-	.nochg:
-
-		startZ80					; restart Z80
+		jsr	ProcessDMAQueue(pc)
 
 		movem.l	(v_screenposx).w,d0-d7			; copy everything from v_screenposx to v_bg3screenposy...
 		movem.l	d0-d7,(v_screenposx_dup).w		; ...to backup RAM (used in LoadTilesAsYouMove)
@@ -765,7 +626,6 @@ VBlank_UpdateScreen:
 		bsr.w	LoadTilesAsYouMove			; update level tiles while screen is moving
 		jsr	(AnimateLevelGfx).l			; updated animated tiles
 		jsr	(HUD_Update).l				; update HUD data
-		bsr.w	ProcessPLC_3Tiles			; decompress up to 3 Nemesis-compressed tiles (instead of the usual 9)
 
 		tst.w	(v_generictimer).w			; is generic timer set?
 		beq.w	.end					; if not, branch
@@ -781,21 +641,15 @@ VBlank_UpdateScreen:
 
 ; loc_DA6: VBla_0A:
 VBlank_SpecialStage:
-		stopZ80						; request Z80 stop
-		waitZ80						; wait until Z80 has stopped
 		bsr.w	ReadJoypads				; read joypads and update buffered inputs in RAM
 		writeCRAM	v_palette,0			; write regular palette buffer to CRAM
 		writeVRAM	v_spritetablebuffer,vram_sprites  ; transfer sprite buffer table to actual sprites VRAM
 		writeVRAM	v_hscrolltablebuffer,vram_hscroll ; transfer H-scroll buffer table to actual H-scroll VRAM
-		startZ80					; restart Z80
+		jsr	ProcessDMAQueue(pc)
 
 		bsr.w	PalCycle_SS				; advance special stage palette cycle and animate bird/fish graphics
 
-		tst.b	(f_sonframechg).w			; has Sonic's sprite changed?
-		beq.s	.nochg					; if not, branch
-		writeVRAM	v_sgfx_buffer,ArtTile_Sonic*tile_size ; load new Sonic gfx
-		move.b	#0,(f_sonframechg).w			; clear Sonic gfx update flag
-	.nochg:
+		jsr	(SS_LoadWalls).l			; update graphics for square blocks in VRAM
 
 		tst.w	(v_generictimer).w			; is generic timer set?
 		beq.w	.end					; if not, branch
@@ -812,8 +666,6 @@ VBlank_SpecialStage:
 ; loc_E72: VBla_0C: VBla_18:
 VBlank_TitleCards:
 VBlank_Ending:
-		stopZ80						; request Z80 stop
-		waitZ80						; wait until Z80 has stopped
 		bsr.w	ReadJoypads				; read joypads and update buffered inputs in RAM
 
 		tst.b	(f_wtr_state).w				; is the screen completely underwater?
@@ -823,18 +675,13 @@ VBlank_Ending:
 	.waterAbove:
 		writeCRAM	v_palette_water,0		; write water palette buffer to CRAM
 	.waterBelow:
-		move.w	(v_hblank_hreg).w,(a5)			; write HBlank trigger scan line for water palette swap to VDP
+		move.w	(v_hblank_hreg).w,d0	; get HBlank interrupt counter
+		move.w	d0,(a5)			; write to VDP register ($8Axx)
+		move.b	d0,(v_waterline).w	; copy target scan line ($xx)
 
 		writeVRAM	v_hscrolltablebuffer,vram_hscroll ; transfer H-scroll buffer table to actual H-scroll VRAM
 		writeVRAM	v_spritetablebuffer,vram_sprites  ; transfer sprite buffer table to actual sprites VRAM
-
-		tst.b	(f_sonframechg).w			; has Sonic's sprite changed?
-		beq.s	.nochg					; if not, branch
-		writeVRAM	v_sgfx_buffer,ArtTile_Sonic*tile_size ; load new Sonic gfx
-		move.b	#0,(f_sonframechg).w			; clear Sonic gfx update flag
-	.nochg:
-
-		startZ80					; restart Z80
+		jsr	ProcessDMAQueue(pc)
 
 		movem.l	(v_screenposx).w,d0-d7			; copy everything from v_screenposx to v_bg3screenposy...
 		movem.l	d0-d7,(v_screenposx_dup).w		; ...to backup RAM (used in LoadTilesAsYouMove)
@@ -843,9 +690,7 @@ VBlank_Ending:
 
 		bsr.w	LoadTilesAsYouMove			; update rendered
 		jsr	(AnimateLevelGfx).l			; animate uncompressed level graphics (e.g. MZ lava)
-		jsr	(HUD_Update).l				; update HUD numbers
-		bsr.w	ProcessPLC_9Tiles			; decompress up to 9 Nemesis-compressed tiles
-		rts						; return
+		jmp	(HUD_Update).l				; update HUD numbers
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -867,8 +712,10 @@ VBlank_Unused0E:
 ; loc_F9A: VBla_12:
 VBlank_PaletteFade:
 		bsr.w	VBlank_StandardTransfers		; do standard screen transfers
-		move.w	(v_hblank_hreg).w,(a5)			; write HBlank trigger scan line for water palette swap to VDP
-		bra.w	ProcessPLC_9Tiles			; decompress up to 9 Nemesis-compressed tiles
+		move.w	(v_hblank_hreg).w,d0	; get HBlank interrupt counter
+		move.w	d0,(a5)			; write to VDP register ($8Axx)
+		move.b	d0,(v_waterline).w	; copy target scan line ($xx)
+		rts
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -877,20 +724,14 @@ VBlank_PaletteFade:
 
 ; loc_FA6: VBla_16:
 VBlank_Continue:
-		stopZ80						; request Z80 stop
-		waitZ80						; wait until Z80 has stopped
 		bsr.w	ReadJoypads				; read joypads and update buffered inputs in RAM
 
 		writeCRAM	v_palette,0			; write regular palette buffer to CRAM
 		writeVRAM	v_spritetablebuffer,vram_sprites  ; transfer sprite buffer table to actual sprites VRAM
 		writeVRAM	v_hscrolltablebuffer,vram_hscroll ; transfer H-scroll buffer table to actual H-scroll VRAM
-		startZ80					; restart Z80
+		jsr	ProcessDMAQueue(pc)
 
-		tst.b	(f_sonframechg).w			; has Sonic's sprite changed?
-		beq.s	.nochg					; if not, branch
-		writeVRAM	v_sgfx_buffer,ArtTile_Sonic*tile_size ; load new Sonic gfx
-		move.b	#0,(f_sonframechg).w			; clear Sonic gfx update flag
-	.nochg:
+		jsr	(SS_LoadWalls).l			; update graphics for square blocks in VRAM
 
 		tst.w	(v_generictimer).w			; is generic timer set?
 		beq.w	.end					; if not, branch
@@ -905,8 +746,6 @@ VBlank_Continue:
 
 ; sub_106E:
 VBlank_StandardTransfers:
-		stopZ80						; request Z80 stop
-		waitZ80						; wait until Z80 has stopped
 		bsr.w	ReadJoypads				; read joypads and update buffered inputs in RAM
 
 		tst.b	(f_wtr_state).w				; is the screen completely underwater?
@@ -919,8 +758,8 @@ VBlank_StandardTransfers:
 
 		writeVRAM	v_spritetablebuffer,vram_sprites  ; transfer sprite buffer table to actual sprites VRAM
 		writeVRAM	v_hscrolltablebuffer,vram_hscroll ; transfer H-scroll buffer table to actual H-scroll VRAM
+		jsr	ProcessDMAQueue(pc)
 
-		startZ80					; restart Z80
 		rts						; return
 ; End of function VBlank_StandardTransfers
 ; End of VBlank (as a whole)
@@ -933,91 +772,211 @@ VBlank_StandardTransfers:
 
 ; PalToCRAM: <-- old misnomer
 HBlank:
-		disable_ints					; disable interrupts (VBlank in this context)
-		tst.w	(f_hblank_pal).w			; is palette set to change?
-		beq.s	.nochg					; if not, branch
-		move.w	#0,(f_hblank_pal).w			; clear palette change flag
+		tst.w	(f_hblank_pal).w		; is palette set to change?
+		beq.w	.nochg				; if not, branch
+		move.w	#0,(f_hblank_pal).w		; clear palette change flag
 
-		movem.l	a0-a1,-(sp)				; backup a0 and a1 registers
-		lea	(vdp_data_port).l,a1			; load VDP data port to a1
-		lea	(v_palette_water).w,a0			; get water palette from RAM
-		move.l	#$C0000000,4(a1)			; set VDP to CRAM write
-		rept (4*$10)/2					; overwrite full palette (4 rows, 2 colors per move)
-			move.l	(a0)+,(a1)			; move water palette to CRAM
-		endr						; repeat at assembly time
-		move.w	#$8A00+223,4(a1)			; reset horizontal interrupt counter
-		movem.l	(sp)+,a0-a1				; restore a0 and a1
+		movem.l	d0-d1/a0-a2,-(sp)		; backup registers
+		;stopZ80					; request Z80 stop
+		;waitZ80					; wait until it stopped
 
-		tst.b	(f_doupdatesinhblank).w			; was frame update delayed by water surface being near the top of the screen?
-		bne.s	.delayed_transfer			; if yes, resume transfer now
+		moveq	#$F,d0				; waste a few cycles here...
+		dbf	d0,*				; ...to push artifacts off screen
+		nop					; more nops for precision
+		nop					; ''
 
-.nochg:
-		rte						; return from horizontal interrupt and resume normal operation
+		lea	(vdp_data_port).l,a1		; load VDP data port to a1
+		move.w	#$8A00+223,4(a1)		; reset horizontal interrupt counter
+
+		lea	WaterTransition_LZ(pc),a2	; get water transition LUT
+		move.w	(a2)+,d1			; get number of entries in list
+		move.b	(v_waterline).w,d0		; get scanline that was written to
+		subi.b	#200,d0				; is H-int occurring below line 200?
+		bcs.s	.transferColors			; if it is, branch
+		sub.b	d0,d1				; skip relevant number of entries in LUT
+		bcs.s	.skipTransfer			; if everything was skipped, branch
+
+	.transferColors:
+		move.w	(a2)+,d0			; get palette offset from LUT
+		lea	(v_palette_water).w,a0		; get buffered water palette
+		adda.w	d0,a0				; go to specified entry in palette buffer
+		addi.w	#$C000,d0			; prepare CRAM write
+		swap	d0				; move to upper word
+		move.l	d0,4(a1)			; write to CRAM at appropriate address
+		move.l	(a0)+,(a1)			; transfer two colors
+		move.w	(a0)+,(a1)			; transfer the third color
+
+		moveq	#$24,d0				; waste a few cycles here...
+		dbf	d0,*				; ...to push artifacts off screen
+		nop					; more nops for precision
+		nop					; ''
+
+		dbf	d1,.transferColors		; repeat for number of colors to transfer
+
+	.skipTransfer:
+		;startZ80				; restart Z80
+		movem.l	(sp)+,d0-d1/a0-a2		; restore registers
+
+		tst.b	(f_doupdatesinhblank).w		; was frame update delayed by water surface being near the top of the screen?
+		bne.s	.delayed_transfer		; if yes, resume transfer now
+
+	.nochg:
+		rte					; return from horizontal interrupt and resume normal operation
 ; ===========================================================================
 
 ; loc_119E:
 .delayed_transfer:
-		clr.b	(f_doupdatesinhblank).w			; clear delayed updates flag
-		movem.l	d0-a6,-(sp)				; backup all registers except stack pointer (a7)
-		bsr.w	VBlank_UpdateScreen			; do all the screen updates that were skipped during VBlank now
-		jsr	(UpdateMusic).l				; update the sound driver
-		movem.l	(sp)+,d0-a6				; restore registers
-		rte						; return from horizontal interrupt and resume normal operation
+		clr.b	(f_doupdatesinhblank).w		; clear delayed updates flag
+		movem.l	d0-a6,-(sp)			; backup all registers except stack pointer (a7)
+		bsr.w	VBlank_UpdateScreen		; do all the screen updates that were skipped during VBlank now
+		jsr	(UpdateMusic).l			; update the sound driver
+		movem.l	(sp)+,d0-a6			; restore registers
+		rte					; return from horizontal interrupt and resume normal operation
 ; End of function HBlank
+
+; ---------------------------------------------------------------------------
+
+WaterTransition_LZ:
+	dc.w (WaterTransition_LZ_End-WaterTransition_LZ)/2-2 ; number of entries - 1
+	dc.w $62	; line 4, color 1-2-3
+	dc.w $68	; line 4, color 4-5-6
+	dc.w $7A	; line 4, color D-E-F
+	dc.w $6E	; line 4, color 7-8-9
+	dc.w $74	; line 4, color A-B-C
+
+	dc.w $42	; line 3, color 1-2-3
+	dc.w $48	; line 3, color 4-5-6
+	dc.w $4E	; line 3, color 7-8-9
+	dc.w $54	; line 3, color A-B-C
+	dc.w $5A	; line 3, color D-E-F
+
+	dc.w $02	; line 1, color 1-2-3
+	dc.w $08	; line 1, color 4-5-6
+	dc.w $0E	; line 1, color 7-8-9
+	dc.w $14	; line 1, color A-B-C
+	dc.w $1A	; line 1, color D-E-F
+
+	dc.w $34	; line 2, color A-B-C
+	dc.w $22	; line 2, color 1-2-3
+	dc.w $3A	; line 2, color D-E-F
+	dc.w $2E	; line 2, color 7-8-9
+	dc.w $28	; line 2, color 4-5-6
+WaterTransition_LZ_End:
 
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Subroutine to initialise joypads (run once during boot)
+; Subroutine to initialize joypads and check if either port is using
+; a 6-button controller. MSB is set in v_jpadhold_6btn/v_jpadhold_6btn_p2
+; if one has been detected.
+; For reference, see: https://www.plutiedev.com/controllers#6-button
+; ---------------------------------------------------------------------------
+
+; Small helper macro that toggles the TH line and adds the required delay
+; so the controller can output the correct button states. Defined as a macro
+; to avoid repeating the same move/nop sequence over and over.
+PollTH	macro	hiPoll
+		if hiPoll>0
+			move.b	#$40,(a1)		; read D-Pad, B, and C input (hi poll)
+		else
+			move.b	#0,(a1)			; read A and Start input (lo poll)
+		endif
+		nop					; wait a bit after polling
+		nop					; (bus synchronization)
+	endm
+
 ; ---------------------------------------------------------------------------
 
 JoypadInit:
-		stopZ80						; request Z80 stop on
-		waitZ80						; wait until it has stopped
-		moveq	#$40,d0					; prepare initialise value
-		move.b	d0,(port_1_control).l			; init port 1 (joypad 1)
-		move.b	d0,(port_2_control).l			; init port 2 (joypad 2)
-		move.b	d0,(expansion_control).l		; init port 3 (expansion/extra)
-		startZ80					; request Z80 stop off
-		rts						; return
+		moveq	#$40,d0				; set TH high
+		move.b	d0,(port_1_control).l		; init port 1 (joypad 1)
+		move.b	d0,(port_2_control).l		; init port 2 (joypad 2)
+		move.b	d0,(expansion_control).l	; init port 3 (expansion/extra)
+
+		lea	(port_1_data).l,a1		; load address to read controller 1 data
+		bsr.s	.check6btn			; check whether it's a 6-button controller
+		sne.b	(v_jpadhold_6btn).w		; set P1 to 6-button controller flag if it is
+
+		lea	(port_2_data).l,a1		; load address to read controller 2 data
+		bsr.s	.check6btn			; check whether it's a 6-button controller
+		sne.b	(v_jpadhold_6btn_p2).w		; set P2 to 6-button controller flag if it is
+		rts					; return
+; ---------------------------------------------------------------------------
+
+.check6btn:
+		PollTH	1				; 1st TH poll (hi)
+		PollTH	0				; 2nd TH poll (lo)
+		PollTH	1				; 3rd TH poll (hi)
+		PollTH	0				; 4th TH poll (lo)
+		PollTH	1				; 5th TH poll (hi)
+		PollTH	0				; 6th TH poll (lo)
+		cmpi.b	#%00110011,(a1)			; check if 6th TH poll returned 3-button controller data
+		rts					; CCR check is done after the return
 ; End of function JoypadInit
 
 ; ---------------------------------------------------------------------------
-; Subroutine to read joypad input, and send it to the RAM (read every VBlank)
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Subroutine to read joypad input for P1 and P2 controllers and write to RAM.
+; Extended to support 6-button controllers for both controller ports.
 ; ---------------------------------------------------------------------------
 
 ReadJoypads:
-		lea	(v_jpadhold1).w,a0			; address where joypad states are written
-		lea	(port_1_data).l,a1			; first joypad port
-		bsr.s	.read					; do the first joypad
-		addq.w	#2,a1					; do the second joypad (port_2_data)
+		lea	(port_1_data).l,a1		; set to read first joypad port
+		lea	(v_jpadhold1).w,a0		; address where P1 joypad states are written to
+		bsr.s	.read_3btn			; read standard 3-button inputs for P1
+		tst.b	(a0)				; is P1 using a 6-button controller?
+		bpl.s	.readP2				; if not, branch
+		bsr.s	.read_6btn			; read additional 6-button inputs for P1
 
-.read:
-		move.b	#0,(a1)					; read A and Start input (TH poll low)
-		nop						; wait a bit
-		nop						; ''
-		move.b	(a1),d0					; write A and Start input states to d0
+	.readP2:
+		lea	(port_2_data).l,a1		; set to read second joypad port
+		lea	(v_jpadhold_p2).w,a0		; address where P2 joypad states are written to
+		bsr.s	.read_3btn			; read standard 3-button inputs for P2
+		tst.b	(a0)				; is P2 using a 6-button controller?
+		bpl.s	.return				; if not, branch
+		bsr.s	.read_6btn			; read additional 6-button inputs for P2
 
-		lsl.b	#2,d0					; move A and Start to topmost bits
-		andi.b	#%11000000,d0				; clear all other inputs from the poll
+	.return:
+		rts					; return
+; ---------------------------------------------------------------------------
 
-		move.b	#$40,(a1)				; read D-Pad, B, and C input (TH poll high)
-		nop						; wait a bit
-		nop						; ''
-		move.b	(a1),d1					; write D-Pad, B, and C input states to d1
+.read_3btn:
+		; 3-Button inputs (SACBRLDU)
+		PollTH	1				; 1st TH poll (hi)
+		moveq	#%00111111,d0			; clear all other inputs from the hi-poll (for sanity)
+		and.b	(a1),d0				; write D-Pad, B, and C input states to d0
+		PollTH	0				; 2nd TH poll (lo)
+		moveq	#%00110000,d1			; clear all other inputs from the lo-poll (up and down)
+		and.b	(a1),d1				; write A and Start input states to d1
+		lsl.b	#2,d1				; move A and Start to highest bits
+		or.b	d1,d0				; merge both poll results into d0
+		; write result to v_jpadhold/v_jpadpress
 
-		andi.b	#%00111111,d1				; clear all other inputs from the poll
-		or.b	d1,d0					; merge but poll results into d0
-		not.b	d0					; flip bits so that 0=released and 1=pressed
+	.toJpadRam:
+		not.b	d0				; flip bits so that 0=released and 1=pressed
+		move.b	(a0),d1				; get buttons held the previous frame
+		move.b	d0,(a0)+			; write new HELD buttons
+		eor.b	d0,d1				; xor with buttons held this frame
+		and.b	d0,d1				; find buttons pressed this frame
+		move.b	d1,(a0)+			; write new PRESSED buttons
+		rts					; return
+; ---------------------------------------------------------------------------
 
-		move.b	(a0),d1					; get buttons pressed the previous frame
-		eor.b	d0,d1					; XOR with buttons pressed this frame
-
-		move.b	d0,(a0)+				; write HELD buttons
-		and.b	d0,d1					; find buttons pressed this frame
-		move.b	d1,(a0)+				; write PRESSED buttons
-		rts						; return to VBlank routine
+.read_6btn:
+		; 6-button inputs (0000MXYZ)
+		PollTH	1				; 3rd TH poll (hi)
+		PollTH	0				; 4th TH poll (lo)
+		PollTH	1				; 5th TH poll (hi)
+		PollTH	0				; 6th TH poll (lo)
+		PollTH	1				; 7th TH poll (hi, extra buttons are returned now)
+		moveq	#%00001111,d0			; clear all other inputs from the poll
+		and.b	(a1),d0				; write MODE, X, Y, Z input states to d0
+		bra.s	.toJpadRam			; write result to v_jpadhold_6btn/v_jpadpress_6btn
 ; End of function ReadJoypads
+; ---------------------------------------------------------------------------
+; ===========================================================================
+
 
 
 ; ===========================================================================
@@ -1085,6 +1044,49 @@ VDPSetupArray:
 		dc.w $9200					; window vertical position
 VDPSetupArray_End:
 
+; ===========================================================================
+
+		include	"_inc/DMA-Queue.asm"
+
+; ---------------------------------------------------------------------------
+; Load a Dynamic Pattern Load Cues request into the DMA queue.
+; ---------------------------------------------------------------------------
+; Input:
+;	d0.b = frame number
+;	d4.w = starting target VRAM tile address
+;	d6.l = pointer to uncompressed art
+;	a2   = pointer to DPLC table
+; ---------------------------------------------------------------------------
+
+LoadDynPLC:
+		andi.w	#$FF,d0					; mask out anything except the input frame
+		add.w	d0,d0					; double ID (for word-based indexing)
+		adda.w	(a2,d0.w),a2				; find current DPLC entry
+		moveq	#0,d5					; clear d5
+		move.b	(a2)+,d5				; get number of tasks in this DPLC entry
+		subq.w	#1,d5					; subtract 1 from number of tasks (will be the loop count)
+		bmi.w	.end					; if it underflowed, this is an empty entry, nothing to do
+		
+	.loop:
+		move.b	(a2)+,d3				; get first byte of DPLC task
+		move.b	d3,-(sp)				; move it to stack (bytes shift sp by 2)
+		moveq	#0,d1					; clear d1
+		move.w	(sp)+,d1				; move it from stack to upper byte of d1
+		move.b	(a2)+,d1				; get second byte of DPLC task
+		andi.w	#$F0,d3					; only look at upper nybble of first byte
+		addi.w	#$10,d3					; add 1 to that nybble
+		andi.w	#$FFF,d1				; mask out that nybble in the other part
+		lsl.l	#5,d1					; multiply by $20 (tile_size)
+		add.l	d6,d1					; add art location
+		move.w	d4,d2					; set target VRAM location
+		add.w	d3,d4					; advance VRAM pointer
+		add.w	d3,d4					; (twice, for word-based tiles)
+		bsr.w	QueueDMATransfer			; load DMA request into queue (also known as "DMA_68KtoVRAM")
+		dbf	d5,.loop				; repeat for number of entries
+		
+	.end:
+		rts						; return
+; End of function LoadDynPLC
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -1101,31 +1103,12 @@ ClearScreen:
 		clearRAM v_spritetablebuffer,v_spritetablebuffer_end ; clear sprite table buffer
 		clearRAM v_hscrolltablebuffer,v_hscrolltablebuffer_end_padded ; clear H-Scroll table buffer
 
+		clr.b	(v_draw_hud).w
+		ResetDMAQueue
+
 		rts						; return
 ; End of function ClearScreen
 
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Subroutine to load the DAC driver
-; ---------------------------------------------------------------------------
-
-; SoundDriverLoad: <-- old misnomer
-DACDriverLoad:
-		nop						; delay
-		stopZ80						; request Z80 stop on
-		deassertZ80Reset				; request Z80 reset off
-		lea	(DACDriver).l,a0			; load compressed DAC driver address as source
-		lea	(z80_ram).l,a1				; set Z80 RAM address as target
-		bsr.w	KosDec					; decompress the DAC driver into Z80 RAM
-		assertZ80Reset					; request Z80 reset on
-		nop						; delay (while the Z80 resets)
-		nop						; ''
-		nop						; ''
-		nop						; ''
-		deassertZ80Reset				; request Z80 reset off
-		startZ80					; request Z80 stop off
-		rts						; return
-; End of function DACDriverLoad
 
 ; ===========================================================================
 ; >>> Subroutines to queue sound commands to be executed by the sound driver during VBlank
@@ -1167,259 +1150,208 @@ Tilemap_Cell:
 ; End of function TilemapToVRAM
 
 ; ===========================================================================
-; >>> Nemesis decompression algorithm, primarily (but not exclusively) used for PLCs
-	include	"_inc/Decompression/Nemesis Decompression.asm"
+; >>> Decompression algorithms
+	include	"_inc/Decompression/Enigma Decompression.asm"
+	include	"_inc/Decompression/KosinskiPlus Decompression.asm"
 
+; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Subroutine to add entries from a given Pattern Load Cue list ID to the
-; PLC decompression queue (decompressed later during VBlank)
+; Subroutine to add all entries from a PLC list to the PLC queue
 ; ---------------------------------------------------------------------------
-; ARGUMENTS
-; d0 = index of PLC list
-; ---------------------------------------------------------------------------
-; NOTICE: This subroutine does not check for buffer overruns. The programmer
-;         (or hacker) is responsible for making sure that no more than
-;         16 load requests are copied into the buffer.
-;         _________DO NOT PUT MORE THAN 16 LOAD REQUESTS IN A LIST!__________
-;         (or if you change the size of Plc_Buffer, the limit becomes (Plc_Buffer_Only_End-Plc_Buffer)/plc_slot_size)
+; Input:
+;    d0 = index of PLC list
 ; ---------------------------------------------------------------------------
 
-; LoadPLC:
+NewPLC:
+		bsr.s	ClearPLC				; like AddPLC, but clear the PLC queue first
+; ---------------------------------------------------------------------------
+
 AddPLC:
 		movem.l	a1-a2,-(sp)				; store register data
 		lea	(ArtLoadCues).l,a1			; load PLC list address
 		add.w	d0,d0					; double for word-based indexing
 		move.w	(a1,d0.w),d0				; load correct relative add address
 		lea	(a1,d0.w),a1				; add and load actual address of list
-		lea	(v_plc_buffer).w,a2			; load PLC process list
-
-.findspace:
-		tst.l	(a2)					; is this slot taken?
-		beq.s	.copytoRAM				; if not, branch
-		addq.w	#plc_slot_size,a2			; advance to next slot
-		bra.s	.findspace				; recheck
-; ===========================================================================
-
-.copytoRAM:
 		move.w	(a1)+,d0				; load size of list
 		bmi.s	.return					; if there is no list, branch
 
-.loop:
+		lea	(v_plc_buffer).w,a2			; load PLC process list		
+	.findspace:
+		tst.l	(a2)					; is this slot taken?
+		beq.s	.fillQueue				; if not, branch
+		addq.w	#plc_slot_size,a2			; advance to next slot
+		bra.s	.findspace				; recheck
+
+.fillQueue:
+		cmpa.l	#v_plc_buffer_only_end,a2		; is PLC queue full?
+		bhs.s	.overflow				; if yes, overflow...
 		move.l	(a1)+,(a2)+				; copy Nemesis art address
 		move.w	(a1)+,(a2)+				; copy VRAM location to dump to
-		dbf	d0,.loop				; repeat for all entries
+		dbf	d0,.fillQueue				; repeat for all entries
 
-.return:
+	.return:
 		movem.l	(sp)+,a1-a2				; restore register data
 		rts						; return
+; ---------------------------------------------------------------------------
+
+.overflow:
+		; WARNING: This will just silently drop the new PLC request and move on
+		; like nothing happened. Ideally, you would raise an error here or some
+		; other debugging functionality to troubleshoot any queue overflows!
+		;RaiseError "PLC queue overflow"		; comment this in if you have vladikcomper's Debugger
+		bra.s	.return					; otherwise, just silently return...
 ; End of function AddPLC
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Identical to AddPLC, but also stops the current PLC process, and loads
-; a brand new queue. (The same 16th entry warning as above applies!)
-; ---------------------------------------------------------------------------
-
-; LoadPLC2:
-NewPLC:
-		movem.l	a1-a2,-(sp)				; store register data
-		lea	(ArtLoadCues).l,a1			; load PLC list address
-		add.w	d0,d0					; double for word-based indexing
-		move.w	(a1,d0.w),d0				; load correct relative add address
-		lea	(a1,d0.w),a1				; add and load actual address of list
-		bsr.s	ClearPLC				; clear the current PLC entries first
-		lea	(v_plc_buffer).w,a2			; load PLC process list
-		move.w	(a1)+,d0				; load size of list
-		bmi.s	.return					; if there is no list, branch
-
-.loop:
-		move.l	(a1)+,(a2)+				; copy Nemesis art address
-		move.w	(a1)+,(a2)+				; copy VRAM location to dump to
-		dbf	d0,.loop				; repeat for all entries
-
-.return:
-		movem.l	(sp)+,a1-a2				; restore register data
-		rts						; return
-; End of function NewPLC
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Subroutine to clear the pattern load cues
-; Clear the pattern load queue ($FFF680 - $FFF700)
+; Subroutine to clear the PLC queue and all helper variables
 ; ---------------------------------------------------------------------------
 
 ClearPLC:
 		lea	(v_plc_buffer).w,a2			; load PLC process list
-		moveq	#(v_plc_buffer_end-v_plc_buffer)/4-1,d0	; set size of list
-
-.loop:
-		clr.l	(a2)+					; clear PLC process list
-		dbf	d0,.loop				; repeat until entire list is cleared
+		moveq	#(v_plc_buffer_end-v_plc_buffer)/4-1,d1	; set size of list
+	.loop:	clr.l	(a2)+					; clear PLC process list
+		dbf	d1,.loop				; repeat until entire list is cleared
 		rts						; return
 ; End of function ClearPLC
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Subroutine to	check the PLC buffer and begin decompression if it contains
-; anything. ProcessPLC handles the actual decompression during VBlank
+; Subroutine to directly load a full PLC list outside of VBlank (blocking).
+; Not recommended, but Sonic 1 does use this occasionally...
 ; ---------------------------------------------------------------------------
-
-RunPLC:
-		tst.l	(v_plc_buffer).w			; are there any PLC entries left to process?
-		beq.s	.return					; if not, branch
-		tst.w	(v_plc_patternsleft).w			; is a section counter already set (is art already being decompressed)?
-		bne.s	.return					; if so, branch
-
-		movea.l	(v_plc_buffer).w,a0			; load address of first entry's art
-		lea	(NemPCD_WriteRowToVDP).l,a3		; load address of dumping routine to use (VDP variant)
-		lea	(v_ngfx_buffer).w,a1			; load RLE huffman buffer
-		move.w	(a0)+,d2				; load number of sections to decompress (Each section is $20 bytes)
-		bpl.s	.skipXor				; if this data doesn't use XOR variant, branch
-		adda.w	#NemPCD_WriteRowToVDP_XOR-NemPCD_WriteRowToVDP,a3 ; advance to XOR variant
-; loc_160E:
-.skipXor:
-		andi.w	#$7FFF,d2				; clear XOR flag
-
-		bsr.w	NemDec_BuildCodeTable			; decompress the huffman tree RLE table
-		move.b	(a0)+,d5				; load lookup field
-		asl.w	#8,d5					; ''
-		move.b	(a0)+,d5				; ''
-		moveq	#$10,d6					; prepare bit shift counter (shifting up to a word in size)
-		moveq	#0,d0					; clear d0
-		move.l	a0,(v_plc_buffer).w			; store current entry address
-		move.l	a3,(v_plc_ptrnemcode).w			; store dumping routine (XOR/Non-XOR)
-		move.l	d0,(v_plc_repeatcount).w		; clear RLE dump counter
-		move.l	d0,(v_plc_paletteindex).w		; clear RLE dump nybble
-		move.l	d0,(v_plc_previousrow).w		; clear previous XOR dump
-		move.l	d5,(v_plc_dataword).w			; store lookup field
-		move.l	d6,(v_plc_shiftvalue).w			; store bit shift counter
-		move.w	d2,(v_plc_patternsleft).w		; save section counter
-
-.return:
-		rts						; return
-; End of function RunPLC
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Subroutine to decompress and dump a specified number of Nemesis-compressed
-; PLC tiles from the PLC process list to VRAM. These are called from VBlank,
-; probably done to smooth out level loading because of how slow Nemesis is.
-; (Note: Process"D"PLC is an old misnomer!)
-; ---------------------------------------------------------------------------
-
-; sub_1642: ProcessDPLC_9Tiles:
-ProcessPLC_9Tiles:
-		tst.w	(v_plc_patternsleft).w			; is a section counter set (is art being decompressed)?
-		beq.w	ProcessPLC_Return			; if not, branch (nothing to decompress)
-
-		move.w	#9,(v_plc_framepatternsleft).w		; set tile counter to 9 (number of tiles to decompress in a frame)
-		moveq	#0,d0					; clear d0
-		move.w	(v_plc_buffer_dest).w,d0		; load VRAM address for this frame
-		addi.w	#9*tile_size,(v_plc_buffer_dest).w	; increase address for next frame
-		bra.s	ProcessPLC				; continue
-; ===========================================================================
-
-; sub_165E: ProcessDPLC2: ProcessPLC_3Tiles:
-ProcessPLC_3Tiles:
-		tst.w	(v_plc_patternsleft).w			; is a section counter set (is art being decompressed)?
-		beq.s	ProcessPLC_Return			; if not, branch (nothing to decompress)
-
-		move.w	#3,(v_plc_framepatternsleft).w		; set tile counter to 3 (number of tiles to decompress in a frame)
-		moveq	#0,d0					; clear d0
-		move.w	(v_plc_buffer_dest).w,d0		; load VRAM address for this frame
-		addi.w	#3*tile_size,(v_plc_buffer_dest).w	; increase address for next frame
-		; fall-through to ProcessPLC...
-; ---------------------------------------------------------------------------
-
-; loc_1676: ProcessPLC:
-ProcessPLC:
-		lea	(vdp_control_port).l,a4			; load VDP control port address
-		lsl.l	#2,d0					; get address MSB bits and send to LSB of long-word
-		lsr.w	#2,d0					; send rest back
-		ori.w	#$4000,d0				; set mode bits
-		swap	d0					; align for VDP port
-		move.l	d0,(a4)					; set VDP address/mode
-		subq.w	#4,a4					; move a4 down to VDP data port
-		movea.l	(v_plc_buffer).w,a0			; load current entry address
-		movea.l	(v_plc_ptrnemcode).w,a3			; load dumping routine to use (XOR/Non-XOR)
-		move.l	(v_plc_repeatcount).w,d0		; load RLE dump counter
-		move.l	(v_plc_paletteindex).w,d1		; load RLE dump nybble
-		move.l	(v_plc_previousrow).w,d2		; load previous XOR dump
-		move.l	(v_plc_dataword).w,d5			; load lookup field
-		move.l	(v_plc_shiftvalue).w,d6			; load bit shift counter
-		lea	(v_ngfx_buffer).w,a1			; load RLE huffman buffer
-
-; loc_16AA:
-.loop:
-		movea.w	#8,a5					; set size of data to decompress (20 bytes, 1 tile)
-		bsr.w	NemPCD_NewRow				; continue the decompression
-		subq.w	#1,(v_plc_patternsleft).w		; decrease section count by 1
-		beq.s	ProcessPLC_ShiftCue			; if decompression is finished, branch
-		subq.w	#1,(v_plc_framepatternsleft).w		; decrease tile counter
-		bne.s	.loop					; if still running, branch to decompress another tile
-
-		move.l	a0,(v_plc_buffer).w			; store current entry address
-		move.l	a3,(v_plc_ptrnemcode).w			; store dumping routine to use (XOR/Non-XOR)
-		move.l	d0,(v_plc_repeatcount).w		; store RLE dump counter
-		move.l	d1,(v_plc_paletteindex).w		; store RLE dump nybble
-		move.l	d2,(v_plc_previousrow).w		; store previous XOR dump
-		move.l	d5,(v_plc_dataword).w			; store lookup field
-		move.l	d6,(v_plc_shiftvalue).w			; store bit shift counter
-
-ProcessPLC_Return:
-		rts						; return
-; ===========================================================================
-
-; loc_16DC:
-ProcessPLC_ShiftCue:
-		lea	(v_plc_buffer).w,a0			; load PLC process list
-		moveq	#(v_plc_buffer_only_end-v_plc_buffer-plc_slot_size)/4-1,d0 ; set size of list
-
-; loc_16E2:
-.loop:
-		move.l	plc_slot_size(a0),(a0)+			; shift contents of PLC buffer up 6 bytes
-		dbf	d0,.loop				; repeat til done
-
-		if (v_plc_buffer_only_end-v_plc_buffer-plc_slot_size)&2
-			move.w	plc_slot_size(a0),(a0)
-		endif
-		clr.l	(v_plc_buffer_only_end-plc_slot_size).w
-
-		rts						; return
-; End of function ProcessPLC
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Like AddPLC, but instead of adding entries to a queue to be processed later,
-; this will decompress and transfer all entries of the given PLC ID's list
-; immediately, blocking until it is done. Does not use or affect the queue.
+; Input:
+;    d0 = index of PLC list
 ; ---------------------------------------------------------------------------
 
 QuickPLC:
-		lea	(ArtLoadCues).l,a1			; load PLC list address
-		add.w	d0,d0					; double for word-based indexing
-		move.w	(a1,d0.w),d0				; load correct relative add address
-		lea	(a1,d0.w),a1				; add and load actual address of list
-		move.w	(a1)+,d1				; load size of list
+		bsr.w	NewPLC					; write PLC ID to new queue on the fly...
+; ---------------------------------------------------------------------------
 
 .loop:
-		movea.l	(a1)+,a0				; load Nemesis art address
-		moveq	#0,d0					; clear d0
-		move.w	(a1)+,d0				; load VRAM dump address
-		lsl.l	#2,d0					; get address MSB bits and send to LSB of long-word
-		lsr.w	#2,d0					; send rest back
-		ori.w	#$4000,d0				; set mode bits
-		swap	d0					; align for VDP port
-		move.l	d0,(vdp_control_port).l			; set VDP address/mode
-		bsr.w	NemDec					; decompress the entire entry
-		dbf	d1,.loop				; repeat for all entries in the list
+		move.b	#id_VBlank_PaletteFade,(v_vblank_routine).w ; set VBlank routine (palette fade is good enough)
+		bsr.w	WaitForVBlank				; execute PLC and DMA in VBlank
+		tst.l	(v_plc_buffer).w			; is more work to be done?
+		bne.s	.loop					; if yes, loop
+		tst.b	(v_plc_Busy).w				; has last entry failed to get DMA'd in time?
+		bne.s	.loop					; if yes, VBlank for one extra frame
 		rts						; return
 ; End of function QuickPLC
 
+
 ; ===========================================================================
-; >>> Other decompression algorithms
-	include	"_inc/Decompression/Enigma Decompression.asm"
-	include	"_inc/Decompression/Kosinski Decompression.asm"
+; ---------------------------------------------------------------------------
+; Subroutine to execute PLC (decompress queued entries and queue for DMA)
+; ---------------------------------------------------------------------------
+
+ExecutePLC:
+		tst.l	(v_plc_buffer).w			; does PLC queue contain any work for us?
+		beq.s	.queueEmpty				; if not, branch
+
+		movem.l	d0-a6,-(sp)				; backup all registers
+		move.w	#Art_Buffer,(v_plc_BufferPtr).w		; reset decompression buffer pointer to start
+		bsr.s	.executePLC				; execute the next PLC entry
+		movem.l	(sp)+,d0-a6				; restore backed-up registers
+
+	.queueEmpty:
+		rts						; nothing to do
+; ---------------------------------------------------------------------------
+
+.executePLC:
+		tst.b	(v_plc_Modules).w			; is multi-module decompression currently in progress?
+		bne.s	.decompressAndQueueDMA			; if yes, continue decompressing next module
+		; fresh entry...
+
+; ---------------------------------------------------------------------------
+; Process PLC queue (get next entry, prepare variables, get module count...)
+; ---------------------------------------------------------------------------
+
+.getNewPLCEntry:
+		lea	(v_plc_buffer).w,a0			; get next entry of PLC queue
+		move.l	(a0)+,d0				; get art offset
+		move.w	(a0)+,(v_plc_VRAMAddr).w		; remember start VRAM address
+		movea.l	d0,a0					; get art pointer
+
+		move.w	(a0)+,d2				; get moduled header
+		move.l	a0,(v_plc_ArtPtr).w			; remember start address of compressed data
+		move.w	d2,d3					; copy module header
+		and.w	#$F000,d2				; high nybble contains number of total modules - 1
+		rol.w	#4,d2					; move to low nybble
+		and.w	#$0FFF,d3				; get size of the last module
+		seq.b	d3					; d3 = 0 if last module size is non-zero, -1 otherwise
+		add.b	d3,d2					; reduce number of modules if the last module's size is zero
+
+		addq.b	#1,d2					; make module count 1-based
+		move.b	d2,(v_plc_Modules).w			; get number of modules to decompress
+		; begin decompressing first module...
+
+; ---------------------------------------------------------------------------
+; Decompress a single module and queue it for DMA
+; ---------------------------------------------------------------------------
+
+.decompressAndQueueDMA:
+		movea.w	(v_plc_BufferPtr).w,a1			; a1 = decompression buffer
+		move.l	(v_plc_ArtPtr).w,a0			; a0 = compressed art pointer
+        
+		bsr.w	KosPlusDec				; decompress module to buffer using Kosinksi+ compression
+		move.l	a0,(v_plc_ArtPtr).w			; remember compressed art pointer
+
+		movea.w	(v_plc_BufferPtr).w,a0			; a0 = source
+		move.w	a1,d3					; d3 = end of buffer
+		sub.w	a0,d3					; d3 = size of decompressed module
+		add.w	d3,(v_plc_BufferPtr).w			; adjust decompression buffer pointer
+		move.l	a0,d1					; d1 = source address
+		andi.l	#$FFFFFF,d1				; mask to 24-bit address
+		move.w	(v_plc_VRAMAddr).w,d2			; d2 = destination VRAM address
+		add.w	d3,(v_plc_VRAMAddr).w			; adjust destination VRAM address
+		lsr.w	#1,d3					; d3 = DMA transfer length (transfer size / 2)
+
+		move.w	sr,-(sp)				; remember interrupt state
+		disable_ints					; need to disable interrupts while accessing DMA queue
+		jsr	(QueueDMATransfer).l			; queue decompressed art to be DMA'd
+		move.w	(sp)+,sr				; restore previous interrupt state
+		
+		subq.b	#1,(v_plc_Modules).w			; decrement number of remaining modules
+		bne.s	.return					; if this is a multi-module asset and more modules are left to do, branch
+		; all modules for this entry are completed, go to next PLC entry...
+
+; ---------------------------------------------------------------------------
+; When a single PLC entry (with all modules) has been fully decompressed
+; ---------------------------------------------------------------------------
+
+.entryCompleted:
+		; Shift the whole PLC queue 6 bytes to the left 
+		lea	(v_plc_buffer).w,a0			; load PLC process list
+		moveq	#(v_plc_buffer_only_end-v_plc_buffer-plc_slot_size)/4-1,d0 ; set size of list
+	.loop:	move.l	plc_slot_size(a0),(a0)+			; shift contents of PLC buffer up 6 bytes
+		dbf	d0,.loop				; repeat until done
+
+		; Properly 'POP' last entry
+		if (v_plc_buffer_only_end-v_plc_buffer-plc_slot_size)&2
+			move.w	plc_slot_size(a0),(a0)		; pop trailing word of last entry
+		endif
+		clr.l	(v_plc_buffer_only_end-plc_slot_size+0).w ; clear art location of last entry
+		clr.w	(v_plc_buffer_only_end-plc_slot_size+4).w ; clear VRAM dump location of last entry
+
+		; Immediately execute the next PLC entry if it's small enough to fit into the buffer
+		tst.l	(v_plc_buffer).w			; are more tasks in the PLC queue?
+		beq.s	.return					; if not, branch
+		movea.l	(v_plc_buffer).w,a0			; get art location of next entry from PLC queue
+		move.w	(a0),d0					; get module header of art data
+		move.w	#Art_Buffer_End,d1			; get end location of decompression buffer
+		sub.w	(v_plc_BufferPtr).w,d1			; d1 = remaining space in buffer
+		cmp.w	d1,d0					; is remaining space in buffer big enough for the next entry?
+		bge.s	.return					; if not, branch
+		movea.w	(VDP_Command_Buffer_Slot).w,a0		; get current DMA queue length
+		cmpa.w	#VDP_Command_Buffer_Slot,a0		; is DMA queue already full?
+		bne.w	.getNewPLCEntry				; if not, immediately execute next PLC entry
+
+.return:
+		rts						; return
+; End of function ExecutePLC
+
+; ---------------------------------------------------------------------------
+; ===========================================================================
 
 
 ; ===========================================================================
@@ -1653,11 +1585,23 @@ PalLoad_Water:
 WaitForVBlank:
 		enable_ints					; enable interrupts so vertical interrupts can occur
 
+		tst.l	(v_plc_buffer).w			; are any PLC jobs queued?
+		beq.s	.wait					; if not, branch
+		tst.b	(v_plc_Busy).w				; has PLC DMA missed the previous frame?
+		bne.s	.wait					; if yes, don't advance PLC this frame
+		bsr.w	ExecutePLC				; decompress the next PLC entry and queue it for DMA
+		tst.b	(v_vblank_routine).w			; has VBlank interrupt occurred while PLC was running?
+		bne.s	.wait					; if not, branch
+		st.b	(v_plc_Busy).w				; otherwise, set flag that next frame should skip PLC (flush DMA)
+		rts
 .wait:
 		tst.b	(v_vblank_routine).w			; has VBlank routine finished?
 		bne.s	.wait					; if not, loop until it has
+
+		sf.b	(v_plc_Busy).w				; clear DMA busy flag
 		rts						; resume normal operation
 ; End of function WaitForVBlank
+
 
 ; ===========================================================================
 ; >>> Subroutines for generic calculations
@@ -1677,7 +1621,7 @@ GM_Sega:
 		move.b	#bgm_Stop,d0				; set stop music command
 		bsr.w	QueueSound2				; stop music
 		bsr.w	ClearPLC				; stop any potential in-progress PLC
-		bsr.w	PaletteFadeOut				; fade-out previous game mode
+		bsr.w	PaletteWhiteOut				; white fade-out because the Sega screen has a white background
 ; ---------------------------------------------------------------------------
 
 		; screen setup and loading patterns
@@ -1693,9 +1637,8 @@ GM_Sega:
 		disable_display					; disable screen output
 		bsr.w	ClearScreen				; wipe the screen
 
-		locVRAM	ArtTile_Sega_Tiles*tile_size		; set target VRAM location for Sega logo patterns
-		lea	(Nem_SegaLogo).l,a0			; load Sega logo patterns
-		bsr.w	NemDec					; decompress Nemesis-compressed patterns directly to VRAM
+		moveq	#plcid_Sega,d0				; load patterns through PLC list
+		bsr.w	QuickPLC				; decompress PLC list now and return once done
 
 		lea	(v_ram_start).l,a1			; set start of RAM to be used as decompression buffer
 		lea	(Eni_SegaLogo).l,a0			; load Sega logo mappings
@@ -1733,7 +1676,7 @@ Sega_WaitPal:		; while light scanning effect is active
 ; ---------------------------------------------------------------------------
 
 		; after sound has finished playing
-		move.w	#30,(v_generictimer).w			; wait 30 frames before automatic fade-out
+		move.w	#(2*60)+30,(v_generictimer).w	; wait 2.5 seconds (150 frames) before automatic fade-out
 
 Sega_WaitEnd:
 		move.b	#id_VBlank_Sega,(v_vblank_routine).w	; set VBlank routine to $02
@@ -1765,7 +1708,6 @@ GM_Title:		; fading out from previous game mode
 
 		; screen setup and loading "SONIC TEAM PRESENTS" (STP) patterns
 		disable_ints					; disable ints while accessing the VDP
-		bsr.w	DACDriverLoad				; load Z80 driver
 		lea	(vdp_control_port).l,a6			; load VDP control port
 		move.w	#$8004,(a6)				; 8-colour mode
 		move.w	#$8200+(vram_fg>>10),(a6)		; set foreground nametable address
@@ -1778,13 +1720,8 @@ GM_Title:		; fading out from previous game mode
 		bsr.w	ClearScreen				; wipe the screen
 		clearRAM v_objspace				; clear object RAM
 
-		locVRAM	ArtTile_Title_Japanese_Text*tile_size	; set target VRAM location for hidden Japanese credits
-		lea	(Nem_JapNames).l,a0			; load hidden Japanese credits
-		bsr.w	NemDec					; decompress Nemesis-compressed patterns directly to VRAM
-
-		locVRAM	ArtTile_Sonic_Team_Font*tile_size	; set target VRAM location for "SONIC TEAM PRESENTS" font
-		lea	(Nem_CreditText).l,a0			; load STP font (same as the credits font)
-		bsr.w	NemDec					; decompress Nemesis-compressed patterns directly to VRAM
+		moveq	#plcid_TitleSonicTeam,d0		; load patterns through PLC list
+		bsr.w	QuickPLC				; decompress PLC list now and return once done
 
 		lea	(v_ram_start).l,a1			; set start of RAM to be used as decompression buffer
 		lea	(Eni_JapNames).l,a0			; load mappings for hidden Japanese credits
@@ -1804,17 +1741,8 @@ GM_Title:		; fading out from previous game mode
 		; load main title screen patterns while "SONIC TEAM PRESENTS" screen is shown
 		disable_ints					; display is frozen during the STP screen
 
-		locVRAM	ArtTile_Title_Foreground*tile_size	; set target VRAM location title screen foreground emblem
-		lea	(Nem_TitleFg).l,a0			; load title screen foreground emblem patterns
-		bsr.w	NemDec					; decompress Nemesis-compressed patterns directly to VRAM
-
-		locVRAM	ArtTile_Title_Sonic*tile_size		; set target VRAM location big Sonic object
-		lea	(Nem_TitleSonic).l,a0			; load big Sonic title screen patterns
-		bsr.w	NemDec					; decompress Nemesis-compressed patterns directly to VRAM
-
-		locVRAM	ArtTile_Title_Trademark*tile_size	; set target VRAM location for "TM" patterns
-		lea	(Nem_TitleTM).l,a0			; load "TM" patterns
-		bsr.w	NemDec					; decompress Nemesis-compressed patterns directly to VRAM
+		moveq	#plcid_TitleForeground,d0		; load patterns through PLC list
+		bsr.w	QuickPLC				; decompress PLC list now and return once done
 
 		lea	(vdp_data_port).l,a6			; load VDP data transfer port
 		locVRAM	ArtTile_Level_Select_Font*tile_size,4(a6) ; set target VRAM location for level select font
@@ -1833,16 +1761,17 @@ Tit_LoadText:
 		bsr.w	LevelSizeLoad				; load level size (will use GHZ1's sizes)
 		bsr.w	DeformLayers				; initialize background deformation before fade-in (redundant here)
 
-		lea	(v_16x16).w,a1				; set target buffer for blocks mappings
-		lea	(Blk16_GHZ).l,a0			; load GHZ 16x16 blocks mappings
-		move.w	#ArtTile_Level,d0			; set to target VRAM address $0000
-		bsr.w	EniDec					; decompress Enigma-compressed blocks mappings to buffer
-
-		lea	(Blk256_GHZ).l,a0			; load GHZ 256x256 mappings
-		lea	(v_256x256).l,a1			; set target buffer for chunks mappings
-		bsr.w	KosDec					; decompress Kosinski-compressed chunks mappings to buffer
+		move.l	#Blk16_Title,(v_rom_blocks).w		; set Blk16 pointer to use Title blocks
+		move.l	#Blk256_Title,(v_rom_chunks).w		; set Blk256 pointer to use Title blocks
 
 		bsr.w	LevelLayoutLoad				; load level layout for the background
+
+		moveq	#60-1,d0				; frames to manually wait on STP screen
+	.delay:
+		move.b	#id_VBlank_Title,(v_vblank_routine).w
+		bsr.w	WaitForVBlank
+		dbf	d0,.delay
+
 		bsr.w	PaletteFadeOut				; fade-out "SONIC TEAM PRESENTS" screen
 ; ---------------------------------------------------------------------------
 
@@ -1857,27 +1786,31 @@ Tit_LoadText:
 		move.w	#$4000+(vram_bg-vram_fg),d2		; =$6000 (VRAM write command $4000 + nametable start address relative to vram_fg)
 		bsr.w	DrawChunks				; draw initial background layer
 
-		lea	(v_ram_start).l,a1			; set start of RAM to be used as decompression buffer (this overwrites unused chunk RAM)
+		lea	(v_ram_start+$6000).l,a1		; set middle of RAM to be used as decompression buffer (this overwrites unused chunk RAM)
 		lea	(Eni_Title).l,a0			; load title screen emblem mappings
-		move.w	#ArtTile_Level,d0			; =$0000 (emblem mappings are themselves set up with a +$2000 offset per tile)
+		move.w	#ArtTile_Title_Foreground,d0		; set foreground emblem art tile (dynamically set)
 		bsr.w	EniDec					; decompress Enigma-compressed emblem mappings to buffer
-		copyTilemap v_ram_start,vram_fg+$208,34,22	; transfer decompressed patterns from RAM buffer to VRAM (correctly centered)
+		copyTilemap	v_ram_start+$6000,vram_fg,40,28	; transfer decompressed patterns from RAM buffer to VRAM (full plane)
 
-		locVRAM	ArtTile_Level*tile_size			; set target VRAM location for level patterns
-		lea	(Nem_Title).l,a0			; load first half of GHZ patterns
-		bsr.w	NemDec					; decompress Nemesis-compressed patterns directly to VRAM
+		moveq	#plcid_TitleBackground,d0		; load patterns through PLC list
+		bsr.w	QuickPLC				; decompress PLC list now and return once done
 
 		moveq	#palid_Title,d0				; load title screen palette...
 		bsr.w	PalLoad_Fade				; ...to fade-in buffer
 		move.b	#bgm_Title,d0				; set title screen music
 		bsr.w	QueueSound2				; play title screen music
 		move.b	#0,(f_debugmode).w			; disable debug mode (cheat remains active though)
-		move.w	#376,(v_generictimer).w			; run title screen for 376 frames (6 seconds plus some change)
+		move.w	#3000,(v_generictimer).w			; run title screen for 376 frames (6 seconds plus some change)
+	;	btst	#6,(v_megadrive).w			; is Mega Drive set to PAL region?
+	;	beq.s	.notPAL					; if not, branch
+	;	subi.w	#60,(v_generictimer).w			; correct title screen duration for PAL
+	;.notPAL:
 
 		clearRAM v_sonicteam,v_sonicteam+object_size	; delete RAM used by "SONIC TEAM PRESENTS" object (fully)
 
 		move.b	#id_TitleSonic,(v_titlesonic).w		; load big Sonic object
 		move.b	#id_PSBTM,(v_pressstart).w		; load "PRESS START BUTTON" object
+		jsr	(TitleMenu_LoadTextGraphics).l
 
 		tst.b	(v_megadrive).w				; is console Japanese?
 		bpl.s	.isjap					; if yes, don't load TM object
@@ -1912,8 +1845,19 @@ Tit_MainLoop:
 		jsr	(ExecuteObjects).l			; execute title screen objects
 		bsr.w	DeformLayers				; run background deformation
 		jsr	(BuildSprites).l			; display sprites
+
+		lea	(v_spritetablebuffer+4).w,a1		; fetch sprite table buffer, starting from tile IDs
+		moveq	#0,d0					; this will be our X-position
+		moveq	#sprites_max-1,d6			; iterate through the whole sprite table (80-1)
+	.maskLoop:
+		tst.w	(a1)					; does this sprite have tile ID $0000 (indicates either a mask or nothing)?
+		bne.s	.next					; if not, then this is a normal sprite, do not modify its X-position
+		bchg	#2,d0					; alternate between X-position of 0 and 4 (masks need a non X=0 higher priority sprite to mask)
+		move.w	d0,2(a1)				; write to X-position
+	.next:	addq.w	#8,a1					; go to next sprite
+		dbf	d6,.maskLoop				; loop
+
 		bsr.w	PalCycle_Title				; run title screen palette cycle
-		bsr.w	RunPLC					; run any potential PLC
 
 		move.w	(v_player+obX).w,d0			; get current title screen position (big Sonic object)
 		addq.w	#2,d0					; move it 2px to the right
@@ -1996,6 +1940,8 @@ Tit_ChkStartOrDemo:
 		beq.w	Tit_MainLoop				; if not, continue looping title screen
 
 Tit_ChkLevSel:
+		jmp	(TitleMenu_SelectionMade).l
+
 		tst.b	(f_levselcheat).w			; check if level select code is on
 		beq.w	PlayLevel				; if not, begin game by playing normal level
 		btst	#bitA,(v_jpadhold1).w			; check if A was held while pressing Start
@@ -2003,6 +1949,11 @@ Tit_ChkLevSel:
 ; ---------------------------------------------------------------------------
 
 Tit_EnterLevelSelect:
+		lea	(v_pressstart).w,a0
+		jsr	(DeleteObject).l
+		jsr	(ExecuteObjects).l
+		jsr	(BuildSprites).l
+
 		move.b	#id_VBlank_Title,(v_vblank_routine).w	; set VBlank routine to $04
 		bsr.w	WaitForVBlank				; run VBlank one extra frame to prevent graphical glitches
 		moveq	#palid_LevelSel,d0			; load level select palette...
@@ -2028,10 +1979,9 @@ LevelSelect:
 		move.b	#id_VBlank_Title,(v_vblank_routine).w	; set VBlank routine to $04
 		bsr.w	WaitForVBlank				; wait for VBlank to finish
 		bsr.w	LevSelControls				; update selected line if necessary
-		bsr.w	RunPLC					; run any potential PLC
 		tst.l	(v_plc_buffer).w			; are any patterns in the PLC still left to be loaded?
 		bne.s	LevelSelect				; if yes, block quitting level select until finished
-		andi.b	#btnABC+btnStart,(v_jpadpress1).w	; is A, B, C, or Start pressed?
+		andi.b	#btnC+btnStart,(v_jpadpress1).w		; is C or Start pressed?
 		beq.s	LevelSelect				; if not, loop level select
 
 LevSel_SelectionMade:
@@ -2163,7 +2113,6 @@ GotoDemo_PreDelayLoop:
 		bsr.w	WaitForVBlank				; wait for VBlank to finish
 		bsr.w	DeformLayers				; run background deformation
 		bsr.w	PaletteCycle				; run normal palette cycle routine (this briefly uses GHZ's cycle)
-		bsr.w	RunPLC					; run any potential PLC
 
 		move.w	(v_player+obX).w,d0			; get current title screen position (big Sonic object)
 		addq.w	#2,d0					; move it 2px to the right
@@ -2275,7 +2224,7 @@ LevSel_SndTest:
 		cmpi.w	#levsel_sndtest_row,(v_levselitem).w	; is sound test row selected?
 		bne.s	LevSel_NoMove				; if not, branch
 		move.b	(v_jpadpress1).w,d1			; get currently pressed buttons
-		andi.b	#btnR+btnL,d1				; is left/right pressed?
+		andi.b	#btnL+btnR+btnA,d1			; is left/right/A pressed?
 		beq.s	LevSel_NoMove				; if not, branch
 
 		move.w	(v_levselsound).w,d0			; get currently selected sound test number
@@ -2283,17 +2232,33 @@ LevSel_SndTest:
 		beq.s	LevSel_Right				; if not, branch
 		subq.w	#1,d0					; subtract 1 from sound test
 		bhs.s	LevSel_Right				; is result still positive? if yes, branch
-		moveq	#sfx__Last-$80,d0 			; if sound test moves below 0, set to last entry (non-$80 based)
+		moveq	#ext__Last-$80,d0 			; if sound test moves below 0, set to last entry (non-$80 based)
 
 LevSel_Right:
 		btst	#bitR,d1				; is right pressed?
 		beq.s	LevSel_Refresh2				; if not, branch
 		addq.w	#1,d0					; add 1 to sound test
-		cmpi.w	#sfx__Last-$80+1,d0			; is result now past the last entry?
+		cmpi.w	#ext__Last-$80+1,d0			; is result now past the last entry?
 		blo.s	LevSel_Refresh2				; if not, branch
 		moveq	#0,d0					; if sound test moves above last entry, set to 0
 
 LevSel_Refresh2:
+		btst	#bitA,d1				; is A pressed?
+		beq.s	LevSel_SetSound				; if not, branch
+		btst	#bitB,(v_jpadhold1).w			; was B held down while A was pressed?
+		bne.s	LevSel_A_WithB				; if yes, branch
+		addi.w	#$10,d0					; advance sound test selection by $10
+		cmpi.w	#ext__Last-$80+1,d0			; is result now past the last entry?
+		blo.s	LevSel_SetSound				; if not, branch
+		subi.w	#ext__Last-$80+1,d0			; if sound test moves above last entry, wrap
+		bra.s	LevSel_SetSound				; skip over
+
+LevSel_A_WithB:
+		subi.w	#$10,d0					; reduce sound test selection by $10
+		bhs.s	LevSel_SetSound				; is result still positive? if yes, branch
+		addi.w	#ext__Last-$80+1,d0			; if sound test moves below 0, wrap
+
+LevSel_SetSound:
 		move.w	d0,(v_levselsound).w			; set sound test number
 		bsr.w	LevSelTextLoad				; refresh text
 
@@ -2480,20 +2445,52 @@ LevelMenuText:
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Music playlist for the start of a level. Note that restarting the music
-; after invincibility has worn off is controlled in MusicList2 (part of
-; Sonic's object). Bosses have the post-defeat music hardcoded.
+; Music playlist for the start of a level
 ; ---------------------------------------------------------------------------
 
 MusicList:
-		dc.b bgm_GHZ		; GHZ
-		dc.b bgm_LZ		; LZ
-		dc.b bgm_MZ		; MZ
-		dc.b bgm_SLZ		; SLZ
-		dc.b bgm_SYZ		; SYZ
-		dc.b bgm_SBZ		; SBZ
-		dc.b bgm_FZ		; Ending
+		dc.b bgm_GHZ		; GHZ 1
+		dc.b bgm_GHZ		; GHZ 2
+		dc.b bgm_GHZ		; GHZ 3
+		dc.b bgm_GHZ		; GHZ 4 (unused)
+
+		dc.b bgm_LZ		; LZ 1
+		dc.b bgm_LZ		; LZ 2
+		dc.b bgm_LZ		; LZ 3
+		dc.b bgm_SBZ		; LZ 4 (SBZ act 3)
+
+		dc.b bgm_MZ		; MZ 1
+		dc.b bgm_MZ		; MZ 2
+		dc.b bgm_MZ		; MZ 3
+		dc.b bgm_MZ		; MZ 4 (unused)
+
+		dc.b bgm_SLZ		; SLZ 1
+		dc.b bgm_SLZ		; SLZ 2
+		dc.b bgm_SLZ		; SLZ 3
+		dc.b bgm_SLZ		; SLZ 4 (unused)
+
+		dc.b bgm_SYZ		; SYZ 1
+		dc.b bgm_SYZ		; SYZ 2
+		dc.b bgm_SYZ		; SYZ 3
+		dc.b bgm_SYZ		; SYZ 4 (unused)
+
+		dc.b bgm_SBZ		; SBZ 1
+		dc.b bgm_SBZ		; SBZ 2
+		dc.b bgm_FZ		; SBZ 3 (Final Zone)
+		dc.b bgm_SBZ		; SBZ 4 (unused)
+
 		even
+; ===========================================================================
+
+PlayCurrentActMusic:
+		moveq	#0,d0					; clear d0
+		move.b	(v_zone).w,d0				; get current zone ID
+		lsl.b	#2,d0					; times four entries per zone
+		add.b	(v_act).w,d0				; add current act number
+		move.b	MusicList(pc,d0.w),d0			; find music ID from MusicList
+		bra.w	QueueSound1				; play current level music
+; End of function PlayCurrentActMusic
+
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -2518,17 +2515,9 @@ Level_NoMusicFade:
 		tst.w	(f_demo).w				; is an ending sequence demo running?
 		bmi.s	Level_ClrRam				; if yes, don't load title screen or main level patterns
 
-		disable_ints					; disable interrupts
-		locVRAM	ArtTile_Title_Card*tile_size		; set VRAM target location for title cards
-		lea	(Nem_TitleCard).l,a0			; load title card patterns
-		bsr.w	NemDec					; decompress Nemesis-compressed patterns directly to VRAM
-		enable_ints					; enable interrupts again
+		jsr	(TitleCards_LoadArt).l			; load level title card graphics
 
-		moveq	#0,d0					; clear d0
-		move.b	(v_zone).w,d0				; get current Zone ID
-		lsl.w	#4,d0					; multiply by $10 (number of bytes per level header entry)
-		lea	(LevelHeaders).l,a2			; load level headers
-		lea	(a2,d0.w),a2				; get relevant header for current level
+		jsr	(GetLevelHeader).l			; load level header for current zone/act into a2
 		moveq	#0,d0					; clear d0
 		move.b	(a2),d0					; get first PLC entry
 		beq.s	Level_NoPLC				; if it's null, branch (never the case)
@@ -2592,24 +2581,13 @@ Level_WaterPal:
 		move.b	(v_lamp_wtrstat).w,(f_wtr_state).w	; restore water state from checkpoint
 
 Level_GetBgm:
+		move.b	#id_VBlank_TitleCards,(v_vblank_routine).w ; set VBlank routine to $0C
+		bsr.w	WaitForVBlank				; transfer data up to this point
+		bsr.w	LoadZoneTiles				; load main zone art (S2 Art Loader)
+
 		tst.w	(f_demo).w				; is this a credits demo?
 		bmi.s	Level_SkipTtlCard			; if yes, don't load title cards or change music
-
-		moveq	#0,d0					; clear d0
-		move.b	(v_zone).w,d0				; get current Zone ID
-		cmpi.w	#id_LZ_act4,(v_zone_act).w		; is level SBZ3 (LZ4)?
-		bne.s	Level_BgmNotLZ4				; if not, branch
-		moveq	#5,d0					; use 5th music (SBZ)
-
-Level_BgmNotLZ4:
-		cmpi.w	#id_FZ,(v_zone_act).w			; is level FZ?
-		bne.s	Level_PlayBgm				; if not, branch
-		moveq	#6,d0					; use 6th music (FZ)
-
-Level_PlayBgm:
-		lea	(MusicList).l,a1			; load music playlist
-		move.b	(a1,d0.w),d0				; get music ID for current level
-		bsr.w	QueueSound1				; play music
+		bsr.w	PlayCurrentActMusic			; play music for current act
 		move.b	#id_TitleCard,(v_titlecard).w		; load title card object
 ; ---------------------------------------------------------------------------
 
@@ -2618,7 +2596,6 @@ Level_TtlCardLoop: ; move in title cards, stay on them until PLCs have finished
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
 		jsr	(ExecuteObjects).l			; execute title cards object
 		jsr	(BuildSprites).l			; build sprites to show title cards
-		bsr.w	RunPLC					; decompress level graphics
 
 		lea	(v_titlecard).w,a0			; get title card elements
 		moveq	#4-1,d1					; number of title card elements
@@ -2640,6 +2617,7 @@ Level_CheckTtlCard:
 		jsr	(Hud_Base).l				; load basic HUD graphics (only in levels, not in the ending demos)
 
 Level_SkipTtlCard:
+		bsr.w	InitRingFrame
 		moveq	#palid_Sonic,d0				; load Sonic's palette to fade-in buffer
 		bsr.w	PalLoad_Fade				; (doesn't actually do anything, the PalFadeIn_Alt call below skips the first palette line)
 		bsr.w	LevelSizeLoad				; load level size and set default level boundaries
@@ -2654,7 +2632,7 @@ Level_SkipTtlCard:
 
 		tst.w	(f_demo).w				; is this a credits demo?
 		bmi.s	Level_ChkDebug				; if yes, don't load HUD
-		move.b	#id_HUD,(v_hud).w			; load HUD object
+		move.b	#1,(v_draw_hud).w			; enable HUD drawing
 
 Level_ChkDebug:
 		tst.b	(f_debugcheat).w			; has debug cheat been entered?
@@ -2667,15 +2645,15 @@ Level_ChkWater:
 		move.w	#0,(v_jpadhold2).w			; clear button input states for Sonic player object
 		move.w	#0,(v_jpadhold1).w			; clear actual button input states for controller 1
 
-		cmpi.b	#id_LZ,(v_zone).w			; is level LZ?
-		bne.s	Level_LoadObj				; if not, branch
-		move.b	#id_WaterSurface,(v_watersurface1).w	; load water surface object A
-		move.w	#$60,(v_watersurface1+obX).w		; set base X-position for surface A
-		move.b	#id_WaterSurface,(v_watersurface2).w	; load water surface object B
-		move.w	#$120,(v_watersurface2+obX).w		; set base X-position for surface B
-
 Level_LoadObj:
-		jsr	(ObjPosLoad).l				; initialize object manager
+		cmpi.b	#id_SLZ,(v_zone).w			; are we in SLZ?
+		bne.s	.nopylon				; if not, don't load pylon
+		jsr	(FindFreeObj).l				; find a free object slot
+		bne.s	.nopylon				; if none are free, branch
+		move.b	#id_Pylon,(a1)				; manually load SLZ pylon
+.nopylon:
+		jsr	(ObjPosLoad_Init).l			; initialize object manager
+		jsr	(RingsManager_Init).l			; initialize the S3K Rings Manager at level start
 		jsr	(ExecuteObjects).l			; load objects that are already visible during fade-in
 		jsr	(BuildSprites).l			; build sprites for objects before fade-in
 
@@ -2737,13 +2715,6 @@ Level_WtrNotSbz:
 		bsr.w	PalLoad_Water				; load underwater palette to active palette
 
 Level_Delay:
-		move.w	#4-1,d1					; run 4 extra frames of VBlank to do palette transfers
-
-Level_DelayLoop:
-		move.b	#id_VBlank_Levels,(v_vblank_routine).w	; set VBlank routine to $08
-		bsr.w	WaitForVBlank				; wait until VBlank has finished
-		dbf	d1,Level_DelayLoop			; repeat for 4 frames in total
-
 		move.w	#$202F,(v_pfade_start).w		; set to fade in 2nd, 3rd & 4th palette lines
 		bsr.w	PalFadeIn_Alt				; fade-in main palette
 ; ---------------------------------------------------------------------------
@@ -2789,20 +2760,11 @@ Level_MainLoop:
 
 		tst.w	(f_restart).w				; is the level set to restart?
 		bne.s	Level_CheckRestart			; if yes, branch to check restart condition
-
-		tst.w	(v_debuguse).w				; is debug mode being used?
-		bne.s	Level_DoScroll				; if yes, continue plane scrolling even when dying
-		cmpi.b	#6,(v_player+obRoutine).w		; has Sonic just died?
-		bhs.s	Level_SkipScroll			; if yes, don't do plane scrolling
-
-Level_DoScroll:
 		bsr.w	DeformLayers				; scroll planes and do background deformation
-
-Level_SkipScroll:
 		jsr	(BuildSprites).l			; build sprite table
 		jsr	(ObjPosLoad).l				; run the object manager to load level objects
+		jsr	(RingsManager).l			; execute S3K Rings Manager
 		bsr.w	PaletteCycle				; run palette cycles
-		bsr.w	RunPLC					; run PLC, if any
 		bsr.w	OscillateNumDo				; advance oscillation values
 		bsr.w	SynchroAnimate				; advance animation timers
 		bsr.w	SignpostArtLoad				; check if sign post art needs to be loaded and lock left boundary
@@ -2873,24 +2835,13 @@ Level_FDLoop_NoDim:
 ; ---------------------------------------------------------------------------
 
 ColIndexLoad:
-		moveq	#0,d0					; clear d0
-		move.b	(v_zone).w,d0				; get current zone ID
-		lsl.w	#2,d0					; multiply by 4 for long-based indexing
-		move.l	ColPointers(pc,d0.w),(v_collindex).w	; set collision index pointer for current zone
-		rts						; return
+		jsr	(GetLevelHeader).l			; load level header for current zone/act into a2
+		move.l	$C(a2),d0				; get collision/palette entry from level header
+		lsr.l	#8,d0					; shift out palette to only have collision index left
+		move.l	d0,(v_collindex).w			; write collision index to RAM
+		rts
 ; End of function ColIndexLoad
 
-; ---------------------------------------------------------------------------
-; Collision index pointers
-; ---------------------------------------------------------------------------
-
-ColPointers:	dc.l Col_GHZ
-		dc.l Col_LZ
-		dc.l Col_MZ
-		dc.l Col_SLZ
-		dc.l Col_SYZ
-		dc.l Col_SBZ
-		even
 
 ; ===========================================================================
 ; >>> Routines to set and update values that change on a fixed timer
@@ -2899,10 +2850,81 @@ ColPointers:	dc.l Col_GHZ
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
+; Queue ring frame graphics loading
+; ---------------------------------------------------------------------------
+
+InitRingFrame:
+		st.b	(v_ani1_prev).w			; Make sure initial frame art loads
+		st.b	(v_ani2_prev).w
+		st.b	(v_ani3_prev).w
+; ---------------------------------------------------------------------------
+
+LoadRingFrame:
+		cmpi.b	#6,(v_player+obRoutine).w	; Is Sonic dead?
+		bhs.w	.end				; If so, branch
+
+		moveq	#0,d1				; Get ring frame offset for regular rings
+		move.b	(v_ani1_frame).w,d1
+		cmp.b	(v_ani1_prev).w,d1		; Has it changed?
+		beq.s	.noring				; If not, branch
+		move.b	d1,(v_ani1_prev).w		; Mark frame's art as loaded
+
+		lsl.l	#7,d1				; Each ring frame takes $80 bytes, so multiply by $80
+		addi.l	#Art_Ring,d1			; Queue a DMA transfer for this ring frame
+		move.w	#ArtTile_Ring*tile_size,d2
+		move.w	#$80/2,d3
+		jsr	(QueueDMATransfer).l		; (or DMA_68KtoVRAM)
+
+.noring:
+		cmpi.b	#id_Special,(v_gamemode).w	; Are we in a special stage?
+		beq.s	.end				; If so, branch
+
+		tst.b	(v_gfxbigring).w		; Is a there a special stage ring?
+		beq.s	.nossring			; If not, branch
+
+		move.l	#Art_BigRing,d2			; Use normal special stage ring graphics
+		cmpi.b	#1,(v_gfxbigring).w		; Should we be using them?
+		beq.s	.loadssring			; If so, branch
+		move.l	#Art_BigFlash,d2		; Use special stage ring flash graphics
+
+.loadssring:
+		moveq	#0,d1				; Get ring frame offset for special stage rings
+		move.b	(v_ani2_frame).w,d1
+		cmp.b	(v_ani2_prev).w,d1		; Has it changed?
+		beq.s	.nossring			; If not, branch
+		move.b	d1,(v_ani2_prev).w		; Mark frame's art as loaded
+
+		lsl.l	#8,d1				; Each giant ring frame takes $800 bytes, so multiply by $800
+		lsl.l	#3,d1
+		add.l	d2,d1				; Queue a DMA transfer for this ring frame
+		move.w	#ArtTile_Giant_Ring*tile_size,d2
+		move.w	#$800/2,d3
+		jsr	(QueueDMATransfer).l		; (or DMA_68KtoVRAM)
+
+.nossring:
+		moveq	#0,d1				; Get ring frame offset for lost rings
+		move.b	(v_ani3_frame).w,d1
+		cmp.b	(v_ani3_prev).w,d1		; Has it changed?
+		beq.s	.end				; If not, branch
+		move.b	d1,(v_ani3_prev).w		; Mark frame's art as loaded
+
+		lsl.l	#7,d1				; Each ring frame takes $80 bytes, so multiply by $80
+		add.l	#Art_Ring,d1			; Queue a DMA transfer for this ring frame
+		move.w	#ArtTile_Ring_Loss*tile_size,d2
+		move.w	#$80/2,d3
+		jmp	(QueueDMATransfer).l		; (or DMA_68KtoVRAM)
+
+.end:
+		rts
+; End of function InitRingFrame and LoadRingFrame
+
+
+; ---------------------------------------------------------------------------
 ; Subroutine to change synchronised animation variables (rings, giant rings)
 ; ---------------------------------------------------------------------------
 
 SynchroAnimate:
+		bsr.w	LoadRingFrame
 
 ; Used for GHZ spiked log
 Sync1:
@@ -2912,36 +2934,36 @@ Sync1:
 		subq.b	#1,(v_ani0_frame).w			; go to next frame (backwards)
 		andi.b	#7,(v_ani0_frame).w 			; limit to frames 0-7
 
-; Used for rings and giant rings
+; Used for rings
 Sync2:
-		subq.b	#1,(v_ani1_time).w			; has second timer reached 0?
-		bpl.s	Sync3					; if not, branch
-		move.b	#8-1,(v_ani1_time).w			; reset second timer to 8 frames
-		addq.b	#1,(v_ani1_frame).w			; go to next frame
-		andi.b	#3,(v_ani1_frame).w			; limit to frames 0-3
+		subq.b	#1,(v_ani1_time).w
+		bpl.s	Sync3
+		move.b	#4-1,(v_ani1_time).w
+		addq.b	#1,(v_ani1_frame).w
+		andi.b	#7,(v_ani1_frame).w
 
-; Used for nothing
+; Used for giant rings
 Sync3:
-		subq.b	#1,(v_ani2_time).w			; has third timer reached 0?
-		bpl.s	Sync4					; if not, branch
-		move.b	#8-1,(v_ani2_time).w			; reset third timer to 8 frames
-		addq.b	#1,(v_ani2_frame).w			; go to next frame
-		cmpi.b	#6,(v_ani2_frame).w			; limit to frames 0-5
-		blo.s	Sync4					; if still frame 0-5, branch
-		move.b	#0,(v_ani2_frame).w			; set to frame 0 when it reached frame 6
+		cmpi.b	#1,(v_gfxbigring).w
+		bne.s	Sync4
+		subq.b	#1,(v_ani2_time).w
+		bpl.s	Sync4
+		move.b	#4-1,(v_ani2_time).w
+		addq.b	#1,(v_ani2_frame).w
+		andi.b	#7,(v_ani2_frame).w
 
 ; Used for bouncing rings
 Sync4:
-		tst.b	(v_ani3_time).w				; is ring loss timer active at all?
-		beq.s	SyncEnd					; if not, don't advance animation
-		moveq	#0,d0					; clear d0
-		move.b	(v_ani3_time).w,d0			; get remaining ring loss timer
-		add.w	(v_ani3_buf).w,d0			; add buffered timer value
-		move.w	d0,(v_ani3_buf).w			; set that as new buffered timer
-		rol.w	#7,d0					; align for speed
-		andi.w	#3,d0					; limit to frames 0-3
-		move.b	d0,(v_ani3_frame).w			; set as current frame for lost rings
-		subq.b	#1,(v_ani3_time).w			; decrease ring loss timer
+		tst.b	(v_ani3_time).w
+		beq.s	SyncEnd
+		moveq	#0,d0
+		move.b	(v_ani3_time).w,d0
+		add.w	(v_ani3_buf).w,d0
+		move.w	d0,(v_ani3_buf).w
+		rol.w	#8,d0
+		andi.w	#7,d0
+		move.b	d0,(v_ani3_frame).w
+		subq.b	#1,(v_ani3_time).w
 
 SyncEnd:
 		rts						; return
@@ -3011,6 +3033,7 @@ GM_Special:		; white fade-out from previous game mode
 		bsr.w	SS_BGLoad				; load background clouds/bubbles/birds/fish mappings
 		moveq	#plcid_SpecialStage,d0			; load special stage patterns
 		bsr.w	QuickPLC				; execute PLCs immediately (no queue)
+		bsr.w	InitRingFrame
 
 		clearRAM v_objspace				; clear object RAM space
 		clearRAM v_levelvariables			; clear various level variables
@@ -3021,6 +3044,26 @@ GM_Special:		; white fade-out from previous game mode
 		clr.w	(f_restart).w				; clear level restart flag
 		moveq	#palid_Special,d0			; load special stage palette...
 		bsr.w	PalLoad_Fade				; ...into the palette fade-in buffer
+
+		moveq	#0,d0					; clear d0	
+		move.b	(v_lastspecial).w,d0			; get ID of special stage we've just entered
+		move.b	SS_Music(pc,d0.w),d0			; find music ID from SS_Music list
+		bsr.w	QueueSound1				; play correct special stage BG music
+		bra.s	SS_ContinueSetup			; skip over music list
+
+; ===========================================================================
+SS_Music:
+		dc.b bgm_SS	; stage 1
+		dc.b bgm_SS	; stage 2
+		dc.b bgm_SS	; stage 3
+		dc.b bgm_SS	; stage 4
+		dc.b bgm_SS	; stage 5
+		dc.b bgm_SS	; stage 6
+		;dc.b bgm_SS	; stage 7 (if you ever decide to add it...)
+		even
+; ===========================================================================
+
+SS_ContinueSetup:
 		jsr	(SS_Load).l				; load SS layout data (based on last stage entered and collected emeralds)
 
 		move.w	#$2B0,(v_limittop2).w			; set top boundary
@@ -3031,11 +3074,10 @@ GM_Special:		; white fade-out from previous game mode
 		move.l	#0,(v_screenposx).w			; reset X-camera position
 		move.l	#0,(v_screenposy).w			; reset Y-camera position
 		move.b	#id_SonicSpecial,(v_player).w		; load special stage Sonic object
+		move.b	#-1,(v_ssangleprev).w			; fill previous angle with obviously false value to force initial update
 		bsr.w	PalCycle_SS				; initialize palette cycle and background for fade-in
 		clr.w	(v_ssangle).w				; set stage angle to "upright"
 		move.w	#ss_rotatespeed,(v_ssrotate).w		; set initial stage rotation speed ($40, see object 09)
-		move.w	#bgm_SS,d0				; play special stage BG music
-		bsr.w	QueueSound1				; play it
 
 		move.w	#0,(v_btnpushtime1).w			; clear button push counters for demos
 		lea	(DemoDataPtr).l,a1			; load demo data
@@ -3073,6 +3115,7 @@ SS_MainLoop:
 
 		jsr	(ExecuteObjects).l			; execute Special Stage object
 		jsr	(BuildSprites).l			; build sprites
+		bsr.w	LoadRingFrame
 		jsr	(SS_ShowLayout).l			; render Special Stage layout
 		bsr.w	SS_BGAnimate				; animate Special Stage background
 
@@ -3130,9 +3173,7 @@ SS_FinLoop_NoBrighten:
 		move.w	#$9001,(a6)				; 64-cell hscroll size
 		bsr.w	ClearScreen				; wipe screen
 
-		locVRAM	ArtTile_Title_Card*tile_size		; set VRAM location for title card font
-		lea	(Nem_TitleCard).l,a0			; load title card patterns
-		bsr.w	NemDec					; decompress Nemesis-compressed graphics directly to VRAM
+		jsr	(SpecStagResults_LoadArt).l		; load SSR title card graphics
 
 		jsr	(Hud_Base).l				; load basic HUD graphics
 		enable_ints					; enable interrupts
@@ -3164,7 +3205,6 @@ SS_NormalExit:		; Special Stage results screen loop
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
 		jsr	(ExecuteObjects).l			; execute SSR objects
 		jsr	(BuildSprites).l			; build sprites
-		bsr.w	RunPLC					; load SSR patterns
 		tst.w	(f_restart).w				; has the SSR object signaled that we can exit?
 		beq.s	SS_NormalExit				; if not, loop results screen
 		tst.l	(v_plc_buffer).w			; is PLC buffer empty?
@@ -3213,17 +3253,8 @@ GM_Continue:
 
 		clearRAM v_objspace				; clear object RAM
 
-		locVRAM	ArtTile_Title_Card*tile_size		; set VRAM location for title card patterns
-		lea	(Nem_TitleCard).l,a0			; load title card patterns
-		bsr.w	NemDec					; decompress Nemesis-compressed patterns directly to VRAM
-
-		locVRAM	ArtTile_Continue_Sonic*tile_size	; set VRAM location for Sonic on the continue screen
-		lea	(Nem_ContSonic).l,a0			; load Sonic patterns
-		bsr.w	NemDec					; decompress Nemesis-compressed patterns directly to VRAM
-
-		locVRAM	ArtTile_Mini_Sonic*tile_size		; set VRAM location for the mini Sonic icons
-		lea	(Nem_MiniSonic).l,a0			; load mini Sonic icons
-		bsr.w	NemDec					; decompress Nemesis-compressed patterns directly to VRAM
+		moveq	#plcid_Continue,d0			; load patterns through PLC list
+		bsr.w	QuickPLC				; decompress PLC list now and return once done
 
 		moveq	#10,d1					; draw continue screen countdown to start with digits 10
 		jsr	(ContScrCounter).l			; initialize countdown
@@ -3357,10 +3388,6 @@ End_LoadData:
 		move.l	#Col_GHZ,(v_collindex).w		; load collision index (hardcoded to GHZ instead of using ColIndexLoad)
 		enable_ints					; enable interrupts
 
-		lea	(Kos_EndFlowers).l,a0			; load extra flower patterns
-		lea	(v_256x256_def+$4A*chunk_size).w,a1	; set RAM address to be used as decompression buffer (this overwrites unused chunk RAM)
-		bsr.w	KosDec					; decompress Kosinski-compressed chunks mappings to buffer
-
 		moveq	#palid_Sonic,d0				; load Sonic's palette...
 		bsr.w	PalLoad_Fade				; ...to fade-in buffer
 		move.w	#bgm_Ending,d0				; play ending sequence music
@@ -3377,9 +3404,9 @@ End_LoadSonic:
 		bset	#0,(v_player+obStatus).w		; make Sonic face left
 		move.b	#1,(f_lockctrl).w			; lock controls to keep simulating D-Pad
 		move.w	#(btnL<<8),(v_jpadhold2).w		; simulate holding down the left D-Pad button to move Sonic (and clear v_jpadpress2)
-		move.w	#-$800,(v_player+obInertia).w		; set Sonic's initial speed (speed cap immediately limits this to -$600)
+		move.w	#-$600,(v_player+obInertia).w		; set Sonic's initial speed (speed cap immediately limits this to -$600)
 
-		move.b	#id_HUD,(v_hud).w			; load HUD object
+		move.b	#1,(v_draw_hud).w			; enable HUD drawing
 		jsr	(ObjPosLoad).l				; run the object manager to load level objects
 		jsr	(ExecuteObjects).l			; execute all objects in object RAM
 		jsr	(BuildSprites).l			; build sprite table
@@ -3589,9 +3616,8 @@ GM_Credits:
 
 		clearRAM v_objspace				; clear object RAM
 
-		locVRAM	ArtTile_Credits_Font*tile_size		; set target VRAM location for credits font
-		lea	(Nem_CreditText).l,a0			; load credits font
-		bsr.w	NemDec					; decompress Nemesis-compressed patterns directly to VRAM
+		moveq	#plcid_Credits,d0			; load patterns through PLC list
+		bsr.w	QuickPLC				; decompress PLC list now and return once done
 
 		clearRAM v_palette_fading			; set palette fade-in buffer to all-black
 		moveq	#palid_Sonic,d0				; load Sonic's palette...
@@ -3603,11 +3629,7 @@ GM_Credits:
 
 		bsr.w	EndingDemoLoad				; prepare loading the next ending demo
 
-		moveq	#0,d0					; clear d0
-		move.b	(v_zone).w,d0				; get zone ID for next credits demo
-		lsl.w	#4,d0					; multiply by $10 (number of bytes per level header entry)
-		lea	(LevelHeaders).l,a2			; load level headers
-		lea	(a2,d0.w),a2				; get relevant header for next credits demo
+		jsr	(GetLevelHeader).l			; load level header for current zone/act into a2
 		moveq	#0,d0					; clear d0
 		move.b	(a2),d0					; get first PLC entry
 		beq.s	Cred_SkipObjGfx				; if it's null, branch (never the case)
@@ -3629,8 +3651,6 @@ Cred_SkipObjGfx:
 Cred_WaitLoop:		; while a credits page is displayed and graphics are getting decompressed
 		move.b	#id_VBlank_Title,(v_vblank_routine).w	; set VBlank routine to $04 (uses the same one as the title screen)
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
-
-		bsr.w	RunPLC					; decompress level graphics
 
 		tst.w	(v_generictimer).w			; have at least 2 seconds elapsed?
 		bne.s	Cred_WaitLoop				; if not, loop
@@ -3844,6 +3864,7 @@ Demo_EndGHZ2:	include	"demodata/Ending - GHZ2.asm"
 
 ; ===========================================================================
 ; >>> Rings
+		include	"_incObj/_RingsManager.asm"
 		include	"_incObj/25, 37 Rings.asm"
 		include	"_incObj/4B, 7C Giant Ring and Flash.asm"
 
@@ -3876,7 +3897,7 @@ Demo_EndGHZ2:	include	"demodata/Ending - GHZ2.asm"
 		include	"_incObj/39 Game Over.asm"
 		include	"_incObj/3A Got Through Card.asm"
 		include	"_incObj/7E, 7F Special Stage Results and Chaos Emeralds.asm"
-		include	"_maps/Title Cards.asm" ; includes "Map_Card", "Map_Over", "Map_Got", and "Map_SSR"
+Map_Over:	include	"_maps/Game Over.asm"
 
 
 ; ===========================================================================
@@ -3889,14 +3910,15 @@ Demo_EndGHZ2:	include	"demodata/Ending - GHZ2.asm"
 
 ; ===========================================================================
 ; Subroutines to run, render, and update objects
-		include	"_inc/ExecuteObjects.asm"
-		include	"_inc/Object Pointers.asm" ; includes Obj_Index
+		include	"_incObj/sub AnimateSprite.asm"
+		include	"_incObj/_ExecuteObjects.asm"
+		include	"_incObj/_ObjectPointers.asm"
 		include	"_incObj/sub ObjectFall & SpeedToPos.asm"
 		include	"_incObj/sub DisplaySprite.asm"
 		include	"_incObj/sub DeleteObject.asm"
 		include	"_inc/BuildSprites.asm"
 		include	"_incObj/sub ChkObjectVisible.asm"
-		include	"_inc/ObjPosLoad.asm"
+		include	"_incObj/_ObjPosLoad.asm"
 		include	"_incObj/sub FindFreeObj.asm"
 
 
@@ -3915,7 +3937,8 @@ Demo_EndGHZ2:	include	"demodata/Ending - GHZ2.asm"
 		include	"_incObj/4C, 4D MZ Lava Geyser and Maker.asm"
 		include	"_incObj/4E MZ Wall of Lava.asm"
 		include	"_incObj/54 MZ Invisible Lava Tag.asm"
-		include	"_incObj/40 Badnik - Moto Bug.asm" ; includes "_incObj/sub RememberState.asm" subroutine
+		include	"_incObj/40 Badnik - Moto Bug.asm"
+		include	"_incObj/sub RememberState.asm"
 		include	"_incObj/50 Badnik - Yadrin.asm"
 		include	"_incObj/sub SolidObject.asm"
 		include	"_incObj/51 MZ Smashable Green Block.asm"
@@ -3928,7 +3951,6 @@ Demo_EndGHZ2:	include	"demodata/Ending - GHZ2.asm"
 		include	"_incObj/5A SLZ Circling Platform.asm"
 		include	"_incObj/5B SLZ Staircase.asm"
 		include	"_incObj/5C SLZ Foreground Pylon.asm"
-		include	"_incObj/1B LZ Water Surface.asm"
 		include	"_incObj/0B LZ Pole that Breaks.asm"
 		include	"_incObj/0C LZ Flapping Door.asm"
 		include	"_incObj/71 Invisible Solid Barriers.asm"
@@ -3947,6 +3969,8 @@ Demo_EndGHZ2:	include	"demodata/Ending - GHZ2.asm"
 ; ===========================================================================
 ; >>> Main Sonic player object
 		include	"_incObj/01 Sonic.asm"
+		include	"_incObj/05 SpinDust.asm"
+		include	"_incObj/06 AfterImage.asm"
 
 
 ; ===========================================================================
@@ -4027,12 +4051,14 @@ Map_SS_Chaos:	include	"_maps/SS Chaos Emeralds.asm"
 
 ; ===========================================================================
 ; >>> HUD objects
-		include	"_incObj/21 HUD.asm"
+Map_HUD:	include	"_maps/HUD.asm"
 		include	"_incObj/sub AddPoints.asm"
 		include	"_inc/HUD Update.asm" ; includes "ContScrCounter" subroutine
 
 Art_Hud:	binclude "artunc/HUD Numbers.unc" ; 8x16 pixel numbers on HUD
+		binclude "artunc/HUD Numbers Separators.unc" ; ' and " separators for the time
 		even
+
 Art_LivesNums:	binclude "artunc/Lives Counter Numbers.unc" ; 8x8 pixel numbers on lives counter
 		even
 
@@ -4058,7 +4084,7 @@ Art_LivesNums:	binclude "artunc/Lives Counter Numbers.unc" ; 8x8 pixel numbers o
 ; ---------------------------------------------------------------------------
 ; Compressed graphics and mappings - Sega screen
 ; ---------------------------------------------------------------------------
-Nem_SegaLogo:	binclude	"artnem/Sega Logo.nem" ; large Sega logo
+KosPM_SegaLogo:	binclude	"artkospm/Sega Logo.kospm" ; large Sega logo
 		even
 Eni_SegaLogo:	binclude	"tilemaps/Sega Logo.eni" ; large Sega logo (mappings)
 		even
@@ -4068,15 +4094,17 @@ Eni_SegaLogo:	binclude	"tilemaps/Sega Logo.eni" ; large Sega logo (mappings)
 ; ---------------------------------------------------------------------------
 Eni_Title:	binclude	"tilemaps/Title Screen.eni" ; title screen foreground (mappings)
 		even
-Nem_TitleFg:	binclude	"artnem/Title Screen Foreground.nem"
+KosPM_TitleFg:	binclude	"artkospm/Title Screen Foreground.kospm"
 		even
-Nem_TitleSonic:	binclude	"artnem/Title Screen Sonic.nem"
+KosPM_TitleSonic:	binclude	"artkospm/Title Screen Sonic.kospm"
 		even
-Nem_TitleTM:	binclude	"artnem/Title Screen TM.nem"
+KosPM_TitleTM:	binclude	"artkospm/Title Screen TM.kospm"
+		even
+KosPM_TitlePSB:	binclude	"artkospm/Title Screen PSB.kospm"
 		even
 Eni_JapNames:	binclude	"tilemaps/Hidden Japanese Credits.eni" ; Japanese credits (mappings)
 		even
-Nem_JapNames:	binclude	"artnem/Hidden Japanese Credits.nem"
+KosPM_JapNames:	binclude	"artkospm/Hidden Japanese Credits.kospm"
 		even
 
 ; ---------------------------------------------------------------------------
@@ -4089,12 +4117,15 @@ SonicDynPLC:	include	"_maps/Sonic - Dynamic Gfx Script.asm"
 Art_Sonic:	binclude	"artunc/Sonic.unc"
 		even
 
+Art_SpinDust:	binclude	"artunc/SpinDust.unc"
+		even
+
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - various
 ; ---------------------------------------------------------------------------
-Nem_Shield:	binclude	"artnem/Shield.nem"
+Art_Shield:	binclude	"artunc/Shield.unc"
 		even
-Nem_Stars:	binclude	"artnem/Invincibility Stars.nem"
+Art_Stars:	binclude	"artunc/Invincibility Stars.unc"
 		even
 
 ; ---------------------------------------------------------------------------
@@ -4102,359 +4133,363 @@ Nem_Stars:	binclude	"artnem/Invincibility Stars.nem"
 ; ---------------------------------------------------------------------------
 Map_SSWalls:	include	"_maps/SS Walls.asm"
 
-Nem_SSWalls:	binclude	"artnem/Special Walls.nem" ; special stage walls
+Art_SSWalls:	binclude	"artunc/Special Walls.unc" ; special stage walls (uncompressed)
 		even
 Eni_SSBg1:	binclude	"tilemaps/SS Background 1.eni" ; special stage background (mappings)
 		even
-Nem_SSBgFish:	binclude	"artnem/Special Birds & Fish.nem" ; special stage birds and fish background
+KosPM_SSBgFish:	binclude	"artkospm/Special Birds & Fish.kospm" ; special stage birds and fish background
 		even
 Eni_SSBg2:	binclude	"tilemaps/SS Background 2.eni" ; special stage background (mappings)
 		even
-Nem_SSBgCloud:	binclude	"artnem/Special Clouds.nem" ; special stage clouds background
+KosPM_SSBgCloud:	binclude	"artkospm/Special Clouds.kospm" ; special stage clouds background
 		even
-Nem_SSGOAL:	binclude	"artnem/Special GOAL.nem" ; special stage GOAL block
+KosPM_SSGOAL:	binclude	"artkospm/Special GOAL.kospm" ; special stage GOAL block
 		even
-Nem_SSRBlock:	binclude	"artnem/Special R.nem" ; special stage R block
+KosPM_SSRBlock:	binclude	"artkospm/Special R.kospm" ; special stage R block
 		even
-Nem_SS1UpBlock:	binclude	"artnem/Special 1UP.nem" ; special stage 1UP block
+KosPM_SS1UpBlock:	binclude	"artkospm/Special 1UP.kospm" ; special stage 1UP block
 		even
-Nem_SSEmStars:	binclude	"artnem/Special Emerald Twinkle.nem" ; special stage stars from a collected emerald
+KosPM_SSEmStars:	binclude	"artkospm/Special Emerald Twinkle.kospm" ; special stage stars from a collected emerald
 		even
-Nem_SSRedWhite:	binclude	"artnem/Special Red-White.nem" ; special stage red/white block
+KosPM_SSRedWhite:	binclude	"artkospm/Special Red-White.kospm" ; special stage red/white block
 		even
-Nem_SSZone1:	binclude	"artnem/Special ZONE1.nem" ; special stage ZONE1 block
+KosPM_SSZone1:	binclude	"artkospm/Special ZONE1.kospm" ; special stage ZONE1 block
 		even
-Nem_SSZone2:	binclude	"artnem/Special ZONE2.nem" ; ZONE2 block
+KosPM_SSZone2:	binclude	"artkospm/Special ZONE2.kospm" ; ZONE2 block
 		even
-Nem_SSZone3:	binclude	"artnem/Special ZONE3.nem" ; ZONE3 block
+KosPM_SSZone3:	binclude	"artkospm/Special ZONE3.kospm" ; ZONE3 block
 		even
-Nem_SSZone4:	binclude	"artnem/Special ZONE4.nem" ; ZONE4 block
+KosPM_SSZone4:	binclude	"artkospm/Special ZONE4.kospm" ; ZONE4 block
 		even
-Nem_SSZone5:	binclude	"artnem/Special ZONE5.nem" ; ZONE5 block
+KosPM_SSZone5:	binclude	"artkospm/Special ZONE5.kospm" ; ZONE5 block
 		even
-Nem_SSZone6:	binclude	"artnem/Special ZONE6.nem" ; ZONE6 block
+KosPM_SSZone6:	binclude	"artkospm/Special ZONE6.kospm" ; ZONE6 block
 		even
-Nem_SSUpDown:	binclude	"artnem/Special UP-DOWN.nem" ; special stage UP/DOWN block
+KosPM_SSUpDown:	binclude	"artkospm/Special UP-DOWN.kospm" ; special stage UP/DOWN block
 		even
-Nem_SSEmerald:	binclude	"artnem/Special Emeralds.nem" ; special stage chaos emeralds
+KosPM_SSEmerald:	binclude	"artkospm/Special Emeralds.kospm" ; special stage chaos emeralds
 		even
-Nem_SSGhost:	binclude	"artnem/Special Ghost.nem" ; special stage ghost block
+KosPM_SSGhost:	binclude	"artkospm/Special Ghost.kospm" ; special stage ghost block
 		even
-Nem_SSWBlock:	binclude	"artnem/Special W.nem" ; special stage W block
+KosPM_SSWBlock:	binclude	"artkospm/Special W.kospm" ; special stage W block
 		even
-Nem_SSGlass:	binclude	"artnem/Special Glass.nem" ; special stage destroyable glass block
+KosPM_SSGlass:	binclude	"artkospm/Special Glass.kospm" ; special stage destroyable glass block
 		even
-Nem_ResultEm:	binclude	"artnem/Special Result Emeralds.nem" ; chaos emeralds on special stage results screen
+KosPM_ResultEm:	binclude	"artkospm/Special Result Emeralds.kospm" ; chaos emeralds on special stage results screen
 		even
 
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - GHZ stuff
 ; ---------------------------------------------------------------------------
-Nem_Stalk:	binclude	"artnem/GHZ Flower Stalk.nem"
+KosPM_Stalk:	binclude	"artkospm/GHZ Flower Stalk.kospm"
 		even
-Nem_Swing:	binclude	"artnem/GHZ Swinging Platform.nem"
+KosPM_Swing:	binclude	"artkospm/GHZ Swinging Platform.kospm"
 		even
-Nem_Bridge:	binclude	"artnem/GHZ Bridge.nem"
+KosPM_Bridge:	binclude	"artkospm/GHZ Bridge.kospm"
 		even
-Nem_Ball:	binclude	"artnem/GHZ Giant Ball.nem"
+KosPM_Ball:	binclude	"artkospm/GHZ Giant Ball.kospm"
 		even
-Nem_Spikes:	binclude	"artnem/Spikes.nem"
+KosPM_Spikes:	binclude	"artkospm/Spikes.kospm"
 		even
-Nem_SpikePole:	binclude	"artnem/GHZ Spiked Log.nem"
+KosPM_SpikePole:	binclude	"artkospm/GHZ Spiked Log.kospm"
 		even
-Nem_PplRock:	binclude	"artnem/GHZ Purple Rock.nem"
+KosPM_PplRock:	binclude	"artkospm/GHZ Purple Rock.kospm"
 		even
-Nem_GhzWall1:	binclude	"artnem/GHZ Breakable Wall.nem"
+KosPM_GhzWall1:	binclude	"artkospm/GHZ Breakable Wall.kospm"
 		even
-Nem_GhzWall2:	binclude	"artnem/GHZ Edge Wall.nem"
+KosPM_GhzWall2:	binclude	"artkospm/GHZ Edge Wall.kospm"
 		even
 
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - LZ stuff
 ; ---------------------------------------------------------------------------
-Nem_Water:	binclude	"artnem/LZ Water Surface.nem"
+KosPM_Splash:	binclude	"artkospm/LZ Water & Splashes.kospm"
 		even
-Nem_Splash:	binclude	"artnem/LZ Water & Splashes.nem"
+KosPM_LzSpikeBall:binclude	"artkospm/LZ Spiked Ball & Chain.kospm"
 		even
-Nem_LzSpikeBall:binclude	"artnem/LZ Spiked Ball & Chain.nem"
+KosPM_FlapDoor:	binclude	"artkospm/LZ Flapping Door.kospm"
 		even
-Nem_FlapDoor:	binclude	"artnem/LZ Flapping Door.nem"
+KosPM_Bubbles:	binclude	"artkospm/LZ Bubbles & Countdown.kospm"
 		even
-Nem_Bubbles:	binclude	"artnem/LZ Bubbles & Countdown.nem"
+KosPM_LzBlock3:	binclude	"artkospm/LZ 32x16 Block.kospm"
 		even
-Nem_LzBlock3:	binclude	"artnem/LZ 32x16 Block.nem"
+KosPM_LzDoor1:	binclude	"artkospm/LZ Vertical Door.kospm"
 		even
-Nem_LzDoor1:	binclude	"artnem/LZ Vertical Door.nem"
+KosPM_Harpoon:	binclude	"artkospm/LZ Harpoon.kospm"
 		even
-Nem_Harpoon:	binclude	"artnem/LZ Harpoon.nem"
+KosPM_LzPole:	binclude	"artkospm/LZ Breakable Pole.kospm"
 		even
-Nem_LzPole:	binclude	"artnem/LZ Breakable Pole.nem"
+KosPM_LzDoor2:	binclude	"artkospm/LZ Horizontal Door.kospm"
 		even
-Nem_LzDoor2:	binclude	"artnem/LZ Horizontal Door.nem"
+KosPM_LzWheel:	binclude	"artkospm/LZ Wheel.kospm"
 		even
-Nem_LzWheel:	binclude	"artnem/LZ Wheel.nem"
+KosPM_Gargoyle:	binclude	"artkospm/LZ Gargoyle & Fireball.kospm"
 		even
-Nem_Gargoyle:	binclude	"artnem/LZ Gargoyle & Fireball.nem"
+KosPM_LzBlock2:	binclude	"artkospm/LZ Blocks.kospm"
 		even
-Nem_LzBlock2:	binclude	"artnem/LZ Blocks.nem"
+KosPM_LzPlatfm:	binclude	"artkospm/LZ Rising Platform.kospm"
 		even
-Nem_LzPlatfm:	binclude	"artnem/LZ Rising Platform.nem"
+KosPM_Cork:	binclude	"artkospm/LZ Cork.kospm"
 		even
-Nem_Cork:	binclude	"artnem/LZ Cork.nem"
-		even
-Nem_LzBlock1:	binclude	"artnem/LZ 32x32 Block.nem"
+KosPM_LzBlock1:	binclude	"artkospm/LZ 32x32 Block.kospm"
 		even
 
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - MZ stuff
 ; ---------------------------------------------------------------------------
-Nem_MzMetal:	binclude	"artnem/MZ Metal Blocks.nem"
+KosPM_MzMetal:	binclude	"artkospm/MZ Metal Blocks.kospm"
 		even
-Nem_MzSwitch:	binclude	"artnem/MZ Switch.nem"
+KosPM_MzSwitch:	binclude	"artkospm/MZ Switch.kospm"
 		even
-Nem_MzGlass:	binclude	"artnem/MZ Green Glass Block.nem"
+KosPM_MzGlass:	binclude	"artkospm/MZ Green Glass Block.kospm"
 		even
-Nem_MzFire:	binclude	"artnem/Fireballs.nem"
+KosPM_MzFire:	binclude	"artkospm/Fireballs.kospm"
 		even
-Nem_Lava:	binclude	"artnem/MZ Lava.nem"
+KosPM_Lava:	binclude	"artkospm/MZ Lava.kospm"
 		even
-Nem_MzBlock:	binclude	"artnem/MZ Green Pushable Block.nem"
+KosPM_MzBlock:	binclude	"artkospm/MZ Green Pushable Block.kospm"
 		even
 
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - SLZ stuff
 ; ---------------------------------------------------------------------------
-Nem_Seesaw:	binclude	"artnem/SLZ Seesaw.nem"
+KosPM_Seesaw:	binclude	"artkospm/SLZ Seesaw.kospm"
 		even
-Nem_SlzSpike:	binclude	"artnem/SLZ Little Spikeball.nem"
+KosPM_SlzSpike:	binclude	"artkospm/SLZ Little Spikeball.kospm"
 		even
-Nem_Fan:	binclude	"artnem/SLZ Fan.nem"
+KosPM_Fan:	binclude	"artkospm/SLZ Fan.kospm"
 		even
-Nem_SlzWall:	binclude	"artnem/SLZ Breakable Wall.nem"
+KosPM_SlzWall:	binclude	"artkospm/SLZ Breakable Wall.kospm"
 		even
-Nem_Pylon:	binclude	"artnem/SLZ Pylon.nem"
+KosPM_Pylon:	binclude	"artkospm/SLZ Pylon.kospm"
 		even
-Nem_SlzSwing:	binclude	"artnem/SLZ Swinging Platform.nem"
+KosPM_SlzSwing:	binclude	"artkospm/SLZ Swinging Platform.kospm"
 		even
-Nem_SlzBlock:	binclude	"artnem/SLZ 32x32 Block.nem"
+KosPM_SlzBlock:	binclude	"artkospm/SLZ 32x32 Block.kospm"
 		even
-Nem_SlzCannon:	binclude	"artnem/SLZ Cannon.nem"
+KosPM_SlzCannon:	binclude	"artkospm/SLZ Cannon.kospm"
 		even
 
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - SYZ stuff
 ; ---------------------------------------------------------------------------
-Nem_Bumper:	binclude	"artnem/SYZ Bumper.nem"
+KosPM_Bumper:	binclude	"artkospm/SYZ Bumper.kospm"
 		even
-Nem_SyzSpike2:	binclude	"artnem/SYZ Small Spikeball.nem"
+KosPM_SyzSpike2:	binclude	"artkospm/SYZ Small Spikeball.kospm"
 		even
-Nem_LzSwitch:	binclude	"artnem/Switch.nem"
+KosPM_LzSwitch:	binclude	"artkospm/Switch.kospm"
 		even
-Nem_SyzSpike1:	binclude	"artnem/SYZ Large Spikeball.nem"
+KosPM_SyzSpike1:	binclude	"artkospm/SYZ Large Spikeball.kospm"
 		even
 
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - SBZ stuff
 ; ---------------------------------------------------------------------------
-Nem_SbzWheel1:	binclude	"artnem/SBZ Running Disc.nem"
+KosPM_SbzWheel1:	binclude	"artkospm/SBZ Running Disc.kospm"
 		even
-Nem_SbzWheel2:	binclude	"artnem/SBZ Junction Wheel.nem"
+KosPM_SbzWheel2:	binclude	"artkospm/SBZ Junction Wheel.kospm"
 		even
-Nem_Cutter:	binclude	"artnem/SBZ Pizza Cutter.nem"
+KosPM_Cutter:	binclude	"artkospm/SBZ Pizza Cutter.kospm"
 		even
-Nem_Stomper:	binclude	"artnem/SBZ Stomper.nem"
+KosPM_Stomper:	binclude	"artkospm/SBZ Stomper.kospm"
 		even
-Nem_SpinPform:	binclude	"artnem/SBZ Spinning Platform.nem"
+KosPM_SpinPform:	binclude	"artkospm/SBZ Spinning Platform.kospm"
 		even
-Nem_TrapDoor:	binclude	"artnem/SBZ Trapdoor.nem"
+KosPM_TrapDoor:	binclude	"artkospm/SBZ Trapdoor.kospm"
 		even
-Nem_SbzFloor:	binclude	"artnem/SBZ Collapsing Floor.nem"
+KosPM_SbzFloor:	binclude	"artkospm/SBZ Collapsing Floor.kospm"
 		even
-Nem_Electric:	binclude	"artnem/SBZ Electrocuter.nem"
+KosPM_Electric:	binclude	"artkospm/SBZ Electrocuter.kospm"
 		even
-Nem_SbzBlock:	binclude	"artnem/SBZ Vanishing Block.nem"
+KosPM_SbzBlock:	binclude	"artkospm/SBZ Vanishing Block.kospm"
 		even
-Nem_FlamePipe:	binclude	"artnem/SBZ Flaming Pipe.nem"
+KosPM_FlamePipe:	binclude	"artkospm/SBZ Flaming Pipe.kospm"
 		even
-Nem_SbzDoor1:	binclude	"artnem/SBZ Small Vertical Door.nem"
+KosPM_SbzDoor1:	binclude	"artkospm/SBZ Small Vertical Door.kospm"
 		even
-Nem_SlideFloor:	binclude	"artnem/SBZ Sliding Floor Trap.nem"
+KosPM_SlideFloor:	binclude	"artkospm/SBZ Sliding Floor Trap.kospm"
 		even
-Nem_SbzDoor2:	binclude	"artnem/SBZ Large Horizontal Door.nem"
+KosPM_SbzDoor2:	binclude	"artkospm/SBZ Large Horizontal Door.kospm"
 		even
-Nem_Girder:	binclude	"artnem/SBZ Crushing Girder.nem"
+KosPM_Girder:	binclude	"artkospm/SBZ Crushing Girder.kospm"
 		even
 
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - enemies
 ; ---------------------------------------------------------------------------
-Nem_BallHog:	binclude	"artnem/Enemy Ball Hog.nem"
+KosPM_BallHog:	binclude	"artkospm/Enemy Ball Hog.kospm"
 		even
-Nem_Crabmeat:	binclude	"artnem/Enemy Crabmeat.nem"
+KosPM_Crabmeat:	binclude	"artkospm/Enemy Crabmeat.kospm"
 		even
-Nem_Buzz:	binclude	"artnem/Enemy Buzz Bomber.nem"
+KosPM_Buzz:	binclude	"artkospm/Enemy Buzz Bomber.kospm"
 		even
-Nem_Burrobot:	binclude	"artnem/Enemy Burrobot.nem"
+KosPM_Burrobot:	binclude	"artkospm/Enemy Burrobot.kospm"
 		even
-Nem_Chopper:	binclude	"artnem/Enemy Chopper.nem"
+KosPM_Chopper:	binclude	"artkospm/Enemy Chopper.kospm"
 		even
-Nem_Jaws:	binclude	"artnem/Enemy Jaws.nem"
+KosPM_Jaws:	binclude	"artkospm/Enemy Jaws.kospm"
 		even
-Nem_Roller:	binclude	"artnem/Enemy Roller.nem"
+KosPM_Roller:	binclude	"artkospm/Enemy Roller.kospm"
 		even
-Nem_Motobug:	binclude	"artnem/Enemy Motobug.nem"
+KosPM_Motobug:	binclude	"artkospm/Enemy Motobug.kospm"
 		even
-Nem_Newtron:	binclude	"artnem/Enemy Newtron.nem"
+KosPM_Newtron:	binclude	"artkospm/Enemy Newtron.kospm"
 		even
-Nem_Yadrin:	binclude	"artnem/Enemy Yadrin.nem"
+KosPM_Yadrin:	binclude	"artkospm/Enemy Yadrin.kospm"
 		even
-Nem_Basaran:	binclude	"artnem/Enemy Basaran.nem"
+KosPM_Basaran:	binclude	"artkospm/Enemy Basaran.kospm"
 		even
-Nem_Splats:	binclude	"artnem/Enemy Splats.nem"
+KosPM_Splats:	binclude	"artkospm/Enemy Splats.kospm"
 		even
-Nem_Bomb:	binclude	"artnem/Enemy Bomb.nem"
+KosPM_Bomb:	binclude	"artkospm/Enemy Bomb.kospm"
 		even
-Nem_Orbinaut:	binclude	"artnem/Enemy Orbinaut.nem"
+KosPM_Orbinaut:	binclude	"artkospm/Enemy Orbinaut.kospm"
 		even
-Nem_Cater:	binclude	"artnem/Enemy Caterkiller.nem"
+KosPM_Cater:	binclude	"artkospm/Enemy Caterkiller.kospm"
 		even
 
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - various
 ; ---------------------------------------------------------------------------
-Nem_TitleCard:	binclude	"artnem/Title Cards.nem"
+KosPM_TitleCard:	binclude	"artkospm/Title Cards.kospm"
 		even
-Nem_Hud:	binclude	"artnem/HUD.nem" ; HUD (rings, time, score)
+KosPM_Hud:	binclude	"artkospm/HUD.kospm" ; HUD (rings, time, score)
 		even
-Nem_Lives:	binclude	"artnem/HUD - Life Counter Icon.nem"
+KosPM_Lives:	binclude	"artkospm/HUD - Life Counter Icon.kospm"
 		even
-Nem_Ring:	binclude	"artnem/Rings.nem"
+Art_Ring:	binclude	"artunc/Rings.unc"
 		even
-Nem_Monitors:	binclude	"artnem/Monitors.nem"
+KosPM_Sparkles:	binclude	"artkospm/Ring Sparkles.kospm"
 		even
-Nem_Explode:	binclude	"artnem/Explosion.nem"
+KosPM_Monitors:	binclude	"artkospm/Monitors.kospm"
 		even
-Nem_Points:	binclude	"artnem/Points.nem" ; points from destroyed enemy or object
+KosPM_Explode:	binclude	"artkospm/Explosion.kospm"
 		even
-Nem_GameOver:	binclude	"artnem/Game Over.nem" ; game over / time over
+Art_Points:	binclude	"artunc/Points.unc"
 		even
-Nem_HSpring:	binclude	"artnem/Spring Horizontal.nem"
+KosPM_GameOver:	binclude	"artkospm/Game Over.kospm" ; game over / time over
 		even
-Nem_VSpring:	binclude	"artnem/Spring Vertical.nem"
+KosPM_HSpring:	binclude	"artkospm/Spring Horizontal.kospm"
 		even
-Nem_SignPost:	binclude	"artnem/Signpost.nem" ; end of level signpost
+KosPM_VSpring:	binclude	"artkospm/Spring Vertical.kospm"
 		even
-Nem_Lamp:	binclude	"artnem/Lamppost.nem"
+KosPM_SignPost:	binclude	"artkospm/Signpost.kospm" ; end of level signpost
 		even
-Nem_BigFlash:	binclude	"artnem/Giant Ring Flash.nem"
+KosPM_Lamp:	binclude	"artkospm/Lamppost.kospm"
 		even
-Nem_Bonus:	binclude	"artnem/Hidden Bonuses.nem" ; hidden bonuses at end of a level
+Art_BigFlash:	binclude	"artunc/Giant Ring Flash.unc"
+		even
+KosPM_Bonus:	binclude	"artkospm/Hidden Bonuses.kospm" ; hidden bonuses at end of a level
 		even
 
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - continue screen
 ; ---------------------------------------------------------------------------
-Nem_ContSonic:	binclude	"artnem/Continue Screen Sonic.nem"
+KosPM_ContSonic:	binclude	"artkospm/Continue Screen Sonic.kospm"
 		even
-Nem_MiniSonic:	binclude	"artnem/Continue Screen Stuff.nem"
+KosPM_MiniSonic:	binclude	"artkospm/Continue Screen Stuff.kospm"
 		even
 
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - animals
 ; ---------------------------------------------------------------------------
-Nem_Rabbit:	binclude	"artnem/Animal Rabbit.nem"
+KosPM_Rabbit:	binclude	"artkospm/Animal Rabbit.kospm"
 		even
-Nem_Chicken:	binclude	"artnem/Animal Chicken.nem"
+KosPM_Chicken:	binclude	"artkospm/Animal Chicken.kospm"
 		even
-Nem_Penguin:	binclude	"artnem/Animal Penguin.nem"
+KosPM_Penguin:	binclude	"artkospm/Animal Penguin.kospm"
 		even
-Nem_Seal:	binclude	"artnem/Animal Seal.nem"
+KosPM_Seal:	binclude	"artkospm/Animal Seal.kospm"
 		even
-Nem_Pig:	binclude	"artnem/Animal Pig.nem"
+KosPM_Pig:	binclude	"artkospm/Animal Pig.kospm"
 		even
-Nem_Flicky:	binclude	"artnem/Animal Flicky.nem"
+KosPM_Flicky:	binclude	"artkospm/Animal Flicky.kospm"
 		even
-Nem_Squirrel:	binclude	"artnem/Animal Squirrel.nem"
+KosPM_Squirrel:	binclude	"artkospm/Animal Squirrel.kospm"
 		even
 
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - primary patterns and block mappings
 ; ---------------------------------------------------------------------------
-Nem_Title:	binclude	"artnem/8x8 - Title.nem"
+Blk16_Title:	binclude	"map16/Title.unc"
+		even
+KosPM_Title:	binclude	"artkospm/8x8 - Title.kospm" ; Title primary patterns
+		even
+Blk256_Title:	binclude	"map256/Title.unc"
 		even
 
-Blk16_GHZ:	binclude	"map16/GHZ.eni"
+Blk16_GHZ:	binclude	"map16/GHZ.unc"
 		even
-Nem_GHZ:	binclude	"artnem/8x8 - GHZ.nem" ; GHZ primary patterns
+KosP_GHZ:	binclude	"artkosp/8x8 - GHZ.kosp" ; GHZ primary patterns
 		even
-Blk256_GHZ:	binclude	"map256/GHZ.kos"
-		even
-
-Blk16_LZ:	binclude	"map16/LZ.eni"
-		even
-Nem_LZ:		binclude	"artnem/8x8 - LZ.nem" ; LZ primary patterns
-		even
-Blk256_LZ:	binclude	"map256/LZ.kos"
+Blk256_GHZ:	binclude	"map256/GHZ.unc"
 		even
 
-Blk16_MZ:	binclude	"map16/MZ.eni"
+Blk16_LZ:	binclude	"map16/LZ.unc"
 		even
-Nem_MZ:		binclude	"artnem/8x8 - MZ.nem" ; MZ primary patterns
+KosP_LZ:	binclude	"artkosp/8x8 - LZ.kosp" ; LZ primary patterns
 		even
-Blk256_MZ:	binclude	"map256/MZ.kos"
-		even
-
-Blk16_SLZ:	binclude	"map16/SLZ.eni"
-		even
-Nem_SLZ:	binclude	"artnem/8x8 - SLZ.nem" ; SLZ primary patterns
-		even
-Blk256_SLZ:	binclude	"map256/SLZ.kos"
+Blk256_LZ:	binclude	"map256/LZ.unc"
 		even
 
-Blk16_SYZ:	binclude	"map16/SYZ.eni"
+Blk16_MZ:	binclude	"map16/MZ.unc"
 		even
-Nem_SYZ:	binclude	"artnem/8x8 - SYZ.nem" ; SYZ primary patterns
+KosP_MZ:	binclude	"artkosp/8x8 - MZ.kosp" ; MZ primary patterns
 		even
-Blk256_SYZ:	binclude	"map256/SYZ.kos"
+Blk256_MZ:	binclude	"map256/MZ.unc"
 		even
 
-Blk16_SBZ:	binclude	"map16/SBZ.eni"
+Blk16_SLZ:	binclude	"map16/SLZ.unc"
 		even
-Nem_SBZ:	binclude	"artnem/8x8 - SBZ.nem" ; SBZ primary patterns
+KosP_SLZ:	binclude	"artkosp/8x8 - SLZ.kosp" ; SLZ primary patterns
 		even
-Blk256_SBZ:	binclude	"map256/SBZ.kos"
+Blk256_SLZ:	binclude	"map256/SLZ.unc"
+		even
+
+Blk16_SYZ:	binclude	"map16/SYZ.unc"
+		even
+KosP_SYZ:	binclude	"artkosp/8x8 - SYZ.kosp" ; SYZ primary patterns
+		even
+Blk256_SYZ:	binclude	"map256/SYZ.unc"
+		even
+
+Blk16_SBZ:	binclude	"map16/SBZ.unc"
+		even
+KosP_SBZ:	binclude	"artkosp/8x8 - SBZ.kosp" ; SBZ primary patterns
+		even
+Blk256_SBZ:	binclude	"map256/SBZ.unc"
 		even
 
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - bosses and ending sequence
 ; ---------------------------------------------------------------------------
-Nem_Eggman:	binclude	"artnem/Boss - Main.nem"
+KosPM_Eggman:	binclude	"artkospm/Boss - Main.kospm"
 		even
-Nem_Weapons:	binclude	"artnem/Boss - Weapons.nem"
+KosPM_Weapons:	binclude	"artkospm/Boss - Weapons.kospm"
 		even
-Nem_Prison:	binclude	"artnem/Prison Capsule.nem"
+KosPM_Prison:	binclude	"artkospm/Prison Capsule.kospm"
 		even
-Nem_Sbz2Eggman:	binclude	"artnem/Boss - Eggman in SBZ2 & FZ.nem"
+KosPM_Sbz2Eggman:	binclude	"artkospm/Boss - Eggman in SBZ2 & FZ.kospm"
 		even
-Nem_FzBoss:	binclude	"artnem/Boss - Final Zone.nem"
+KosPM_FzBoss:	binclude	"artkospm/Boss - Final Zone.kospm"
 		even
-Nem_FzEggman:	binclude	"artnem/Boss - Eggman after FZ Fight.nem"
+KosPM_FzEggman:	binclude	"artkospm/Boss - Eggman after FZ Fight.kospm"
 		even
-Nem_Exhaust:	binclude	"artnem/Boss - Exhaust Flame.nem"
+KosPM_Exhaust:	binclude	"artkospm/Boss - Exhaust Flame.kospm"
 		even
-Nem_EndEm:	binclude	"artnem/Ending - Emeralds.nem"
+KosPM_EndEm:	binclude	"artkospm/Ending - Emeralds.kospm"
 		even
-Nem_EndSonic:	binclude	"artnem/Ending - Sonic.nem"
+KosPM_EndSonic:	binclude	"artkospm/Ending - Sonic.kospm"
 		even
-Nem_TryAgain:	binclude	"artnem/Ending - Try Again.nem"
+KosPM_TryAgain:	binclude	"artkospm/Ending - Try Again.kospm"
 		even
-Kos_EndFlowers:	binclude	"artkos/Flowers at Ending.kos" ; ending sequence animated flowers
+Art_EndFlowers:	binclude	"artunc/Flowers at Ending.unc"
 		even
-Nem_EndFlower:	binclude	"artnem/Ending - Flowers.nem"
+KosPM_EndFlower:	binclude	"artkospm/Ending - Flowers.kospm"
 		even
-Nem_CreditText:	binclude	"artnem/Ending - Credits.nem"
+KosPM_CreditText:	binclude	"artkospm/Ending - Credits.kospm"
 		even
-Nem_EndStH:	binclude	"artnem/Ending - StH Logo.nem"
+KosPM_EndStH:	binclude	"artkospm/Ending - StH Logo.kospm"
 		even
 
 
@@ -4553,7 +4588,7 @@ Level_Index:
 		dc.w Level_End-Level_Index, Level_GHZbg-Level_Index, Level_EndUnk-Level_Index
 		dc.w Level_End-Level_Index, Level_GHZbg-Level_Index, Level_EndUnk-Level_Index
 		dc.w Level_EndUnk-Level_Index, Level_EndUnk-Level_Index, Level_EndUnk-Level_Index
-		dc.w Level_EndUnk-Level_Index, Level_EndUnk-Level_Index, Level_EndUnk-Level_Index
+		dc.w Level_EndUnk-Level_Index, Level_Titlebg-Level_Index, Level_EndUnk-Level_Index ; title screen background
 
 Level_GHZ1:	binclude	"levels/ghz1.bin"
 		even
@@ -4635,6 +4670,9 @@ Level_SBZ4Unk:	dc.l 0
 Level_End:	binclude	"levels/ending.bin"
 		even
 Level_EndUnk:	dc.l 0
+
+Level_Titlebg:	binclude	"levels/titlebg.bin"
+		even
 
 ; ---------------------------------------------------------------------------
 ; Uncompressed graphics - Giant Rings
@@ -4770,11 +4808,94 @@ ObjPos_End:	binclude	"objpos/ending.bin"
 ObjPos_Null:	dc.b $FF, $FF, 0, 0, 0,	0
 
 ; ---------------------------------------------------------------------------
+; Ring locations index for RingManager
+; ---------------------------------------------------------------------------
+
+RingPos_Index:	;	Act 1		Act 2		Act 3		Act 4
+		dc.l	Rings_GHZ1,	Rings_GHZ2,	Rings_GHZ3,	Rings_Null	; GHZ
+		dc.l	Rings_LZ1,	Rings_LZ2,	Rings_LZ3,	Rings_SBZ3	; LZ (SBZ3 => LZ4)
+		dc.l	Rings_MZ1,	Rings_MZ2,	Rings_MZ3,	Rings_Null	; MZ
+		dc.l	Rings_SLZ1,	Rings_SLZ2,	Rings_SLZ3,	Rings_Null	; SLZ
+		dc.l	Rings_SYZ1,	Rings_SYZ2,	Rings_SYZ3,	Rings_Null	; SYZ
+		dc.l	Rings_SBZ1,	Rings_SBZ2,	Rings_FZ,	Rings_Null	; SBZ (FZ => SBZ3)
+		dc.l	Rings_Ending,	Rings_Ending,	Rings_Null,	Rings_Null	; Ending Sequence
+
+Rings_GHZ1:	binclude "objpos/Rings/ghz1.bin"
+		even
+Rings_GHZ2:	binclude "objpos/Rings/ghz2.bin"
+		even
+Rings_GHZ3:	binclude "objpos/Rings/ghz3.bin"
+		even
+
+Rings_LZ1:	binclude "objpos/Rings/lz1.bin"
+		even
+Rings_LZ2:	binclude "objpos/Rings/lz2.bin"
+		even
+Rings_LZ3:	binclude "objpos/Rings/lz3.bin"
+		even
+Rings_SBZ3:	binclude "objpos/Rings/sbz3.bin"
+		even
+
+Rings_MZ1:	binclude "objpos/Rings/mz1.bin"
+		even
+Rings_MZ2:	binclude "objpos/Rings/mz2.bin"
+		even
+Rings_MZ3:	binclude "objpos/Rings/mz3.bin"
+		even
+
+Rings_SLZ1:	binclude "objpos/Rings/slz1.bin"
+		even
+Rings_SLZ2:	binclude "objpos/Rings/slz2.bin"
+		even
+Rings_SLZ3:	binclude "objpos/Rings/slz3.bin"
+		even
+
+Rings_SYZ1:	binclude "objpos/Rings/syz1.bin"
+		even
+Rings_SYZ2:	binclude "objpos/Rings/syz2.bin"
+		even
+Rings_SYZ3:	binclude "objpos/Rings/syz3.bin"
+		even
+
+Rings_SBZ1:	binclude "objpos/Rings/sbz1.bin"
+		even
+Rings_SBZ2:	binclude "objpos/Rings/sbz2.bin"
+		even
+Rings_FZ:	binclude "objpos/Rings/fz.bin"
+		even
+
+Rings_Ending:	binclude "objpos/Rings/ending.bin"
+		even
+
+Rings_Null:	dc.w $FFFF, $0000
+
+; ---------------------------------------------------------------------------
+
+		include	"_inc/Title Cards Extended.asm"
+
+; ---------------------------------------------------------------------------
+
+		include "sound/MegaPCM.asm"
+		include "sound/SampleTable.asm"
 
 SoundDriver:	include "sound/s1.sounddriver.asm"
 		even
 
-; ---------------------------------------------------------------------------
+; =============================================================
+; --------------------------------------------------------------
+; Debugging modules
+; --------------------------------------------------------------
+
+	include	"_inc/ErrorHandler.asm"
+
+; --------------------------------------------------------------
+; WARNING!
+;	DO NOT put any data from now on! DO NOT use ROM padding!
+;	Symbol data should be appended here after ROM is compiled
+;	by ConvSym utility, otherwise debugger modules won't be able
+;	to resolve symbol names.
+; --------------------------------------------------------------
+
 
 ; end of 'ROM'
 EndOfRom:

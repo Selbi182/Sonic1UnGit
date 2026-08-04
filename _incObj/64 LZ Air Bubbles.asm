@@ -103,7 +103,6 @@ Bub_ChkWater:	; Routine 4
 		move.w	#35,locktime(a1)			; disable D-Pad input for 35 frames
 		move.b	#0,jumping(a1)				; clear jumping flag
 		bclr	#5,obStatus(a1)				; clear pushing flag
-		bclr	#4,obStatus(a1)				; clear roll-jump flag
 
 		btst	#2,obStatus(a1)				; was Sonic rolling as he touched the bubble?
 		beq.w	.burst					; if not, branch

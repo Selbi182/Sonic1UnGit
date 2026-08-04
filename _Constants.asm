@@ -16,6 +16,8 @@ PSG_Sample_Rate:	equ Z80_Clock/16
 ; VDP addresses
 vdp_data_port:		equ $C00000
 vdp_control_port:	equ $C00004
+VDP_data_port:		equ vdp_data_port
+VDP_control_port: 	equ vdp_control_port
 vdp_counter:		equ $C00008
 psg_input:		equ $C00011
 debug_reg:		equ $C0001C
@@ -153,7 +155,11 @@ id_EndZ_bad:		equ (id_EndZ<<8)+act2			; $0601 (bad ending, not all emeralds)
 ; Special Stage
 ss_emeralds_num:	equ 6					; total number of Chaos Emeralds and Special Stages
 ss_giantring_rings:	equ 50					; number of rings required for giant rings to spawn
+    if Enable_InfiniteLives
+ss_continue_rings:	equ 9999
+    else
 ss_continue_rings:	equ 50					; number of rings required to earn an extra continue
+    endif
 ss_rotatespeed:		equ $40					; base special stage rotation speed
 ss_timeout:		equ 30					; delay after touching an UP/DOWN or R block
 ss_blocksize:		equ 24					; logical size of a single block
@@ -195,7 +201,7 @@ sprite_cam_field_bit:	equ 2					; position with foreground coordinates (playfiel
 sprite_cam_bg_bit:	equ 3					; position with background coordinates (unused, see notes in BuildSpr_Cameras)
 sprite_customheight_bit:equ 4					; use obHeight instead of assuming 32px to determine display height
 sprite_rawmappings_bit:	equ 5					; obMap points to single, specific sprite piece rather than index of mappings
-sprite_looping_bit:	equ 6					; display behind looping chunks (only used by Sonic)
+sprite_subsprite_bit:	equ 6
 sprite_rendered_bit:	equ 7					; set when sprite is in visible screen space and got rendered the previous frame
 
 sprite_xflip:		equ 1<<sprite_xflip_bit
@@ -220,6 +226,7 @@ obSubpixelY:		equ $E					; y-axis subpixel position for playfield items (2 bytes
 obVelX:			equ $10					; x-axis velocity (2 bytes)
 obVelY:			equ $12					; y-axis velocity (2 bytes)
 obInertia:		equ $14					; potential speed (2 bytes)
+respawn_index:		equ $14					; S3K object manager respawn table address (2 bytes)
 obHeight:		equ $16					; height/2
 obWidth:		equ $17					; width/2
 obPriority:		equ $18					; sprite stack priority -- 0 is front
@@ -233,7 +240,6 @@ obDelayAni:		equ $1F					; time to delay animation
 obColType:		equ $20					; collision response type
 obColProp:		equ $21					; collision extra property
 obStatus:		equ $22					; orientation or mode
-obRespawnNo:		equ $23					; respawn list index number
 obRoutine:		equ $24					; routine number
 ob2ndRout:		equ $25					; secondary routine number
 obSolid:		equ ob2ndRout				; solid status flag
@@ -241,17 +247,53 @@ obAngle:		equ $26					; angle
 obSubtype:		equ $28					; object subtype
 
 ; Object variables used by Sonic
+homingattack:		equ $2F
 flashtime:		equ $30					; time between flashes after getting hit (2 bytes)
 invtime:		equ $32					; time left for invincibility (2 bytes)
 shoetime:		equ $34					; time left for speed shoes (2 bytes)
 angleright:		equ $36					; angle of floor on Sonic's right side
 angleleft:		equ $37					; angle of floor on Sonic's left side
 sticktoconvex:		equ $38					; flag set while running on an SBZ gear
-;unused:		equ $39					; unused by Sonic
+spindash_flag:		equ $39					; Spin Dash flag
+spindash_count:		equ $3A					; Spin Dash rev counter
+spindash_decay:		equ $3B					; Spin Dash rev decay timer
 restartime:		equ $3A					; time left before level restarts after dying (2 bytes)
 jumping:		equ $3C					; flag set while Sonic is jumping
 standonobject:		equ $3D					; object index Sonic stands on
 locktime:		equ $3E					; temporary D-Pad control lock timer (2 bytes)
+
+; Sub sprites from Sonic 2: when childsprites are activated (bit 6 of obRender set)
+; (Comments denote overridden SSTs, 0-5 and high words of obX/obY same as normal)
+next_subspr:		equ 6	; Length of sub sprite data
+mainspr_mapframe:	equ $B	; obScreenY (low byte)
+mainspr_width:		equ $E	; obY (low word hi)
+mainspr_childsprites:	equ $F	; obY (low word lo)
+mainspr_height:		equ $14	; obInertia (high byte)
+subspr_data:		equ $10
+sub2_x_pos:		equ subspr_data+next_subspr*0+0	; obVelX
+sub2_y_pos:		equ subspr_data+next_subspr*0+2	; obVelY
+sub2_mapframe:		equ subspr_data+next_subspr*0+5	; obInertia (low byte)
+sub3_x_pos:		equ subspr_data+next_subspr*1+0	; obHeight/obWidth
+sub3_y_pos:		equ subspr_data+next_subspr*1+2	; obPriority/obActWid
+sub3_mapframe:		equ subspr_data+next_subspr*1+5	; obAniFrame
+sub4_x_pos:		equ subspr_data+next_subspr*2+0	; obAnim/obPrevAni
+sub4_y_pos:		equ subspr_data+next_subspr*2+2	; obTimeFrame/obDelayAni
+sub4_mapframe:		equ subspr_data+next_subspr*2+5	; obColProp
+sub5_x_pos:		equ subspr_data+next_subspr*3+0	; obStatus/obRespawnNo
+sub5_y_pos:		equ subspr_data+next_subspr*3+2	; obRoutine/ob2ndRout
+sub5_mapframe:		equ subspr_data+next_subspr*3+5	; obAngle (low byte)
+sub6_x_pos:		equ subspr_data+next_subspr*4+0	; obSubtype/objoff_29
+sub6_y_pos:		equ subspr_data+next_subspr*4+2	; objoff_2A/objoff_2B
+sub6_mapframe:		equ subspr_data+next_subspr*4+5	; objoff_2D
+sub7_x_pos:		equ subspr_data+next_subspr*5+0	; objoff_2E/objoff_2F
+sub7_y_pos:		equ subspr_data+next_subspr*5+2	; objoff_30/objoff_31
+sub7_mapframe:		equ subspr_data+next_subspr*5+5	; objoff_33
+sub8_x_pos:		equ subspr_data+next_subspr*6+0	; objoff_34/objoff_35
+sub8_y_pos:		equ subspr_data+next_subspr*6+2	; objoff_36/objoff_37
+sub8_mapframe:		equ subspr_data+next_subspr*6+5	; objoff_39
+sub9_x_pos:		equ subspr_data+next_subspr*7+0	; objoff_3A/objoff_3B
+sub9_y_pos:		equ subspr_data+next_subspr*7+2	; objoff_3C/objoff_3D
+sub9_mapframe:		equ subspr_data+next_subspr*7+5	; objoff_3F
 
 ; Sonic's collision sizes
 sonic_width:		equ 18/2				; Sonic's width
@@ -388,6 +430,14 @@ spec__First:		equ $D0
 sfx_Waterfall:		equ ((ptr_sndD0-SpecSoundIndex)/4)+spec__First
 spec__Last:		equ ((ptr_specend-SpecSoundIndex-4)/4)+spec__First
 
+; Extra sound effects
+ext__First:		equ $D1
+sfx_SpinDash:		equ ((ptr_sndD1-ExtSoundIndex)/4)+ext__First
+sfx_PeelCharge:		equ ((ptr_sndD2-ExtSoundIndex)/4)+ext__First
+sfx_PeelRelease:	equ ((ptr_sndD3-ExtSoundIndex)/4)+ext__First
+sfx_PeelStop:		equ ((ptr_sndD4-ExtSoundIndex)/4)+ext__First
+ext__Last:		equ ((ptr_extend-ExtSoundIndex-4)/4)+ext__First
+
 ; Sound commands
 flg__First:		equ $E0
 bgm_Fade:		equ ((ptr_flgE0-Sound_ExIndex)/4)+flg__First
@@ -476,7 +526,6 @@ ArtTile_LZ_Block_1:		equ $1E0
 ArtTile_LZ_Block_2:		equ $1F0
 ArtTile_LZ_Splash:		equ $259
 ArtTile_LZ_Gargoyle:		equ $2E9
-ArtTile_LZ_Water_Surface:	equ $300
 ArtTile_LZ_Spikeball_Chain:	equ $310
 ArtTile_LZ_Flapping_Door:	equ $328
 ArtTile_LZ_Bubbles:		equ $348
@@ -549,7 +598,7 @@ ArtTile_Spikes:			equ $51B
 ArtTile_Spring_Horizontal:	equ $523
 ArtTile_Spring_Vertical:	equ $533
 ArtTile_Shield:			equ $541
-ArtTile_Invincibility:		equ $55C
+ArtTile_Invincibility:		equ ArtTile_Shield
 ArtTile_Game_Over:		equ $55E
 ArtTile_Title_Card:		equ $580
 ArtTile_Animal_1:		equ $580
@@ -557,6 +606,8 @@ ArtTile_Animal_2:		equ $592
 ArtTile_Explosion:		equ $5A0
 ArtTile_Monitor:		equ $680
 ArtTile_HUD:			equ $6CA
+MapOff_HUDCentis:		equ -6
+ArtTile_HUDCentis:		equ ArtTile_HUD+MapOff_HUDCentis
 ArtTile_HUDScore:		equ ArtTile_HUD+$1A
 ArtTile_HUDScore_E:		equ ArtTile_HUDScore-2
 ArtTile_HUDTimeMins:		equ ArtTile_HUD+$28
@@ -564,9 +615,12 @@ ArtTile_HUDTimeSecs:		equ ArtTile_HUD+$2C
 ArtTile_HUDRings:		equ ArtTile_HUD+$30
 
 ArtTile_Sonic:			equ $780
-ArtTile_Points:			equ $797
-ArtTile_Lamppost:		equ $7A0
+ArtTile_Points:			equ $79E
+ArtTile_Lamppost:		equ $553
+ArtTile_SpinDust:		equ $F400/tile_size		; = $7A0
 ArtTile_Ring:			equ $7B2
+ArtTile_Ring_Loss:		equ ArtTile_Ring+4
+ArtTile_Sparkles:		equ ArtTile_Ring+$A
 ArtTile_Lives_Counter:		equ $7D4
 ArtTile_Lives_Counter_Num:	equ ArtTile_Lives_Counter+9
 
@@ -580,7 +634,6 @@ ArtTile_Eggman_Exhaust:		equ ArtTile_Eggman+$12A
 
 ; End of Level
 ArtTile_Giant_Ring:		equ $400
-ArtTile_Giant_Ring_Flash:	equ $462
 ArtTile_Prison_Capsule:		equ $49D
 ArtTile_Hidden_Points:		equ $4B6
 ArtTile_Warp:			equ $541
@@ -592,10 +645,19 @@ ArtTile_Signpost:		equ $680
 ArtTile_Sega_Tiles:		equ $000
 
 ; Title Screen
+Title_Background_Tiles:		equ $105 ; tile count for the background (minimum $105 to not clash with Sonic Team Presents screen)
+Title_Foreground_Tiles:		equ $F0	 ; tile count for foreground emblem
+Title_Sonic_Tiles:		equ $20D ; tile count for the big Sonic object
+Title_PSB_Tiles:		equ $12	 ; tile count for Press Start Button text
+Title_TM_Tiles:			equ $2	 ; tile count for TM text
+
 ArtTile_Title_Japanese_Text:	equ $000
-ArtTile_Title_Foreground:	equ $200
-ArtTile_Title_Sonic:		equ $300
-ArtTile_Title_Trademark:	equ $510
+ArtTile_Title_Foreground:	equ Title_Background_Tiles
+ArtTile_Title_Sonic:		equ ArtTile_Title_Foreground+Title_Foreground_Tiles
+ArtTile_Title_PressStart:	equ ArtTile_Title_Sonic+Title_Sonic_Tiles
+ArtTile_Title_Trademark:	equ ArtTile_Title_PressStart+Title_PSB_Tiles
+
+ArtTile_Title_Menu:		equ $5C0
 ArtTile_Level_Select_Font:	equ $680
 
 ; Continue Screen

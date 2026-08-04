@@ -8,7 +8,7 @@ Map_Hel_internal:	mappingsTable
 	mappingsTableEntry.w	.down45
 	mappingsTableEntry.w	.down
 	mappingsTableEntry.w	.down45bg
-	mappingsTableEntry.w	.up45bg+2 ; This is a nasty hack to render the sprite invisible by pointing at a random 00 byte.
+	mappingsTableEntry.w	.blank
 	mappingsTableEntry.w	.up45bg
 
 .up:	spriteHeader
@@ -34,6 +34,9 @@ Map_Hel_internal:	mappingsTable
 .down45bg:	spriteHeader
 	spritePiece	-3, 4, 1, 1, $10, 0, 0, 0, 0	; 45 degree
 .down45bg_End
+
+.blank:	spriteHeader
+.blank_End
 
 .up45bg:	spriteHeader
 	spritePiece	-3, -$C, 1, 1, $11, 0, 0, 0, 0 ; 45 degree

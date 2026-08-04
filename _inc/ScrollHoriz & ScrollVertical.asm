@@ -32,16 +32,32 @@ ScrollHoriz:
 
 ; ScrollHoriz2:
 MoveScreenHoriz:
-		move.w	(v_player+obX).w,d0			; get Sonic's current X-position
-		sub.w	(v_screenposx).w,d0			; d0 = Sonic's distance from left edge of screen
+		move.w	(v_cam_x_delay).w,d1			; get current horizontal camera delay value
+		beq.s	.normal					; if there is none, branch (move camera normally)
+		subi.w	#$100,d1				; reduce remaining horizontal camera delay
+		move.w	d1,(v_cam_x_delay).w			; update remaining horizontal camera delay
+		moveq	#0,d1					; clear d1
+		move.b	(v_cam_x_delay).w,d1			; get new remaining camera delay (upper byte only)
+		lsl.b	#2,d1					; multiply by 4
+		addq.b	#4,d1					; add 4
+		move.w	(v_trackpos).w,d0			; get current index of Sonic's tracking position buffer
+		sub.b	d1,d0					; subtract delay value from tracking buffer index
+		lea	(v_tracksonic).w,a1			; get Sonic's tracked position buffer
+		move.w	(a1,d0.w),d0				; use the tracked position from a couple frames ago (based on delay value)
+		andi.w	#$3FFF,d0				; keep value sane
+		bra.s	.x_delay				; don't use Sonic's actual X coordinate
 
-		subi.w	#(320/2)-16,d0				; is distance less than 144px?
-		blt.s	SH_MoveCameraLeft			; if yes, branch (signed)
+	.normal:
+		move.w	(v_player+obX).w,d0			; get Sonic's current X coordinate
 
+	.x_delay:
+		sub.w	(v_screenposx).w,d0			; subtract X camera coordinate
+		sub.w	(v_camera_pan).w,d0			; subtract extended camera pan value
+		addi.w	#16,d0					; is distance less than 144px?
+		blt.s	SH_MoveCameraLeft			; if yes, branch
 		subi.w	#16,d0					; is distance more than 160px?
-		bge.s	SH_MoveCameraRight			; if yes, branch (signed)
-
-		clr.w	(v_scrshiftx).w				; Sonic is within the sweet spot, do not update camera shift
+		bge.s	SH_MoveCameraRight			; if yes, branch
+		clr.w	(v_scrshiftx).w				; clear horizontal X delta for frame
 		rts						; return
 ; ---------------------------------------------------------------------------
 
@@ -96,6 +112,11 @@ ScrollVertical:
 
 		move.w	(v_player+obY).w,d0			; get Sonic's current Y-position
 		sub.w	(v_screenposy).w,d0			; d0 = Sonic's distance from top of screen
+
+		tst.w	(v_limittop2).w				; is vertical wrapping enabled?
+		bpl.s	.noWrap					; if not, branch
+		andi.w	#$7FF,d0				; wrap Y position
+	.noWrap:
 
 		btst	#2,(v_player+obStatus).w		; is Sonic rolling?
 		beq.s	.checkInAir				; if not, branch
@@ -202,10 +223,8 @@ SV_TopBoundary:
 		bgt.s	SV_SetScreen				; if not, branch
 		cmpi.w	#-$100,d1				; does level wrap vertically? (top boundary set to -$100)
 		bgt.s	.noWrap					; if not, branch
-		andi.w	#$7FF,d1				; wrap expected new camera Y-position
-		andi.w	#$7FF,(v_player+obY).w			; wrap Sonic vertically
-		andi.w	#$7FF,(v_screenposy).w			; wrap camera Y-position
-		andi.w	#$3FF,(v_bgscreenposy).w		; wrap background Y-position
+		andi.w	#$7FF,d1				; wrap Y position
+		bset	#0,(v_fg_scroll_flags).w		; force a row redraw at the top to avoid visual glitches from wrapping
 		bra.s	SV_SetScreen				; set updated screen position
 ; ---------------------------------------------------------------------------
 
@@ -228,9 +247,8 @@ SV_BottomBoundary:
 		blt.s	SV_SetScreen				; if not, branch
 		subi.w	#$7FF+1,d1				; does level wrap vertically? (bottom boundary set to $800)
 		bcs.s	.noWrap					; if not, branch
-		andi.w	#$7FF,(v_player+obY).w			; wrap Sonic vertically
 		subi.w	#$7FF+1,(v_screenposy).w		; move camera back to top +1
-		andi.w	#$3FF,(v_bgscreenposy).w		; wrap background Y-position
+		bset	#1,(v_fg_scroll_flags).w		; force a row redraw at the bottom to avoid visual glitches from wrapping
 		bra.s	SV_SetScreen				; set updated screen position
 
 	; loc_6720:

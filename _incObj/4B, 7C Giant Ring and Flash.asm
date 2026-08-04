@@ -36,11 +36,10 @@ GRing_Okay:
 		addq.b	#2,obRoutine(a0)			; set to GRing_Animate
 		move.b	#2,obPriority(a0)			; set sprite priority
 		move.b	#col_16x32|col_item,obColType(a0)	; set col type (ReactToItem will advance obRoutine on collection)
-		move.w	#Art_BigRing_size,(v_gfxbigring).w	; trigger AniArt_GiantRing to load graphics (Art_BigRing_size = $C40)
+		move.b	#1,(v_gfxbigring).w			; start loading giant ring graphics
 ; ---------------------------------------------------------------------------
 
 GRing_Animate:	; Routine 2
-		move.b	(v_ani1_frame).w,obFrame(a0)		; set frame (updated in SynchroAnimate => Sync2)
 		out_of_range.w	DeleteObject			; is giant ring offscreen? if yes, delete it
 		bra.w	DisplaySprite				; otherwise, display sprite
 ; ===========================================================================
@@ -88,12 +87,13 @@ Flash_Index:	dc.w Flash_Main-Flash_Index
 
 Flash_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)			; set to Flash_ChkDel
-		move.l	#Map_Flash,obMap(a0)			; set mappings
-		move.w	#ArtTile_Giant_Ring_Flash|Tile_Pal2,obGfx(a0) ; set art tile and palette line
+		move.l	#Map_GRing,obMap(a0)
+		move.w	#ArtTile_Giant_Ring|Tile_Pal2,obGfx(a0)
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield positioned mode
 		move.b	#0,obPriority(a0)			; set to maximum sprite priority
 		move.b	#64/2,obActWid(a0)			; set sprite display width
-		move.b	#-1,obFrame(a0)				; set to frame -1 so first run of Flash_Collect will set it to 0
+		move.b	#2,(v_gfxbigring).w
+		move.b	#-1,(v_ani2_frame).w
 ; ---------------------------------------------------------------------------
 
 Flash_ChkDel:	; Routine 2
@@ -111,11 +111,11 @@ Flash_Collect:
 		subq.b	#1,obTimeFrame(a0)			; decrement delay until next frame
 		bpl.s	.return					; if time remains, branch
 		move.b	#1,obTimeFrame(a0)			; reset delay to 2 frames
-		addq.b	#1,obFrame(a0)				; advance to next frame
-		cmpi.b	#8,obFrame(a0)				; has animation finished? (8 frames)
-		bhs.s	.deleteSonic				; if yes, branch
-		cmpi.b	#3,obFrame(a0)				; is 3rd frame displayed?
-		bne.s	.return					; if not, branch
+		addq.b	#1,(v_ani2_frame).w
+		cmpi.b	#8,(v_ani2_frame).w	                ; has animation finished?
+		bhs.s	.deleteSonic		                ; if yes, branch
+		cmpi.b	#3,(v_ani2_frame).w	                ; is 3rd frame displayed?
+		bne.s   .return		                        ; if not, branch
 
 		movea.l	gring_parent(a0),a1			; get parent giant ring object address
 		move.b	#6,obRoutine(a1)			; delete parent object
@@ -138,9 +138,9 @@ Flash_Collect:
 ; ===========================================================================
 
 Flash_Delete:	; Routine 4
+		clr.b	(v_gfxbigring).w			; stop loading giant ring graphics
 		bra.w	DeleteObject				; delete flash object
 
 ; ===========================================================================
 
 Map_GRing:	include	"_maps/Giant Ring.asm"
-Map_Flash:	include	"_maps/Ring Flash.asm"

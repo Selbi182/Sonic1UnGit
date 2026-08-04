@@ -1,22 +1,32 @@
+; precalculated sprite queue offsets, eight in total, $80 bytes each
+DSpr_Layers:	dc.w v_spritequeue+($80*0)
+		dc.w v_spritequeue+($80*1)
+		dc.w v_spritequeue+($80*2)
+		dc.w v_spritequeue+($80*3)
+		dc.w v_spritequeue+($80*4)
+		dc.w v_spritequeue+($80*5)
+		dc.w v_spritequeue+($80*6)
+		dc.w v_spritequeue+($80*7)
+		even
+
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Subroutine to display a sprite/object, when a0 is the object RAM
 ; ---------------------------------------------------------------------------
 
 DisplaySprite:
-		lea	(v_spritequeue).w,a1			; load sprite priority layer buffer
-		move.w	obPriority(a0),d0			; d0 = priority level * $100 (lower byte ignored)
-		lsr.w	#8-spritelayer_size_bits,d0		; d0 = priority level * spritequeue_layersize (lower bits ignored)
-		andi.w	#spritelayer_size*(spritelayer_num-1),d0 ; mask to possible offset starts per layer ($80*7=$380)
-		adda.w	d0,a1					; jump to start of appropriate priority layer
-		cmpi.w	#spritelayer_size-2,(a1)		; is this sprite priority layer full? ($7E bytes)
-		bhs.s	.return					; if yes, drop queuing this sprite
-		addq.w	#2,(a1)					; increment sprite counter
-		adda.w	(a1),a1					; jump to empty position
-		move.w	a0,(a1)					; insert RAM address for object
+		moveq	#7,d0			; possible sprite priorities
+		and.b	obPriority(a0),d0	; mask by object's sprite priority
+		add.w	d0,d0			; double it for word-based indexing
+		movea.w	DSpr_Layers(pc,d0.w),a1	; get target sprite queue
+		move.w	(a1),d0			; get sprite queue's entry count
+		addq.b	#2,d0			; increase count by another entry (word)
+		bmi.s	DSpr_Full		; if byte value went to $80, queue is full
+		move.w	d0,(a1)			; set new sprite queue's entry count
+		move.w	a0,(a1,d0.w)		; insert RAM address for object to queue
 
-	.return:
-		rts						; return
+DSpr_Full:
+		rts
 ; End of function DisplaySprite
 
 ; ===========================================================================
@@ -26,17 +36,35 @@ DisplaySprite:
 
 ; DisplaySprite1: <-- old misnomer
 DisplaySprite2:
-		lea	(v_spritequeue).w,a2			; load sprite priority layer buffer
-		move.w	obPriority(a1),d0			; d0 = priority level * $100 (lower byte ignored)
-		lsr.w	#8-spritelayer_size_bits,d0		; d0 = priority level * spritequeue_layersize (lower bits ignored)
-		andi.w	#spritelayer_size*(spritelayer_num-1),d0 ; mask to possible offset starts per layer ($80*7=$380)
-		adda.w	d0,a2					; jump to start of appropriate priority layer
-		cmpi.w	#spritelayer_size-2,(a2)		; is this sprite priority layer full? ($7E bytes)
-		bhs.s	.return					; if yes, drop queuing this sprite
-		addq.w	#2,(a2)					; increment sprite counter
-		adda.w	(a2),a2					; jump to empty position
-		move.w	a1,(a2)					; insert RAM address for object
+		moveq	#7,d0			; possible sprite priorities
+		and.b	obPriority(a1),d0	; mask by object's sprite priority
+		add.w	d0,d0			; double it for word-based indexing
+		movea.w	DSpr_Layers(pc,d0.w),a2	; get target sprite queue
+		move.w	(a2),d0			; get sprite queue's entry count
+		addq.b	#2,d0			; increase count by another entry (word)
+		bmi.s	DSpr2_Full		; if byte value went to $80, queue is full
+		move.w	d0,(a2)			; set new sprite queue's entry count
+		move.w	a1,(a2,d0.w)		; insert RAM address for object to queue
 
-	.return:
-		rts						; return
+DSpr2_Full:
+		rts
 ; End of function DisplaySprite2
+
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Subroutine to display a sprite/object, when a0 is the object RAM
+; and d0 is already priority*$80
+; ---------------------------------------------------------------------------
+
+DisplaySprite3:
+		lea	(v_spritequeue).w,a1			; load base sprite queue address
+		adda.w	d0,a1					; add precalculated queue offset from d0
+		move.w	(a1),d0					; get sprite queue's entry count
+		addq.b	#2,d0					; increase count by another entry (word)
+		bmi.s	DSpr3_Full				; if byte value went to $80, queue is full
+		move.w	d0,(a1)					; set new sprite queue's entry count
+		move.w	a0,(a1,d0.w)				; insert RAM address for object to queue
+
+DSpr3_Full:
+		rts
+; End of function DisplaySprite3

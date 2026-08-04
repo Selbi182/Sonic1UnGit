@@ -15,9 +15,12 @@ DeformLayers:
 		clr.w	(v_bg2_scroll_flags).w
 		clr.w	(v_bg3_scroll_flags).w
 
+		cmpi.b	#6,(v_player+obRoutine).w		; has Sonic just died?
+		bhs.s	.skipScroll				; if yes, don't do plane scrolling
 		bsr.w	ScrollHoriz				; update camera position & redraw flags
 		bsr.w	ScrollVertical
 		bsr.w	DynamicLevelEvents			; update level boundaries, load bosses etc.
+	.skipScroll:
 
 		move.w	(v_screenposy).w,(v_scrposy_vdp).w	; v_scrposy_vdp is sent to VSRAM during VBlank
 		move.w	(v_bgscreenposy).w,(v_bgscrposy_vdp).w
@@ -205,6 +208,7 @@ Deform_LZ:
 ; additional water ripple effects
 
 		move.w	(v_waterpos1).w,d4
+		addq.w	#7,d4		; adjust ripple effect target line for S3K HBlank water palette transfer system
 		move.w	(v_screenposy).w,d5
 
 		; write normal scroll before meeting water position

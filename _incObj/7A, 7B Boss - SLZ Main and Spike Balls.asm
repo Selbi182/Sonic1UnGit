@@ -359,8 +359,7 @@ BSLZ_Recover:
 ; loc_18BB4:
 .playMusic:
 		clr.w	obVelY(a0)				; stop rising
-		move.w	#bgm_SLZ,d0
-		jsr	(QueueSound1).l				; play SLZ music
+		jsr	(PlayCurrentActMusic).l			; restart level music after boss defeat
 
 ; loc_18BC2:
 .exit:
@@ -495,7 +494,7 @@ BossSpikeball:
 		move.b	obRoutine(a0),d0			; copy object routine
 		move.w	BossSpikeball_Index(pc,d0.w),d0		; use the object routine index and BossSpikeball_Index to calculate our offset
 		jsr	BossSpikeball_Index(pc,d0.w)		; jump into the table and use our offset to pick a routine in the index to go to
-		out_of_range.w	BossStarLight_Delete,obBossX(a0),1 ; contains a (redundant) bmi check
+		out_of_range.w	BossStarLight_Delete,obBossX(a0)
 		jmp	(DisplaySprite).l
 ; ===========================================================================
 BossSpikeball_Index:

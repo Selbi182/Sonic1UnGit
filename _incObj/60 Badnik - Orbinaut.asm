@@ -126,11 +126,8 @@ Orb_DisplayNoMove:
 ; This is essentially a custom version of RememberState,
 ; as we also needs to delete any (non-fired) spikeballs.
 .deleteWithSpikeballs:
-		lea	(v_objstate).w,a2			; load respawn table
-		moveq	#0,d0					; clear d0 for word-based addressing
-		move.b	obRespawnNo(a0),d0			; get Orbinaut's respawn table index
-		beq.s	.deleteBalls				; if it doesn't have one, branch
-		bclr	#7,2(a2,d0.w)				; clear Orbinaut's respawn block flag so it can spawn again
+		respawn_entry.s	.deleteBalls
+		bclr	#7,(a2)
 
 	.deleteBalls:
 		lea	orb_balldata(a0),a2			; load data of fired spikeballs

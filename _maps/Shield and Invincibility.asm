@@ -1,64 +1,67 @@
-; ---------------------------------------------------------------------------
-; Sprite mappings - shield and invincibility stars
-; ---------------------------------------------------------------------------
-Map_Shield_internal:	mappingsTable
-	mappingsTableEntry.w	.shield1+$B	; This is a nasty hack to render the sprite invisible by pointing at a random 00 byte.
-	mappingsTableEntry.w	.shield1
-	mappingsTableEntry.w	.shield2
-	mappingsTableEntry.w	.shield3
-	mappingsTableEntry.w	.stars1
-	mappingsTableEntry.w	.stars2
-	mappingsTableEntry.w	.stars3
-	mappingsTableEntry.w	.stars4
+; --------------------------------------------------------------------------------
+; Sprite mappings - output from ClownMapEd - MapMacros format
+; --------------------------------------------------------------------------------
 
-.shield1:	spriteHeader
-	spritePiece	-$18, -$18, 3, 3, 0, 0, 0, 0, 0
-	spritePiece	0, -$18, 3, 3, 9, 0, 0, 0, 0
-	spritePiece	-$18, 0, 3, 3, 0, 0, 1, 0, 0
-	spritePiece	0, 0, 3, 3, 9, 0, 1, 0, 0
-.shield1_End
+.offsets:	mappingsTable
+	mappingsTableEntry.w	.frame0
+	mappingsTableEntry.w	.frame1
+	mappingsTableEntry.w	.frame2
+	mappingsTableEntry.w	.frame3
+	mappingsTableEntry.w	.frame4
+	mappingsTableEntry.w	.frame5
+	mappingsTableEntry.w	.frame6
+	mappingsTableEntry.w	.frame7
 
-.shield2:	spriteHeader
-	spritePiece	-$17, -$18, 3, 3, $12, 1, 0, 0, 0
-	spritePiece	0, -$18, 3, 3, $12, 0, 0, 0, 0
-	spritePiece	-$17, 0, 3, 3, $12, 1, 1, 0, 0
-	spritePiece	0, 0, 3, 3, $12, 0, 1, 0, 0
-.shield2_End
+.frame0:	spriteHeader
+.frame0_End
 
-.shield3:	spriteHeader
-	spritePiece	-$18, -$18, 3, 3, 9, 1, 0, 0, 0
-	spritePiece	0, -$18, 3, 3, 0, 1, 0, 0, 0
-	spritePiece	-$18, 0, 3, 3, 9, 1, 1, 0, 0
-	spritePiece	0, 0, 3, 3, 0, 1, 1, 0, 0
-.shield3_End
+.frame1:	spriteHeader
+	spritePiece -24, -24, 3, 3, 0, 0, 0, 0, 0
+	spritePiece 0, -24, 3, 3, 9, 0, 0, 0, 0
+	spritePiece -24, 0, 3, 3, 0, 0, 1, 0, 0
+	spritePiece 0, 0, 3, 3, 9, 0, 1, 0, 0
+.frame1_End
 
+.frame2:	spriteHeader
+	spritePiece -23, -24, 3, 3, 0, 1, 0, 0, 0
+	spritePiece 0, -24, 3, 3, 0, 0, 0, 0, 0
+	spritePiece -23, 0, 3, 3, 0, 1, 1, 0, 0
+	spritePiece 0, 0, 3, 3, 0, 0, 1, 0, 0
+.frame2_End
 
-.stars1:	spriteHeader
-	spritePiece	-$18, -$18, 3, 3, 0, 0, 0, 0, 0
-	spritePiece	0, -$18, 3, 3, 9, 0, 0, 0, 0
-	spritePiece	-$18, 0, 3, 3, 9, 1, 1, 0, 0
-	spritePiece	0, 0, 3, 3, 0, 1, 1, 0, 0
-.stars1_End
+.frame3:	spriteHeader
+	spritePiece -24, -24, 3, 3, 9, 1, 0, 0, 0
+	spritePiece 0, -24, 3, 3, 0, 1, 0, 0, 0
+	spritePiece -24, 0, 3, 3, 9, 1, 1, 0, 0
+	spritePiece 0, 0, 3, 3, 0, 1, 1, 0, 0
+.frame3_End
 
-.stars2:	spriteHeader
-	spritePiece	-$18, -$18, 3, 3, 9, 1, 0, 0, 0
-	spritePiece	0, -$18, 3, 3, 0, 1, 0, 0, 0
-	spritePiece	-$18, 0, 3, 3, 0, 0, 1, 0, 0
-	spritePiece	0, 0, 3, 3, 9, 0, 1, 0, 0
-.stars2_End
+.frame4:	spriteHeader
+	spritePiece -24, -24, 3, 3, 0, 0, 0, 0, 0
+	spritePiece 0, -24, 3, 3, 9, 0, 0, 0, 0
+	spritePiece -24, 0, 3, 3, 9, 1, 1, 0, 0
+	spritePiece 0, 0, 3, 3, 0, 1, 1, 0, 0
+.frame4_End
 
-.stars3:	spriteHeader
-	spritePiece	-$18, -$18, 3, 3, $12, 0, 0, 0, 0
-	spritePiece	0, -$18, 3, 3, $1B, 0, 0, 0, 0
-	spritePiece	-$18, 0, 3, 3, $1B, 1, 1, 0, 0
-	spritePiece	0, 0, 3, 3, $12, 1, 1, 0, 0
-.stars3_End
+.frame5:	spriteHeader
+	spritePiece -24, -24, 3, 3, 9, 1, 0, 0, 0
+	spritePiece 0, -24, 3, 3, 0, 1, 0, 0, 0
+	spritePiece -24, 0, 3, 3, 0, 0, 1, 0, 0
+	spritePiece 0, 0, 3, 3, 9, 0, 1, 0, 0
+.frame5_End
 
-.stars4:	spriteHeader
-	spritePiece	-$18, -$18, 3, 3, $1B, 1, 0, 0, 0
-	spritePiece	0, -$18, 3, 3, $12, 1, 0, 0, 0
-	spritePiece	-$18, 0, 3, 3, $12, 0, 1, 0, 0
-	spritePiece	0, 0, 3, 3, $1B, 0, 1, 0, 0
-.stars4_End
+.frame6:	spriteHeader
+	spritePiece -24, -24, 3, 3, 0, 0, 0, 0, 0
+	spritePiece 0, -24, 3, 3, 9, 0, 0, 0, 0
+	spritePiece -24, 0, 3, 3, 9, 1, 1, 0, 0
+	spritePiece 0, 0, 3, 3, 0, 1, 1, 0, 0
+.frame6_End
+
+.frame7:	spriteHeader
+	spritePiece -24, -24, 3, 3, 9, 1, 0, 0, 0
+	spritePiece 0, -24, 3, 3, 0, 1, 0, 0, 0
+	spritePiece -24, 0, 3, 3, 0, 0, 1, 0, 0
+	spritePiece 0, 0, 3, 3, 9, 0, 1, 0, 0
+.frame7_End
 
 	even

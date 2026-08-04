@@ -109,13 +109,9 @@ FBlock_Main:	; Routine 0
 		move.w	#128,fb_distance(a0)			; set distance to move to 128px (platform width)
 
 	.chkState:
-		lea	(v_objstate).w,a2			; load object respawn table
-		moveq	#0,d0					; clear d0
-		move.b	obRespawnNo(a0),d0			; get object respawn index
-		beq.s	FBlock_Action				; if it doesn't have one, branch
-		bclr	#7,2(a2,d0.w)				; clear respawn block flag
-		btst	#0,2(a2,d0.w)				; has this door already been opened?
-		beq.s	FBlock_Action				; if not, branch
+		respawn_entry.s	FBlock_Action
+		btst	#0,(a2)
+		beq.s	FBlock_Action
 		addq.b	#1,obSubtype(a0)			; set LZ door to next action type to already open it
 		clr.w	fb_distance(a0)				; force no more distance to travel
 ; ---------------------------------------------------------------------------
@@ -152,6 +148,9 @@ FBlock_Action:	; Routine 2
 		tst.b	fb_moving(a0)				; is block currently moving?
 		bne.s	.display				; if yes, don't delete it
 	.delete:
+		respawn_entry.s	.doDelete
+		bclr	#7,(a2)
+	.doDelete:
 		jmp	(DeleteObject).l			; delete object
 
 ; ===========================================================================
@@ -285,11 +284,8 @@ FBlock_LZSmallDoor_Open:
 		addq.b	#1,obSubtype(a0)			; advance to FBlock_LZSmallDoor_Close type
 		clr.b	fb_moving(a0)				; stop door moving any further
 
-		lea	(v_objstate).w,a2			; load object respawn table
-		moveq	#0,d0					; clear d0
-		move.b	obRespawnNo(a0),d0			; get object respawn index
-		beq.s	.updatePosition				; if it doesn't have one, branch
-		bset	#0,2(a2,d0.w)				; globally remember that this door has been opened
+		respawn_entry.s	.updatePosition
+		bset	#0,(a2)
 		bra.s	.updatePosition				; update Y-position once more
 ; ===========================================================================
 
@@ -335,11 +331,8 @@ FBlock_LZSmallDoor_Close:
 		subq.b	#1,obSubtype(a0)			; go back to FBlock_LZSmallDoor_Open
 		clr.b	fb_moving(a0)				; stop door moving any further
 
-		lea	(v_objstate).w,a2			; load object respawn table
-		moveq	#0,d0					; clear d0
-		move.b	obRespawnNo(a0),d0			; get object respawn index
-		beq.s	.updatePosition				; if it doesn't have one, branch
-		bclr	#0,2(a2,d0.w)				; clear global flag that this door has been opened
+		respawn_entry.s	.updatePosition
+		bclr	#0,(a2)
 		bra.s	.updatePosition				; update Y-position once more
 ; ===========================================================================
 
@@ -402,11 +395,8 @@ FBlock_LZHorizDoor_Open:
 		addq.b	#1,obSubtype(a0)			; advance to FBlock_LZHorizDoor_Close type
 		clr.b	fb_moving(a0)				; stop door moving any further
 
-		lea	(v_objstate).w,a2			; load object respawn table
-		moveq	#0,d0					; clear d0
-		move.b	obRespawnNo(a0),d0			; get object respawn index
-		beq.s	.updatePosition				; if it doesn't have one, branch
-		bset	#0,2(a2,d0.w)				; globally remember that this door has been opened
+		respawn_entry.s	.updatePosition
+		bset	#0,(a2)
 		bra.s	.updatePosition				; update X-position once more
 ; ===========================================================================
 
@@ -448,11 +438,8 @@ FBlock_LZHorizDoor_Close:
 		subq.b	#1,obSubtype(a0)			; go back to FBlock_LZHorizDoor_Open
 		clr.b	fb_moving(a0)				; stop door moving any further
 
-		lea	(v_objstate).w,a2			; load object respawn table
-		moveq	#0,d0					; clear d0
-		move.b	obRespawnNo(a0),d0			; get object respawn index
-		beq.s	.updatePosition				; if it doesn't have one, branch
-		bclr	#0,2(a2,d0.w)				; clear global flag that this door has been opened
+		respawn_entry.s	.updatePosition
+		bclr	#0,(a2)
 		bra.s	.updatePosition				; update X-position once more
 ; ===========================================================================
 

@@ -53,11 +53,8 @@ Sto_Main:	; Routine 0
 
 	; .chkdel:
 	.despawn:
-		lea	(v_objstate).w,a2			; load object respawn table
-		moveq	#0,d0					; clear d0
-		move.b	obRespawnNo(a0),d0			; get object respawn table index
-		beq.s	.delete					; it if doesn't have one, branch
-		bclr	#7,2(a2,d0.w)				; clear respawn block flag
+		respawn_entry.s	.delete
+		bclr	#7,(a2)
 
 	.delete:
 		jmp	(DeleteObject).l			; delete ancient lift object
@@ -68,12 +65,9 @@ Sto_Main:	; Routine 0
 		cmpi.w	#$A80,obX(a0)				; is this the platform before the switch was pressed? (X-coordinate $A80)
 		bne.s	.continueSetup				; if not, branch
 
-		lea	(v_objstate).w,a2			; load object respawn table
-		moveq	#0,d0					; clear d0
-		move.b	obRespawnNo(a0),d0			; get object respawn table index
-		beq.s	.continueSetup				; if it doesn't have one, branch
-		btst	#0,2(a2,d0.w)				; has switch that starts moving lift already been pressed? (see Sto_AncientLift)
-		beq.s	.continueSetup				; if not, branch
+		respawn_entry.s	.continueSetup
+		btst	#0,(a2)
+		beq.s	.continueSetup
 		clr.b	(v_obj6B).w				; clear "ancient lift loaded" flag
 		bra.s	.despawn				; prevent pre-switched ancient lift from reappearing after switch was pressed
 ; ===========================================================================
@@ -101,11 +95,8 @@ Sto_Main:	; Routine 0
 		bset	#sprite_customheight_bit,obRender(a0)	; set custom sprite render height flag
 
 	.chkgone:
-		lea	(v_objstate).w,a2			; load object respawn table
-		moveq	#0,d0					; clear d0
-		move.b	obRespawnNo(a0),d0			; get object respawn table index
-		beq.s	Sto_Action				; if it doesn't have one, branch
-		bclr	#7,2(a2,d0.w)				; clear respawn block flag
+		respawn_entry.s	Sto_Action
+		bclr	#7,(a2)
 ; ---------------------------------------------------------------------------
 
 Sto_Action:	; Routine 2
@@ -138,13 +129,7 @@ Sto_Action:	; Routine 2
 	.chkgone:
 		cmpi.b	#id_LZ,(v_zone).w			; are we in LZ? (SBZ3/LZ4)
 		bne.s	.delete					; if not, branch
-
 		clr.b	(v_obj6B).w				; clear "ancient lift loaded" flag
-		lea	(v_objstate).w,a2			; load object respawn table
-		moveq	#0,d0					; clear d0
-		move.b	obRespawnNo(a0),d0			; get object respawn table index
-		beq.s	.delete					; it it doesn't have one, branch
-		bclr	#7,2(a2,d0.w)				; clear respawn block flag
 
 	.delete:
 		jmp	(DeleteObject).l			; delete object
@@ -199,12 +184,9 @@ Sto_SlidingPlatform_Extend:
 		move.w	#3*60,sto_delay(a0)			; set delay before retracting to 3 seconds
 		clr.b	sto_active(a0)				; clear activation flag
 
-		lea	(v_objstate).w,a2			; load object respawn table
-		moveq	#0,d0					; clear d0
-		move.b	obRespawnNo(a0),d0			; get object respawn table index
-		beq.s	.updatePosition				; if it doesn't have one, branch
-		bset	#0,2(a2,d0.w)				; set flag that platform has been extended (seems to be unused?)
-		bra.s	.updatePosition				;
+		respawn_entry.s	.updatePosition
+		bset	#0,(a2)
+		bra.s	.updatePosition
 ; ===========================================================================
 
 ; Type 2 (set from Type 1) - retract sliding platform again after a delay
@@ -238,12 +220,9 @@ Sto_SlidingPlatform_Retract:
 		subq.b	#1,obSubtype(a0)			; change back to Sto_SlidingPlatform_Extend (extend on switch press)
 		clr.b	sto_active(a0)				; clear activation flag
 
-		lea	(v_objstate).w,a2			; load object respawn table
-		moveq	#0,d0					; clear d0
-		move.b	obRespawnNo(a0),d0			; get object respawn table index
-		beq.s	.updatePosition				; if it doesn't have one, branch
-		bclr	#0,2(a2,d0.w)				; clear flag that platform has been extended (seems to be unused?)
-		bra.s	.updatePosition				;
+		respawn_entry.s	.updatePosition
+		bclr	#0,(a2)
+		bra.s	.updatePosition
 ; ===========================================================================
 
 ; Type 3 - stomper (stomps down, immediately goes slowly back up, waits 1 second, stomps down again)
@@ -341,11 +320,8 @@ Sto_AncientLift:
 
 		move.b	#1,sto_active(a0)			; start moving ancient lift
 
-		lea	(v_objstate).w,a2			; load object respawn table
-		moveq	#0,d0					; clear d0
-		move.b	obRespawnNo(a0),d0			; get object respawn table index
-		beq.s	.moveLift				; if it doesn't have one, branch
-		bset	#0,2(a2,d0.w)				; globally remember that lift has already started moving
+		respawn_entry.s	.moveLift
+		bset	#0,(a2)
 
 	.moveLift:
 		subi.l	#$10000,obX(a0)				; move ancient lift to the left at 1px/frame (including subpixels)

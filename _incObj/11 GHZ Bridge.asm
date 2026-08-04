@@ -4,6 +4,9 @@
 ; ---------------------------------------------------------------------------
 
 Bridge:
+		cmpi.b	#BriOpti_LogCount,obSubtype(a0)		; is this a bridge with 12 logs? (standard size)
+		beq.w	BridgeOptimized				; if yes, go to the optimized bridge object
+
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Bri_Index(pc,d0.w),d1
@@ -367,3 +370,155 @@ Bri_ChildLog:	; Routine $A
 ; ===========================================================================
 
 Map_Bri:	include	"_maps/Bridge.asm"
+
+
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Object 11 - Optimized GHZ bridge (only 12 logs, but much more efficient)
+; ---------------------------------------------------------------------------
+BriOpti_LogCount: equ 12 ; default Sonic 1 never uses anything but 12 logs
+; ---------------------------------------------------------------------------
+
+BridgeOptimized:
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	BriOpti_Index(pc,d0.w),d1
+		jmp	BriOpti_Index(pc,d1.w)
+; ===========================================================================
+BriOpti_Index:	dc.w BriOpti_Main-BriOpti_Index
+		dc.w BriOpti_Action-BriOpti_Index
+		dc.w BriOpti_StoodOn-BriOpti_Index
+
+briopti_origX:	equ	objoff_30	; initial X-position
+; ===========================================================================
+
+BriOpti_Main:
+		addq.b	#2,obRoutine(a0)			; go to BriOpti_Action
+		move.l	#Map_OptiBridge_Idle,obMap(a0)		; set default mappings to idle state
+		move.w	#ArtTile_GHZ_Bridge|Tile_Pal3,obGfx(a0)	; use third palette line
+		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
+		move.b	#3,obPriority(a0)			; set priority to 3
+		clr.b	obFrame(a0)				; force frame 0
+		move.b	#BriOpti_LogCount*16/2,obActWid(a0)	; set width to bridge length (half of: number of logs * 16px width per log)
+		move.w	obX(a0),briopti_origX(a0)		; backup internal X position for offscreen deletion check
+		subq.w	#8,obX(a0)				; adjust for middle of 16x16 sprite
+; ---------------------------------------------------------------------------
+
+BriOpti_Action:
+		; retract bridge after leaving it
+		cmpi.l	#Map_OptiBridge_Idle,obMap(a0)		; is already at idle state?
+		beq.s	BriOpti_ChkTouch			; if it's already at idle state, branch
+		btst	#0,(v_framebyte).w			; is this an odd frame?
+		bne.s	BriOpti_ChkTouch			; if yes, branch (i.e. slow down bridge bending by half)
+		subq.b	#1,obFrame(a0)				; retract one frame of bending
+		bpl.s	BriOpti_ChkTouch			; if still retracting, branch
+		move.l	#Map_OptiBridge_Idle,obMap(a0)		; if fully retracted, reset to idle mappings
+		clr.b	obFrame(a0)				; force frame 0
+; ---------------------------------------------------------------------------
+
+BriOpti_ChkTouch:
+		moveq	#0,d1					; clear d1
+		move.b	obActWid(a0),d1				; get interactable bridge width
+		bsr.w	PlatformObject				; check if Sonic has walked onto the bridge
+		bra.w	BriOpti_ChkDelOrDisplay			; display or delete bridge
+; ===========================================================================
+
+BriOpti_StoodOn:
+		moveq	#0,d1					; clear d1
+		move.b	obActWid(a0),d1				; get interactable bridge width
+		bsr.w	ExitPlatform				; check if Sonic has walked off the bridge
+
+		; set frame
+		lea	(v_player).w,a1				; load Sonic object to a1
+		move.w	obX(a1),d0				; get Sonic's X position
+		sub.w	obX(a0),d0				; subtract center X position of bridge
+		asr.w	#4,d0					; divide by $10 (width per log)
+		bmi.s	.leftside				; branch if Sonic is on left side of bridge
+		move.l	#Map_OptiBridge_Right,obMap(a0)		; use right-side bridge mappings
+		neg.w	d0					; make negative
+		bra.s	.bendbridge				; skip over
+	.leftside:
+		move.l	#Map_OptiBridge_Left,obMap(a0)		; use left-side bridge mappings
+		addq.w	#1,d0					; fix off-by-one error for left side
+
+.bendbridge:
+		addq.w	#BriOpti_LogCount/2-1,d0		; bring -5 to 0 range to 0 to 5
+		bpl.s	.pos					; if result is positive, branch
+		moveq	#0,d0					; make sure it doesn't stay negative
+	.pos:	cmp.b	obFrame(a0),d0				; get current bridge frame
+		beq.s	.adjustSonicY				; if it reached target bend frame, branch
+		btst	#0,(v_framebyte).w			; is this an odd frame?
+		bne.s	.adjustSonicY				; if yes, branch (i.e. slow down bridge bending by half)
+		blo.s	.back					; if current frame is higher than target frame, branch
+		addq.b	#1,obFrame(a0)				; bend bridge further
+		bra.s	.adjustSonicY				; skip over
+	.back:	subq.b	#1,obFrame(a0)				; retract bridge bending
+
+.adjustSonicY:
+		; update Sonic's Y position based on bridge bend
+		move.b	obFrame(a0),d0				; use current bridge frame as base Y bend value
+		add.b	d0,d0					; double it
+		sub.b	obHeight(a1),d0				; subtract Sonic's current height
+		subq.b	#6,d0					; adjust by -6px
+		ext.w	d0					; extend to word
+		add.w	obY(a0),d0				; add bridge's base Y position
+		move.w	d0,obY(a1)				; set Sonic's new Y position
+
+; ---------------------------------------------------------------------------
+
+BriOpti_ChkDelOrDisplay:
+		out_of_range.w	DeleteObject,briopti_origX(a0)	; check if bridge has gone offscreen and delete it if so
+		bra.w	DisplaySprite				; display sprite
+; ===========================================================================
+
+; ---------------------------------------------------------------------------
+; Sprite mappings - Optimized GHZ bridge
+; ---------------------------------------------------------------------------
+
+bridgemap macro *
+\*:	spriteHeader
+	.xpos: = -(narg/2*$10)
+	rept narg
+		spritePiece	.xpos, \1-8, 2, 2, 0, 0, 0, 0, 0
+		.xpos: = .xpos+$10
+		shift
+	endr
+\*_End:
+	endm
+	
+; ---------------------------------------------------------------------------
+
+Map_OptiBridge_Idle:	mappingsTable
+	mappingsTableEntry.w	.bridge_idle
+.bridge_idle:	bridgemap	 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0
+		even
+		
+Map_OptiBridge_Right:	mappingsTable
+	mappingsTableEntry.w	.bridge_bendR1
+	mappingsTableEntry.w	.bridge_bendR2
+	mappingsTableEntry.w	.bridge_bendR3
+	mappingsTableEntry.w	.bridge_bendR4
+	mappingsTableEntry.w	.bridge_bendR5
+	mappingsTableEntry.w	.bridge_bendR6
+.bridge_bendR1:	bridgemap  1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 2
+.bridge_bendR2:	bridgemap  0, 1, 1, 2, 2, 2,  3, 3, 3, 3, 4, 2
+.bridge_bendR3:	bridgemap  0, 1, 2, 3, 4, 4,  5, 5, 5, 6, 5, 2
+.bridge_bendR4:	bridgemap  1, 2, 3, 5, 6, 6,  7, 7, 8, 7, 5, 3
+.bridge_bendR5:	bridgemap  1, 3, 5, 7, 8, 9,  9,10, 9, 8, 5, 2
+.bridge_bendR6:	bridgemap  2, 5, 7, 9,10,11, 12,11,10, 8, 5, 2
+		even
+
+Map_OptiBridge_Left:	mappingsTable
+	mappingsTableEntry.w	.bridge_bendL1
+	mappingsTableEntry.w	.bridge_bendL2
+	mappingsTableEntry.w	.bridge_bendL3
+	mappingsTableEntry.w	.bridge_bendL4
+	mappingsTableEntry.w	.bridge_bendL5
+	mappingsTableEntry.w	.bridge_bendL6
+.bridge_bendL1:	bridgemap  2, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1
+.bridge_bendL2:	bridgemap  2, 4, 3, 3, 3, 3,  2, 2, 2, 1, 1, 0
+.bridge_bendL3:	bridgemap  2, 5, 6, 5, 5, 5,  4, 4, 3, 2, 1, 0
+.bridge_bendL4:	bridgemap  3, 5, 7, 8, 7, 7,  6, 6, 5, 3, 2, 1
+.bridge_bendL5:	bridgemap  2, 5, 8, 9,10, 9,  9, 8, 7, 5, 3, 1
+.bridge_bendL6:	bridgemap  2, 5, 8,10,11,12, 11,10, 9, 7, 5, 2
+		even

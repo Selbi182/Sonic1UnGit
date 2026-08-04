@@ -12,11 +12,8 @@ RememberState:
 ; ---------------------------------------------------------------------------
 
 .offscreen:
-		lea	(v_objstate).w,a2			; load object respawn table
-		moveq	#0,d0					; clear d0 (obRespawnNo is a byte)
-		move.b	obRespawnNo(a0),d0			; get object's respawn table index number
-		beq.s	.delete					; if it doesn't have one, branch
-		bclr	#7,2(a2,d0.w)				; clear respawn block flag so object can spawn again
+		respawn_entry.w	DeleteObject			; get respawn entry for this object; branch to DeleteObject if none exists
+		bclr	#7,(a2)					; clear respawn table entry, so object manager can load this object again
 
 	.delete:
 		bra.w	DeleteObject				; delete the object

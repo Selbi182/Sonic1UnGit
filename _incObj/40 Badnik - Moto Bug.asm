@@ -60,14 +60,7 @@ Moto_Action:	; Routine 2
 
 		lea	(Ani_Moto).l,a1				; load animation script
 		bsr.w	AnimateSprite				; animate Motobug
-		; fall-through to RememberState...
-; ---------------------------------------------------------------------------
-
-		; RememberState is included here and Moto_Action terminates in it (ends with an rts).
-		; The Motobug was likely the first object where that subroutine was introduced,
-		; and the developers never cleanly moved it elsewhere, despite it being heavily reused.
-
-		include	"_incObj/sub RememberState.asm"		; check if offscreen: display sprite if no, delete if yes
+		bra.w	RememberState
 
 ; ===========================================================================
 Moto_ActIndex:	dc.w Moto_Action_Ledge-Moto_ActIndex		; 0 - waiting at a ledge

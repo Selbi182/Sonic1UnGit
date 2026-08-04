@@ -17,6 +17,7 @@ Cat_Index:	dc.w Cat_Main-Cat_Index		; 0 - init
 		dc.w Cat_Delete-Cat_Index	; A - delete head or segment
 		dc.w Cat_Fragment-Cat_Index	; C - fragmentated/bouncy state
 
+cat_inertia:	equ obAnim	; Caterkiller inertia (=$1C/$1D, both unused by Caterkiller)
 cat_waittime:	equ objoff_2A	; time to wait between actions
 cat_mode:	equ objoff_2B	; bit 4 (+$10) = mouth is open/segment moving up; bit 7 (+$80) = update animation
 cat_floormap:	equ objoff_2C	; height map of floor beneath caterkiller (16 bytes)
@@ -105,8 +106,9 @@ Cat_Head:	; Routine 2
 
 		moveq	#0,d0					; clear d0 for word-addressing
 		move.b	ob2ndRout(a0),d0			; get current secondary routine counter
-		move.w	Cat_HeadIndex(pc,d0.w),d1		; find index in head actions
-		jsr	Cat_HeadIndex(pc,d1.w)			; jump there, then return here
+		lea	Cat_HeadIndex(pc),a1
+		move.w	(a1,d0.w),d1
+		jsr	(a1,d1.w)
 
 		move.b	cat_mode(a0),d1				; should head frame get changed?
 		bpl.s	.display				; if not, branch
@@ -132,11 +134,8 @@ Cat_Head:	; Routine 2
 
 ; Cat_ChkGone:
 Cat_Despawn:
-		lea	(v_objstate).w,a2			; load respawn table
-		moveq	#0,d0					; clear d0 for word-addressing
-		move.b	obRespawnNo(a0),d0			; get respawn table index
-		beq.s	.delete					; if it doesn't have one, branch
-		bclr	#7,2(a2,d0.w)				; clear respawn block flag
+		respawn_entry.s	.delete
+		bclr	#7,(a2)
 
 	.delete:
 		move.b	#$A,obRoutine(a0)			; goto Cat_Delete next (also used as flag in .chk_broken)
@@ -162,11 +161,11 @@ Cat_Undulate:
 		addq.b	#2,ob2ndRout(a0)			; advance to Cat_Floor
 		move.b	#17-1,cat_waittime(a0)			; set timer for movement
 		move.w	#-$C0,obVelX(a0)			; move head to the left
-		move.w	#$40,obInertia(a0)
+		move.w	#$40,cat_inertia(a0)
 		bchg	#4,cat_mode(a0)				; change between mouth open/moving up, and mouth closed/moving down
 		bne.s	.updateHeadSprite			; if going up now (mouth open), branch
 		clr.w	obVelX(a0)				; don't move left
-		neg.w	obInertia(a0)
+		neg.w	cat_inertia(a0)
 
 	.updateHeadSprite:
 		bset	#7,cat_mode(a0)				; set flag to update head sprite
@@ -214,7 +213,7 @@ Cat_Floor:
 		subq.b	#2,ob2ndRout(a0)			; go back to Cat_Undulate
 		move.b	#8-1,cat_waittime(a0)			; set time delay to stay on high/low head position frame
 		clr.w	obVelX(a0)				; stop moving
-		clr.w	obInertia(a0)
+		clr.w	cat_inertia(a0)
 		rts						; return
 ; ---------------------------------------------------------------------------
 
@@ -267,9 +266,9 @@ Cat_BodySeg1:	; Routine 4, 8
 		move.b	ob2ndRout(a1),ob2ndRout(a0)
 		beq.w	.chkBroken
 
-		move.w	obInertia(a1),obInertia(a0)
+		move.w	cat_inertia(a1),cat_inertia(a0)
 		move.w	obVelX(a1),d0
-		add.w	obInertia(a0),d0
+		add.w	cat_inertia(a0),d0
 		move.w	d0,obVelX(a0)				; update x speed
 		move.l	obX(a0),d2
 		move.l	d2,d3					; d3 = x pos before update

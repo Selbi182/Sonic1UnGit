@@ -43,19 +43,10 @@ BossDefeated:
 ; ---------------------------------------------------------------------------
 
 BossMove:
-		move.l	obBossX(a0),d2				; get boss' X-axis position
-		move.l	obBossY(a0),d3				; get boss' Y-axis position
-		move.w	obVelX(a0),d0				; load horizontal speed
-		ext.l	d0					; extend speed to longword
-		asl.l	#8,d0					; shift speed up a byte (16.16 fixed point)
-		add.l	d0,d2					; add speed to X-axis position
-
-		move.w	obVelY(a0),d0				; load vertical speed
-		ext.l	d0					; extend speed to longword
-		asl.l	#8,d0					; shift speed up a byte (16.16 fixed point)
-		add.l	d0,d3					; add speed to Y-axis position
-
-		move.l	d2,obBossX(a0)				; update X-axis position
-		move.l	d3,obBossY(a0)				; update Y-axis position
-		rts						; return
+		movem.w	obVelX(a0),d0/d2			; load X and Y speed to d0/d2
+		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obBossX(a0)				; add X speed to X position (note this affects the subpixel position)
+		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d2,obBossY(a0)				; add Y speed to Y position (note this affects the subpixel position)
+		rts
 ; End of function BossMove

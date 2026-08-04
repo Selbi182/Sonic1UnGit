@@ -61,15 +61,19 @@ SSR_Loop:
 		cmpi.b	#ss_emeralds_num,d1			; do you have all chaos emeralds?
 		bne.s	.setFrame				; if not, branch
 		moveq	#8,d0					; use "SONIC GOT THEM ALL" text
-		move.w	#$18,obX(a0)				; set alternate start position
-		move.w	#$118,ssr_mainX(a0)			; use alternate target position
 	; loc_C842:
 	.setFrame:
 		move.b	d0,obFrame(a0)				; set specified frame ID for text object
 ; ---------------------------------------------------------------------------
 
 SSR_Move:	; Routine 2
-		moveq	#$10,d1					; set horizontal move-in speed
+		move.w	card_mainX(a0),d1			; get target moving-in X-position
+		sub.w	obX(a0),d1				; calculate difference to current X-position
+		bpl.s	.pos					; is result positive? if yes, branch
+		neg.w	d1					; otherwise, make it positive
+	.pos:	lsr.w	#3,d1					; divide difference by 8
+		addq.w	#1,d1					; set lower cap speed to 1px/frame
+
 		move.w	ssr_mainX(a0),d0			; get target moving in X-position
 		cmp.w	obX(a0),d0				; has item reached its target position?
 		beq.s	.reachedXTarget				; if yes, branch
@@ -116,6 +120,19 @@ SSR_RingBonus:	; Routine 6
 		bsr.w	DisplaySprite				; keep displaying card sprites
 		move.b	#1,(f_endactbonus).w			; set time/ring bonus HUD update flag
 
+		moveq	#btnABC,d0		; is button A, B, or C...
+		and.b	(v_jpadhold1).w,d0	; ...held?
+		beq.s	.normal			; if not, tick down score tally normally
+
+		add.w	(v_timebonus).w,d0	; add entire remaining time bonus to d0
+		add.w	(v_ringbonus).w,d0	; add entire remaining ring bonus to d0
+		clr.w	(v_timebonus).w		; clear remaining time bonus
+		clr.w	(v_ringbonus).w		; clear remaining ring bonus
+		jsr	(AddPoints).l		; add up the points stored in d0
+		moveq	#0,d0			; set remaining bonus to 0 so that Got_AddBonus gets skipped
+		bra.s	.finished		; skip regular logic
+
+	.normal:
 		tst.w	(v_ringbonus).w				; is any ring bonus left?
 		beq.s	.finished				; if not, branch
 		subi.w	#10,(v_ringbonus).w			; subtract 100 points from remaining ring bonus

@@ -141,8 +141,7 @@ GotThroughAct:
 		clr.b	(v_invinc).w				; disable invincibility
 		clr.b	(f_timecount).w				; stop time counter
 		move.b	#id_GotThroughCard,(v_endcard).w	; load end card object (and prevent this routine from running again)
-		moveq	#plcid_TitleCard,d0			; get title cards PLC entry
-		jsr	(NewPLC).l				; queue title cards patterns for PLC
+		jsr	(Got_LoadArt).l				; load end-of-level title card graphics
 		move.b	#1,(f_endactbonus).w			; update bonus HUD for pre-tally display
 
 	; Time Bonus
@@ -170,8 +169,8 @@ GotThroughAct:
 		move.w	d0,(v_ringbonus).w			; set ring bonus
 
 		; SFX
-		move.w	#bgm_GotThrough,d0			; set "Sonic got through" music
-		jsr	(QueueSound2).l				; play it
+		move.w	#bgm_Fade,d0
+		jsr	(QueueSound2).l	; fade-out music
 
 ; locret_ECEE:
 Sign_Return:

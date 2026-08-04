@@ -38,7 +38,7 @@ LTag_Main:	; Routine 0
 ; ---------------------------------------------------------------------------
 
 LTag_ChkDel:	; Routine 2
-		out_of_range.w	DeleteObject,obX(a0),1		; contains a (redundant) bmi check
+		out_of_range.w	DeleteObject,obX(a0)
 		rts						; don't delete, but also don't display
 ; ===========================================================================
 

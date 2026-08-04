@@ -6,22 +6,13 @@ gravity:	equ	$38				; gravity constant used by many objects
 ; ---------------------------------------------------------------------------
 
 ObjectFall:
-		move.l	obX(a0),d2				; get object's X-axis position
-		move.l	obY(a0),d3				; get object's Y-axis position
-		move.w	obVelX(a0),d0				; load horizontal speed
-		ext.l	d0					; extend speed to longword
-		asl.l	#8,d0					; shift speed up a byte (16.16 fixed point)
-		add.l	d0,d2					; add speed to X-axis position
-
-		move.w	obVelY(a0),d0				; load vertical speed
-		addi.w	#gravity,obVelY(a0)			; increase vertical speed (apply gravity)
-		ext.l	d0					; extend speed to longword
-		asl.l	#8,d0					; shift speed up a byte (16.16 fixed point)
-		add.l	d0,d3					; add speed to Y-axis position
-
-		move.l	d2,obX(a0)				; update X-axis position
-		move.l	d3,obY(a0)				; update Y-axis position
-		rts						; return
+		movem.w	obVelX(a0),d0/d2			; load X and Y speed to d0/d2
+		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add X speed to X position (note this affects the subpixel position)
+		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d2,obY(a0)				; add Y speed to Y position (note this affects the subpixel position)
+		add.w	#gravity,obVelY(a0)			; increase vertical speed (apply gravity)
+		rts
 ; End of function ObjectFall
 
 
@@ -32,19 +23,10 @@ ObjectFall:
 ; ---------------------------------------------------------------------------
 
 SpeedToPos:
-		move.l	obX(a0),d2				; get object's X-axis position
-		move.l	obY(a0),d3				; get object's Y-axis position
-		move.w	obVelX(a0),d0				; load horizontal speed
-		ext.l	d0					; extend speed to longword
-		asl.l	#8,d0					; shift speed up a byte (16.16 fixed point)
-		add.l	d0,d2					; add speed to X-axis position
-
-		move.w	obVelY(a0),d0				; load vertical speed
-		ext.l	d0					; extend speed to longword
-		asl.l	#8,d0					; shift speed up a byte (16.16 fixed point)
-		add.l	d0,d3					; add speed to Y-axis position
-
-		move.l	d2,obX(a0)				; update X-axis position
-		move.l	d3,obY(a0)				; update Y-axis position
-		rts						; return
+		movem.w	obVelX(a0),d0/d2			; load X and Y speed to d0/d2
+		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add X speed to X position (note this affects the subpixel position)
+		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d2,obY(a0)				; add Y speed to Y position (note this affects the subpixel position)
+		rts
 ; End of function SpeedToPos

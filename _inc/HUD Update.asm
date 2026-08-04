@@ -44,11 +44,14 @@ HUD_Update:
 
 		lea	(v_time).w,a1				; load current time as pointer
 		cmpi.l	#(9*$10000)+(59*$100)+59,(a1)+		; is the time 9:59:59? (and advance pointer by 4)
-		beq.s	TimeOver				; if yes, kill Sonic from a time over
+		beq.w	TimeOver				; if yes, kill Sonic from a time over
+
+		tst.b	(v_gamemode).w				; is level still fading in?
+		bmi.w	.updatetime				; if yes, don't yet update time
 
 		addq.b	#1,-(a1)				; increment 1/60s counter (v_timecent)
 		cmpi.b	#60,(a1)				; check if passed 60
-		blo.s	.chklives				; if not, branch (and skip updating time in VRAM entirely)
+		blo.s	.updatetime				; if not, branch (and skip updating time in VRAM entirely)
 		move.b	#0,(a1)					; reset 1/60s counter to 0
 
 		addq.b	#1,-(a1)				; increment seconds counter (v_timesec)
@@ -71,6 +74,12 @@ HUD_Update:
 		moveq	#0,d1					; clear d1
 		move.b	(v_timesec).w,d1			; load seconds
 		bsr.w	Hud_Secs				; write seconds digits to VRAM
+
+		moveq	#0,d1					; clear d1
+		move.b	(v_timecent).w,d1			; load centiseconds
+		move.b	Frame60To100(pc,d1.w),d1		; convert 60-based values to 100-based ones
+		locVRAM	(ArtTile_HUDCentis+2)*tile_size,d0	; set VRAM location (+2 to skip the separator)
+		bsr.w	Hud_Secs				; write to VRAM (we can reuse the Hud_Secs logic)
 
 .chklives:
 		tst.b	(f_lifecount).w				; does the lives counter need updating?
@@ -95,6 +104,12 @@ HUD_Update:
 .finish:
 		rts						; return
 ; End of function HUD_Update
+
+; ---------------------------------------------------------------------------
+
+Frame60To100:	rept 60
+		dc.b (*-Frame60To100)*99/59
+		endr
 
 ; ---------------------------------------------------------------------------
 ; Kill Sonic when a time over has occurred (9:59:59)
@@ -138,11 +153,12 @@ HudDebug:
 		bsr.w	Hud_Secs				; write digits to VRAM
 
 .chklives:
+	if Enable_InfiniteLives=0
 		tst.b	(f_lifecount).w				; does the lives counter need updating?
 		beq.s	.chkbonus				; if not, branch
 		clr.b	(f_lifecount).w				; clear update flag
 		bsr.w	Hud_Lives				; write lives digits to VRAM
-
+	endif
 .chkbonus:
 		tst.b	(f_endactbonus).w			; do time/ring bonus counters need updating?
 		beq.s	.finish					; if not, branch
@@ -180,7 +196,14 @@ Hud_ResetRings:
 
 Hud_Base:
 		lea	(vdp_data_port).l,a6			; set VDP data port
+	if Enable_InfiniteLives=0
 		bsr.w	Hud_Lives				; write lives counter to VRAM
+	endif
+
+		locVRAM	ArtTile_HUDCentis*tile_size		; write to centiseconds VRAM location
+		lea	Hud_Base_Centi(pc),a2			; load tile information array
+		moveq	#3-1,d2					; do 3 characters (minus 1 for loop)
+		bsr.s	Hud_Init_8x16Digits			; write to VRAM, then return for the remaining HUD
 
 		locVRAM	(ArtTile_HUDScore_E)*tile_size		; set VRAM address to the "E" in score
 		lea	Hud_Base_Score(pc),a2			; load HUD digits initialization data
@@ -229,10 +252,13 @@ Hud_Init_8x16Digits:
 ; The last two are tile offsets in Art_Hud.
 
 Hud_Base_Score:	dc.b $16,  -1,  -1,  -1,  -1,  -1,  -1,	  0	; score (E______0)
-Hud_Base_Time:	dc.b   0, $14,   0,   0				; time  (0:00)
+Hud_Base_Time:	dc.b   0, $18,   0,   0				; time  (0'00)
 Hud_Base_Rings:	dc.b  -1,  -1,   0				; rings (__0)
 Hud_Base_End:
 		even
+Hud_Base_Centi:	dc.b $1A, 0, 0					; centiseconds ("00)
+		even
+
 ; ===========================================================================
 
 ; ===========================================================================

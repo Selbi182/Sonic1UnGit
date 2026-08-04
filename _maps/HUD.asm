@@ -14,13 +14,16 @@ Map_HUD_internal:	mappingsTable
 
 	spritePiece	0, -$70, 4, 2, $10, 0, 0, 0, 1		; "TIME"
 	spritePiece	$28, -$70, 4, 2, $28, 0, 0, 0, 1	; time counter
+	spritePiece	$48, -$70, 3, 2, MapOff_HUDCentis, 0, 0, 0, 1	; centiseconds
 
 	spritePiece	0, -$60, 4, 2, 8, 0, 0, 0, 1		; "RING"
 	spritePiece	$20, -$60, 1, 2, 0, 0, 0, 0, 1		; "S"
 	spritePiece	$30, -$60, 3, 2, $30, 0, 0, 0, 1	; rings counter
 
+    if Enable_InfiniteLives=0
 	spritePiece	0, $40, 2, 2, $10A, 0, 0, 0, 1		; lives counter (Sonic icon)
 	spritePiece	$10, $40, 4, 2, $10E, 0, 0, 0, 1	; lives counter ("SONIC x N" text)
+    endif
 .allyellow_End
 	even
 
@@ -31,13 +34,16 @@ Map_HUD_internal:	mappingsTable
 
 	spritePiece	0, -$70, 4, 2, $10, 0, 0, 0, 1		; "TIME"
 	spritePiece	$28, -$70, 4, 2, $28, 0, 0, 0, 1	; time counter
+	spritePiece	$48, -$70, 3, 2, MapOff_HUDCentis, 0, 0, 0, 1	; centiseconds
 
 	spritePiece	0, -$60, 4, 2, 8, 0, 0, 1, 1		; (red) "RING"
 	spritePiece	$20, -$60, 1, 2, 0, 0, 0, 1, 1		; (red) "S"
 	spritePiece	$30, -$60, 3, 2, $30, 0, 0, 0, 1	; rings counter
 
+    if Enable_InfiniteLives=0
 	spritePiece	0, $40, 2, 2, $10A, 0, 0, 0, 1		; lives counter (Sonic icon)
 	spritePiece	$10, $40, 4, 2, $10E, 0, 0, 0, 1	; lives counter ("SONIC x N" text)
+    endif
 .ringred_End
 	even
 
@@ -48,13 +54,16 @@ Map_HUD_internal:	mappingsTable
 
 	spritePiece	0, -$70, 4, 2, $10, 0, 0, 1, 1		; (red) "TIME"
 	spritePiece	$28, -$70, 4, 2, $28, 0, 0, 0, 1	; time counter
+	spritePiece	$48, -$70, 3, 2, MapOff_HUDCentis, 0, 0, 0, 1	; centiseconds
 
 	spritePiece	0, -$60, 4, 2, 8, 0, 0, 0, 1		; "RING"
 	spritePiece	$20, -$60, 1, 2, 0, 0, 0, 0, 1		; "S"
 	spritePiece	$30, -$60, 3, 2, $30, 0, 0, 0, 1	; rings counter
 
+    if Enable_InfiniteLives=0
 	spritePiece	0, $40, 2, 2, $10A, 0, 0, 0, 1		; lives counter (Sonic icon)
 	spritePiece	$10, $40, 4, 2, $10E, 0, 0, 0, 1	; lives counter ("SONIC x N" text)
+    endif
 .timered_End
 	even
 
@@ -65,12 +74,15 @@ Map_HUD_internal:	mappingsTable
 
 	spritePiece	0, -$70, 4, 2, $10, 0, 0, 1, 1		; (red) "TIME"
 	spritePiece	$28, -$70, 4, 2, $28, 0, 0, 0, 1	; time counter
+	spritePiece	$48, -$70, 3, 2, MapOff_HUDCentis, 0, 0, 0, 1	; centiseconds
 
 	spritePiece	0, -$60, 4, 2, 8, 0, 0, 1, 1		; (red) "RING"
 	spritePiece	$20, -$60, 1, 2, 0, 0, 0, 1, 1		; (red) "S"
 	spritePiece	$30, -$60, 3, 2, $30, 0, 0, 0, 1	; rings counter
 
+    if Enable_InfiniteLives=0
 	spritePiece	0, $40, 2, 2, $10A, 0, 0, 0, 1		; lives counter (Sonic icon)
 	spritePiece	$10, $40, 4, 2, $10E, 0, 0, 0, 1	; lives counter ("SONIC x N" text)
+    endif
 .allred_End
 	even

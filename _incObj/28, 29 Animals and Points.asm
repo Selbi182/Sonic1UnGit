@@ -548,6 +548,29 @@ Poi_Index:	dc.w Poi_Main-Poi_Index
 ; ===========================================================================
 
 Poi_Main:	; Routine 0
+
+		; Load DPLCs for new points art and queue for DMA
+		move.b	obFrame(a0),d0				; load current frame to d0
+		lea	PointsDynPLC(pc),a2			; load shield/stars DPLCs to a2
+		move.l	#Art_Points,d6				; load uncompressed graphics pointer to d6
+		move.w	#ArtTile_Points*tile_size,d4		; load art tile x $20 to d4 to get VRAM offset
+		jsr	(LoadDynPLC).l				; load DPLCs
+
+		; If a points object already existed, hijack it
+		lea	(v_lvlobjspace).w,a1			; set start of level object RAM
+		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d2 ; go through all level objects
+	.loop:	cmpi.b	#id_Points,(a1)				; is this a points object?
+		bne.s	.next					; if not, branch
+		cmpa.w	a0,a1					; is this THIS object? (the new points)
+		beq.s	.next					; if yes, branch
+		move.w	obX(a0),obX(a1)				; hijack previous points object
+		move.w	obY(a0),obY(a1)				; ''
+		move.b	obFrame(a0),obFrame(a1)			; ''
+		move.w	#-$300,obVelY(a1)			; ''
+		jmp	(DeleteObject).l			; delete new points object
+	.next:	lea	object_size(a1),a1			; go to next object in object RAM
+		dbf	d2,.loop				; loop until object RAM has been iterated
+
 		addq.b	#2,obRoutine(a0)			; advance to Poi_Slower
 		move.l	#Map_Points,obMap(a0)			; set mappings
 		move.w	#ArtTile_Points|Tile_Pal2,obGfx(a0)	; set art tile and palette
@@ -570,3 +593,4 @@ Map_Animal1:	include	"_maps/Animals 1.asm"
 Map_Animal2:	include	"_maps/Animals 2.asm"
 Map_Animal3:	include	"_maps/Animals 3.asm"
 Map_Points:	include	"_maps/Points.asm"
+PointsDynPLC:	include	"_maps/Points - DPLC.asm"

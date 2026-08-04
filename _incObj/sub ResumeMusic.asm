@@ -1,29 +1,30 @@
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Subroutine to resume regular level music after the underwater
-; countdown music in LZ/SBZ3 has started
+; Subroutine to play music for LZ/SBZ3 after a drowning countdown
 ; ---------------------------------------------------------------------------
 
 ResumeMusic:
 		cmpi.w	#12,(v_air).w				; more than 12 seconds of air left?
-		bhi.s	.replenishAir				; if yes, branch
-
-		move.w	#bgm_LZ,d0				; play LZ music
-		cmpi.w	#id_LZ_act4,(v_zone_act).w		; check if level is SBZ3 (LZ4)
-		bne.s	.notSBZ					; if not, branch
-		move.w	#bgm_SBZ,d0				; play SBZ music instead
-	.notSBZ:
+		bhi.s	.replenishAir				; if yes, only replenish air without changing music 
 
 		tst.b	(v_invinc).w				; is Sonic invincible?
 		beq.s	.notInvincible				; if not, branch
-		move.w	#bgm_Invincible,d0			; play invincibility music instead
-	.notInvincible:
-		tst.b	(f_lockscreen).w			; is Sonic at a boss?
-		beq.s	.playselected				; if not, branch
-		move.w	#bgm_Boss,d0				; play boss music instead
-	.playselected:
+		move.w	#bgm_Invincible,d0			; resume invincibility music instead
+		bra.s	.playSelected				; play it
+; ===========================================================================
 
-		jsr	(QueueSound1).l				; play selected music
+.notInvincible:
+		tst.b	(f_lockscreen).w			; is Sonic at a boss?
+		beq.s	.normal 				; if not, branch
+		move.w	#bgm_Boss,d0				; resume boss music instead
+
+.playSelected:
+		jsr	(QueueSound1).l				; play selected song
+		bra.s	.replenishAir				; do not play regular level music
+; ===========================================================================
+
+.normal:
+		jsr	(PlayCurrentActMusic).l			; resume regular level music after drowning counting
 
 .replenishAir:
 		move.w	#30,(v_air).w				; reset air to 30 seconds

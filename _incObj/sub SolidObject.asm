@@ -261,6 +261,9 @@ Solid_Below:
 
 Solid_TopBtmAir:
 		sub.w	d3,obY(a1)				; correct Sonic's position
+		clr.b	(v_squashbuffer).w ; no squash check was needed this frame, reset squash distance buffer
+
+Solid_TopBtmAir_2:
 		moveq	#-1,d4					; return top/bottom collision
 		rts
 ; ===========================================================================
@@ -268,6 +271,21 @@ Solid_TopBtmAir:
 Solid_Squash:
 		btst	#1,obStatus(a1)				; is Sonic in the air?
 		bne.s	Solid_TopBtmAir				; if yes, branch
+
+		; Sonic is supposed to get squashed now, here is where we will add the leeway check
+		cmpi.b	#-8,d3			; is squash distance greater than a tile (8px)?
+		blt.s	.kill			; if yes, kill Sonic anyway
+		tst.b	(v_squashbuffer).w	; is this the first frame Sonic would have been squashed?
+		beq.s	.buffer			; if yes, survive this frame and remember squash distance
+		cmp.b	(v_squashbuffer).w,d3	; is new squash distance bigger than the stored one?
+		blt.s	.kill			; if yes, do squash kill (object moved closer)
+.buffer:	move.b	d3,(v_squashbuffer).w	; remember squash distance for next frame
+		bra.s	Solid_TopBtmAir_2	; survive squash this frame
+; ===========================================================================
+
+.kill:
+		clr.b	(v_squashbuffer).w	; reset squash distance buffer
+
 		move.l	a0,-(sp)				; save address of OST of current object to stack
 		movea.l	a1,a0					; temporarily make Sonic the current object
 		jsr	(KillSonic).l				; kill Sonic

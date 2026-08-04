@@ -128,43 +128,6 @@ copyTilemap:	macro source,destination,width,height
 		endm
 
 ; ---------------------------------------------------------------------------
-; stop the Z80
-; ---------------------------------------------------------------------------
-
-stopZ80:	macro
-		move.w	#$100,(z80_bus_request).l
-		endm
-
-; ---------------------------------------------------------------------------
-; wait for Z80 to stop
-; ---------------------------------------------------------------------------
-
-waitZ80:	macro
-.wait\@:	btst	#0,(z80_bus_request).l
-		bne.s	.wait\@
-		endm
-
-; ---------------------------------------------------------------------------
-; reset the Z80
-; ---------------------------------------------------------------------------
-
-deassertZ80Reset:	macro
-		move.w	#$100,(z80_reset).l
-		endm
-
-assertZ80Reset:	macro
-		move.w	#0,(z80_reset).l
-		endm
-
-; ---------------------------------------------------------------------------
-; start the Z80
-; ---------------------------------------------------------------------------
-
-startZ80:	macro
-		move.w	#0,(z80_bus_request).l
-		endm
-
-; ---------------------------------------------------------------------------
 ; disable interrupts
 ; ---------------------------------------------------------------------------
 
@@ -296,29 +259,64 @@ jle:		macro loc
 	.nojump\@:
 		endm
 
+
 ; ---------------------------------------------------------------------------
 ; check if object moves out of range
-; input: location to jump to if out of range, x-axis pos (obX(a0) by default), optional bmi exit
+; input: location to jump to if out of range, x-axis pos (obX(a0) by default)
 ; ---------------------------------------------------------------------------
 
-out_of_range:	macro exit,pos,bmicheck
+out_of_range:	macro exit,customxpos
 	if (narg>=2)
-		move.w	pos,d0		; get object position (if specified as not obX)
+		move.w	customxpos,d0				; get object X position (if specified as not obX)
 	else
-		move.w	obX(a0),d0	; get object position
+		move.w	obX(a0),d0				; get object position
 	endif
-		andi.w	#$FF80,d0	; round down to nearest $80
-		move.w	(v_screenposx).w,d1 ; get screen position
-		subi.w	#128,d1
-		andi.w	#$FF80,d1
-		sub.w	d1,d0		; approx distance between object and screen
-	if (narg=3)
-		; This bmi is in a few out_of_range calls (albeit redundant)
-		bmi.\0	exit
-	endif
+		andi.w	#$FF80,d0				; round down to nearest $80
+		sub.w	(Camera_X_Coarse_Back).w,d0		; approx distance between object and screen
 		cmpi.w	#128+320+192,d0
-		bhi.\0	exit
+		bls.s	.noOffscreenXDelete\@			; if object is still in range, don't do anything
+		respawn_entry.\0 \exit				; try to fetch this object's respawn entry, exit if there is none
+		bclr	#7,(a2)					; clear respawn table entry, so object can be loaded again
+		bra.\0	exit					; branch to exit (to delete the object)
+.noOffscreenXDelete\@:
 		endm
+
+; ---------------------------------------------------------------------------
+; same as out_of_range, but will also check for the y-axis
+; ---------------------------------------------------------------------------
+
+out_of_range_with_y_check: macro exit,customxpos,customypos
+		out_of_range.w	\exit,\customxpos		; do regular X check first
+		
+		; if X is still in range, check for Y now		
+	if (narg=3)
+		move.w	customypos,d0				; get custom object Y position
+	else
+		move.w	obY(a0),d0				; get object Y position
+	endif
+		andi.w	#$FF80,d0				; round down to nearest $80
+		sub.w	(Camera_Y_Coarse_Back).w,d0		; approx distance between object and screen
+		cmpi.w	#128+224+160,d0
+		bls.s	.noOffscreenYDelete\@			; if object is still in range, don't do anything
+		tst.w	(v_limittop2).w				; is vertical wrapping enabled?
+		bmi.s	.noOffscreenYDelete\@			; if yes, don't do delete
+		respawn_entry.\0 \exit				; try to fetch this object's respawn entry, exit if there is none
+		bclr	#7,(a2)					; clear respawn table entry, so object can be loaded again
+		bra.\0	exit					; branch to exit (to delete the object)
+.noOffscreenYDelete\@:
+		endm
+
+; ---------------------------------------------------------------------------
+; load pointer to current object's respawn table entry to a2
+; ("exit" will be branched to if no entry was found)
+; ---------------------------------------------------------------------------
+
+respawn_entry:	macro exit
+		move.w	respawn_index(a0),d0			; load object's respawn index
+		beq.\0	exit					; if it's zero, this object has no entry, branch
+		movea.w	d0,a2					; load address to respawn table entry into a2
+		endm
+
 
 ; ---------------------------------------------------------------------------
 ; bankswitch between SRAM and ROM

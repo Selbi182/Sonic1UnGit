@@ -40,6 +40,8 @@ LevelSizeLoad:
 		move.w	(a0)+,d0				; load final entry in level size array
 		move.w	d0,(v_lookshift).w			; write to vertical look shift (redundant, this is always $0060)
 
+		move.w	#(320/2),(v_camera_pan).w		; Reset the horizontal camera pan value to half screen width
+
 		bra.w	LevSz_InitScreenAndPlayerStart		; continue to remaining level setup for start location and camera position
 
 
@@ -117,6 +119,14 @@ LevSz_StartLoc:
 
 ; SetScreen: LevSz_SkipStartPos:
 LevSz_InitCameraPositions:
+		clr.w	(v_trackpos).w				; reset Sonic's position tracking index 
+		lea	(v_tracksonic).w,a2			; load the tracking array into a2 
+		moveq	#64-1,d2				; begin a 64-step loop
+	.looppoint: 
+		move.w	d1,(a2)+				; fill in X 
+		move.w	d0,(a2)+				; fill in Y 
+		dbf	d2,.looppoint				; loop
+
 	; --- Camera X-Position ---
 	.chkXLeft:
 		subi.w	#320/2,d1				; initial camera X-position is Sonic horizontally centered on the screen

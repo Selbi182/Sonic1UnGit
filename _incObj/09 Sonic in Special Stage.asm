@@ -87,6 +87,7 @@ SonicSS_Modes:	dc.w SonicSS_OnWall-SonicSS_Modes		; 0 - while touching a block
 
 ; Obj09_OnWall:
 SonicSS_OnWall:	; While Sonic is touching a solid block
+		bclr	#7,obStatus(a0)	; clear "Sonic has jumped" flag
 		bsr.w	SonicSS_Jump				; allow Sonic to jump from walls
 		bsr.w	SonicSS_Move				; update position based on button inputs
 		bsr.w	SonicSS_Fall				; apply gravity based on stage rotation
@@ -95,7 +96,7 @@ SonicSS_OnWall:	; While Sonic is touching a solid block
 
 ; Obj09_InAir:
 SonicSS_InAir:	; While Sonic is airborne from jumping or falling
-		bsr.w	SonicSS_JumpHeight_Unused		; (disabled code) would have allowed to granularly control jump height
+		bsr.w	SonicSS_JumpHeight
 		bsr.w	SonicSS_Move				; update position based on button inputs
 		bsr.w	SonicSS_Fall				; apply gravity based on stage rotation
 ; ---------------------------------------------------------------------------
@@ -303,6 +304,7 @@ SonicSS_Jump:
 		move.w	d0,obVelY(a0)				; set result as new Y speed
 
 		bset	#1,obStatus(a0)				; set in-air flag
+		bset	#7,obStatus(a0)	; set "Sonic has jumped" flag
 
 		move.w	#sfx_Jump,d0				; set jump sound
 		jsr	(QueueSound2).l				; play jumping sound
@@ -315,29 +317,45 @@ SonicSS_NoJump:
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Unused subroutine to limit Sonic's upward vertical speed depending on
-; how long the jump button was held after the initial jump. This likely got
-; removed as it doesn't work (it doesn't account for the stage rotation).
+; Subroutine to limit Sonic's upward vertical speed
 ; ---------------------------------------------------------------------------
 
-; nullsub_2:
-SonicSS_JumpHeight_Unused:
-		rts						; immediately return
-; ---------------------------------------------------------------------------
+; Obj09_JumpHeight:
+SonicSS_JumpHeight:
+		move.b	(v_jpadhold2).w,d0	; is the jump button up?
+		andi.b	#btnABC,d0
+		bne.s	.return			; if not, branch to return
+		btst	#7,obStatus(a0)		; did Sonic jump or is he just falling or hit by a bumper?
+		beq.s	.return			; if not, branch to return
+		move.b	(v_ssangle).w,d0	; get SS angle
+		andi.b	#$FC,d0
+		neg.b	d0
+		subi.b	#$40,d0
+		jsr	(CalcSine).l			
+		move.w	obVelY(a0),d2		; get Y speed
+		muls.w	d2,d0			; multiply Y speed by sin
+		asr.l	#8,d0			; find the new Y speed
+		move.w	obVelX(a0),d2		; get X speed
+		muls.w	d2,d1			; multiply X speed by cos
+		asr.l	#8,d1			; find the new X speed
+		add.w	d0,d1			; combine the two speeds
+		cmpi.w	#$400,d1		; compare the combined speed with the jump release speed
+		ble.s	.return			; if it's less, branch to return
+		move.b	(v_ssangle).w,d0
+		andi.b	#$FC,d0
+		neg.b	d0
+		subi.b	#$40,d0
+		jsr	(CalcSine).l
+		muls.w	#$400,d1
+		asr.l	#8,d1
+		move.w	d1,obVelX(a0)
+		muls.w	#$400,d0
+		asr.l	#8,d0
+		move.w	d0,obVelY(a0)		; set the speed to the jump release speed
+		bclr	#7,obStatus(a0)		; clear "Sonic has jumped" flag
 
-		; dead code
-		move.w	#-$400,d1				; set maximum jump speed
-		cmp.w	obVelY(a0),d1				; is Sonic already below the cap?
-		ble.s	.return					; if yes, branch
-		move.b	(v_jpadhold2).w,d0			; get held buttons
-		andi.b	#btnABC,d0				; is A, B, or C being held?
-		bne.s	.return					; if yes, branch
-		move.w	d1,obVelY(a0)				; cap vertical speed if not holding ABC
-
-; locret_1BBB4:
-.return:
-		rts						; return
-; End of function SonicSS_JumpHeight
+	.return:
+		rts
 
 
 ; ===========================================================================
@@ -627,7 +645,7 @@ SonicSS_GetContinue:
 		jsr	(CollectRing).l				; add a ring
 		cmpi.w	#ss_continue_rings,(v_rings).w		; check if you now have 50 rings
 		blo.s	SonicSS_NoContinue			; if not, branch
-		bset	#0,(v_lifecount).w			; remember that a continue has already been awarded
+		bset	#7,(v_lifecount).w			; remember that a continue has already been awarded
 		bne.s	SonicSS_NoContinue			; if flag was already set, branch
 		addq.b	#1,(v_continues).w			; add 1 to number of continues
 		move.w	#sfx_Continue,d0			; set extra continue sound
@@ -651,11 +669,7 @@ SonicSS_Chk1Up:
 
 ; Obj09_Get1Up:
 SonicSS_Get1Up:
-		addq.b	#1,(v_lives).w				; add 1 to number of lives
-		addq.b	#1,(f_lifecount).w			; update the lives counter
-		move.w	#bgm_ExtraLife,d0			; set extra life music
-		jsr	(QueueSound1).l				; play it
-
+		jsr	(ExtraLife).l				; add 1 to number of lives
 		moveq	#0,d4					; regular item
 		rts						; return
 ; ===========================================================================
@@ -800,6 +814,7 @@ SonicSS_ChkBumper:
 		move.w	d0,obVelY(a0)				; set final result to Sonic's Y-speed
 
 		bset	#1,obStatus(a0)				; set in-air flag
+		bclr	#7,obStatus(a0)	; clear "Sonic has jumped" flag
 
 		bsr.w	SS_FindFreeAnimationSlot		; find a free animation slot
 		bne.s	SonicSS_BumpSnd				; if none are free, branch

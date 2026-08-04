@@ -11,7 +11,12 @@
 ; ---------------------------------------------------------------------------
 
 ReactToItem:
-		nop						; useless nop (probably so an rts could easily be inserted here)
+		jsr	(Touch_Rings).l				; allow Sonic to collect S3K Rings Manager rings
+
+		tst.w	(v_registeredcollision).w		; does collision response queue contain entries?
+		bne.s	.queueNotEmpty				; if yes, branch
+		rts						; queue is empty, exit early (nothing to do)
+.queueNotEmpty:
 		move.w	obX(a0),d2				; load Sonic's x-axis position
 		move.w	obY(a0),d3				; load Sonic's y-axis position
 		subq.w	#sonic_react_width,d2			; d2 = X-position of Sonic's left edge
@@ -30,20 +35,19 @@ ReactToItem:
 		move.w	#sonic_react_width*2,d4			; d4 = Sonic's hitbox width
 		add.w	d5,d5					; d5 = Sonic's hitbox height
 
-		lea	(v_lvlobjspace).w,a1			; set object RAM start address
-		move.w	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d6 ; iterate through the entire level object RAM space
+		lea	(v_registeredcollision).w,a3		; load start of register collision objects
+		move.w	(a3)+,d6				; get number of entries in queue
+		lsr.w	#1,d6					; divide by two (entry count is doubled)
 ; .loop:
 React_LoopObjects:
-		; Sonic 2 onwards removed this, allowing objects that do not set the
-		; 'object visible flag' to process their collision.
-		tst.b	obRender(a1)				; is object on screen? (sprite rendered)
-		bpl.s	React_CheckNext				; if not, don't check collision for it
-		move.b	obColType(a1),d0			; load collision type
-		bne.s	React_CheckHitboxOverlap		; if non-zero (i.e. not col_none), check for collision
+		move.w	(a3)+,d0				; get next registered object RAM pointer
+		beq.s	React_CheckNext				; if slot is empty, skip it
+		movea.w	d0,a1					; load pointer to a1
+		move.b	obColType(a1),d0			; load object collision type
+		bne.s	React_CheckHitboxOverlap		; if valid, begin handling collision response
 ; .next:
 React_CheckNext:
-		lea	object_size(a1),a1			; next object RAM
-		dbf	d6,React_LoopObjects			; repeat $5F more times
+		dbf	d6,React_LoopObjects			; loop for all queued objects
 
 		moveq	#0,d0					; no collision was processed
 		rts						; return
@@ -222,6 +226,7 @@ React_Monitor:
 		bne.s	.return					; if not, don't break monitor
 		neg.w	obVelY(a0)				; reverse Sonic's y-motion
 		addq.b	#2,obRoutine(a1)			; advance the monitor's routine counter
+		bsr.w	ResetHomingAttack
 
 	.return:
 		rts						; return
@@ -235,6 +240,8 @@ React_Monitor:
 React_Enemy:
 		tst.b	(v_invinc).w				; is Sonic invincible?
 		bne.s	.checkBossHit				; if yes, branch
+		cmpi.b	#id_SpinDash,obAnim(a0)			; is Sonic Spin Dashing? 
+		beq.s	.checkBossHit				; if yes, branch
 		cmpi.b	#id_Roll,obAnim(a0)			; is Sonic rolling/jumping?
 		bne.w	React_ChkHurt				; if not, damage Sonic
 
@@ -258,6 +265,8 @@ React_BossHit:
 ; ===========================================================================
 
 React_BadnikHit:
+		bsr.w	ResetHomingAttack
+
 		bset	#7,obStatus(a1)				; set flag that badnik has been broken (pretty much unused, badnik gets replaced by explosion)
 
 		; Points and points object
@@ -382,6 +391,7 @@ HurtSonic:
 		neg.w	obVelX(a0)				; if Sonic is right of the object, reverse
 
 	.setDamageState:
+		clr.b	spindash_flag(a0)			; clear Spin Dash flag 
 		move.w	#0,obInertia(a0)			; cancel ground speed
 		move.b	#id_Hurt,obAnim(a0)			; set Sonic to hurt animation
 		move.w	#2*60,flashtime(a0)			; set temporary invulnerability time to 2 seconds
@@ -420,19 +430,31 @@ HurtSonic:
 
 KillSonic:
 		tst.w	(v_debuguse).w				; is debug mode active?
-		bne.s	.return					; if yes, branch
+		bne.w	.return					; if yes, branch
 
 		move.b	#0,(v_invinc).w				; remove invincibility
 		move.b	#6,obRoutine(a0)			; set Sonic to "Sonic_Death" routine
 		bsr.w	Sonic_ResetOnFloor			; reset airborne state
 		bset	#1,obStatus(a0)				; force airborne flag again
 
+	if Enable_InfiniteLives
+		move.w	#-$380,obVelY(a0)
+		asr.w	obVelX(a0)
+		asr.w	obVelX(a0)
+	else
 		move.w	#-$700,obVelY(a0)			; launch Sonic upwards while dying
 		move.w	#0,obVelX(a0)				; stop horizontal movement
+	endif
 		move.w	#0,obInertia(a0)			; stop ground movement
+
+		move.w	(v_screenposy).w,objoff_38(a0)		; remember Sonic's Y position at time of death
+		clr.w	(v_scrshiftx).w
+		clr.w	(v_scrshifty).w
 
 		move.b	#id_Death,obAnim(a0)			; set Sonic to use death animation
 		bset	#7,obGfx(a0)				; set Sonic to high sprite priority state
+
+		move.w	obY(a0),objoff_38(a0)			; remember Sonic's Y position at time of death
 
 		clr.b	(f_timecount).w				; stop time counter
 
@@ -444,6 +466,29 @@ KillSonic:
 		move.w	#sfx_Death,d0				; play normal death sound
 
 	.sound:
+		move.b	obID(a2),d1		; get object ID of object that killed Sonic
+		cmpi.b	#id_LavaBall,d1		; MZ and SLZ lava balls (object 14)
+		beq.s	.firedeath
+		cmpi.b	#id_GrassFire,d1	; MZ grass fire (object 35)
+		beq.s	.firedeath
+		cmpi.b	#id_LavaTag,d1		; MZ invisible lava tag (object 54)
+		beq.s	.firedeath
+		cmpi.b	#id_LavaGeyser,d1	; MZ lava geysers/falls (object 4D)
+		beq.s	.firedeath
+		cmpi.b	#id_LavaWall,d1		; MZ wall of lava from act 2 (object 4E)
+		beq.s	.firedeath
+		cmpi.b	#id_Gargoyle,d1		; LZ gargoyle fireballs (object 62)
+		beq.s	.firedeath
+		cmpi.b	#id_Flamethrower,d1	; SBZ flamethrower (obejct 6D)
+		beq.s	.firedeath
+		cmpi.b	#id_BossFire,d1		; MZ fire balls from boss (object 74)
+		bne.s	.normal			; if it was none of the above, don't do burnt death
+
+	.firedeath:
+		move.b	#id_Burnt,obAnim(a0)	; set Sonic to "burnt death" animation
+		move.w	#sfx_Flamethrower,d0	; use burnt death sound
+
+	.normal:
 		jsr	(QueueSound2).l				; play selected sound
 
 	; .dontdie:
@@ -519,3 +564,12 @@ React_LZPole:
 		rts						; return
 ; End of function React_Special
 ; ===========================================================================
+
+ResetHomingAttack:
+		tst.b	homingattack(a0)			; was the homing attack flag set?
+		beq.s	.return					; if not, nothing to do
+		clr.w	obVelX(a0)				; clear Sonic's X-speed
+		move.w	#-$500,obVelY(a0)			; bounce Sonic upwards a little from the impact
+		clr.b	homingattack(a0)			; reset homing attack flag so we can do another one
+	.return:
+		rts

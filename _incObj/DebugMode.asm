@@ -48,6 +48,7 @@ Debug_Init:	; Routine 0
 		move.w	d0,obInertia(a0)			; clear ground speed
 		move.b	d0,obAngle(a0)				; clear angle
 		move.b	d0,jumping(a0)				; clear jump flag
+		move.b	d0,objoff_38(a0)
 		move.b	d0,sticktoconvex(a0)			; clear SBZ gear flag
 
 		; Debug Mode makes no attempt to check if Sonic was standing on any
@@ -253,7 +254,6 @@ Debug_ChgItem:
 
 		jsr	(FindFreeObj).l				; find a free object slot
 		bne.s	Debug_ExitDebugMode			; if none are free, branch
-		clr.b	(v_objstate+2).w			; free up object state for spawned object (target for obRespawnNo=0)
 		move.w	obX(a0),obX(a1)				; set new object's X-position
 		move.w	obY(a0),obY(a1)				; set new object's Y-position
 		move.b	obMap(a0),obID(a1)			; create object (ID is stored in list with mappings as map+(object<<24))

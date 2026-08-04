@@ -32,10 +32,8 @@ Mon_Main:	; Routine 0
 		move.b	#3,obPriority(a0)			; set sprite priority to 3
 		move.b	#30/2,obActWid(a0)			; set render width
 
-		lea	(v_objstate).w,a2			; get object respawn table
-		moveq	#0,d0					; clear d0
-		move.b	obRespawnNo(a0),d0			; get monitor's respawn table index number
-		btst	#0,2(a2,d0.w)				; has monitor already been broken?
+		respawn_entry.s	.notbroken
+		btst	#0,(a2)					; has monitor already been broken?
 		beq.s	.notbroken				; if not, branch
 
 		move.b	#8,obRoutine(a0)			; run "Mon_Display" routine
@@ -95,6 +93,9 @@ Mon_Solid:	; Routine 2
 
 ; loc_A20A:
 .dontbreak:
+		tst.b	spindash_flag(a1)			; is spindash flag set?
+		bne.s	.checkpush				; if yes, branch
+
 		tst.w	d1					; has Sonic touched the monitor from the sides?
 		bpl.s	.sidetouch				; if yes, branch
 		sub.w	d3,obY(a1)				; align Sonic to the top of the monitor
@@ -174,11 +175,9 @@ Mon_Explode:
 
 ; .fail:
 Mon_RememberBroken:
-		lea	(v_objstate).w,a2			; get object respawn table
-		moveq	#0,d0					; clear d0
-		move.b	obRespawnNo(a0),d0			; get monitor's respawn table index number
-		bset	#0,2(a2,d0.w)				; remember that this monitor has been broken in respawn table
-
+		respawn_entry.s	.broken
+		bset	#0,(a2)
+.broken:
 		move.b	#9,obAnim(a0)				; set monitor animation to broken
 		bra.w	DisplaySprite				; keep displaying broken monitor
 
@@ -242,12 +241,7 @@ Pow_ChkEggman:
 Pow_ChkSonic:
 		cmpi.b	#2,d0					; does monitor contain Sonic?
 		bne.s	Pow_ChkShoes				; if not, branch
-
-ExtraLife:
-		addq.b	#1,(v_lives).w				; add 1 to the number of lives you have
-		addq.b	#1,(f_lifecount).w			; update the lives counter
-		move.w	#bgm_ExtraLife,d0			; set extra life music
-		jmp	(QueueSound1).l				; play it
+		jmp	(ExtraLife).l				; add 1 to number of lives and update HUD
 ; ===========================================================================
 
 Pow_ChkShoes:
@@ -255,6 +249,7 @@ Pow_ChkShoes:
 		bne.s	Pow_ChkShield				; if not, branch
 
 		move.b	#1,(v_shoes).w				; set speed shoes flag (used for reverting when time ran out)
+		move.b	#id_AfterImage,(v_afterimage).w		; load after image object
 		move.w	#20*60,(v_player+shoetime).w		; set time limit for speed shoes to 20 seconds
 
 		move.w	#son_maxspeed*2,(v_sonspeedmax).w	; double Sonic's top speed
@@ -312,26 +307,8 @@ Pow_NoMusic:
 Pow_ChkRings:
 		cmpi.b	#6,d0					; does monitor contain 10 rings?
 		bne.s	Pow_ChkS				; if not, branch
-
-		addi.w	#10,(v_rings).w				; add 10 rings to the number of rings you have
-		cmpi.w	#999,(v_rings).w			; does the player have 999 rings?
-		blo.s	.chkExtraLife				; if not, branch
-		move.w	#999,(v_rings).w			; cap at 999 rings
-
-	.chkExtraLife:
-		ori.b	#1,(f_ringcount).w			; update the ring counter
-		cmpi.w	#100,(v_rings).w			; check if you have at least 100 rings now
-		blo.s	Pow_RingSound				; if not, branch
-		bset	#1,(v_lifecount).w			; set 100 rings extra life flag
-		beq.w	ExtraLife				; if it wasn't already set, award an extra life
-		cmpi.w	#200,(v_rings).w			; check if you have at least 200 rings now
-		blo.s	Pow_RingSound				; if not, branch
-		bset	#2,(v_lifecount).w			; set 200 rings extra life flag
-		beq.w	ExtraLife				; if it wasn't already set, award an extra life
-
-Pow_RingSound:
-		move.w	#sfx_Ring,d0				; set ring sound collection effect
-		jmp	(QueueSound1).l				; play it
+		moveq	#10,d0					; set to award 10 extra rings
+		jmp	(AddRings).l				; add specified rings, update HUD, and potentially award extra life
 ; ===========================================================================
 
 Pow_ChkS:

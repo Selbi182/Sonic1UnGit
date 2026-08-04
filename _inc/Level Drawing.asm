@@ -113,10 +113,10 @@ LoadTilesAsYouMove:
 
 		; Draw new tiles on the right
 		moveq	#-16,d4					; set X and Y positions to top right of screen
-		move.w	#320,d5					; ''
+		move.w	#320+16,d5					; ''
 		bsr.w	Calc_VRAM_Pos				; get the plane position
 		moveq	#-16,d4					; set X and Y positions to top right of screen
-		move.w	#320,d5					; ''
+		move.w	#320+16,d5					; ''
 		bsr.w	DrawBlocks_TB				; draw a vertical line of blocks to the right of the screen
 
 ; locret_6952:
@@ -187,10 +187,10 @@ DrawBG_Top:
 
 		; Draw new tiles on the right
 		moveq	#-16,d4					; set X and Y positions to top right of screen
-		move.w	#320,d5					; ''
+		move.w	#320+16,d5					; ''
 		bsr.w	Calc_VRAM_Pos				; get the plane position
 		moveq	#-16,d4					; set X and Y positions to top right of screen
-		move.w	#320,d5					; ''
+		move.w	#320+16,d5					; ''
 		bsr.w	DrawBlocks_TB				; draw a vertical line of blocks to the right of the screen
 
 	; locj_6D70:
@@ -259,10 +259,10 @@ DrawBG_Bottom:
 
 		; Draw new tiles on the right
 		move.w	#224/2,d4				; draw the bottom half of the screen
-		move.w	#320,d5					; x coordinate - right of screen
+		move.w	#320+16,d5					; x coordinate - right of screen
 		bsr.w	Calc_VRAM_Pos				; get the plane position
 		move.w	#224/2,d4				; draw the bottom half of the screen
-		move.w	#320,d5					; x coordinate - right of screen
+		move.w	#320+16,d5					; x coordinate - right of screen
 		moveq	#3-1,d6					; draw three Blocks
 		bsr.w	DrawBlocks_TB_2				; draw three blocks vertically to the right of the screen
 
@@ -336,7 +336,7 @@ Draw_SBZ:
 		beq.s	.doMore					; if none are set, branch
 		lsr.b	#1,d0					; shift into bits 6, 4 and 2 respectively
 		move.b	d0,(a2)					; set as new draw flag bits
-		move.w	#320,d5					; x coordinate - right of screen
+		move.w	#320+16,d5					; x coordinate - right of screen
 
 	; locj_6E8C:
 	.doMore:
@@ -375,10 +375,10 @@ DrawBG_Block3:
 
 		; Draw new tiles on the right
 		move.w	#64,d4					; y coordinate - fourth line from top of screen
-		move.w	#320,d5					; x coordinate - right of screen
+		move.w	#320+16,d5					; x coordinate - right of screen
 		bsr.w	Calc_VRAM_Pos				; get the plane position
 		move.w	#64,d4					; y coordinate - fourth line from top of screen
-		move.w	#320,d5					; x coordinate - right of screen
+		move.w	#320+16,d5					; x coordinate - right of screen
 		moveq	#3-1,d6					; draw three blocks
 		bsr.w	DrawBlocks_TB_2				; draw three blocks vertically to the right of the screen
 
@@ -456,7 +456,7 @@ Draw_MZ:
 		beq.s	.doMore					; if none are set, branch
 		lsr.b	#1,d0					; shift into bits 6, 4 and 2 respectively
 		move.b	d0,(a2)					; set as new draw flag bits
-		move.w	#320,d5					; x coordinate - right of screen
+		move.w	#320+16,d5					; x coordinate - right of screen
 
 	; locj_6FC8:
 	.doMore:
@@ -539,7 +539,7 @@ DrawBG_ColumnForBGIndex:
 
 ; DrawBlocks_X: DrawRow:
 DrawBlocks_LR:
-		moveq	#((320+16+16)/16)-1,d6			; prepare number of blocks (entire width of the screen + two extra columns)
+		moveq	#((320+16+16+16)/16)-1,d6		; Draw the entire width of the screen + THREE extra columns
 
 ; DrawBlocks_X_Alt: DrawRow_Partial:
 DrawBlocks_LR_2:
@@ -737,7 +737,7 @@ GetBlockData:
 
 GetBlockData_2:
 		add.w	4(a3),d4				; add Screen Y position
-		lea	(v_16x16).w,a1				; load block RAM
+		movea.l	(v_rom_blocks).w,a1			; load ROM Blk16 pointer
 
 		; Turn Y coordinate into index into level layout
 		move.w	d4,d3					; copy X position to d3
@@ -752,7 +752,7 @@ GetBlockData_2:
 
 		; Get chunk from level layout
 		add.w	d3,d0					; fuse Y and X together (d0 = layout position of chunk)
-		moveq	#$FFFFFFFF,d3				; prepare RAM address ($FFFF???? for layout)
+		moveq	#0,d3					; changed from -1 to 0
 		move.b	(a4,d0.w),d3				; load correct chunk ID from layout
 		beq.s	.return					; if the chunk is 0, branch (chunk 0 is empty, no drawing necessary)
 
@@ -771,6 +771,7 @@ GetBlockData_2:
 		; Get block metadata from chunk
 		add.w	d4,d3					; add block's Y position to the chunk address in d3
 		add.w	d5,d3					; add block's X position to the chunk address in d3
+		add.l	(v_rom_chunks).w,d3			; add ROM Blk256 pointer to offset
 		movea.l	d3,a0					; copy chunk/block address to a0
 		move.w	(a0),d3					; load block ID from chunk
 

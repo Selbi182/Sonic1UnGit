@@ -312,8 +312,7 @@ BLZ_ShipWait:
 
 ; loc_18112:
 .startEscape:
-		move.w	#bgm_LZ,d0
-		jsr	(QueueSound1).l				; play LZ music
+		jsr	(PlayCurrentActMusic).l			; restart level music after boss defeat
 		clr.b	(f_lockscreen).w
 		bset	#0,obStatus(a0)				; face to the right
 		addq.b	#2,ob2ndRout(a0)			; increment second routine counter

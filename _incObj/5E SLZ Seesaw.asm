@@ -11,7 +11,7 @@ Seesaw:
 		move.b	obRoutine(a0),d0
 		move.w	See_Index(pc,d0.w),d1
 		jsr	See_Index(pc,d1.w)
-		out_of_range.w	DeleteObject,see_origX(a0),1 ; contains a (redundant) bmi check
+		out_of_range.w	DeleteObject,see_origX(a0)
 		bra.w	DisplaySprite
 ; ===========================================================================
 See_Index:	dc.w See_Main-See_Index			; 0

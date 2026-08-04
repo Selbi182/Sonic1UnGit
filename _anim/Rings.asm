@@ -5,6 +5,6 @@
 Ani_Ring:	dc.w .sparkle-Ani_Ring
 
 .sparkle:	dc.b 5
-		dc.b 4, 5, 6, 7
+		dc.b 1, 2, 3, 4
 		dc.b afRoutine
 		even

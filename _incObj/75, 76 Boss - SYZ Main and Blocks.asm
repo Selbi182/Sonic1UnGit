@@ -490,8 +490,7 @@ BSYZ_Recover:
 ; loc_194E0
 .playMusic:
 		clr.w	obVelY(a0)				; clear Y velocity
-		move.w	#bgm_SYZ,d0
-		jsr	(QueueSound1).l				; play SYZ music
+		jsr	(PlayCurrentActMusic).l			; restart level music after boss defeat
 
 ; loc_194EE:
 .exit:

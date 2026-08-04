@@ -10,9 +10,7 @@
 v_ram_start_def:
 v_ram_start:		equ	v_ram_start_def&$FFFFFF		; 24-bit addressing
 
-v_256x256_def:		ds.b	chunk_size*$52			; 256x256 tile mappings ($52 chunks)
-v_256x256:		equ	v_256x256_def&$FFFFFF		; 24-bit addressing
-v_256x256_end:
+			ds.b	chunk_size*$52			; unused (previously 256x256 tile mappings ($52 chunks))
 
 v_lvllayout:		ds.b	layout_row*8			; level layouts (FG/BG rows interlaced, 8 rows and $400 total)
 v_lvllayout_fg:		equ	v_lvllayout			; start address of foreground's first row
@@ -25,11 +23,37 @@ v_ngfx_buffer_end:
 
 v_spritequeue:		ds.b	spritelayer_num*spritelayer_size ; sprite display queue, in order of priority (8*$80=$400 bytes)
 
-v_16x16:		ds.b	$1800				; 16x16 tile mappings
+; ---------------------------------------------------------------------------
+; Previously v_16x16 block mappings
 
-v_sgfx_buffer:		ds.b	tile_size*23			; buffered Sonic graphics ($17 cells)
-v_sgfx_buffer_end:
-			ds.b	$20				; unused
+v_16x16_start:
+Art_Buffer:		ds.b	$1000				; art decompression buffer used for PLCs
+Art_Buffer_End:							; end of decompression buffer
+
+Object_Respawn_Table: 	ds.b	$300				; S3K Object Manager respawn table ($300 bytes)
+Camera_X_Pos_Last:	ds.w	1				; camera X position from previous frame (2 bytes)
+Camera_Y_Pos_Last:	ds.w	1				; camera Y position from previous frame (2 bytes)
+Camera_X_Coarse_Back:	ds.w	1				; camera X position - $80, rounded down to the nearest multiple of $80 (2 bytes)
+Camera_Y_Coarse_Back:	ds.w	1				; camera Y position - $80, rounded down to the nearest multiple of $80 (2 bytes)
+
+v_ringmanager:
+v_ringstates:		ds.b	512				; collected rings status table, 1 byte per ring
+v_ringstates_pointer:	ds.w	1				; address within v_ringstates RAM of the first ring found within left screen boundary
+v_ringwindow_start:	ds.l	1				; address in ROM ring layout of the first ring found within left screen boundary
+v_ringwindow_end:	ds.l	1				; address in ROM ring layout of the first ring found beyond right screen boundary
+v_ringanimqueue_count:	ds.w	1				; current entry count in v_ringanimqueue
+v_ringanimqueue:	ds.w	$3F				; queue of recently collected rings storing pointers pointing inside v_ringstates
+v_ringmanager_size:	equ	*-v_ringmanager			; size of all RAM occupied by rings manager
+
+v_registeredcollision:	ds.b	$80				; collision response queue for ReactToItem
+
+v_16x16_end:		ds.b	$1800-(v_16x16_end-v_16x16_start) ; unused
+; ---------------------------------------------------------------------------
+
+VDP_Command_Buffer:	ds.w	7*$12				; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
+VDP_Command_Buffer_Slot:ds.l	1				; stores the address of the next open slot for a queued VDP command
+			ds.b	$200				; unused ($200 were freed up by the new DMA Queue)
+
 v_tracksonic:		ds.b	$100				; position tracking data for Sonic
 v_hscrolltablebuffer:	ds.b	$380				; scrolling table data
 v_hscrolltablebuffer_end:
@@ -47,7 +71,6 @@ v_ttlsonichide:		equ	v_objspace+object_size*4	; object variable space for hiding
 
 ; Level objects
 v_player:		equ	v_objspace+object_size*0	; object variable space for Sonic ($40 bytes)
-v_hud:			equ	v_objspace+object_size*1	; object variable space for the HUD ($40 bytes)
 
 v_titlecard:		equ	v_objspace+object_size*2	; object variable space for the title card ($100 bytes)
 v_ttlcardname:		equ	v_titlecard+object_size*0	; object variable space for the title card zone name text ($40 bytes)
@@ -59,6 +82,7 @@ v_gameovertext1:	equ	v_objspace+object_size*2	; object variable space for the "G
 v_gameovertext2:	equ	v_objspace+object_size*3	; object variable space for the "OVER" in "GAME OVER"/"TIME OVER" text ($40 bytes)
 
 v_shieldobj:		equ	v_objspace+object_size*6	; object variable space for the shield ($40 bytes)
+v_dustobj:		equ	v_objspace+object_size*7	; object variable space for the Spin Dash dust ($40 bytes)
 v_starsobj1:		equ	v_objspace+object_size*8	; object variable space for the invincibility stars #1 ($40 bytes)
 v_starsobj2:		equ	v_objspace+object_size*9	; object variable space for the invincibility stars #2 ($40 bytes)
 v_starsobj3:		equ	v_objspace+object_size*10	; object variable space for the invincibility stars #3 ($40 bytes)
@@ -66,8 +90,8 @@ v_starsobj4:		equ	v_objspace+object_size*11	; object variable space for the invi
 
 v_splash:		equ	v_objspace+object_size*12	; object variable space for the water splash ($40 bytes)
 v_sonicbubbles:		equ	v_objspace+object_size*13	; object variable space for the bubbles that come out of Sonic's mouth/drown countdown ($40 bytes)
-v_watersurface1:	equ	v_objspace+object_size*30	; object variable space for the water surface #1 ($40 bytes)
-v_watersurface2:	equ	v_objspace+object_size*31	; object variable space for the water surface #1 ($40 bytes)
+
+v_afterimage:		equ	v_objspace+object_size*14	; object variable space for Sonic's after image effect ($40 bytes)
 
 v_endcard:		equ	v_objspace+object_size*23	; object variable space for the level results card ($1C0 bytes)
 v_endcardsonic:		equ	v_endcard+object_size*0		; object variable space for the level results card "SONIC HAS" text ($40 bytes)
@@ -112,11 +136,18 @@ v_snddriver_ram:	makeStruct__SMPS_RAM			; sound driver state
 
 v_gamemode:		ds.b	1				; game mode (00=Sega; 04=Title; 08=Demo; 0C=Level; 10=SS; 14=Cont; 18=End; 1C=Credit; +8C=PreLevel)
 			ds.b	1				; unused
-v_jpadhold2:		ds.b	1				; joypad input - held, duplicate
-v_jpadpress2:		ds.b	1				; joypad input - pressed, duplicate
-v_jpadhold1:		ds.b	1				; joypad input - held
-v_jpadpress1:		ds.b	1				; joypad input - pressed
-			ds.b	6				; unused
+
+v_jpadhold2:		ds.b	1				; joypad input - held (Sonic controls, can be overridden)
+v_jpadpress2:		ds.b	1				; joypad input - pressed (Sonic controls, can be overridden)
+v_jpadhold1:		ds.b	1				; joypad input - P1 held
+v_jpadpress1:		ds.b	1				; joypad input - P1 pressed
+v_jpadhold_6btn:	ds.b	1				; joypad input - P1 held (6-button controller extra inputs)
+v_jpadpress_6btn:	ds.b	1				; joypad input - P1 pressed (6-button controller extra inputs)
+v_jpadhold_p2:		ds.b	1				; joypad input - P2 held
+v_jpadpress_p2:		ds.b	1				; joypad input - P2 pressed
+v_jpadhold_6btn_p2:	ds.b	1				; joypad input - P2 held (6-button controller extra inputs)
+v_jpadpress_6btn_p2:	ds.b	1				; joypad input - P2 pressed (6-button controller extra inputs)
+
 v_vdp_buffer1:		ds.w	1				; VDP instruction buffer of register $81 (used for enabling/disabling display)
 			ds.b	6				; unused
 v_generictimer:		ds.w	1				; generic timer, decrements to 0 in VBlank (word)
@@ -134,7 +165,7 @@ v_pfade_size:		ds.b	1				; palette fading - number of colours
 
 v_misc_variables:
 v_vblank_0e_counter:	ds.b	1				; tracks how many times vertical interrupts routine 0E occurred (pretty much unused because routine 0E is unused)
-			ds.b	1				; unused
+v_palmuscounter:	ds.b	1				; counter used to fix tempo for music in PAL regions
 v_vblank_routine:	ds.b	1				; VBlank - routine counter (previously called v_vbla_routine)
 			ds.b	1				; unused
 v_spritecount:		ds.b	1				; number of sprites on-screen
@@ -145,7 +176,8 @@ v_random:		ds.l	1				; pseudo random number buffer
 f_pause:		ds.w	1				; flag set to pause the game
 			ds.b	4				; unused
 v_vdp_buffer2:		ds.w	1				; VDP instruction buffer
-			ds.b	2				; unused
+			ds.b	1				; unused
+v_waterline:		ds.b	1				; backup of the water line used for HBlank
 f_hblank_pal:		ds.w	1				; flag set to change palette during HBlank (0000 = no; 0001 = change) (previously called f_hbla_pal)
 v_waterpos1:		ds.w	1				; water height, actual
 v_waterpos2:		ds.w	1				; water height, ignoring sway
@@ -158,17 +190,13 @@ v_pal_buffer:		ds.b	$30				; palette data buffer (used for palette cycling)
 v_misc_variables_end:
 
 plc_slot_size:		equ	4+2				; size of a single PLC slot: 6 bytes = 4 bytes (data address) + 2 bytes (VRAM target address)
-v_plc_buffer:		ds.b	plc_slot_size*16		; pattern load cues buffer (maximum $10 PLCs)
-v_plc_buffer_dest:	equ	v_plc_buffer+4			; VRAM destination for 1st item in PLC buffer (2 bytes)
+v_plc_buffer:		ds.b	plc_slot_size*19		; pattern load cues buffer (maximum 19 PLCs)
 v_plc_buffer_only_end:
-v_plc_ptrnemcode:	ds.l	1				; pointer for nemesis decompression code ($1502 or $150C)
-v_plc_repeatcount:	ds.l	1
-v_plc_paletteindex:	ds.l	1
-v_plc_previousrow:	ds.l	1
-v_plc_dataword:		ds.l	1
-v_plc_shiftvalue:	ds.l	1
-v_plc_patternsleft:	ds.w	1
-v_plc_framepatternsleft:ds.w	1
+v_plc_BufferPtr:	ds.w	1				; pointer to decompression buffer location
+v_plc_VRAMAddr:		ds.w	1				; VRAM destination address
+v_plc_ArtPtr:		ds.l	1				; pointer within compressed art (for multi-module art)
+v_plc_Modules:		ds.b	1				; number of remaining modules (for multi-module art)
+v_plc_Busy:		ds.b	1				; flag set while PLC is being executed
 			ds.b	4				; unused
 v_plc_buffer_end:
 
@@ -224,7 +252,7 @@ v_sonspeedmax:		ds.w	1				; Sonic's maximum speed
 v_sonspeedacc:		ds.w	1				; Sonic's acceleration
 v_sonspeeddec:		ds.w	1				; Sonic's deceleration
 v_sonframenum:		ds.b	1				; frame to display for Sonic
-f_sonframechg:		ds.b	1				; flag set to update Sonic's sprite frame
+			ds.b	1				; unused
 v_anglebuffer:		ds.b	1				; angle of collision block that Sonic or object is standing on
 			ds.b	1				; unused
 v_anglebuffer2:		ds.b	1				; other angle of collision block that Sonic or object is standing on
@@ -244,9 +272,10 @@ v_palss_num:		ds.w	1				; palette cycling in Special Stage - reference number
 v_palss_time:		ds.w	1				; palette cycling in Special Stage - time until next change
 v_palss_index:		ds.w	1				; palette cycling in Special Stage - index into palette cycle 2 (unused?)
 v_ssbganim:		ds.w	1				; Special Stage background animation
-			ds.b	2				; unused
-v_obj31ypos:		ds.w	1				; y-position of object 31 (MZ stomper)
+v_ssangleprev:		ds.b	1				; unused
 			ds.b	1				; unused
+v_obj31ypos:		ds.w	1				; y-position of object 31 (MZ stomper)
+v_squashbuffer:		ds.b	1				; buffer Sonic's squash distance for one frame to prevent cheap deaths
 v_bossstatus:		ds.b	1				; status of boss and prison capsule (01 = boss defeated; 02 = prison opened)
 v_trackpos:		ds.w	1				; position tracking reference number
 v_trackbyte:		equ	v_trackpos+1			; low byte for position tracking
@@ -268,7 +297,7 @@ v_lani4_frame:		ds.b	1				; level graphics animation 4 - current frame
 v_lani4_time:		ds.b	1				; level graphics animation 4 - time until next frame
 v_lani5_frame:		ds.b	1				; level graphics animation 5 - current frame
 v_lani5_time:		ds.b	1				; level graphics animation 5 - time until next frame
-			ds.b	2				; unused
+v_camera_pan:		ds.w	1				; Extended Camera - how far the camera/view is panned to the left or right of Sonic (2 bytes)
 v_gfxbigring:		ds.w	1				; settings for giant ring graphics loading
 f_conveyrev:		ds.b	1				; flag set to reverse conveyor belts in LZ/SBZ
 v_obj63:		ds.b	6				; flags set if conveyor group is loaded for LZ (object 63) and SBZ (object 6F)
@@ -280,20 +309,25 @@ v_obj6B:		ds.b	1				; object 6B (SBZ stomper) variable
 f_lockctrl:		ds.b	1				; flag set to lock controls during ending sequence
 f_bigring:		ds.b	1				; flag set when Sonic collects the giant ring
 f_obj56:		ds.b	1				; object 56 flag
-			ds.b	1				; unused
+v_draw_hud:		ds.b	1				; flag to enable/disable drawing the HUD
 v_itembonus:		ds.w	1				; item bonus from broken enemies, blocks etc.
 v_timebonus:		ds.w	1				; time bonus at the end of an act
 v_ringbonus:		ds.w	1				; ring bonus at the end of an act
 f_endactbonus:		ds.b	1				; time/ring bonus update flag at the end of an act
 v_sonicend:		ds.b	1				; routine counter for Sonic in the ending sequence
 v_lz_deform:		ds.w	1				; LZ deformation offset, in units of $80
-			ds.b	6				; unused
+v_cam_x_delay:		ds.w	1				; (word) horizontal camera delay timer after a Spin Dash
+v_cam_y_delay:		ds.b	1				; vertical camera delay when looking up/down
+v_spindash_sfx_flag:	ds.b	1				; set to 1 if the Spin Dash sound was the last one played and 0 if it was not
+v_spindash_sfx_timer:	ds.b	1				; timer to reset the Spin Dash rev pitch after a second of inactivity
+v_spindash_sfx_pitch:	ds.b	1				; current Spin Dash rev pitch value
 f_switch:		ds.b	$10				; flags set when Sonic stands on a switch
 v_scroll_block_1_size:	ds.w	1
 v_scroll_block_2_size:	ds.w	1				; unused
 v_scroll_block_3_size:	ds.w	1				; unused
 v_scroll_block_4_size:	ds.w	1				; unused
-			ds.b	8				; unused
+v_rom_blocks:		ds.l	1				; pointer for 16x16 blocks in ROM
+v_rom_chunks:		ds.l	1				; pointer for 256x256 chunks in ROM
 v_levelvariables_end:
 
 v_spritetablebuffer:	ds.b	spritetable_entrysize*sprites_max ; sprite table (8*80=$280 bytes) (last $80 bytes are overwritten by v_palette_water_fading)
@@ -325,8 +359,10 @@ v_palette_fading_line_3:ds.b $20
 v_palette_fading_line_4:ds.b $20
 v_palette_fading_end:
 
-v_objstate:		ds.b	$C0				; object state list
-v_objstate_end:
+v_regbuffer:		ds.b	$40				; stores registers d0-a7 during an error event
+v_spbuffer:		ds.l	1				; stores most recent sp address
+v_errortype:		ds.b	1				; error type
+			ds.b	$C0-$45				; unused ($7B bytes)
 
 v_systemstack_end:	ds.b	$140				; system stack end (items get added backwards)
 v_systemstack:							; system stack start
@@ -412,7 +448,10 @@ v_ani2_frame:		ds.b	1				; synchronised sprite animation 2 - current frame
 v_ani3_time:		ds.b	1				; synchronised sprite animation 3 - time until next frame
 v_ani3_frame:		ds.b	1				; synchronised sprite animation 3 - current frame
 v_ani3_buf:		ds.w	1				; synchronised sprite animation 3 - info buffer
-			ds.b	$26				; unused
+v_ani1_prev:		ds.b	1				; synchronised sprite animation 1 - previous frame
+v_ani2_prev:		ds.b	1				; synchronised sprite animation 2 - previous frame
+v_ani3_prev:		ds.b	1				; synchronised sprite animation 3 - previous frame
+			ds.b	$23				; unused (used to be $26, three were taken for the above variables)
 v_limittopdb:		ds.w	1				; level upper boundary, buffered for debug mode
 v_limitbtmdb:		ds.w	1				; level bottom boundary, buffered for debug mode
 			ds.b	$C				; unused
@@ -494,14 +533,5 @@ v_ss_scroll_bubbles:	ds.b	$28				; buffer to store scroll positions for SS backg
 			ds.b	$D8				; unused in SS
 v_ss_scroll_clouds:	ds.b	$1C				; buffer to store scroll positions for SS background clouds
 	objend
-
-
-; Error handler
-	obj	v_objstate
-v_regbuffer:	ds.b	$40					; stores registers d0-a7 during an error event
-v_spbuffer:	ds.l	1					; stores most recent sp address
-v_errortype:	ds.b	1					; error type
-	objend
-
 
 	org 0

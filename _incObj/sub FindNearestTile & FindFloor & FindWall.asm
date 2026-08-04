@@ -19,7 +19,7 @@ FindNearestTile:
 		lsr.w	#8,d1
 		andi.w	#$7F,d1					; read only high byte of X-position
 		add.w	d1,d0					; combine for position within layout
-		moveq	#$FFFFFFFF,d1				; d1 = $FFFFFFFF (used to make a RAM address)
+		moveq	#0,d1					; changed from -1 to 0
 		lea	(v_lvllayout_fg).w,a1
 		move.b	(a1,d0.w),d1				; get 256x256 chunk number
 		beq.s	.blanktile				; branch if 0 (blank chunk)
@@ -36,7 +36,7 @@ FindNearestTile:
 		lsr.w	#3,d0
 		andi.w	#$1E,d0					; d0 = high nybble of low byte of X-position, multiplied by 2
 		add.w	d0,d1					; add to base address
-
+		add.l	(v_rom_chunks).w,d1			; add ROM chunks pointer
 		movea.l	d1,a1
 		rts
 
@@ -51,7 +51,9 @@ FindNearestTile:
 
 .specialtile:
 		andi.w	#$7F,d1
-		btst	#sprite_looping_bit,obRender(a0)	; is object "behind a loop"?
+		cmpi.b	#id_SonicPlayer,(a0)			; is object Sonic?
+		bne.s	.treatasnormal				; if not, branch
+		btst	#7,obStatus(a0) 			; is Sonic "behind a loop"?
 		beq.s	.treatasnormal				; if not, branch
 		addq.w	#1,d1
 		cmpi.w	#$29,d1					; is 256x256 chunk number $28?
@@ -69,6 +71,7 @@ FindNearestTile:
 		lsr.w	#3,d0
 		andi.w	#$1E,d0
 		add.w	d0,d1
+		add.l	(v_rom_chunks).w,d1			; add ROM chunks pointer
 		movea.l	d1,a1
 		rts
 ; End of function FindNearestTile
@@ -94,7 +97,7 @@ FindNearestTile:
 ; ---------------------------------------------------------------------------
 
 FindFloor:
-		bsr.s	FindNearestTile				; a1 = address within 256x256 mappings of 16x16 block being stood on
+		bsr.w	FindNearestTile				; a1 = address within 256x256 mappings of 16x16 block being stood on
 		move.w	(a1),d0					; get value for solidness, orientation and 16x16 block number
 		move.w	d0,d4
 		andi.w	#$7FF,d0				; ignore solid/orientation bits

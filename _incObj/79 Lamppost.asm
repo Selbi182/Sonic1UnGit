@@ -28,12 +28,9 @@ Lamp_Main:	; Routine 0
 		move.b	#16/2,obActWid(a0)			; set sprite display width
 		move.b	#5,obPriority(a0)			; set sprite priority
 
-		lea	(v_objstate).w,a2			; load object respawn table
-		moveq	#0,d0					; clear d0 for word-based addressing
-		move.b	obRespawnNo(a0),d0			; get this lamppost's respawn table index
-		bclr	#7,2(a2,d0.w)				; immediately clear respawn block flag (...why?)
-		btst	#0,2(a2,d0.w)				; has this lamppost already been collected?
-		bne.s	.red					; if yes, use red frame
+		respawn_entry.s	.fail
+		btst	#0,(a2)
+		bne.s	.red
 
 		move.b	(v_lastlamp).w,d1			; get ID of last hit lamppost number
 		andi.b	#$7F,d1					; clear bit 7 (see notes in Lamp_LoadInfo)
@@ -43,7 +40,8 @@ Lamp_Main:	; Routine 0
 		blo.s	Lamp_Blue				; if yes, branch
 
 	.red:
-		bset	#0,2(a2,d0.w)				; set respawn table data to remember this lamppost was already hit
+		bset	#0,(a2)
+	.fail:
 		move.b	#4,obRoutine(a0)			; goto Lamp_Finish next
 		move.b	#3,obFrame(a0)				; use red lamppost frame
 		rts						; return
@@ -62,11 +60,9 @@ Lamp_Blue:	; Routine 2
 		cmp.b	d2,d1					; is this a "new" lamppost? (bigger ID than last hit one)
 		blo.s	.chkhit					; if yes, branch
 
-		lea	(v_objstate).w,a2			; load object respawn table
-		moveq	#0,d0					; clear d0 for word-based addressing
-		move.b	obRespawnNo(a0),d0			; get this lamppost's respawn table index
-		bset	#0,2(a2,d0.w)				; set respawn table data to remember this lamppost was already hit
-
+		respawn_entry.s	.noEntry
+		bset	#0,(a2)
+.noEntry:
 		move.b	#4,obRoutine(a0)			; goto Lamp_Finish next
 		move.b	#3,obFrame(a0)				; use red lamppost frame
 		bra.w	.donothing				; branch to rts
@@ -110,10 +106,8 @@ Lamp_Blue:	; Routine 2
 
 		bsr.w	Lamp_StoreInfo				; store all current relevant gameplay data
 
-		lea	(v_objstate).w,a2			; load object respawn table
-		moveq	#0,d0					; clear d0 for word-based addressing
-		move.b	obRespawnNo(a0),d0			; get this lamppost's respawn table index
-		bset	#0,2(a2,d0.w)				; set respawn table data to remember this lamppost was already hit
+		respawn_entry.s	.donothing
+		bset	#0,(a2)
 
 	.donothing:
 		rts						; return

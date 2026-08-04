@@ -358,8 +358,7 @@ BMZ_Recover:
 
 .playMusic:
 		clr.w	obVelY(a0)				; stop rising
-		move.w	#bgm_MZ,d0
-		jsr	(QueueSound1).l				; play MZ music
+		jsr	(PlayCurrentActMusic).l			; restart level music after boss defeat
 
 ; loc_1857A
 .exit:

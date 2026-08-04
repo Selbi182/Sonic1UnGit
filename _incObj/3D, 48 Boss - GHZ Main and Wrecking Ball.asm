@@ -278,8 +278,7 @@ BGHZ_Recover:
 ; loc_179E0:
 .playMusic:
 		clr.w	obVelY(a0) 				; stop moving
-		move.w	#bgm_GHZ,d0
-		jsr	(QueueSound1).l				; play GHZ music
+		jsr	(PlayCurrentActMusic).l			; restart level music after boss defeat
 
 ; loc_179EE:
 .exit:
