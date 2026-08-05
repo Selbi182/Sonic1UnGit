@@ -188,8 +188,8 @@ React_CollisionDetected:
 		beq.s	React_Monitor				; if yes, branch
 
 		; Assume object is a ring (standard, lost, or giant)
-		cmpi.w	#90,flashtime(a0)			; has Sonic recently been hurt and has more than 90 frames of flashing time left?
-		bhs.w	.return					; if yes, prevent collecting ring
+	;	cmpi.w	#90,flashtime(a0)			; has Sonic recently been hurt and has more than 90 frames of flashing time left?
+	;	bhs.w	.return					; if yes, prevent collecting ring
 		addq.b	#2,obRoutine(a1)			; advance the ring's routine counter (e.g. Ring_Collect)
 
 	.return:
@@ -369,6 +369,7 @@ HurtSonic:
 		move.b	#id_RingLoss,obID(a1)			; load bouncing multi rings object
 		move.w	obX(a0),obX(a1)				; spawn at Sonic's X-position
 		move.w	obY(a0),obY(a1)				; spawn at Sonic's Y-position
+		move.b	#8,obRoutine(a1)			; set to RLoss_Count
 
 	; .hasshield:
 	.bounceSonicAway:
@@ -569,7 +570,11 @@ ResetHomingAttack:
 		tst.b	homingattack(a0)			; was the homing attack flag set?
 		beq.s	.return					; if not, nothing to do
 		clr.w	obVelX(a0)				; clear Sonic's X-speed
-		move.w	#-$500,obVelY(a0)			; bounce Sonic upwards a little from the impact
 		clr.b	homingattack(a0)			; reset homing attack flag so we can do another one
+		move.w	#-$500,obVelY(a0)			; bounce Sonic upwards a little from the impact
+		btst	#6,obStatus(a0)				; is Sonic underwater?
+		beq.s	.return					; if not, branch
+		asr.w	obVelY(a0)
+
 	.return:
 		rts

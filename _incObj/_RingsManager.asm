@@ -364,3 +364,58 @@ Map_RingsCompact:
 		dc.w ArtTile_Ring+$A|Tile_Pal2|$1000		; 7 - sparkle
 
 		dc.w 0, 0					; blank frames in case of overflow
+
+; ===========================================================================
+
+BuildRings_Loss:
+		tst.w	(v_ani3_time).w
+		beq.w	.return
+
+
+		lea	(v_lvlobjspace).w,a4
+		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1-1,d7
+
+		lea	(v_screenposx).w,a3			; load camera X-position
+
+	.loop:
+		tst.b	obRoutine(a4)
+		bne.s	.next
+		cmpi.b	#id_RingLoss,(a4)
+		bne.s	.next
+
+		cmpi.b	#sprites_max,d5				; has the sprite limit of 80 been reached?
+		bhs.s	.return					; if yes, abort drawing more sprites to avoid corruption
+
+		move.w	obX(a4),d3				; get ring X-position
+		sub.w	(a3),d3					; subtract camera X-position
+		addi.w	#8,d3
+		cmpi.w	#320+16,d3
+		bhs.s	.next
+		addi.w	#$80-8-8,d3
+
+		move.w	obY(a4),d2				; get ring Y-position
+		sub.w	4(a3),d2				; subtract camera Y-position (4(a3) = v_screenposy)
+		addi.w	#8,d2					; add half of ring height (16/2 = 8px)
+		andi.w	#$7FF,d2				; apply vertical screen wrap
+		cmpi.w	#224+16,d2				; is ring below visible screen?
+		bhs.s	.next					; if yes, don't render
+		addi.w	#$80-8-8,d2				; add VDP sprite start and undo earlier 8px offset
+
+		move.w	d2,(a2)+				; store sprite Y-position in sprite buffer
+
+		move.b	#5,(a2)+				; store sprite width/height in sprite buffer
+
+		addq.b	#1,d5					; increase total sprites counter
+		move.b	d5,(a2)+				; store sprite link in sprite buffer
+
+		move.w	#ArtTile_Ring_Loss|Tile_Pal2,(a2)+	; get VRAM settings and store in sprite buffer
+
+		move.w	d3,(a2)+				; store sprite X-position in sprite buffer
+
+	.next:
+		lea	object_size(a4),a4
+		dbf	d7,.loop					; if we've got more rings to render, loop
+
+	.return:
+		rts
+; End of function BuildRings_Loss

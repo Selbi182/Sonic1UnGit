@@ -127,6 +127,12 @@ BuildSprites:
 		lea	spritelayer_size(a4),a4			; advance to next layer (each layer is $80 bytes)
 		dbf	d7,.priorityLoop
 
+		tst.b	(v_draw_hud).w				; are rings even meant to get rendered? (Level_started_flag in S2)
+		beq.s	.noLossRings				; if not, branch
+		movem.l	d7/a4,-(sp)				; backup v_spritequeue and layer iterator
+		bsr.w	BuildRings_Loss				; render ring sprites
+		movem.l	(sp)+,d7/a4				; restore v_spritequeue and layer iterator
+	.noLossRings:
 		move.b	d5,(v_spritecount).w			; write number of rendered sprites to debug var
 		cmpi.b	#sprites_max,d5				; check if sprite limit was exhausted
 		beq.s	.spriteLimit				; if yes, branch
