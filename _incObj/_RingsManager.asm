@@ -368,20 +368,16 @@ Map_RingsCompact:
 ; ===========================================================================
 
 BuildRings_Loss:
-		tst.w	(v_ani3_time).w
+		lea	(v_registeredcollision_rings).w,a5
+		move.w	(a5)+,d7
 		beq.w	.return
-
-
-		lea	(v_lvlobjspace).w,a4
-		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1-1,d7
+		lsr.w	#1,d7
+		subq.w	#1,d7
 
 		lea	(v_screenposx).w,a3			; load camera X-position
 
 	.loop:
-		tst.b	obRoutine(a4)
-		bne.s	.next
-		cmpi.b	#id_RingLoss,(a4)
-		bne.s	.next
+		movea.w	(a5)+,a4
 
 		cmpi.b	#sprites_max,d5				; has the sprite limit of 80 been reached?
 		bhs.s	.return					; if yes, abort drawing more sprites to avoid corruption
@@ -417,5 +413,6 @@ BuildRings_Loss:
 		dbf	d7,.loop					; if we've got more rings to render, loop
 
 	.return:
+		clr.w	(v_registeredcollision_rings).w
 		rts
 ; End of function BuildRings_Loss

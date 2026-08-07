@@ -364,13 +364,7 @@ HurtSonic:
 		tst.w	(v_rings).w				; does Sonic have any rings?
 		beq.w	.hitWithoutRings			; if not, branch to kill Sonic
 
-		jsr	(FindFreeObj).l				; find a free object slot
-		bne.s	.bounceSonicAway			; if object RAM is full, branch
-		move.b	#id_RingLoss,obID(a1)			; load bouncing multi rings object
-		move.w	obX(a0),obX(a1)				; spawn at Sonic's X-position
-		move.w	obY(a0),obY(a1)				; spawn at Sonic's Y-position
-		move.b	#8,obRoutine(a1)			; set to RLoss_Count
-
+		jsr	(RLoss_SpawnRings).l
 	; .hasshield:
 	.bounceSonicAway:
 		move.b	#0,(v_shield).w				; remove a potential shield
@@ -405,7 +399,7 @@ HurtSonic:
 		move.w	#sfx_Death,d0				; use generic damage sound
 
 	.sound:
-		jsr	(QueueSound2).l				; play selected sound
+		jsr	(QueueSound3).l				; play selected sound
 
 		moveq	#-1,d0					; collision detected
 		rts						; return

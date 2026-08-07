@@ -1,3 +1,6 @@
+; DIRTY WIP OPTIMIZAZION !!!!!!!!!!!!!
+
+
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 25 - standalone rings
@@ -129,7 +132,7 @@ RLoss_Index:	; rings spilled from getting hurt
 		dc.w RLoss_Collect-RLoss_Index			;  2
 		dc.w RLoss_Sparkle-RLoss_Index			;  4
 		dc.w RLoss_Delete-RLoss_Index			;  6
-		dc.w RLoss_Count-RLoss_Index			;  8
+		dc.w RLoss_Delete-RLoss_Index			;  8
 
 		; rings attracted while having a shield
 		dc.w RLoss_Attract_Init-RLoss_Index		;  A
@@ -138,7 +141,6 @@ RLoss_Index:	; rings spilled from getting hurt
 		dc.w RLoss_Sparkle-RLoss_Index			; 10
 		dc.w RLoss_Delete-RLoss_Index			; 12
 
-rloss_bottom:	equ	objoff_30
 rloss_velX:	equ	objoff_32
 rloss_velY:	equ	objoff_36
 ; ===========================================================================
@@ -158,7 +160,9 @@ RLoss_Bounce:	; Routine 0
 		add.b	d7,d0					; add object RAM index as crude spreading-out of collision check over multiple frames
 		andi.b	#3,d0					; only check for floor collision every 4th frame
 		bne.s	.chkdel					; if on any other frame, branch
-	
+
+		bsr.w	ChkHitFloor_Rings
+		beq.s	.chkdel
 		jsr	(ObjFloorDist).l			; calculate distance between this ring and the floor
 		tst.w	d1					; has ring hit the floor?
 		bpl.s	.chkdel					; if not, branch
@@ -173,13 +177,106 @@ RLoss_Bounce:	; Routine 0
 		subq.b	#1,obDelayAni(a0)			; decrement remaining time for bouncing ring
 		beq.w	DeleteObject				; if time reached zero, delete ring
 
-		move.w	rloss_bottom(a0),d0
+		move.w	(v_limitbtm3).w,d0
 		cmp.w	obY(a0),d0				; has object moved below the bottom level boundary?
-		blt.s	RLoss_Delete				; if yes, delete ring
-		bset	#sprite_rendered_bit,obRender(a0)
+		blt.w	DeleteObject				; if yes, delete ring
+
+		moveq	#col_none,d1
+		move.w	(v_player+obX).w,d0
+		sub.w	obX(a0),d0
+		bpl.s	.pos
+		neg.w	d0
+	.pos:	cmpi.w	#$20,d0
+		bhi.s	.nocol
+		moveq	#col_12x12|col_item,d1
+	.nocol:
+		move.b	d1,obColType(a0)
+
+
+		lea	(v_registeredcollision_rings).w,a1	; get target sprite queue
+		move.w	(a1),d0			; get sprite queue's entry count
+		addq.b	#2,d0			; increase count by another entry (word)
+		bmi.s	.Full		; if byte value went to $80, queue is full
+		move.w	d0,(a1)			; set new sprite queue's entry count
+		move.w	a0,(a1,d0.w)		; insert RAM address for object to queue
+
+	.Full:
+		cmpi.b	#id_RingLoss,object_size(a0)
+		bne.s	.exit
+		dbf	d7,.shortcut
 		rts
-		bra.w	DisplaySprite				; display this ring
+
+	.shortcut:
+		tst.b	obColType(a0)				; does this object have collision with Sonic?
+		beq.s	.no_collision				; if not, branch
+		tst.b	obRender(a0)				; is object even visible?
+		bpl.s	.no_collision				; if not, branch
+		lea	(v_registeredcollision).w,a1		; get target queue
+		move.w	(a1),d0					; get queue's entry count
+		addq.b	#2,d0					; increase count by another entry (word)
+		bmi.s	.no_collision				; if byte value went to $80, queue is full
+		move.w	d0,(a1)					; set new queue's entry count
+		move.w	a0,(a1,d0.w)				; insert RAM address for object to queue
+
+	.no_collision:
+		lea	object_size(a0),a0
+		bra.w RingLoss
+
+	.exit:
+		rts
 ; ===========================================================================
+
+
+ChkHitFloor_Rings:
+		move.w	obX(a0),d3				; get object's X-position
+		moveq	#16/2,d2				; clear d0 (obHeight is a byte)
+		add.w	obY(a0),d2				; get object's Y-position
+
+		move.w	d2,d0					; get Y-position of bottom edge of object
+		lsr.w	#1,d0					; divide Y-position by 2 (because layout alternates between level and bg lines)
+		andi.w	#$380,d0				; read only high byte of Y-position (because each level chunk is 256px tall)
+		move.w	d3,d1					; get X-position of object
+		lsr.w	#8,d1
+		andi.w	#$7F,d1					; read only high byte of X-position
+		add.w	d1,d0					; combine for position within layout
+		moveq	#0,d1					; changed from -1 to 0
+		lea	(v_lvllayout_fg).w,a1
+		move.b	(a1,d0.w),d1				; get 256x256 chunk number
+		beq.s	.notsolid				; branch if 0 (blank chunk)
+		subq.b	#1,d1					; make chunks start at 0
+		ror.w	#7,d1					; d1 = $FFFFxx00 where xx is multiplied by 2
+		move.w	d2,d0
+		add.w	d0,d0					; d0 = Y-position * 2 (because each 16x16 block is represented by 2 bytes)
+		andi.w	#$1E0,d0				; read only high nybble of low byte (for Y-position within 256x256 chunk)
+		add.w	d0,d1					; add to base address
+		move.w	d3,d0
+		lsr.w	#3,d0
+		andi.w	#$1E,d0					; d0 = high nybble of low byte of X-position, multiplied by 2
+		add.w	d0,d1					; add to base address
+		add.l	(v_rom_chunks).w,d1			; add ROM chunks pointer
+		movea.l	d1,a1
+
+		move.w	(a1),d0					; get value for solidness, orientation and 16x16 block number
+		btst	#$D,d0					; is the block solid?
+		bne.s	.issolid				; if yes, branch
+
+.notsolid:
+		moveq	#0,d0
+		rts
+
+.issolid:
+		moveq	#-1,d0
+		rts
+; End of function ChkHitFloor_Rings
+
+; ===========================================================================
+
+
+
+
+
+
+
 
 RLoss_Collect:	; Routine 2 (set from ReactToItem)
 		addq.b	#2,obRoutine(a0)			; advance to RLoss_Sparkle
@@ -200,7 +297,8 @@ RLoss_Delete:	; Routine 6
 
 ; ===========================================================================
 
-RLoss_Count:	; Routine 8
+;RLoss_Count:	; Routine 8
+RLoss_SpawnRings:
 		move.w	(v_rings).w,d5				; get number of rings you have
 		moveq	#32,d0					; set maximum rings allowed to be spilled to 32
 		cmp.w	d0,d5					; do you more than 32 rings?
@@ -211,40 +309,34 @@ RLoss_Count:	; Routine 8
 		subq.w	#1,d5					; decrement for dbf
 		bmi.s	.resetcounter				; if we have no rings, abort process (failsafe)
 
-		lea	(v_lvlobjspace).w,a2
-		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1-1,d4
+		lea	(v_lvlobjend-object_size).w,a4
+		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d4
 
 		lea	SpillRingData(pc),a3			; load pre-calculated spill velocities
-		movea.l	a0,a1					; load first spilled ring to current RAM location
 
-		move.w	obX(a0),d2				; spawn rings at parent X-position
-		move.w	obY(a0),d3				; spawn rings at parent Y-position
-		bra.s	.makerings				; init first ring
-; ===========================================================================
+
+		move.w	(v_player+obX).w,d2				; spawn rings at parent X-position
+		move.w	(v_player+obY),d3				; spawn rings at parent Y-position
 
 .loop:
-		tst.b	(a2)
+		tst.b	(a4)
 		beq.s	.makerings_go
-		lea	object_size(a2),a2
+		lea	-object_size(a4),a4
 		dbf	d4,.loop
 		bra.s	.resetcounter
 	.makerings_go:
-		movea.w	a2,a1
+		movea.w	a4,a1
 	.makerings:
-		move.b	(a0),(a1)				; load new bouncing ring object
+		move.b	#id_RingLoss,(a1)				; load new bouncing ring object
 		move.w	d2,obX(a1)				; copy parent X-position
 		move.w	d3,obY(a1)				; copy parent Y-position
 
 		move.l	(a3)+,rloss_velX(a1)
 		move.l	(a3)+,rloss_velY(a1)
 
-		bsr.w	Ring_Setup				; complete remaining ring setup (maps etc.)
-		clr.b	obRoutine(a1)
-
-		move.w	(v_limitbtm2).w,d0			; get current bottom level boundary
-		addi.w	#224,d0					; add vertical screen height
-		move.w	d0,rloss_bottom(a1)
-
+		move.l	#Map_Ring,obMap(a1)			; set mappings
+		move.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode
+		bset	#sprite_rendered_bit,obRender(a1)
 		move.w	#ArtTile_Ring_Loss|Tile_Pal2,obGfx(a1)	; special art tile for smooth rings
 		dbf	d5,.loop				; repeat for number of spilled rings (max 31)
 
@@ -252,14 +344,9 @@ RLoss_Count:	; Routine 8
 		clr.w	(v_rings).w				; reset number of rings to zero
 		clr.b	(v_lifecount).w				; reset the flags for extra lives on 100/200 rings collected
 		move.b	#$80,(f_ringcount).w			; update ring counter ($80 means all digits should be reset to __0)
-
-		move.b	#255,d0					; set both timers to 255 frames
-		move.b	d0,obDelayAni(a0)			; set ring despawn timer
-		move.b	d0,(v_ani3_time).w			; set animation timer
-
+		move.b	#255,(v_ani3_time).w			; set animation timer
 		move.w	#sfx_RingLoss,d0			; set ring loss sound
-		jsr	(QueueSound2).l				; play it
-		bra.w	RLoss_Bounce				; skip over SpillRingData
+		jmp	(QueueSound2).l				; play it
 
 ; ---------------------------------------------------------------------------
 ; Precalculated spilled rings velocities
@@ -274,6 +361,7 @@ SpillRingData:
 		dc.l  -$1A800,-$11C00,  $1A800,-$11C00,  -$1F600, -$6200,  $1F600, -$6200  ; 24
 		dc.l  -$1F600,  $6200,  $1F600,  $6200,  -$1A800, $11C00,  $1A800, $11C00  ; 28
 		dc.l  -$11C00, $1A800,  $11C00, $1A800,   -$6200, $15600,   $6200, $15600  ; 32
+		dc.l	$6200, $15600  ; 33
 
 
 ; ===========================================================================
@@ -308,10 +396,7 @@ RLoss_Attract_Main:	; Routine C
 		asl.l	#8,d0
 		move.l	d0,rloss_velY(a0)
 
-		move.w	(v_limitbtm2).w,d0			; get current bottom level boundary
-		addi.w	#224,d0					; add vertical screen height
-		move.w	d0,rloss_bottom(a0)
-
+		bset	#sprite_rendered_bit,obRender(a0)
 		bra.w	RLoss_Bounce				; continue straight to ring loss object
 ; ---------------------------------------------------------------------------
 

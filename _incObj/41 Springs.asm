@@ -4,10 +4,14 @@
 ; ---------------------------------------------------------------------------
 
 Springs:
+		tst.b	obRender(a0)
+		bpl.s	.skip
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Spring_Index(pc,d0.w),d1
 		jsr	Spring_Index(pc,d1.w)
+
+	.skip:
 		out_of_range.w	DeleteObject
 		bra.w	DisplaySprite
 ; ===========================================================================

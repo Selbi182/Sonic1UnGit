@@ -288,7 +288,7 @@ Debug_ExitDebugMode:
 		move.w	(v_limitbtmdb).w,(v_limitbtm1).w	; restore bottom level boundary
 
 		cmpi.b	#id_Special,(v_gamemode).w		; are you in the Special Stage?
-		bne.s	.return					; if not, branch
+		bne.s	.notSS					; if not, branch
 		clr.w	(v_ssangle).w				; make Special Stage "upright"
 		move.w	#ss_rotatespeed,(v_ssrotate).w		; restart maze rotation
 		move.l	#Map_Sonic,(v_player+obMap).w		; reset Sonic's mappings (redundant, already done)
@@ -299,6 +299,13 @@ Debug_ExitDebugMode:
 
 	.return:
 		rts						; return
+	
+	.notSS:
+		disable_ints
+		jsr	(Hud_Base).l
+		move.b	#60,(v_timecent).w
+		enable_ints
+		rts
 ; End of function Debug_Control
 
 ; ===========================================================================

@@ -18,7 +18,9 @@ Enable_ExtendedCamera:	= 1
 Enable_InfiniteLives:	= 1
 Enable_AttractRings:	= 1
 
-CheatsEnabled = 1
+LagOMeter: = 1
+
+CheatsEnabled: = 1
 ;	| If 1, all in-game cheats (Level Select, Debug Mode, Slow-Motion, Japanese Credits)
 ;	|       will be enabled by default, without requiring any title screen button inputs
 
@@ -401,7 +403,7 @@ id_Credits:	gmptr	GM_Credits				; Credits ($1C)
 ; ---------------------------------------------------------------------------
 
 Art_Text:	bincludeEndMarker	"artunc/Level Select & Debug Text.unc"
-
+		dc.w	0
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -1583,6 +1585,9 @@ PalLoad_Water:
 ; DelayProgram: <-- old misnomer
 ; WaitForVBla: <-- old name
 WaitForVBlank:
+	if LagOMeter
+		move.w	#$9100,(vdp_control_port).l ; disable lag-o-meter
+	endif
 		enable_ints					; enable interrupts so vertical interrupts can occur
 
 		tst.l	(v_plc_buffer).w			; are any PLC jobs queued?
@@ -1599,6 +1604,10 @@ WaitForVBlank:
 		bne.s	.wait					; if not, loop until it has
 
 		sf.b	(v_plc_Busy).w				; clear DMA busy flag
+
+	if LagOMeter
+		move.w	#$9193,(vdp_control_port).l ; enable lag-o-meter
+	endif
 		rts						; resume normal operation
 ; End of function WaitForVBlank
 
@@ -1664,6 +1673,8 @@ GM_Sega:
 Sega_WaitPal:		; while light scanning effect is active
 		move.b	#id_VBlank_Sega,(v_vblank_routine).w	; set VBlank routine to $02
 		bsr.w	WaitForVBlank				; wait for VBlank to finish
+		andi.b	#btnStart,(v_jpadhold1).w
+		bne.s	Sega_GotoTitle
 		bsr.w	PalCycle_Sega				; advance light scanning palette cycle effect
 		bne.s	Sega_WaitPal				; loop until it's finished
 ; ---------------------------------------------------------------------------
@@ -1683,7 +1694,7 @@ Sega_WaitEnd:
 		bsr.w	WaitForVBlank				; wait for VBlank to finish
 		tst.w	(v_generictimer).w			; has post-chant timer expired?
 		beq.s	Sega_GotoTitle				; if yes, go to title screen
-		andi.b	#btnStart,(v_jpadpress1).w		; is Start button pressed?
+		andi.b	#btnStart,(v_jpadhold1).w		; is Start button pressed?
 		beq.s	Sega_WaitEnd				; if not, loop post-chant routine
 ; ---------------------------------------------------------------------------
 
@@ -1770,8 +1781,11 @@ Tit_LoadText:
 	.delay:
 		move.b	#id_VBlank_Title,(v_vblank_routine).w
 		bsr.w	WaitForVBlank
-		dbf	d0,.delay
+		andi.b	#btnStart,(v_jpadhold1).w
+		bne.s	.skip
 
+		dbf	d0,.delay
+	.skip:
 		bsr.w	PaletteFadeOut				; fade-out "SONIC TEAM PRESENTS" screen
 ; ---------------------------------------------------------------------------
 

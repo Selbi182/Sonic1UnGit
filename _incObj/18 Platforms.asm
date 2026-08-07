@@ -18,7 +18,7 @@ Plat_Index:	dc.w Plat_Main-Plat_Index	; 0
 plat_rawY:	equ objoff_2C	; raw Y-positon (without nudge Y-offset)
 plat_origX:	equ objoff_32	; initial X-position
 plat_origY:	equ objoff_34	; initial Y-position
-plat_nudge:	equ objoff_38	; nudge Y-offset while Sonic is on platform
+plat_nudgeval:	equ objoff_38	; nudge Y-offset while Sonic is on platform
 plat_delay:	equ objoff_3A	; multi-purpose delay timers
 ; ===========================================================================
 
@@ -61,9 +61,9 @@ Plat_Main:	; Routine 0
 ; ---------------------------------------------------------------------------
 
 Plat_Solid:	; Routine 2
-		tst.b	plat_nudge(a0)				; has platform nudge gone back to 0?
+		tst.b	plat_nudgeval(a0)				; has platform nudge gone back to 0?
 		beq.s	.checkEnterPlatform			; if yes, branch
-		subq.b	#4,plat_nudge(a0)			; reduce nudging while Sonic isn't on platform
+		subq.b	#4,plat_nudgeval(a0)			; reduce nudging while Sonic isn't on platform
 
 	.checkEnterPlatform:
 		moveq	#0,d1					; clear d1
@@ -80,9 +80,9 @@ Plat_Action:	; Routine 8
 
 ; Plat_Action2:
 Plat_StoodOn:	; Routine 4
-		cmpi.b	#$40,plat_nudge(a0)			; has platform fully nudged down?
+		cmpi.b	#$40,plat_nudgeval(a0)			; has platform fully nudged down?
 		beq.s	.platformBehavior			; if yes, don't depress it further
-		addq.b	#4,plat_nudge(a0)			; nudge platform down as Sonic stands on it
+		addq.b	#4,plat_nudgeval(a0)			; nudge platform down as Sonic stands on it
 
 	.platformBehavior:
 		moveq	#0,d1					; clear d1
@@ -103,7 +103,7 @@ Plat_StoodOn:	; Routine 4
 ; ---------------------------------------------------------------------------
 
 Plat_Nudge:
-		move.b	plat_nudge(a0),d0			; get current platform nudge value (0-$40)
+		move.b	plat_nudgeval(a0),d0			; get current platform nudge value (0-$40)
 		bsr.w	CalcSine				; convert it into a sine for smooth movement
 		move.w	#$400,d1				; depress by at most 4px
 		muls.w	d1,d0					; multiply sine value by amplitude

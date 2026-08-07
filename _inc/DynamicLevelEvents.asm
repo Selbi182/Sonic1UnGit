@@ -9,6 +9,11 @@ DynamicLevelEvents:
 		add.w	d0,d0
 		move.w	DLE_Index(pc,d0.w),d0
 		jsr	DLE_Index(pc,d0.w)			; run level-specific events
+
+		move.w	(v_limitbtm2).w,d0
+		addi.w	#224,d0
+		move.w	d0,(v_limitbtm3).w
+
 		moveq	#2,d1
 		move.w	(v_limitbtm1).w,d0			; new boundary y pos is written here
 		sub.w	(v_limitbtm2).w,d0

@@ -227,14 +227,6 @@ SonicSS_MoveLeft:
 ; loc_1BB1A:
 .changeddirection:
 		subi.w	#sonss_deceleration,d0			; apply deceleration to current speed
-
-		; Unknown, removed extra functionality. In Obj01, this part gives
-		; a tiny speed boost on a sign change, but here it does nothing.
-		bcc.s	.stilldecel    				; if still decelerating, branch
-		nop						; no operation
-
-; loc_1BB22:
-.stilldecel:
 		move.w	d0,obInertia(a0)			; set new ground speed
 		rts						; return
 ; End of function SonicSS_MoveLeft
@@ -264,14 +256,6 @@ SonicSS_MoveRight:
 ; loc_1BB48:
 .changedirection:
 		addi.w	#sonss_deceleration,d0			; apply deceleration to current speed
-
-		; Unknown, removed extra functionality. In Obj01, this part gives
-		; a tiny speed boost on a sign change, but here it does nothing.
-		bcc.s	.stilldecel				; if still decelerating, branch
-		nop						; no operation
-
-; loc_1BB50:
-.stilldecel:
 		move.w	d0,obInertia(a0)			; set new ground speed
 
 ; locret_1BB54:

@@ -11,7 +11,7 @@ GotThroughCard:
 ; ===========================================================================
 Got_Index:	dc.w Got_ChkPLC-Got_Index		; 0
 		dc.w Got_MoveIn-Got_Index		; 2
-		dc.w Got_Wait-Got_Index			; 4
+		dc.w Got_Wait_Skippable-Got_Index	; 4
 		dc.w Got_Bonus-Got_Index		; 6
 		dc.w Got_Wait-Got_Index			; 8
 		dc.w Got_NextLevel-Got_Index		; A
@@ -111,13 +111,18 @@ Got_MoveIn:
 		jsr	(QueueSound2).l	; play "Sonic got through" music
 ; ---------------------------------------------------------------------------
 
+Got_Wait_Skippable:	; Routine 4, 8, $C
+		moveq	#btnABC,d0		; is button A, B, or C...
+		and.b	(v_jpadhold1).w,d0	; ...held?
+		bne.s	Got_Wait_skip
+
 Got_Wait:	; Routine 4, 8, $C
 		subq.w	#1,obTimeFrame(a0)			; subtract 1 from time delay
-		bne.s	.display				; if time remains, branch
+		bne.w	DisplaySprite				; if time remains, branch
+	Got_Wait_skip:
+		clr.w	obTimeFrame(a0)
 		addq.b	#2,obRoutine(a0)			; advance to whatever the next routine is
 
-	; Got_Display:
-	.display:
 		bra.w	DisplaySprite				; display card sprites
 ; ===========================================================================
 
@@ -170,7 +175,7 @@ Got_Bonus:	; Routine 6
 
 	; Got_SetDelay:
 	.setPostDelay:
-		move.w	#3*60,obTimeFrame(a0)			; set post summing-up time delay to 3 seconds
+		move.w	#90,obTimeFrame(a0)
 
 	; locret_C692:
 	.return:

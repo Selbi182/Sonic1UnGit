@@ -4,7 +4,8 @@
 ; ---------------------------------------------------------------------------
 
 HUD_Update:
-		tst.w	(f_debugmode).w				; is debug mode on?
+		;tst.w	(f_debugmode).w				; is debug mode on?
+		tst.w	(v_debuguse).w
 		bne.w	HudDebug				; if yes, branch to alternate HUD logic
 ; ---------------------------------------------------------------------------
 
@@ -16,6 +17,7 @@ HUD_Update:
 		locVRAM	(ArtTile_HUDScore)*tile_size,d0		; set VRAM address
 		move.l	(v_score).w,d1				; load score
 		bsr.w	Hud_Score				; write score digits to VRAM
+; ---------------------------------------------------------------------------
 
 .chkrings:
 		tst.b	(f_ringcount).w				; does the ring counter need updating?
@@ -29,6 +31,7 @@ HUD_Update:
 		moveq	#0,d1					; clear d1
 		move.w	(v_rings).w,d1				; load number of rings
 		bsr.w	Hud_Rings				; write rings digits
+; ---------------------------------------------------------------------------
 
 .chktime:
 		tst.b	(f_timecount).w				; does the time need updating?
@@ -51,7 +54,7 @@ HUD_Update:
 
 		addq.b	#1,-(a1)				; increment 1/60s counter (v_timecent)
 		cmpi.b	#60,(a1)				; check if passed 60
-		blo.s	.updatetime				; if not, branch (and skip updating time in VRAM entirely)
+		blo.s	.updatetimeCenti			; if not, branch
 		move.b	#0,(a1)					; reset 1/60s counter to 0
 
 		addq.b	#1,-(a1)				; increment seconds counter (v_timesec)
@@ -75,17 +78,20 @@ HUD_Update:
 		move.b	(v_timesec).w,d1			; load seconds
 		bsr.w	Hud_Secs				; write seconds digits to VRAM
 
+	.updatetimeCenti:
 		moveq	#0,d1					; clear d1
 		move.b	(v_timecent).w,d1			; load centiseconds
 		move.b	Frame60To100(pc,d1.w),d1		; convert 60-based values to 100-based ones
 		locVRAM	(ArtTile_HUDCentis+2)*tile_size,d0	; set VRAM location (+2 to skip the separator)
 		bsr.w	Hud_Secs				; write to VRAM (we can reuse the Hud_Secs logic)
+; ---------------------------------------------------------------------------
 
 .chklives:
 		tst.b	(f_lifecount).w				; does the lives counter need updating?
 		beq.s	.chkbonus				; if not, branch
 		clr.b	(f_lifecount).w				; clear update flag
 		bsr.w	Hud_Lives				; write lives digits to VRAM
+; ---------------------------------------------------------------------------
 
 .chkbonus:
 		tst.b	(f_endactbonus).w			; do time/ring bonus counters need updating?
@@ -100,6 +106,7 @@ HUD_Update:
 		moveq	#0,d1					; clear d1
 		move.w	(v_ringbonus).w,d1			; load ring bonus
 		bsr.w	Hud_TimeRingBonus			; write rings bonus digits to VRAM
+; ---------------------------------------------------------------------------
 
 .finish:
 		rts						; return

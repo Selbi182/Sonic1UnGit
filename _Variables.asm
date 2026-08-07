@@ -46,6 +46,7 @@ v_ringanimqueue:	ds.w	$3F				; queue of recently collected rings storing pointer
 v_ringmanager_size:	equ	*-v_ringmanager			; size of all RAM occupied by rings manager
 
 v_registeredcollision:	ds.b	$80				; collision response queue for ReactToItem
+v_registeredcollision_rings:	ds.b	$80				; collision response queue for ReactToItem
 
 v_16x16_end:		ds.b	$1800-(v_16x16_end-v_16x16_start) ; unused
 ; ---------------------------------------------------------------------------
@@ -217,7 +218,7 @@ v_limitleft2:		ds.w	1				; left level boundary
 v_limitright2:		ds.w	1				; right level boundary
 v_limittop2:		ds.w	1				; top level boundary
 v_limitbtm2:		ds.w	1				; bottom level boundary
-v_unused11:		ds.w	1				; unused
+v_limitbtm3:		ds.w	1				; bottom level boundary + 224
 v_limitleft3:		ds.w	1				; left level boundary, at the end of an act
 			ds.b	6				; unused
 v_scrshiftx:		ds.w	1				; x-screen shift (new - last) * $100

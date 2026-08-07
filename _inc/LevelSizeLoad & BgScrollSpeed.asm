@@ -21,7 +21,7 @@ LevelSizeLoad:
 		lea	LevelSizeArray(pc,d0.w),a0		; load level boundaries
 
 		move.w	(a0)+,d0				; (unused) load first entry in level size array
-		move.w	d0,(v_unused11).w			; write to unused variable (this is always $0004)
+	;	move.w	d0,(v_unused11).w			; write to unused variable (this is always $0004)
 
 		move.l	(a0)+,d0				; load left and right level boundaries (two words, read as long)
 		move.l	d0,(v_limitleft2).w			; set left and right boundaries (actual)

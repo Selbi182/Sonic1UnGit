@@ -16,7 +16,7 @@ lblk_origY:	equ objoff_30		; original y-axis position
 lblk_origX:	equ objoff_34		; original x-axis position
 lblk_time:	equ objoff_36		; time delay for block movement
 lblk_untouched:	equ objoff_38		; flag block as untouched
-lblk_nudge:	equ objoff_3E		; nudge Y-offset while Sonic is standing on block
+lblk_nudgeval:	equ objoff_3E		; nudge Y-offset while Sonic is standing on block
 lblk_touchtype:	equ objoff_3F		; stores Sonic's touch response from SolidObject (0, +1, -1)
 ; ===========================================================================
 
@@ -204,19 +204,19 @@ LBlk_Nudge:
 		btst	#3,obStatus(a0)				; is Sonic standing on it now?
 		bne.s	.nudgeDown				; if yes, branch
 
-		tst.b	lblk_nudge(a0)				; is platform back at default position?
+		tst.b	lblk_nudgeval(a0)				; is platform back at default position?
 		beq.s	.return					; if yes, branch
-		subq.b	#4,lblk_nudge(a0)			; slightly move platform back up
+		subq.b	#4,lblk_nudgeval(a0)			; slightly move platform back up
 		bra.s	.updateYPosition			; update platform's Y-position
 ; ---------------------------------------------------------------------------
 
 	.nudgeDown:
-		cmpi.b	#$40,lblk_nudge(a0)			; is platform fully nudged down?
+		cmpi.b	#$40,lblk_nudgeval(a0)			; is platform fully nudged down?
 		beq.s	.return					; if yes, branch
-		addq.b	#4,lblk_nudge(a0)			; slightly move platform down
+		addq.b	#4,lblk_nudgeval(a0)			; slightly move platform down
 
 	.updateYPosition:
-		move.b	lblk_nudge(a0),d0			; get current nudge Y-offset
+		move.b	lblk_nudgeval(a0),d0			; get current nudge Y-offset
 		jsr	(CalcSine).l				; calculate sine for nudge offset
 		move.w	#$400,d1				; set nudge force
 		muls.w	d1,d0					; multiply sine result by nudge force

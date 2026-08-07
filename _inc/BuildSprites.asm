@@ -245,18 +245,18 @@ BuildSpr_Draw:
 		movea.w	obGfx(a0),a3				; get VRAM settings for object (art tile, palette line, priority flag)
 
 ChkDrawSprite:
-		btst	#sprite_xflip_bit,d4			; is X-flip flag set?
-		bne.s	BuildSpr_FlipX				; if yes, branch
-		btst	#sprite_yflip_bit,d4			; is Y-flip flag set?
-		bne.w	BuildSpr_FlipY				; if yes, branch
+		lsr.w	d4			; is X-flip flag set?
+		bcs.s	BuildSpr_FlipX				; if yes, branch
+		lsr.w	d4			; is Y-flip flag set?
+		bcs.w	BuildSpr_FlipY				; if yes, branch
 
 BuildSpr_Normal:
 		buildsprite	0,0
 ; ---------------------------------------------------------------------------
 
 BuildSpr_FlipX:
-		btst	#sprite_yflip_bit,d4			; is Y-flip flag set as well?
-		bne.w	BuildSpr_FlipXY				; if yes, branch
+		lsr.w	d4			; is Y-flip flag set as well?
+		bcs.w	BuildSpr_FlipXY				; if yes, branch
 
 		buildsprite	1,0
 ; ---------------------------------------------------------------------------

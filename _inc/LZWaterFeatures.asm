@@ -468,14 +468,6 @@ LZWaterSlides:
 ; ===========================================================================
 
 LZSlide_Move:
-		; This is some unused, unknown leftover from a deleted extra feature.
-		; Judging by the design of chunks 2/7/3, which aren't that steep,
-		; this may have been to slow down Sonic on those or something.
-		cmpi.w	#3,d1					; is this one of the first three chunks in Slide_Chunks? (IDs 2/7/3)
-		bhs.s	.setSpeedAndDirection			; if not, branch
-		nop						; useless nop
-
-	.setSpeedAndDirection:
 		bclr	#0,obStatus(a1)				; make Sonic face right
 		move.b	Slide_Speeds(pc,d1.w),d0		; get slide speed for chunk
 		move.b	d0,obInertia(a1)			; set speed as upper ground speed byte

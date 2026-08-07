@@ -952,6 +952,8 @@ Sonic_JumpMove:
 
 ; loc_132A4:
 Sonic_AirDrag:
+		tst.b	homingattack(a0)
+		bne.s	.return
 		cmpi.w	#-$400,obVelY(a0)			; is Sonic moving faster than -$400 upwards?
 		blo.s	.return					; if yes, branch (skip air drag)
 
@@ -2251,7 +2253,7 @@ Sonic_PanCamera:
 		neg.w	d0			; Otherwise, convert speed to an absolute value
 
 .PosInertia:
-		cmpi.w	#$500,d0		; Are we going at max regular speed?
+		cmpi.w	#$480,d0		; Are we going at max regular speed?
 		blo.s	.ResetPan		; If not, branch
 
 		tst.b	d2			; Check if the direction was positive or negative

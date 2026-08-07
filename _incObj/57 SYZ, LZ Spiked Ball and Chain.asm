@@ -111,15 +111,6 @@ SBall_Main:	; Routine 0
 ; ---------------------------------------------------------------------------
 
 SBall_Move:	; Routine 2
-		bsr.w	Sball_Twirl				; twirl all objects in chain
-		bra.w	SBall_ChkDel				; display parent object, or delete whole chain if offscreen
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Subroutine to twirl chain with all child objects
-; ---------------------------------------------------------------------------
-
-Sball_Twirl:
 		move.w	sball_speed(a0),d0			; get twirl speed for chain (can be positive or negative)
 		add.w	d0,obAngle(a0)				; add it to current twirling angle
 
@@ -150,10 +141,7 @@ Sball_Twirl:
 		move.w	d4,obY(a1)				; update Y-position for twirling
 		move.w	d5,obX(a1)				; update X-position for twirling
 		dbf	d6,.loop				; loop for all child objects
-
-		rts						; return
-; End of function Sball_Twirl
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
 SBall_ChkDel:
 		out_of_range.w	.delete,sball_origX(a0)		; has object gone offscreen? if yes, branch

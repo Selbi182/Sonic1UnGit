@@ -22,7 +22,7 @@ Tele_Index:	dc.w Tele_Main-Tele_Index
 		dc.w Tele_Teleporting-Tele_Index
 
 tele_time:	equ objoff_2E	; remaining time Sonic should move in current direction
-tele_prebump:	equ objoff_32	; current pre-bump value before Sonic gets shot off (incremented by 2, triggers at $80)
+tele_prebumpval:	equ objoff_32	; current pre-bump value before Sonic gets shot off (incremented by 2, triggers at $80)
 tele_targetX:	equ objoff_36	; next X-position target
 tele_targetY:	equ objoff_38	; next Y-position target
 tele_current:	equ objoff_3A	; current entry in tele_entries (in multiples of 4)
@@ -82,7 +82,7 @@ Tele_Action:	; Routine 2
 		bset	#1,obStatus(a1)				; set Sonic in-air
 		move.w	obX(a0),obX(a1)				; snap Sonic to teleporter entrance X-position
 		move.w	obY(a0),obY(a1)				; snap Sonic to teleporter entrance Y-position
-		clr.b	tele_prebump(a0)			; reset pre-bump value to 0
+		clr.b	tele_prebumpval(a0)			; reset pre-bump value to 0
 
 		move.w	#sfx_Roll,d0				; set Sonic rolling sound
 		jsr	(QueueSound2).l				; play it
@@ -93,15 +93,15 @@ Tele_Action:	; Routine 2
 
 Tele_PreBump:	; Routine 4
 		lea	(v_player).w,a1				; load Sonic player object
-		move.b	tele_prebump(a0),d0			; get current bump value
-		addq.b	#2,tele_prebump(a0)			; increment bump value
+		move.b	tele_prebumpval(a0),d0			; get current bump value
+		addq.b	#2,tele_prebumpval(a0)			; increment bump value
 		jsr	(CalcSine).l				; get sine for current bump value
 		asr.w	#5,d0					; divide sine result by $20
 		move.w	obY(a0),d2				; get teleporter entrance Y-position
 		sub.w	d0,d2					; subtract adjusted sine result
 		move.w	d2,obY(a1)				; make Sonic bump up and down in teleporter
 
-		cmpi.b	#$80,tele_prebump(a0)			; has bump value advanced to a full bump?
+		cmpi.b	#$80,tele_prebumpval(a0)			; has bump value advanced to a full bump?
 		bne.s	.return					; if not, branch
 		bsr.w	Tele_NextDirection			; begin teleportation
 		addq.b	#2,obRoutine(a0)			; advance to Tele_Teleporting

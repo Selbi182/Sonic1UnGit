@@ -172,80 +172,125 @@ Deform_GHZ:
 ; ---------------------------------------------------------------------------
 
 Deform_LZ:
-		; plain background scroll
-		move.w	(v_scrshiftx).w,d4
-		ext.l	d4
-		asl.l	#7,d4
-		move.w	(v_scrshifty).w,d5
-		ext.l	d5
-		asl.l	#7,d5
-		bsr.w	BGScroll_XY
+Camera_RAM:		equ	$FFFFF700
+Camera_FG:		equ 	$FFFFF700
+CamXpos: 		equ 	$FFFFF700			; l 	Camera X position (FG)
+CamYpos: 		equ 	$FFFFF704			; l 	Camera Y position (FG)
+Camera_BG:		equ 	$FFFFF708
+CamXpos2:		equ 	$FFFFF708			; l 	Camera X position (BG1)
+CamYpos2:		equ 	$FFFFF70C			; l 	Camera Y position (BG1)
+CamXpos3:		equ 	$FFFFF710			; l 	Camera X position (BG2)
+CamYpos3:		equ 	$FFFFF714			; l 	Camera Y position (BG2)
+CamXpos4:		equ 	$FFFFF718			; l 	Camera X position (BG3)
+CamYpos4:		equ 	$FFFFF71C			; l 	Camera Y position (BG3)
+CamXpos5:		equ	$FFFFF720			; l	Camera X position (BG4)
+Camera_RAM_Size:	equ	$FFFFF724-Camera_RAM
 
-		move.w	(v_bgscreenposy).w,(v_bgscrposy_vdp).w
+CamXShift:		equ	$FFFFF73A			; w	Camera X shift from the previous frame (FG, 8.8 fixed)
+CamYShift:		equ	$FFFFF73C			; w	Camera Y shift from the previous frame (FG, 8.8 fixed)
 
-; additional water ripple effects
 
-		lea	(Lz_Scroll_Data).l,a3			; get foreground ripple data
-		lea	(Drown_WobbleData).l,a2			; get background ripple data (see Objects\LZ Drowning Numbers.asm)
-		move.b	(v_lz_deform).w,d2			; get high byte of y pos. of ripple effect
-		move.b	d2,d3
-		addi.w	#$80,(v_lz_deform).w			; add $80 to low byte (i.e. high byte increments every other frame)
+HSRAM_Buffer:		equ	$FFFFCC00			;	Horizontal scroll RAM buffer
+HSRAM_Buffer_End:	equ	HSRAM_Buffer+240*4
+VSRAM_Buffer:		equ	$FFFFF616			;	Verical Scroll RAM (VSRAM) buffer
+VSRAM_PlaneA:		equ	VSRAM_Buffer+0			; w
+VSRAM_PlaneB:		equ	VSRAM_Buffer+2			; w
 
-		add.w	(v_bgscreenposy).w,d2
-		andi.w	#$FF,d2					; d2 = low byte of bg y pos
-		add.w	(v_screenposy).w,d3
-		andi.w	#$FF,d3					; d3 = low byte of camera y pos
+		; Calculate x-position for the background
+		move.w	CamXPos, d0
+		asr.w	#1, d0
+		move.w	d0, CamXPos2
 
-		lea	(v_hscrolltablebuffer).w,a1
-		move.w	#224-1,d1
-		move.w	(v_screenposx).w,d0
-		neg.w	d0
-		move.w	d0,d6
+		; Calculate y-position for the background
+		; based on displacement since the last camera move
+		move.w	CamYShift, d0		; d0 = CamYShift (8.8 fixed)
+		ext.l	d0
+		lsl.l	#8-1, d0		; d0 = CamYShift / 2 (16.16 fixed)
+		add.l	d0, CamYPos2
+
+		move.w	($FFFFF70C).w,VSRAM_PlaneB	; load 'Cam_BG_Y' into VSRAM buffer
+
+		; Setup scroll value
+		lea	HSRAM_Buffer,a1
+		move.w	CamXpos, d0
+		neg.w	d0			; d0 = Plane A scrolling
+		move.w	d0,d1			; d1 = Plane A scrolling (backup)
 		swap	d0
-		move.w	(v_bgscreenposx).w,d0
-		neg.w	d0
+		move.w	CamXpos2, d0
+		neg.w	d0			; d0 = Plane B scrolling
 
-; additional water ripple effects
+		; Calculate water line and decide where to start
+		moveq	#0,d2
+		move.b	($FFFFF7D8).w,d2
+		move.w	d2,d3
+		addi.w	#$80,($FFFFF7D8).w	; WaveValue += 0.5    
+		add.b	($FFFFF704+1).w,d3	; d3 = (WaveValue + Cam_Y) & $FF
+		add.b	($FFFFF70C+1).w,d2	; d2 = (WaveValue + Cam_Y) & $FF
+		move.w	#224,d6			; d6 = Number of lines
+		move.w	($FFFFF646).w,d4	; d4 = WaterLevel
+		sub.w	($FFFFF704).w,d4	; d4 = WaterLevel - Cam_Y
+		beq.s	.DeformWater_2
+		bmi.s	.DeformWater_2		; if water line is above screen, branch
+		cmp.w	d6,d4			; d4 > Lines on screen?
+		blt.s	.DeformDry_Partial	; if not, branch
 
-		move.w	(v_waterpos1).w,d4
-		addq.w	#7,d4		; adjust ripple effect target line for S3K HBlank water palette transfer system
-		move.w	(v_screenposy).w,d5
-
-		; write normal scroll before meeting water position
-	.normalLoop:
-		cmp.w	d4,d5					; is current scanline at or below actual water y pos?
-		bge.s	.underwaterLoop				; if yes, branch
-		move.l	d0,(a1)+				; write to v_hscrolltablebuffer without ripple effect
-		addq.w	#1,d5					; next scanline
-		addq.b	#1,d2
-		addq.b	#1,d3
-		dbf	d1,.normalLoop
-		rts
 ; ---------------------------------------------------------------------------
+; Works, if full screen is dry
 
-		; apply ripple effects when underwater
-	.underwaterLoop:
-		move.b	(a3,d3.w),d4				; get fg ripple value from Lz_Scroll_Data
-		ext.w	d4
-		add.w	d6,d4
-		move.w	d4,(a1)+				; write to v_hscrolltablebuffer
-		move.b	(a2,d2.w),d4				; get bg ripple value from Drown_WobbleData
-		ext.w	d4
-		add.w	d0,d4
-		move.w	d4,(a1)+				; write to v_hscrolltablebuffer
-		addq.b	#1,d2
-		addq.b	#1,d3
-		dbf	d1,.underwaterLoop
+		subq.w	#1,d6
+
+.DeformDry_Full:
+		move.l	d0,(a1)+
+		dbf	d6,.DeformDry_Full
 		rts
+
+; ---------------------------------------------------------------------------
+; Works, if only part of screen is dry
+
+.DeformDry_Partial:
+		move.w	d4,d5			; d5 = WaterLevel
+		subq.w	#1,d4
+
+	.0:	move.l	d0,(a1)+
+		dbf	d4,.0
+
+; ---------------------------------------------------------------------------
+; Works if screen is full of water, or water at least takes place
+
+.DeformWater:
+		sub.w	d5,d6			; d6 = 224 - WaterLevel = Lines left for water
+		add.b	d5,d2			;
+		add.b	d5,d3			;
+
+.DeformWater_2:
+		subq.w	#1,d6
+		lea	(Drown_WobbleData).l,a2	; a2 = Water Deformation Data for Plane B
+		lea	Lz_Scroll_Data(pc),a3	; a3 = Water Deformation Data for Plane A
+		add.w	d2,a2			; load array from position of water line
+		add.w	d3,a3			;
+
+	.1:	move.b	(a3)+,d2
+		ext.w	d2
+		add.w	d1,d2			; d2 = Plane A scrolling
+		move.w	d2,(a1)+
+		move.b	(a2)+,d2
+		ext.w	d2
+		add.w	d0,d2			; d2 = Plane B scrolling
+		move.w	d2,(a1)+
+		dbf	d6,.1
+		rts
+
 ; ===========================================================================
 
 Lz_Scroll_Data:
+	rept 8
 		dc.b 1,1,2,2,3,3,3,3,2,2,1,1			; 12 lines shifted to right
 		dcb.b 116, 0					; 116 lines normal
 		dc.b -1,-1,-2,-2,-3,-3,-3,-3,-2,-2,-1,-1	; 12 lines shifted to left
 		dcb.b 20, 0					; 20 lines normal
 		dc.b 1,1,2,2,3,3,3,3,2,2,1,1			; 12 lines shifted to right
 		dcb.b 84, 0					; 84 lines normal (total 256 lines)
+	endr
 ; End of function Deform_LZ
 
 ; ===========================================================================
