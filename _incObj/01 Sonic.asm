@@ -325,6 +325,7 @@ Sonic_MdJump:	; While Sonic is in the air but not rolling
 
 ; Obj01_MdRoll:
 Sonic_MdRoll:	; While Sonic is on the ground and rolling
+		bsr.w	Sonic_Unroll
 		bsr.w	Sonic_Jump				; check if we need to jump
 		bsr.w	Sonic_SlopeResistRoll			; handle resistance from rolling up slopes
 		bsr.w	Sonic_RollSpeed				; update speed as Sonic rolls
@@ -453,9 +454,9 @@ Sonic_LookUp:
 		beq.s	Sonic_Duck				; if not, check for ducking instead
 		move.b	#id_LookUp,obAnim(a0)			; use "looking up" animation
 		addq.b	#1,(v_cam_y_delay).w			; add 1 to camera Y delay
-		cmpi.b	#120,(v_cam_y_delay).w			; did we reach target wait time of 120 frames (2 seconds)?
+		cmpi.b	#90,(v_cam_y_delay).w			; did we reach target wait time of 90 frames?
 		blo.s	Sonic_ResetScr_Part2			; if not, branch
-		move.b	#120,(v_cam_y_delay).w			; cap wait time
+		move.b	#90,(v_cam_y_delay).w			; cap wait time
 		cmpi.w	#$C8,(v_lookshift).w			; has camera already fully moved up?
 		beq.s	Sonic_CheckDpadLetGo			; if yes, don't move it up further
 		addq.w	#2,(v_lookshift).w			; move camera up further
@@ -468,9 +469,9 @@ Sonic_Duck:
 		beq.s	Sonic_ResetScr				; if not, branch
 		move.b	#id_Duck,obAnim(a0)			; use "ducking" animation
 		addq.b	#1,(v_cam_y_delay).w			; add 1 to camera Y delay
-		cmpi.b	#120,(v_cam_y_delay).w			; did we reach target wait time of 120 frames (2 seconds)?
+		cmpi.b	#90,(v_cam_y_delay).w			; did we reach target wait time of 90 frames?
 		blo.s	Sonic_ResetScr_Part2			; if not, branch
-		move.b	#120,(v_cam_y_delay).w			; cap wait time
+		move.b	#90,(v_cam_y_delay).w			; cap wait time
 		cmpi.w	#8,(v_lookshift).w			; has camera already fully moved down?
 		beq.s	Sonic_CheckDpadLetGo			; if yes, branch
 		subq.w	#2,(v_lookshift).w			; move camera down further
@@ -1070,9 +1071,9 @@ Sonic_Roll:
 		tst.b	(f_slidemode).w				; is Sonic currently on a water slide?
 		bne.s	.noroll					; if yes, don't allow rolling
 
-		move.b	(v_jpadhold2).w,d0			; get held buttons
-		andi.b	#btnL+btnR,d0				; is left/right being held?
-		bne.s	.noroll					; if yes, prevent rolling (some kind of fat-fingering convenience feature?)
+	;	move.b	(v_jpadhold2).w,d0			; get held buttons
+	;	andi.b	#btnL+btnR,d0				; is left/right being held?
+	;	bne.s	.noroll					; if yes, prevent rolling (some kind of fat-fingering convenience feature?)
 		btst	#bitDn,(v_jpadhold2).w			; is down being held?
 		beq.s	.noroll					; if not, branch
 
@@ -1116,6 +1117,18 @@ Sonic_ChkRoll:
 .ismoving:
 		rts						; return
 ; End of function Sonic_Roll
+
+Sonic_Unroll:
+		btst	#bitUp,(v_jpadpress2).w
+		beq.s	.return
+		clr.b	obAnim(a0)
+		bclr	#2,obStatus(a0)				; clear ball flag
+		move.b	#sonic_height,obHeight(a0)		; set Sonic's hitbox height to standing
+		move.b	#sonic_width,obWidth(a0)		; set Sonic's hitbox width to standing
+		subq.w	#sonic_height-sonic_roll_height,obY(a0)	; raise Sonic up 5 pixels so he's not inside the ground
+
+.return:
+		rts
 
 
 ; ===========================================================================
@@ -2183,7 +2196,7 @@ Sonic_Animate:
 ; ---------------------------------------------------------------------------
 ; Animation scripts - Sonic (also includes constants for frame IDs)
 ; SonicAniData:
-		include	"_anim/Sonic.asm"
+		include	"_anim/_Sonic Animations.asm"
 ; ---------------------------------------------------------------------------
 
 

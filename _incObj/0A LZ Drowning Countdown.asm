@@ -145,6 +145,7 @@ Drown_ShowNumber:
 		move.w	#15,drown_numtime(a0)			; reset delay to 15 frames
 		clr.w	obVelY(a0)				; stop bubble from moving
 		move.b	#sprite_rendered,obRender(a0)		; change bubble to screen-fixed positioning mode
+		clr.b	obPriority(a0)
 
 		move.w	obX(a0),d0				; get playfield X-position
 		sub.w	(v_screenposx).w,d0			; subtract camera X-position
@@ -281,7 +282,8 @@ Drown_Countdown:; Routine $A
 
 		jsr	(FindFreeObj).l				; find a free object slot
 		bne.w	.return					; if object RAM is full, branch
-		move.b	#id_DrownCount,obID(a1)			; load an extra bubble object
+		;move.b	#id_DrownCount,obID(a1)			; load an extra bubble object
+		move.b	#id_BubbleParticle,obID(a1)			; load an extra bubble object
 
 		move.w	(v_player+obX).w,obX(a1)		; match X-position to Sonic
 		moveq	#6,d0					; offset it 6px to the right
@@ -292,7 +294,8 @@ Drown_Countdown:; Routine $A
 	.noflip:
 		add.w	d0,obX(a1)				; offset bubble +/- 6px horizontally
 		move.w	(v_player+obY).w,obY(a1)		; match Y-position to Sonic
-		move.b	#6,obSubtype(a1)			; set to "small bubble"
+		;move.b	#6,obSubtype(a1)			; set to "small bubble"
+		move.b	#0,obSubtype(a1)			; set to "small bubble"
 
 		tst.w	drown_restarttime(a0)			; is Sonic currently drowning?
 		beq.w	.checkNumberBubble			; if not, branch
@@ -306,7 +309,8 @@ Drown_Countdown:; Routine $A
 		move.w	(v_framecount).w,d0			; get current level frame counter
 		andi.b	#3,d0					; 1/4 chance to spawn a big bubble
 		bne.s	.decrementExtraBubbles			; branch in other cases
-		move.b	#$E,obSubtype(a1)			; set to "medium bubble" instead of small
+		;move.b	#$E,obSubtype(a1)			; set to "medium bubble" instead of small
+		move.b	#1,obSubtype(a1)			; set to "medium bubble" instead of small
 		bra.s	.decrementExtraBubbles			; skip over
 ; ===========================================================================
 
@@ -322,6 +326,7 @@ Drown_Countdown:; Routine $A
 		bne.s	.decrementExtraBubbles			; was flag already set? if yes, branch
 		move.b	d2,obSubtype(a1)			; set bubble to be a number bubble instead
 		move.w	#28,drown_numtime(a1)			; delay for 28 frames before showing number bubble
+		move.b	#id_DrownCount,obID(a1)			; load an extra bubble object
 	.secondTry:
 		tst.b	drown_extrabubbles(a0)			; are more extra bubbles meant to be spawned?
 		bne.s	.decrementExtraBubbles			; if yes, branch
@@ -329,6 +334,7 @@ Drown_Countdown:; Routine $A
 		bne.s	.decrementExtraBubbles			; was flag already set? if yes, branch
 		move.b	d2,obSubtype(a1)			; set bubble to be a number bubble instead
 		move.w	#28,drown_numtime(a1)			; delay for 28 frames before showing number bubble
+		move.b	#id_DrownCount,obID(a1)			; load an extra bubble object
 
 .decrementExtraBubbles:
 		subq.b	#1,drown_extrabubbles(a0)		; decrement number of remaining extra bubbles to spawn

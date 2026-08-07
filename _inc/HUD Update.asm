@@ -79,11 +79,9 @@ HUD_Update:
 		bsr.w	Hud_Secs				; write seconds digits to VRAM
 
 	.updatetimeCenti:
-		moveq	#0,d1					; clear d1
-		move.b	(v_timecent).w,d1			; load centiseconds
-		move.b	Frame60To100(pc,d1.w),d1		; convert 60-based values to 100-based ones
-		locVRAM	(ArtTile_HUDCentis+2)*tile_size,d0	; set VRAM location (+2 to skip the separator)
-		bsr.w	Hud_Secs				; write to VRAM (we can reuse the Hud_Secs logic)
+		bsr.w	Hud_Centis
+
+
 ; ---------------------------------------------------------------------------
 
 .chklives:
@@ -113,11 +111,7 @@ HUD_Update:
 ; End of function HUD_Update
 
 ; ---------------------------------------------------------------------------
-
-Frame60To100:	rept 60
-		dc.b (*-Frame60To100)*99/59
-		endr
-
+    
 ; ---------------------------------------------------------------------------
 ; Kill Sonic when a time over has occurred (9:59:59)
 ; ---------------------------------------------------------------------------
@@ -623,3 +617,49 @@ Hud_Write_8x8Digits_WithLeading:
 		dbf	d5,.clearloop				; loop until two tiles have been transferred
 		bra.s	.nextdigit				; continue to main digit loop
 ; End of function Hud_Lives
+
+Hud_Centis:
+		moveq	#0,d1					; clear d1
+		move.b	(v_timecent).w,d1			; load centiseconds
+		add.w	d1,d1
+		lea	Frame60To100(pc,d1.w),a2
+		;move.b	Frame60To100(pc,d1.w),d1		; convert 60-based values to 100-based ones
+		;move.b	Frame60To100+1(pc,d1.w),d2		; convert 60-based values to 100-based ones
+		locVRAM	(ArtTile_HUDCentis+2)*tile_size,d0	; set VRAM location (+2 to skip the separator)
+
+		lea	Art_Hud(pc),a1				; load uncompressed 8x16 HUD number graphics
+		
+		moveq	#0,d1
+		move.b	(a2)+,d1
+		btst	#0,(v_vblank_byte).w
+		bne.s	.alt
+		lsl.w	#6,d1					; multiply by $40 (tile_size*2)
+		move.l	d0,4(a6)				; set VRAM address to next digit
+		lea	(a1,d1.w),a3				; set start in Art_Hud to relevant digit
+	rept 8*2
+		move.l	(a3)+,(a6)				; write digit graphics to VRAM
+	endr
+		rts
+
+	.alt:
+		addi.l	#$400000,d0				; advance VRAM pointer to next digit
+
+		moveq	#0,d2
+		move.b	(a2)+,d2
+		lsl.w	#6,d2					; multiply by $40 (tile_size*2)
+		move.l	d0,4(a6)				; set VRAM address to next digit
+		lea	(a1,d2.w),a3				; set start in Art_Hud to relevant digit
+	rept 8*2
+		move.l	(a3)+,(a6)				; write digit graphics to VRAM
+	endr
+
+		rts
+
+;Frame60To100:	rept 60
+;		dc.b (*-Frame60To100)*99/59
+;		endr
+
+Frame60To100:
+    rept 60
+        dc.b (((*-Frame60To100)/2*99/59)/10), (((*-Frame60To100)/2*99/59)%10)
+    endr

@@ -6,6 +6,8 @@
 SpikeBall:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
+		cmpi.b	#4,d0
+		beq.w	SBall_Child
 		move.w	SBall_Index(pc,d0.w),d1
 		jmp	SBall_Index(pc,d1.w)
 ; ===========================================================================
@@ -144,7 +146,7 @@ SBall_Move:	; Routine 2
 ; ---------------------------------------------------------------------------
 
 SBall_ChkDel:
-		out_of_range.w	.delete,sball_origX(a0)		; has object gone offscreen? if yes, branch
+		out_of_range_with_y_check.w	.delete,sball_origX(a0),sball_origY(a0)	; has object gone offscreen? if yes, branch
 		bra.w	DisplaySprite				; display parent object
 ; ---------------------------------------------------------------------------
 
@@ -167,7 +169,8 @@ SBall_ChkDel:
 ; SBall_Display:
 SBall_Child:	; Routine 4
 		; Child objects are just displayed normally, rotation and deletion is handled by parent
-		bra.w	DisplaySprite				; display child
+		move.w	#4*$80,d0
+		bra.w	DisplaySprite3
 
 ; ===========================================================================
 

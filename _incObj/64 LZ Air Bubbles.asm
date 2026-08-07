@@ -100,7 +100,7 @@ Bub_ChkWater:	; Routine 4
 		clr.w	obVelY(a1)				; stop Sonic vertically
 		clr.w	obInertia(a1)				; stop Sonic's ground speed
 		move.b	#id_GetAir,obAnim(a1)			; make Sonic use bubble-collecting animation
-		move.w	#35,locktime(a1)			; disable D-Pad input for 35 frames
+		move.w	#22,locktime(a1)			; disable D-Pad input for 35 frames
 		move.b	#0,jumping(a1)				; clear jumping flag
 		bclr	#5,obStatus(a1)				; clear pushing flag
 
@@ -114,10 +114,17 @@ Bub_ChkWater:	; Routine 4
 ; ===========================================================================
 
 .display:
-		bsr.w	SpeedToPos				; update bubble's position
+		movem.w	obVelX(a0),d0/d2			; load X and Y speed to d0/d2
+		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add X speed to X position (note this affects the subpixel position)
+		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d2,obY(a0)				; add Y speed to Y position (note this affects the subpixel position)
+
 		tst.b	obRender(a0)				; has bubble gone offscreen?
 		bpl.s	.delete					; if yes, delete it
-		jmp	(DisplaySprite).l			; display bubble
+		move.w	#$80,d0
+		jmp	(DisplaySprite3).l			; display bubble
+
 
 	.delete:
 		jmp	(DeleteObject).l			; delete bubble
@@ -129,7 +136,9 @@ Bub_Bursting:	; Routine 6
 
 		tst.b	obRender(a0)				; has bubble gone offscreen?
 		bpl.s	.delete					; if yes, delete it
-		jmp	(DisplaySprite).l			; display bubble
+		move.w	#$80,d0
+		jmp	(DisplaySprite3).l			; display bubble
+
 
 	.delete:
 		jmp	(DeleteObject).l			; delete bubble
@@ -219,6 +228,10 @@ Bub_BubbleMaker: ; Routine $A
 		move.b	#2,obSubtype(a1)			; set bubble to large/inhalable
 
 	.chkReset:
+		cmpi.b	#2,obSubtype(a1)
+		beq.s	.blubb
+		move.b	#id_BubbleParticle,obID(a1)			; load bubble object
+	.blubb:
 		subq.b	#1,bub_minicount(a0)			; decrement number of small bubbles to spawn
 		bpl.s	.animate				; if more remain, branch
 		jsr	(RandomNumber).l			; get random number in d0
@@ -236,8 +249,12 @@ Bub_BubbleMaker: ; Routine $A
 		out_of_range.w	DeleteObject			; has bubble maker gone offscreen? if yes, delete it
 		move.w	(v_waterpos1).w,d0			; get current water height including sway
 		cmp.w	obY(a0),d0				; is bubble maker underwater?
-		blo.w	DisplaySprite				; if yes, display it
+		blo.s	.displaydo				; if yes, display it
 		rts						; otherwise, keep it hidden
+
+.displaydo:
+		move.w	#$80,d0
+		jmp	(DisplaySprite3).l			; display bubble
 
 ; ===========================================================================
 

@@ -18,12 +18,15 @@ Enable_ExtendedCamera:	= 1
 Enable_InfiniteLives:	= 1
 Enable_AttractRings:	= 1
 
-LagOMeter: = 1
+LagOMeter: = 0
 
-CheatsEnabled: = 1
+BootToLevel: = -1;
+;	| -1 to disable
+
+CheatsEnabled: = 2
 ;	| If 1, all in-game cheats (Level Select, Debug Mode, Slow-Motion, Japanese Credits)
 ;	|       will be enabled by default, without requiring any title screen button inputs
-
+;	| If 2, same as 1 but debug mode doesn't need to have A held down to get activated
 ; ===========================================================================
 ; Simplifying macros and functions
 	include	"Macros.asm"
@@ -348,7 +351,7 @@ GameInit:
 		bsr.w	JoypadInit				; initialize controller ports
 		move.b	#id_Sega,(v_gamemode).w			; set first Game Mode to Sega Screen
 
-	if CheatsEnabled=1
+	if CheatsEnabled>0
 		moveq	#1,d0					; enable all cheats by default
 		move.b	d0,(f_levselcheat).w			; enable level select cheat
 		move.b	d0,(f_slomocheat).w			; enable slow-motion cheat
@@ -368,6 +371,15 @@ GameInit:
 			illegal
 		endif
 .SampleTableOk:
+
+	if (BootToLevel>=0)
+		move.b	#id_Level,(v_gamemode).w
+		move.w	#BootToLevel,(v_zone_act).w
+		moveq	#plcid_Main,d0				; load main patterns (rings, etc.)
+		bsr.w	QuickPLC				; (these get loaded once for the title screen and then never again, except when exiting Special Stages)
+
+		enable_display
+	endif
 
 MainGameLoop:
 		move.b	(v_gamemode).w,d0			; load Game Mode
@@ -593,9 +605,6 @@ VBlank_Levels:
 	.waterAbove:
 		writeCRAM	v_palette_water,0		; write water palette buffer to CRAM
 	.waterBelow:
-		move.w	(v_hblank_hreg).w,d0	; get HBlank interrupt counter
-		move.w	d0,(a5)			; write to VDP register ($8Axx)
-		move.b	d0,(v_waterline).w	; copy target scan line ($xx)
 
 		writeVRAM	v_hscrolltablebuffer,vram_hscroll ; transfer H-scroll buffer table to actual H-scroll VRAM
 		writeVRAM	v_spritetablebuffer,vram_sprites  ; transfer sprite buffer table to actual sprites VRAM
@@ -605,6 +614,10 @@ VBlank_Levels:
 		movem.l	d0-d7,(v_screenposx_dup).w		; ...to backup RAM (used in LoadTilesAsYouMove)
 		movem.l	(v_fg_scroll_flags).w,d0-d1		; copy FG and BG scroll flags...
 		movem.l	d0-d1,(v_fg_scroll_flags_dup).w		; ...to backup RAM
+
+		move.w	(v_hblank_hreg).w,d0	; get HBlank interrupt counter
+		move.b	d0,(v_waterline).w	; copy target scan line ($xx)
+		move.w	d0,(a5)			; write to VDP register ($8Axx)
 
 		; The following code handles an awkward visual glitch for the LZ water surface.
 		; If the surface is near the top of the screen (within 96 pixels), the VDP would not have
@@ -774,13 +787,23 @@ VBlank_StandardTransfers:
 
 ; PalToCRAM: <-- old misnomer
 HBlank:
+		disable_ints					; disable interrupts (VBlank in this context)
 		tst.w	(f_hblank_pal).w		; is palette set to change?
 		beq.w	.nochg				; if not, branch
 		move.w	#0,(f_hblank_pal).w		; clear palette change flag
 
 		movem.l	d0-d1/a0-a2,-(sp)		; backup registers
+
+
+		; Gotta keep stopping Z80 here to avoid CRAM dots.
+		; Might be caused by Mega PCM unpredictably affecting timings.
+
 		;stopZ80					; request Z80 stop
+		move.w	#$100,(z80_bus_request).l
 		;waitZ80					; wait until it stopped
+.wait:		btst	#0,(z80_bus_request).l
+		bne.s	.wait
+
 
 		moveq	#$F,d0				; waste a few cycles here...
 		dbf	d0,*				; ...to push artifacts off screen
@@ -816,7 +839,10 @@ HBlank:
 		dbf	d1,.transferColors		; repeat for number of colors to transfer
 
 	.skipTransfer:
+
 		;startZ80				; restart Z80
+		move.w	#0,(z80_bus_request).l
+
 		movem.l	(sp)+,d0-d1/a0-a2		; restore registers
 
 		tst.b	(f_doupdatesinhblank).w		; was frame update delayed by water surface being near the top of the screen?
@@ -926,21 +952,21 @@ JoypadInit:
 ReadJoypads:
 		lea	(port_1_data).l,a1		; set to read first joypad port
 		lea	(v_jpadhold1).w,a0		; address where P1 joypad states are written to
-		bsr.s	.read_3btn			; read standard 3-button inputs for P1
-		tst.b	(a0)				; is P1 using a 6-button controller?
-		bpl.s	.readP2				; if not, branch
-		bsr.s	.read_6btn			; read additional 6-button inputs for P1
-
-	.readP2:
-		lea	(port_2_data).l,a1		; set to read second joypad port
-		lea	(v_jpadhold_p2).w,a0		; address where P2 joypad states are written to
-		bsr.s	.read_3btn			; read standard 3-button inputs for P2
-		tst.b	(a0)				; is P2 using a 6-button controller?
-		bpl.s	.return				; if not, branch
-		bsr.s	.read_6btn			; read additional 6-button inputs for P2
-
-	.return:
-		rts					; return
+	;	bsr.s	.read_3btn			; read standard 3-button inputs for P1
+	;	tst.b	(a0)				; is P1 using a 6-button controller?
+	;	bpl.s	.readP2				; if not, branch
+	;	bsr.s	.read_6btn			; read additional 6-button inputs for P1
+	;
+	;.readP2:
+	;	lea	(port_2_data).l,a1		; set to read second joypad port
+	;	lea	(v_jpadhold_p2).w,a0		; address where P2 joypad states are written to
+	;	bsr.s	.read_3btn			; read standard 3-button inputs for P2
+	;	tst.b	(a0)				; is P2 using a 6-button controller?
+	;	bpl.s	.return				; if not, branch
+	;	bsr.s	.read_6btn			; read additional 6-button inputs for P2
+	;
+	;.return:
+	;	rts					; return
 ; ---------------------------------------------------------------------------
 
 .read_3btn:
@@ -2692,6 +2718,10 @@ Level_SkipClr:
 		move.b	#1,(f_ringcount).w			; update rings counter
 		move.b	#1,(f_timecount).w			; update time counter
 
+	if CheatsEnabled=2
+		move.b	#1,(f_debugmode).w			; disable debug mode (cheat remains active though)
+	endif
+
 		move.w	#0,(v_btnpushtime1).w			; clear button push counters for demos
 		lea	(DemoDataPtr).l,a1			; load demo data
 		moveq	#0,d0					; clear d0
@@ -3391,6 +3421,8 @@ GM_Ending:
 		move.w	#id_EndZ_bad,(v_zone_act).w		; otherwise, set to bad ending (level number 601, no extra flowers)
 
 End_LoadData:
+		bsr.w	LoadZoneTiles				; load main zone art (S2 Art Loader)
+
 		moveq	#plcid_Ending,d0			; load ending sequence patterns (GHZ art, animals, etc.)
 		bsr.w	QuickPLC				; execute PLCs immediately (no queue)
 		jsr	(Hud_Base).l				; load basic HUD graphics (only in levels, not in the ending demos)
@@ -3977,6 +4009,7 @@ Map_Over:	include	"_maps/Game Over.asm"
 		include	"_incObj/62 LZ Gargoyle.asm"
 		include	"_incObj/63 LZ Conveyor.asm"
 		include	"_incObj/64 LZ Air Bubbles.asm"
+		include	"_incObj/10 Bubble Particle.asm"
 		include	"_incObj/65 LZ Waterfalls.asm"
 
 

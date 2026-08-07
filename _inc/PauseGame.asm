@@ -4,9 +4,11 @@
 ; ---------------------------------------------------------------------------
 
 PauseGame:
+	if Enable_InfiniteLives=0
 		nop						; useless nop (probably so an rts could easily be inserted here)
 		tst.b	(v_lives).w				; do you have any lives left?
 		beq.s	.unpauseGame				; if not, branch (prevents pausing during a game over)
+	endif
 		tst.w	(f_pause).w				; is game already paused?
 		bne.s	.startPause				; if yes, branch
 		btst	#bitStart,(v_jpadpress1).w		; has Start button been pressed?

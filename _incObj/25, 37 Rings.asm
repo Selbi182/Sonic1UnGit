@@ -62,6 +62,7 @@ Ring_Setup:
 
 CollectRing:
 		moveq	#1,d0					; add 1 to rings
+		moveq	#32,d0					; add 1 to rings
 ; ---------------------------------------------------------------------------
 
 AddRings:	; d0 = custom number of rings to add
@@ -149,6 +150,7 @@ RLoss_Bounce:	; Routine 0
 		; SpeedToPos (inlined, optimized)
 		movem.l	rloss_velX(a0),d0/d2			; load X and Y speed to d0/d2
 		add.l	d0,obX(a0)				; update X-position
+		;andi.l	#$7FF0000,d2				; apply vertical screen wrap
 		add.l	d2,obY(a0)				; update Y-position
 
 		; apply gravity
@@ -189,6 +191,14 @@ RLoss_Bounce:	; Routine 0
 	.pos:	cmpi.w	#$20,d0
 		bhi.s	.nocol
 		moveq	#col_12x12|col_item,d1
+
+		lea	(v_registeredcollision).w,a1		; get target queue
+		move.w	(a1),d0					; get queue's entry count
+		addq.b	#2,d0					; increase count by another entry (word)
+		bmi.s	.nocol				; if byte value went to $80, queue is full
+		move.w	d0,(a1)					; set new queue's entry count
+		move.w	a0,(a1,d0.w)				; insert RAM address for object to queue
+		
 	.nocol:
 		move.b	d1,obColType(a0)
 
@@ -207,20 +217,8 @@ RLoss_Bounce:	; Routine 0
 		rts
 
 	.shortcut:
-		tst.b	obColType(a0)				; does this object have collision with Sonic?
-		beq.s	.no_collision				; if not, branch
-		tst.b	obRender(a0)				; is object even visible?
-		bpl.s	.no_collision				; if not, branch
-		lea	(v_registeredcollision).w,a1		; get target queue
-		move.w	(a1),d0					; get queue's entry count
-		addq.b	#2,d0					; increase count by another entry (word)
-		bmi.s	.no_collision				; if byte value went to $80, queue is full
-		move.w	d0,(a1)					; set new queue's entry count
-		move.w	a0,(a1,d0.w)				; insert RAM address for object to queue
-
-	.no_collision:
 		lea	object_size(a0),a0
-		bra.w RingLoss
+		bra.w	RingLoss
 
 	.exit:
 		rts
@@ -265,6 +263,12 @@ ChkHitFloor_Rings:
 		rts
 
 .issolid:
+
+
+
+
+
+
 		moveq	#-1,d0
 		rts
 ; End of function ChkHitFloor_Rings
@@ -371,7 +375,7 @@ SpillRingData:
 
 RLoss_Attract_Init:	; Routine A
 		bsr.w	Ring_Setup_Self				; set up maps etc.
-		move.w	#ArtTile_Ring_Loss|Tile_Pal2,obGfx(a0)	; special art tile for smooth rings
+		move.w	#ArtTile_Ring|Tile_Pal2,obGfx(a0)	; special art tile for smooth rings
 		addq.b	#2,obRoutine(a0)
 ; ---------------------------------------------------------------------------
 

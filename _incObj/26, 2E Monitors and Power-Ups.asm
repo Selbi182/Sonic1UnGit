@@ -86,6 +86,8 @@ Mon_Solid:	; Routine 2
 		bsr.w	Mon_SolidSides				; check collision (0 = none; 1 = side; -1 = top/bottom)
 		beq.w	.checkpush				; if not, branch
 
+		tst.b	homingattack(a1)
+		bne.s	.checkpush
 		tst.w	obVelY(a1)				; is Sonic moving upwards?
 		bmi.s	.dontbreak				; if yes, branch
 		cmpi.b	#id_Roll,obAnim(a1)			; is Sonic rolling?

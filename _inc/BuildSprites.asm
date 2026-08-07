@@ -7,41 +7,33 @@
 BuildSprites:
 		lea	(v_spritetablebuffer).w,a2
 		moveq	#0,d5					; d5 will be used as counter for total rendered sprites
+		moveq	#sprites_max,d7
 
 		tst.b	(v_draw_hud).w				; is HUD rendering on? (Level_started_flag in S2)
 		beq.s	.noHud					; if not, branch
 		bsr.w	BuildHUD				; draw HUD directly to sprite buffer
 	.noHud:
 
-		lea	(v_spritequeue).w,a4
-		moveq	#spritelayer_num-1,d7
-.priorityLoop:
-		cmpi.w	#spritelayer_num-2,d7			; is sprite priority layer 2 up next for rendering?
-		bne.s	.noRings				; if not, branch
-		tst.b	(v_draw_hud).w				; are rings even meant to get rendered? (Level_started_flag in S2)
-		beq.s	.noRings				; if not, branch
-		movem.l	d7/a4,-(sp)				; backup v_spritequeue and layer iterator
-		bsr.w	BuildRings				; render ring sprites
-		movem.l	(sp)+,d7/a4				; restore v_spritequeue and layer iterator
-	.noRings:
+spritelayer	macro	screenpospossible
+
 
 		tst.w	(a4)					; are there objects left to draw in current priority layer?
-		beq.w	.nextPriority				; if not, go to next priority layer
+		beq.w	.nextPriority\@				; if not, go to next priority layer
 
 		moveq	#2,d6					; initialize offset pointer to first object after entry counter (2 bytes)
-	.objectLoop:
+	.objectLoop\@:
 		movea.w	(a4,d6.w),a0				; load object's address in RAM
-		tst.b	obID(a0)				; has an object been queued for display but deleted?
-		beq.w	.skipObject				; if yes, skip (this appears to be an effort to fix display-and-delete bugs)
 		bclr	#sprite_rendered_bit,obRender(a0)	; set object as not visible
 
 	; --- Coordinate system ---
 		move.b	obRender(a0),d0
+		
 		move.b	d0,d4
-		btst	#sprite_subsprite_bit,d0		; is the multi-draw/sub-sprites flag set?
-		bne.w	BuildSprites_MultiDraw			; if yes, branch to multi-sprite drawing logic
-		andi.w	#sprite_cam_field|sprite_cam_bg,d0	; get drawing coordinate system in render flags (bit 2-3)
-		beq.s	.screenCoords				; branch if 0 (on-screen positioning coordinate system)
+	if narg=1
+		moveq	#sprite_cam_field|sprite_cam_bg,d0
+		and.w	d4,d0	; get drawing coordinate system in render flags (bit 2-3)
+		beq.s	.screenCoords\@				; branch if 0 (on-screen positioning coordinate system)
+	endif
 		lea	(v_screenposx).w,a1			; load camera pointers for coordinate system (in practice, only foreground camera is ever used)
 
 	; --- Screen bounds check for X-position ---
@@ -51,16 +43,16 @@ BuildSprites:
 		sub.w	(a1),d3					; subtract camera X-position
 		move.w	d3,d1
 		add.w	d0,d1					; d1 = obX - cameraX + obActWid
-		bmi.w	.skipObject				; if underflowed, left edge is out of bounds
+		bmi.w	.skipObject\@				; if underflowed, left edge is out of bounds
 		move.w	d3,d1
 		sub.w	d0,d1					; d1 = obX - cameraX - obActWid
 		cmpi.w	#320,d1					; is result greater than screen width?
-		bge.w	.skipObject				; if yes, right edge is out of bounds
+		bge.w	.skipObject\@				; if yes, right edge is out of bounds
 		addi.w	#$80,d3					; add VDP sprite start
 
 	; --- Screen bounds check for Y-position ---
 		btst	#sprite_customheight_bit,d4		; is custom height flag set?
-		beq.s	.assumeHeight				; if not, assume height instead
+		beq.s	.assumeHeight\@				; if not, assume height instead
 
 		moveq	#0,d0
 		move.b	obHeight(a0),d0				; use custom height
@@ -68,40 +60,42 @@ BuildSprites:
 		sub.w	4(a1),d2				; subtract camera Y-position
 		move.w	d2,d1
 		add.w	d0,d1					; d1 = obY - cameraY + obHeight
-		bmi.s	.skipObject				; if negative, top edge is out of bounds
+		bmi.s	.skipObject\@				; if negative, top edge is out of bounds
 		move.w	d2,d1
 		sub.w	d0,d1					; d1 = obY - cameraY - obHeight
 		cmpi.w	#224,d1					; is result greater than screen height?
-		bge.s	.skipObject				; if yes, bottom edge is out of bounds
+		bge.s	.skipObject\@				; if yes, bottom edge is out of bounds
 		addi.w	#$80,d2					; add VDP sprite start
 		andi.w	#$7FF,d2				; wrap Y axis
-		bra.s	.drawObject
+		bra.s	.drawObject\@
 ; ---------------------------------------------------------------------------
 
-	.screenCoords:
+	if narg=1
+	.screenCoords\@:
 		move.w	obScreenY(a0),d2			; special variable for screen Y
 		move.w	obX(a0),d3
-		bra.s	.drawObject
+		bra.s	.drawObject\@
+	endif
 ; ---------------------------------------------------------------------------
 
-	.assumeHeight:
+	.assumeHeight\@:
 		.ah:	equ 32					; assumed height = 32px ($20)
 		move.w	obY(a0),d2
 		sub.w	4(a1),d2				; subtract camera Y-position
 		addi.w	#$80,d2
 		andi.w	#$7FF,d2				; wrap Y axis
 		cmpi.w	#$80-.ah,d2				; is top Y-position with assumed height out of bounds?
-		blo.s	.skipObject				; if yes, branch
+		blo.s	.skipObject\@				; if yes, branch
 		cmpi.w	#$80+224+.ah,d2				; is bottom Y-position with assumed height out of bounds?
-		bhs.s	.skipObject				; if yes, branch
+		bhs.s	.skipObject\@				; if yes, branch
 
 	; --- Load sprite mappings ---
-	.drawObject:
+	.drawObject\@:
 		movea.l	obMap(a0),a1
 
 		moveq	#1-1,d1					; write only one sprite for raw-mappings
 		btst	#sprite_rawmappings_bit,d4		; is "raw-mappings" flag on?
-		bne.s	.drawFrame				; if yes, branch (assume mappings point to a single sprite piece)
+		bne.s	.drawFrame\@				; if yes, branch (assume mappings point to a single sprite piece)
 
 		move.b	obFrame(a0),d1
 		add.w	d1,d1			; MJ: changed from byte to word (we want more than 7F sprites)
@@ -109,32 +103,66 @@ BuildSprites:
 		moveq	#0,d1			; MJ: clear d1 (because of our byte to word change)
 		move.b	(a1)+,d1				; get number of sprite pieces in frame
 		subq.b	#1,d1					; subtract 1 for dbf
-		bmi.s	.setVisible				; skip rendering if mapping was blank
+		bmi.s	.setVisible\@				; skip rendering if mapping was blank
 
 	; --- Do the actual sprite mapping rendering ---
-	.drawFrame:
+	.drawFrame\@:
 		bsr.w	BuildSpr_Draw
 
-	.setVisible:
+	.setVisible\@:
 		bset	#sprite_rendered_bit,obRender(a0)	; set object as visible
 
-	.skipObject:
+	.skipObject\@:
 		addq.w	#2,d6					; advance to next entry in layer
 		subq.w	#2,(a4)					; decrement number of objects left
-		bne.w	.objectLoop				; if entries remain, loop
+		bne.w	.objectLoop\@				; if entries remain, loop
 
-.nextPriority:
+.nextPriority\@:
 		lea	spritelayer_size(a4),a4			; advance to next layer (each layer is $80 bytes)
-		dbf	d7,.priorityLoop
+
+	endm
+
+
+
+
+		lea	(v_spritequeue).w,a4
+
+		spritelayer	1	; 0
+		spritelayer	1	; 1
+
+
+		tst.b	(v_draw_hud).w				; are rings even meant to get rendered? (Level_started_flag in S2)
+		beq.s	.noRings				; if not, branch
+		move.w	a4,-(sp)				; backup v_spritequeue and layer iterator
+		bsr.w	BuildRings				; render ring sprites
+		move.w	(sp)+,a4				; restore v_spritequeue and layer iterator
+	.noRings:
+
+		spritelayer	1	; 2
 
 		tst.b	(v_draw_hud).w				; are rings even meant to get rendered? (Level_started_flag in S2)
 		beq.s	.noLossRings				; if not, branch
-		movem.l	d7/a4,-(sp)				; backup v_spritequeue and layer iterator
+		move.w	a4,-(sp)				; backup v_spritequeue and layer iterator
 		bsr.w	BuildRings_Loss				; render ring sprites
-		movem.l	(sp)+,d7/a4				; restore v_spritequeue and layer iterator
+		move.w	(sp)+,a4				; restore v_spritequeue and layer iterator
 	.noLossRings:
+
+		spritelayer	1	; 3
+		spritelayer	1	; 4
+		spritelayer	1	; 5
+		spritelayer	1	; 6
+		spritelayer	1	; 7
+
+
+
+
+
+
+
+
 		move.b	d5,(v_spritecount).w			; write number of rendered sprites to debug var
-		cmpi.b	#sprites_max,d5				; check if sprite limit was exhausted
+		tst.b	d7
+		;cmpi.b	#sprites_max,d5				; check if sprite limit was exhausted
 		beq.s	.spriteLimit				; if yes, branch
 		move.l	#0,(a2)					; unlink last sprite
 		rts
@@ -170,8 +198,11 @@ buildsprite:	macro xflip,yflip
 
 .loopSpritePieces:
 	; --- Sprite limit check ---
-		cmpi.b	#sprites_max,d5				; check sprite limit
-		beq.s	.return					; if all sprite slots are taken up, abort process
+		tst.b	d7
+		beq.s	.return
+
+	;	cmpi.b	#sprites_max,d5				; check sprite limit
+	;	beq.s	.return					; if all sprite slots are taken up, abort process
 
 	; --- Y-position ---
 		move.b	(a1)+,d0				; get relative Y-offset
@@ -200,6 +231,7 @@ buildsprite:	macro xflip,yflip
 	; --- Sprite link ---
 		addq.b	#1,d5					; increase total sprites counter
 		move.b	d5,(a2)+				; write sprite link to buffer
+		subq.b	#1,d7
 
 	; --- VRAM settings / art tile / flipping ---
 		move.b	(a1)+,d0				; get first half of VRAM settings
@@ -268,106 +300,6 @@ BuildSpr_FlipY:
 BuildSpr_FlipXY:
 		buildsprite	1,1
 ; End of function BuildSpr_Draw
-
-
-BuildSprites_MultiDraw:
-		move.l	a4,-(sp)
-		lea	(v_screenposx).w,a4
-		movea.w obGfx(a0),a3
-		movea.l obMap(a0),a5
-		moveq	#0,d0
-	
-		; check if object is within X bounds
-		move.b	mainspr_width(a0),d0	; load pixel width
-		move.w	obX(a0),d3
-		sub.w	(a4),d3
-		move.w	d3,d1
-		add.w	d0,d1
-		bmi.w	.skipObject	; left edge out of bounds
-		move.w	d3,d1
-		sub.w	d0,d1
-		cmpi.w	#320,d1
-		bge.w	.skipObject	; right edge out of bounds
-		addi.w	#128,d3		; VDP sprites start at 128px
-
-		; check if object is within Y bounds
-		btst	#sprite_customheight_bit,d4		; is assume height flag on?
-		beq.s	.assumeHeight	; if yes, branch
-		moveq	#0,d0
-		move.b	mainspr_height(a0),d0	; load pixel height
-		move.w	obY(a0),d2
-		sub.w	4(a4),d2
-		move.w	d2,d1
-		add.w	d0,d1
-		bmi.w	.skipObject	; top edge out of bounds
-		move.w	d2,d1
-		sub.w	d0,d1
-		cmpi.w	#224,d1
-		bge.w	.skipObject	; bottom edge out of bounds
-		addi.w	#128,d2		; VDP sprites start at 128px
-		andi.w	#$7FF,d2				; wrap Y axis
-		bra.s	.drawObject
-
-	.assumeHeight:
-		move.w	obY(a0),d2
-		sub.w	4(a4),d2
-		addi.w	#128,d2
-		andi.w	#$7FF,d2				; wrap Y axis
-		cmpi.w	#-32+128,d2
-		blo.w	.skipObject	; top edge out of bounds
-		cmpi.w	#32+128+224,d2
-		bhs.w	.skipObject	; bottom edge out of bounds
-
-.drawObject:
-		moveq	#0,d1
-		move.b	mainspr_mapframe(a0),d1	; get current frame
-		beq.s	.setVisible	; branch if parent object has no sprite
-		add.b	d1,d1
-		movea.l a5,a1
-		adda.w	(a1,d1.w),a1	; get mappings frame address
-		move.b	(a1)+,d1	; number of sprite pieces
-		subq.b	#1,d1
-		bmi.s	.setVisible
-		move.w	d4,-(sp)
-		bsr.w	ChkDrawSprite	; write data from sprite pieces to buffer
-		move.w	(sp)+,d4
-	.setVisible:
-		bset	#7,obRender(a0)
-		lea	subspr_data(a0),a6
-		moveq	#0,d0
-		move.b	mainspr_childsprites(a0),d0	; get child sprite count
-		subq.w	#1,d0		; if there are 0, go to next object
-		bcs.s	.skipObject
-
-.drawSubSpritesLoop:
-		swap	d0
-		move.w	(a6)+,d3	; get X pos
-		sub.w	(a4),d3
-		addi.w	#128,d3
-		move.w	(a6)+,d2	; get Y pos
-		sub.w	4(a4),d2
-		addi.w	#128,d2
-		addq.w	#1,a6
-		moveq	#0,d1
-		move.b	(a6)+,d1	; get mapping frame
-		add.b	d1,d1
-		movea.l a5,a1
-		adda.w	(a1,d1.w),a1	; get mappings frame address
-		move.b	(a1)+,d1	; number of sprite pieces
-		subq.b	#1,d1
-		bmi.s	.nextSubSprite
-		move.w	d4,-(sp)
-		bsr.w	ChkDrawSprite	; write data from sprite pieces to buffer
-		move.w	(sp)+,d4
-	.nextSubSprite:
-		swap	d0
-		dbf	d0,.drawSubSpritesLoop	; repeat for number of child sprites
-
-.skipObject:
-		movea.l (sp)+,a4
-		bra.w	BuildSprites_NextObj
-; End of fuction .BuildSprites_MultiDraw
-
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

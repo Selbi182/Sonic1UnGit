@@ -29,7 +29,7 @@ id_FlapDoor:		objptr	FlapDoor		; 0C
 id_Signpost:		objptr	Signpost		; 0D
 id_TitleSonic:		objptr	TitleSonic		; 0E
 id_PSBTM:		objptr	PSBTM			; 0F
-id_Obj10:		objptr	NullObject		; 10
+id_BubbleParticle:	objptr	BubbleParticle		; 10
 id_Bridge:		objptr	Bridge			; 11
 id_SpinningLight:	objptr	SpinningLight		; 12
 id_LavaMaker:		objptr	LavaMaker		; 13

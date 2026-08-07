@@ -39,6 +39,7 @@ Debug_Init:	; Routine 0
 		bset	#1,obStatus(a0)				; force airborne state to speed up vertical camera
 		move.b	#2,obRoutine(a0)			; force to Sonic_Control routine
 		move.w	#$60,(v_lookshift).w			; reset up/down camera shift
+		move.w	#(320/2),(v_camera_pan).w		; Reset the horizontal camera pan value to half screen width
 
 		moveq	#0,d0					; set to clear values
 		move.b	d0,(f_playerctrl).w			; clear control override flag

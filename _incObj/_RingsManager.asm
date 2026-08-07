@@ -299,16 +299,18 @@ AttractRing:
 
 BuildRings:
 		movea.l	(v_ringwindow_start).w,a0		; load start of ring layout in ROM
-		move.l	(v_ringwindow_end).w,d7			; load ring layout end address
-		sub.l	a0,d7					; is start = end?
+		move.l	(v_ringwindow_end).w,d0			; load ring layout end address
+		sub.l	a0,d0					; is start = end?
 		beq.s	.return					; if yes, nothing to do (no rings on-screen)
 
 		movea.w	(v_ringstates_pointer).w,a4		; load ring status start address
 		lea	(v_screenposx).w,a3			; load camera X-position
 
 	.loop:
-		cmpi.b	#sprites_max,d5				; has the sprite limit of 80 been reached?
-		bhs.s	.return					; if yes, abort drawing more sprites to avoid corruption
+	;	cmpi.b	#sprites_max,d5				; has the sprite limit of 80 been reached?
+	;	bhs.s	.return					; if yes, abort drawing more sprites to avoid corruption
+		tst.b	d7
+		beq.s	.return
 
 		move.b	(a4)+,d1				; has this ring been collected and finished sparkling?
 		bmi.w	.next					; if yes, check next ring
@@ -334,6 +336,7 @@ BuildRings:
 
 		addq.b	#1,d5					; increase total sprites counter
 		move.b	d5,(a2)+				; store sprite link in sprite buffer
+		subq.b	#1,d7
 
 		add.w	d1,d1					; double frame ID for word-based indexing
 		move.w	Map_RingsCompact(pc,d1.w),(a2)+		; get VRAM settings and store in sprite buffer
@@ -342,7 +345,7 @@ BuildRings:
 
 	.next:
 		addq.w	#4,a0					; advance to next ring in ROM
-		subq.w	#4,d7					; decrement number of remaining rings to handle
+		subq.w	#4,d0					; decrement number of remaining rings to handle
 		bne.w	.loop					; if we've got more rings to render, loop
 
 	.return:
@@ -369,48 +372,56 @@ Map_RingsCompact:
 
 BuildRings_Loss:
 		lea	(v_registeredcollision_rings).w,a5
-		move.w	(a5)+,d7
+		move.w	(a5)+,d0
 		beq.w	.return
-		lsr.w	#1,d7
-		subq.w	#1,d7
+		lsr.w	#1,d0
+		subq.w	#1,d0
+		move.w	#$80,d6
+		move.w	#ArtTile_Ring_Loss|Tile_Pal2,d3
+		swap	d3
+
+		move.w	#$0500,d1
 
 		lea	(v_screenposx).w,a3			; load camera X-position
 
 	.loop:
+		tst.b	d7
+		beq.s	.return
+
 		movea.w	(a5)+,a4
 
-		cmpi.b	#sprites_max,d5				; has the sprite limit of 80 been reached?
-		bhs.s	.return					; if yes, abort drawing more sprites to avoid corruption
-
-		move.w	obX(a4),d3				; get ring X-position
+		move.w	d6,d3
+		add.w	obX(a4),d3				; get ring X-position
 		sub.w	(a3),d3					; subtract camera X-position
 		addi.w	#8,d3
-		cmpi.w	#320+16,d3
+		cmpi.w	#320+16+$80,d3
 		bhs.s	.next
-		addi.w	#$80-8-8,d3
+		subi.w	#16,d3
 
-		move.w	obY(a4),d2				; get ring Y-position
+		move.w	d6,d2
+		add.w	obY(a4),d2				; get ring Y-position
 		sub.w	4(a3),d2				; subtract camera Y-position (4(a3) = v_screenposy)
 		addi.w	#8,d2					; add half of ring height (16/2 = 8px)
-		andi.w	#$7FF,d2				; apply vertical screen wrap
-		cmpi.w	#224+16,d2				; is ring below visible screen?
+		cmpi.w	#224+16+$80,d2				; is ring below visible screen?
 		bhs.s	.next					; if yes, don't render
-		addi.w	#$80-8-8,d2				; add VDP sprite start and undo earlier 8px offset
+		subi.w	#16,d2				; add VDP sprite start and undo earlier 8px offset
 
-		move.w	d2,(a2)+				; store sprite Y-position in sprite buffer
 
-		move.b	#5,(a2)+				; store sprite width/height in sprite buffer
+		swap	d1
+		move.w	d2,d1
+		swap	d1
+		;move.w	d2,(a2)+				; store sprite Y-position in sprite buffer
 
 		addq.b	#1,d5					; increase total sprites counter
-		move.b	d5,(a2)+				; store sprite link in sprite buffer
+		subq.b	#1,d7
+		move.b	d5,d1
+		move.l	d1,(a2)+				; store sprite width/height in sprite buffer
 
-		move.w	#ArtTile_Ring_Loss|Tile_Pal2,(a2)+	; get VRAM settings and store in sprite buffer
-
-		move.w	d3,(a2)+				; store sprite X-position in sprite buffer
+		move.l	d3,(a2)+
 
 	.next:
 		lea	object_size(a4),a4
-		dbf	d7,.loop					; if we've got more rings to render, loop
+		dbf	d0,.loop					; if we've got more rings to render, loop
 
 	.return:
 		clr.w	(v_registeredcollision_rings).w

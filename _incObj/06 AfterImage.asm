@@ -3,14 +3,8 @@
 ; ---------------------------------------------------------------------------
 
 AfterImage:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	After_Index(pc,d0.w),d1
-		jmp	After_Index(pc,d1.w)
-; ===========================================================================
-After_Index:	dc.w After_Init-After_Index
-		dc.w After_Main-After_Index
-; ===========================================================================
+		tst.b	obRoutine(a0)
+		bne.s	After_Main
 
 After_Init:
 		addq.b	#2,obRoutine(a0)		; Advance obRoutine to "After_Main"
@@ -24,7 +18,11 @@ After_Init:
 After_Main:
 		tst.b	(v_shoes).w			; Have Speed Shoes expired?
 		beq.w	DeleteObject			; If so, branch and delete
+		cmpi.b	#2,(v_player+obRoutine).w
+		beq.s	.show
+		rts
 
+	.show:
 		moveq	#$C,d1				; This will be subtracted from v_trackpos, giving the object an older entry
 		btst	#0,(v_framecount+1).w		; Even frame? (Think of it as 'every other number' logic)
 		beq.s	.evenframe			; If so, branch

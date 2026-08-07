@@ -206,6 +206,8 @@ React_Monitor:
 		bpl.s	.chkBreakMonitor			; if not, branch
 		btst	#1,obStatus(a0)				; is Sonic in air?
 		beq.s	.chkBreakMonitor			; if not, don't bump monitor
+		tst.b	homingattack(a0)
+		bne.s	.doBreakMonitor
 
 .chkBumpMonitor:
 		move.w	obY(a0),d0				; get Sonic's Y-position
@@ -225,6 +227,7 @@ React_Monitor:
 		cmpi.b	#id_Roll,obAnim(a0)			; is Sonic rolling/jumping?
 		bne.s	.return					; if not, don't break monitor
 		neg.w	obVelY(a0)				; reverse Sonic's y-motion
+	.doBreakMonitor:
 		addq.b	#2,obRoutine(a1)			; advance the monitor's routine counter
 		bsr.w	ResetHomingAttack
 
@@ -563,7 +566,9 @@ React_LZPole:
 ResetHomingAttack:
 		tst.b	homingattack(a0)			; was the homing attack flag set?
 		beq.s	.return					; if not, nothing to do
-		clr.w	obVelX(a0)				; clear Sonic's X-speed
+	;	clr.w	obVelX(a0)				; clear Sonic's X-speed
+		asr.w	obVelX(a0)
+		asr.w	obVelX(a0)
 		clr.b	homingattack(a0)			; reset homing attack flag so we can do another one
 		move.w	#-$500,obVelY(a0)			; bounce Sonic upwards a little from the impact
 		btst	#6,obStatus(a0)				; is Sonic underwater?
