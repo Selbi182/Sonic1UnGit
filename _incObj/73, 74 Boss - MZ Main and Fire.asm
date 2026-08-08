@@ -85,7 +85,8 @@ BossMarble_ShipMain:	; Routine 2
 		and.b	obStatus(a0),d0				; AND with obStatus so now d0 contains X and Y logical flip bits only
 		andi.b	#~(sprite_xflip|sprite_yflip),obRender(a0) ; clear the x and y flip
 		or.b	d0,obRender(a0)				; OR the two together, so now DisplaySprite has X and Y orientation and above render bits
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 BossMarble_ShipIndex:
 		dc.w BMZ_ShipStart-BossMarble_ShipIndex
@@ -493,7 +494,8 @@ BossMarble_SetBits:
 		and.b	obStatus(a0),d0				; AND with obStatus so now do contains X and Y logical flip bits only
 		andi.b	#~(sprite_xflip|sprite_yflip),obRender(a0) ; clear the X and Y flip
 		or.b	d0,obRender(a0)				; OR the two together, so now DisplaySprite has X and Y orientation and above render bits
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 BossMarble_TubeMain:	; Routine 8
@@ -565,7 +567,8 @@ BossFire_Action:	; Routine 2
 		jsr	(AnimateSprite).l
 		cmpi.w	#boss_mz_y+$D8,obY(a0)			; has the fire fallen into the lava (this routine is shared due to sub routine index above)
 		bhi.s	BossFire_Delete				; if so, delete
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 BossFire_Delete:
@@ -726,7 +729,8 @@ BossFire_TempFire: 	; Routine 4
 BossFire_Animate:
 		lea	(Ani_Fire).l,a1
 		jsr	(AnimateSprite).l
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 ; BossFire_Delete3:

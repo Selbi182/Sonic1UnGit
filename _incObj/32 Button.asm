@@ -100,7 +100,8 @@ But_Pressed:	; Routine 2
 ; But_Display:
 .display:
 		out_of_range.s	.delete
-		bra.w	DisplaySprite
+		DisplaySprite
+		rts
 
 	.delete:
 		bsr.w	DeleteObject

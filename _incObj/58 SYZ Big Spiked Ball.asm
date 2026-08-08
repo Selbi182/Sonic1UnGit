@@ -51,7 +51,8 @@ BBall_Move:	; Routine 2
 		jsr	BBall_Types(pc,d1.w)			; execute behavior, then return here
 
 		out_of_range.w	DeleteObject,bball_origX(a0)	; has spike ball gone out of range? if yes, delete it
-		bra.w	DisplaySprite				; otherwise, display ball
+		DisplaySprite
+		rts				; otherwise, display ball
 ; ===========================================================================
 BBall_Types:	dc.w BBall_Type0_Stationary-BBall_Types
 		dc.w BBall_Type1_LeftRight-BBall_Types

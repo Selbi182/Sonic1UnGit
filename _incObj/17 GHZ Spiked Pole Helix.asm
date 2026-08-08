@@ -109,7 +109,8 @@ Hel_RotateSpikes:
 
 Hel_ChkDel:
 		out_of_range.w	.deleteHelix			; has helix gone offscreen? if yes, delete it
-		bra.w	DisplaySprite				; display parent spike
+		DisplaySprite
+		rts				; display parent spike
 ; ---------------------------------------------------------------------------
 
 .deleteHelix:
@@ -138,7 +139,8 @@ Hel_Delete:	; Routine 6
 ; Hel_Display:
 Hel_ChildSpike:	; Routine 8
 		bsr.w	Hel_RotateSpikes			; rotate spike and set damage type
-		bra.w	DisplaySprite				; display spike (deletion is handled by parent)
+		DisplaySprite
+		rts				; display spike (deletion is handled by parent)
 
 ; ===========================================================================
 

@@ -8,7 +8,8 @@ Lamppost:
 		move.b	obRoutine(a0),d0
 		move.w	Lamp_Index(pc,d0.w),d1
 		jsr	Lamp_Index(pc,d1.w)
-		jmp	(RememberState).l
+		RememberState
+		rts
 ; ===========================================================================
 Lamp_Index:	dc.w Lamp_Main-Lamp_Index			; 0 - init
 		dc.w Lamp_Blue-Lamp_Index			; 2 - idle, not touched

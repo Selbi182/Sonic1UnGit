@@ -99,7 +99,8 @@ Fan_Action:	; Routine 2
 
 .chkdel:
 		out_of_range.w	DeleteObject
-		bra.w	DisplaySprite
+		DisplaySprite
+		rts
 
 ; ===========================================================================
 

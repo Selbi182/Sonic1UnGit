@@ -41,7 +41,8 @@ Saw_Action:	; Routine 2
 		jsr	Saw_Types(pc,d1.w)			; execute behavior, then return here
 
 		out_of_range.s	Saw_Delete,saw_origX(a0)	; has saw gone out of range? if yes, branch
-		jmp	(DisplaySprite).l			; display saw sprite
+		DisplaySprite
+		rts			; display saw sprite
 ; ---------------------------------------------------------------------------
 
 Saw_Delete:

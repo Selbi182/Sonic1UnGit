@@ -147,7 +147,8 @@ SBall_Move:	; Routine 2
 
 SBall_ChkDel:
 		out_of_range_with_y_check.w	.delete,sball_origX(a0),sball_origY(a0)	; has object gone offscreen? if yes, branch
-		bra.w	DisplaySprite				; display parent object
+		DisplaySprite
+		rts				; display parent object
 ; ---------------------------------------------------------------------------
 
 	.delete:
@@ -170,7 +171,8 @@ SBall_ChkDel:
 SBall_Child:	; Routine 4
 		; Child objects are just displayed normally, rotation and deletion is handled by parent
 		move.w	#spr_prio4,d0
-		bra.w	DisplaySprite3
+		DisplaySprite_direct
+		rts
 
 ; ===========================================================================
 

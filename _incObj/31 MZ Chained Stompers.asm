@@ -175,7 +175,8 @@ CStom_Spikes:	; Routine 4
 CStom_Ceiling:	; Routine 6
 CStom_ChkDel:
 		out_of_range.w	DeleteObject			; has object gone out of range? if yes, delete it
-		bra.w	DisplaySprite				; display sprite
+		DisplaySprite
+		rts				; display sprite
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

@@ -41,7 +41,8 @@ GRing_Okay:
 
 GRing_Animate:	; Routine 2
 		out_of_range.w	DeleteObject			; is giant ring offscreen? if yes, delete it
-		bra.w	DisplaySprite				; otherwise, display sprite
+		DisplaySprite
+		rts				; otherwise, display sprite
 ; ===========================================================================
 
 GRing_Collect:	; Routine 4
@@ -99,7 +100,8 @@ Flash_Main:	; Routine 0
 Flash_ChkDel:	; Routine 2
 		bsr.s	Flash_Collect				; advance ring animation, delete Sonic, and set flag
 		out_of_range.w	DeleteObject			; is object offscreen? if yes, delete
-		bra.w	DisplaySprite				; otherwise, display sprite
+		DisplaySprite
+		rts				; otherwise, display sprite
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

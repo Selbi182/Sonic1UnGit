@@ -31,7 +31,8 @@ TSon_Delay:	; Routine 2
 		subq.b	#1,obDelayAni(a0)			; decrement animation delay
 		bpl.s	.wait					; if time remains, branch
 		addq.b	#2,obRoutine(a0)			; advance to TSon_Move
-		bra.w	DisplaySprite				; start displaying Sonic's sprite
+		DisplaySprite
+		rts				; start displaying Sonic's sprite
 	.wait:
 		rts						; return
 ; ===========================================================================
@@ -42,15 +43,15 @@ TSon_Move:	; Routine 4
 		bne.s	.display				; if not, branch
 		addq.b	#2,obRoutine(a0)			; advance to TSon_Animate
 	.display:
-		bra.w	DisplaySprite				; display Sonic sprite
-		rts						; redundant rts
+		DisplaySprite
+		rts				; display Sonic sprite
 ; ===========================================================================
 
 TSon_Animate:	; Routine 6
 		lea	(Ani_TSon).l,a1				; load animation script
 		bsr.w	AnimateSprite				; advance animation (will loop on the last two finger-wagging frames)
-		bra.w	DisplaySprite				; display Sonic sprite
-		rts						; redundant rts
+		DisplaySprite
+		rts				; display Sonic sprite
 
 
 ; ===========================================================================
@@ -63,7 +64,8 @@ PSBTM:
 		move.b	obRoutine(a0),d0
 		move.w	PSB_Index(pc,d0.w),d1
 		jsr	PSB_Index(pc,d1.w)
-		bra.w	DisplaySprite
+		DisplaySprite
+		rts
 ; ===========================================================================
 PSB_Index:	dc.w PSB_Main-PSB_Index
 		dc.w PSB_PrsStart-PSB_Index
@@ -161,7 +163,8 @@ PSB_TitleMenu:
 		jsr	(QueueSound2).l				; play sound when selection has changed
 	
 	.display:
-		bra.w	DisplaySprite				; display new selection
+		DisplaySprite
+		rts				; display new selection
 ; End of function PSB_TitleMenu
 
 ; ===========================================================================

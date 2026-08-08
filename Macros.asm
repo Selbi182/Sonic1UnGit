@@ -259,6 +259,35 @@ jle:		macro loc
 	.nojump\@:
 		endm
 
+; ---------------------------------------------------------------------------
+; Subroutine to display a sprite/object, when a0 is the object RAM
+; ---------------------------------------------------------------------------
+
+DisplaySprite	macro
+		lea	(v_spritequeue).w,a1			; load base sprite queue address
+		adda.w	obPriority(a0),a1			; add precalculated queue offse
+		move.w	(a1),d0					; get sprite queue's entry count
+		addq.b	#2,d0					; increase count by another entry (word)
+		bmi.s	.full\@					; if byte value went to $80, queue is full
+		move.w	d0,(a1)					; set new sprite queue's entry count
+		move.w	a0,(a1,d0.w)				; insert RAM address for object to queue
+	.full\@:
+		endm
+; ---------------------------------------------------------------------------
+; Subroutine to display a sprite/object, when a0 is the object RAM
+; and d0 is already priority*$80
+; ---------------------------------------------------------------------------
+
+DisplaySprite_direct	macro
+		lea	(v_spritequeue).w,a1			; load base sprite queue address
+		adda.w	d0,a1					; add precalculated queue offset from d0
+		move.w	(a1),d0					; get sprite queue's entry count
+		addq.b	#2,d0					; increase count by another entry (word)
+		bmi.s	.full\@					; if byte value went to $80, queue is full
+		move.w	d0,(a1)					; set new sprite queue's entry count
+		move.w	a0,(a1,d0.w)				; insert RAM address for object to queue
+	.full\@:
+		endm
 
 ; ---------------------------------------------------------------------------
 ; check if object moves out of range
@@ -315,6 +344,30 @@ respawn_entry:	macro exit
 		move.w	respawn_index(a0),d0			; load object's respawn index
 		beq.\0	exit					; if it's zero, this object has no entry, branch
 		movea.w	d0,a2					; load address to respawn table entry into a2
+		endm
+
+; ---------------------------------------------------------------------------
+; Subroutine to check if an object has gone off screen:
+; - If it hasn't, queue the sprite for display.
+; - If it has, try to find the relevant entry in the respawn table to clear
+;   the respawn block flag (i.e. remember its state), and delete the object.
+; ---------------------------------------------------------------------------
+
+RememberState	macro
+		out_of_range.s	.offscreen\@			; check if object is off-screen, branch if so
+		DisplaySprite
+		rts				; object is on-screen, display sprite
+
+.offscreen\@:
+		respawn_entry.s	.delete\@			; get respawn entry for this object; branch to DeleteObject if none exists
+		bclr	#7,(a2)					; clear respawn table entry, so object manager can load this object again
+	.delete\@:
+		; inlined DeleteObject
+		moveq	#0,d0					; overwrite with zeroes
+	rept	object_size/4
+		move.l	d0,(a0)+				; clear the object RAM
+	endr
+		rts						; deletion done
 		endm
 
 

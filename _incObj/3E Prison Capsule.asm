@@ -10,7 +10,8 @@ Prison:
 		jsr	Pri_Index(pc,d1.w)
 
 		out_of_range.s	.delete				; is capsule offscreen? if yes, branch
-		jmp	(DisplaySprite).l			; display capsule
+		DisplaySprite
+		rts			; display capsule
 	.delete:
 		jmp	(DeleteObject).l			; delete capsule
 ; ===========================================================================

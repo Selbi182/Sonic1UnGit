@@ -53,14 +53,15 @@ WFall_Animate:	; Routine 2
 ; ---------------------------------------------------------------------------
 
 WFall_Display:	; Routine 4
-		bra.w	RememberState				; display object, or delete if out of range
+		RememberState
+		rts				; display object, or delete if out of range
 ; ===========================================================================
 
 WFall_OnWater:	; Routine 6
 		move.w	(v_waterpos1).w,d0			; get current water height including sway
 		subi.w	#16,d0					; adjust splash 16px above it
 		move.w	d0,obY(a0)				; match splash position to water height
-		bra.s	WFall_Animate				; animate splash
+		bra.w	WFall_Animate				; animate splash
 ; ===========================================================================
 
 ; loc_12B36:
@@ -71,7 +72,7 @@ WFall_Priority:	; Routine 8
 		bset	#7,obGfx(a0)				; render splash object on high-plane (make visible)
 
 	.animate:
-		bra.s	WFall_Animate				; animate and display
+		bra.w	WFall_Animate				; animate and display
 
 ; ===========================================================================
 

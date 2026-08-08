@@ -76,7 +76,8 @@ BGHZ_ShipMain:	; Routine 2
 		andi.b	#3,d0 					; AND with obStatus so now d0 contains X and Y logical flip bits only
 		andi.b	#~(sprite_xflip|sprite_yflip),obRender(a0) ; clear the x and y flip
 		or.b	d0,obRender(a0) 			; OR the two together, so now DisplaySprite has X and Y orientation and above render bits
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 BGHZ_ShipIndex:	dc.w BGHZ_ShipStart-BGHZ_ShipIndex
 		dc.w BGHZ_MakeBall-BGHZ_ShipIndex
@@ -403,7 +404,8 @@ BGHZ_Display:
 		andi.b	#3,d0 					; AND with obstatus so now d0 contains X and Y logical flip bits only
 		andi.b	#~(sprite_xflip|sprite_yflip),obRender(a0) 			; clear the x and y flip
 		or.b	d0,obRender(a0) 			; OR the two together, so now DisplaySprite has X and Y orientation and above render bits
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 
 
 ; ===========================================================================
@@ -521,14 +523,16 @@ GBall_Display:
 		bsr.w	GBall_UpdateBase			; update base object
 		move.b	obAngle(a0),d0				; copy angle
 		jsr	(Swing_UpdateSwingPosition).l		; update wrecking ball position
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 ; GBall_Display2:
 GBall_Base2:	; Routine 4
 		bsr.w	GBall_UpdateBase			; update base object
 		jsr	(GBall_Move).l				; swing wrecking ball (part of Object 15, GBall_Swing_Direction and GBall_Swing_Speed are used here)
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -570,7 +574,8 @@ GBall_Link:	; Routine 6
 		move.b	#0,obRoutine(a0)			; set object routine to 0 (start exploding)
 
 GBall_Display3:
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 ; GBall_ChkVanish:
@@ -593,7 +598,8 @@ GBall_Vanish:
 		move.b	#0,obRoutine(a0)			; set object routine to 0 (start exploding)
 
 GBall_Display4:
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 
 ; ===========================================================================
 

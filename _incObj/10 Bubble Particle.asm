@@ -46,7 +46,8 @@ BubPar_ChkWater:	; Routine 4
 		add.l	#-$8800,obY(a0)				; add Y speed to Y position (note this affects the subpixel position)
 
 		move.w	#$80,d0
-		jmp	(DisplaySprite3).l			; display bubble
+		DisplaySprite_direct
+		rts
 ; ===========================================================================
 
 BubPar_Delete:

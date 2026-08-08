@@ -32,7 +32,8 @@ Ring_Main:	; Routine 0/A
 
 Ring_Animate:	; Routine 2
 		out_of_range.w	DeleteObject			; has ring gone out of range? if yes, delete it
-		bra.w	DisplaySprite				; display ring sprite
+		DisplaySprite
+		rts				; display ring sprite
 
 
 ; ===========================================================================
@@ -293,7 +294,8 @@ RLoss_Sparkle:	; Routine 4
 		move.w	#ArtTile_Ring|Tile_Pal2,obGfx(a0)	; reset art tile for sparkle animation
 		lea	(Ani_Ring).l,a1				; get ring animation script
 		bsr.w	AnimateSprite				; advance ring animation
-		bra.w	DisplaySprite				; display ring sprite
+		DisplaySprite
+		rts				; display ring sprite
 ; ===========================================================================
 
 RLoss_Delete:	; Routine 6
@@ -458,7 +460,8 @@ RLoss_Attract_Main:	; Routine C
 		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		add.l	d2,obY(a0)				; add Y speed to Y position (note this affects the subpixel position)
 
-		bra.w	DisplaySprite				; display ring sprite
+		DisplaySprite
+		rts				; display ring sprite
 ; ===========================================================================
 
 		include	"_anim/Rings.asm"

@@ -106,7 +106,8 @@ LWall_Solid:	; Routine 2
 		tst.b	lwall_flag(a0)				; is lava wall already moving?
 		bne.s	.show					; if yes, don't delete it
 		out_of_range.s	.startDelete			; is lava wall offscreen? if yes, branch to delete it
-	.show:	bra.w	DisplaySprite				; display lava wall sprite
+	.show:	DisplaySprite
+		rts				; display lava wall sprite
 ; ---------------------------------------------------------------------------
 
 .startDelete:
@@ -124,7 +125,8 @@ LWall_BackChild: ; Routine 6
 
 		move.w	obX(a1),obX(a0)				; move rest of lava wall
 		subi.w	#128,obX(a0)				; rest of lava wall is 128px to the left of parent
-		bra.w	DisplaySprite				; display lava
+		DisplaySprite
+		rts				; display lava
 ; ===========================================================================
 
 LWall_Delete:	; Routine 8

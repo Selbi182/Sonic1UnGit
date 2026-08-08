@@ -123,7 +123,8 @@ Spikes_NoHurt:
 
 Spikes_Display:
 		out_of_range.w	DeleteObject,spikes_origX(a0)	; check if spikes are offscreen and delete them if so
-		bra.w	DisplaySprite				; display spikes sprite
+		DisplaySprite
+		rts				; display spikes sprite
 
 
 ; ===========================================================================

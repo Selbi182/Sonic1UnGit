@@ -270,7 +270,8 @@ LGrass_ChkDel:
 
 LGrass_ChkGone:
 		out_of_range.w	DeleteObject,lgrass_origX(a0)	; has platform gone out of range? if yes, delete it
-		bra.w	DisplaySprite				; display platform sprite
+		DisplaySprite
+		rts				; display platform sprite
 ; ===========================================================================
 
 LGrass_DelFlames:
@@ -416,7 +417,8 @@ GFire_Move:	; Routine 4
 GFire_Animate:
 		lea	(Ani_GFire).l,a1			; load animation script
 		bsr.w	AnimateSprite				; animate fireballs
-		bra.w	DisplaySprite				; display fireballs
+		DisplaySprite
+		rts				; display fireballs
 
 ; ===========================================================================
 

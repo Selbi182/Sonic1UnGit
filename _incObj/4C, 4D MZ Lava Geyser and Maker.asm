@@ -88,7 +88,7 @@ GMake_Display:	; Routine 8
 		out_of_range.w	DeleteObject
 		lea	(Ani_Geyser).l,a1			; advance animation
 		bsr.w	AnimateSprite				; (for geyser, this will advance obRoutine after bubbling animation has finished)
-		bsr.w	DisplaySprite
+		DisplaySprite
 		rts
 ; ===========================================================================
 
@@ -210,7 +210,8 @@ Geyser_Action:	; Routine 2
 
 Geyser_ChkDel:
 		out_of_range.w	DeleteObject
-		bra.w	DisplaySprite
+		DisplaySprite
+		rts
 ; ===========================================================================
 Geyser_Types:	dc.w Geyser_Type00-Geyser_Types	; geyser
 		dc.w Geyser_Type01-Geyser_Types	; fall

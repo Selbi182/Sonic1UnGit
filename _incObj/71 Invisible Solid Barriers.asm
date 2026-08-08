@@ -50,7 +50,8 @@ Invis_Solid:	; Routine 2
 		out_of_range.s	.delete			; has object gone offscreen? if yes, delete it
 		tst.w	(v_debuguse).w			; are you using debug mode?
 		beq.s	.nodisplay			; if not, branch
-		jmp	(DisplaySprite).l		; display the invisible object for debugging purposes
+		DisplaySprite
+		rts		; display the invisible object for debugging purposes
 
 	.nodisplay:
 		rts					; keep object alive, but don't display it

@@ -153,7 +153,8 @@ Mon_Animate:	; Routine 6
 		bsr.w	AnimateSprite				; animate monitor
 
 Mon_Display:	; Routine 8
-		bra.w	RememberState				; handle display, respawn table, and offscreen delete
+		RememberState
+		rts				; handle display, respawn table, and offscreen delete
 ; ===========================================================================
 
 Mon_BreakOpen:	; Routine 4 (set from ReactToItem)
@@ -181,7 +182,8 @@ Mon_RememberBroken:
 		bset	#0,(a2)
 .broken:
 		move.b	#9,obAnim(a0)				; set monitor animation to broken
-		bra.w	DisplaySprite				; keep displaying broken monitor
+		DisplaySprite
+		rts				; keep displaying broken monitor
 
 
 ; ===========================================================================
@@ -194,7 +196,8 @@ PowerUp:
 		move.b	obRoutine(a0),d0			; get routine number
 		move.w	Pow_Index(pc,d0.w),d1			; find entry in offset table
 		jsr	Pow_Index(pc,d1.w)			; jump to current routine and return
-		bra.w	DisplaySprite				; display monitor icon sprite
+		DisplaySprite
+		rts				; display monitor icon sprite
 ; ===========================================================================
 Pow_Index:	dc.w Pow_Main-Pow_Index				; 0 - init
 		dc.w Pow_Move-Pow_Index				; 2 - icon is moving up

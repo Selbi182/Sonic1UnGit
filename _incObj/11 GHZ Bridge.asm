@@ -330,7 +330,8 @@ Bri_Data_Align:	; Values used to align logs to the left & right of the one being
 
 Bri_ChkDel:
 		out_of_range.w	.deleteBridge			; has bridge gone out of range? if yes, delete it with all child logs
-		bra.w	DisplaySprite				; display main bridge object
+		DisplaySprite
+		rts				; display main bridge object
 ; ---------------------------------------------------------------------------
 
 .deleteBridge:
@@ -364,7 +365,7 @@ Bri_Delete:	; Routine 6/8 (unused?)
 ; Bri_Display:
 Bri_ChildLog:	; Routine $A
 		; Note: Child logs are updated and deleted through the parent object!
-		bsr.w	DisplaySprite				; just display child log sprite
+		DisplaySprite				; just display child log sprite
 		rts						; return
 
 ; ===========================================================================
@@ -468,7 +469,8 @@ BriOpti_StoodOn:
 
 BriOpti_ChkDelOrDisplay:
 		out_of_range.w	DeleteObject,briopti_origX(a0)	; check if bridge has gone offscreen and delete it if so
-		bra.w	DisplaySprite				; display sprite
+		DisplaySprite
+		rts				; display sprite
 ; ===========================================================================
 
 ; ---------------------------------------------------------------------------

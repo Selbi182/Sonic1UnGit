@@ -87,7 +87,8 @@ BossSpringYard_ShipMain:	; Routine 2
 		and.b	obStatus(a0),d0				; AND with obStatus so now d0 contains X and Y logical flip bits only
 		andi.b	#~(sprite_xflip|sprite_yflip),obRender(a0) ; clear the x and y flip
 		or.b	d0,obRender(a0)				; OR the two together, so now DisplaySprite has X and Y orientation and above render bits
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 BossSpringYard_ShipIndex:
 		dc.w BSYZ_ShipStart-BossSpringYard_ShipIndex
@@ -647,7 +648,8 @@ BossSpringYard_Display:
 		and.b	obStatus(a0),d0				; AND obstatus with those flip bits
 		andi.b	#~(sprite_xflip|sprite_yflip),obRender(a0) ; clear the x and y flip
 		or.b	d0,obRender(a0)				; OR the two together, so now DisplaySprite has X and Y orientation and above render bits
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 BossSpringYard_SpikeMain:; Routine 8
@@ -799,7 +801,8 @@ BossBlock_Solid:
 		jsr	(SolidObject).l
 
 BossBlock_Display:
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 ; loc_19762:
@@ -807,7 +810,8 @@ BossBlock_Frag:	; Routine 4
 		tst.b	obRender(a0)				; is the block currently visible?
 		bpl.s	BossBlock_Delete			; if not, branch
 		jsr	(ObjectFall).l
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 BossBlock_Delete:

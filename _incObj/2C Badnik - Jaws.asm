@@ -51,7 +51,8 @@ Jaws_Swim:	; Routine 2
 		bsr.w	AnimateSprite				; animate Jaws
 
 		bsr.w	SpeedToPos				; make Jaws swim
-		bra.w	RememberState				; display sprite, or delete when offscreen
+		RememberState
+		rts				; display sprite, or delete when offscreen
 ; ===========================================================================
 
 		include	"_anim/Jaws.asm"

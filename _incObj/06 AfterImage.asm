@@ -17,7 +17,7 @@ After_Init:
 
 After_Main:
 		tst.b	(v_shoes).w			; Have Speed Shoes expired?
-		beq.w	DeleteObject			; If so, branch and delete
+		jeq	DeleteObject			; If so, branch and delete
 		cmpi.b	#2,(v_player+obRoutine).w
 		beq.s	.show
 		rts
@@ -39,4 +39,5 @@ After_Main:
 		move.b	(v_player+obFrame).w,obFrame(a0)	; Use player's current obFrame
 		move.b	(v_player+obRender).w,obRender(a0)	; Use player's current obRender
 		move.w	(v_player+obPriority).w,obPriority(a0)	; Use player's current obPriority
-		bra.w	DisplaySprite
+		DisplaySprite
+		rts

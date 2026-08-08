@@ -37,7 +37,8 @@ Edge_Solid:	; Routine 2
 
 Edge_Display:	; Routine 4
 		out_of_range.w	DeleteObject
-		bra.w	DisplaySprite
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 Map_Edge:	include	"_maps/GHZ Edge Walls.asm"

@@ -35,7 +35,8 @@ Newt_Action:	; Routine 2
 
 		lea	(Ani_Newt).l,a1				; load Newtron animation script
 		bsr.w	AnimateSprite				; animate with correct slope ID
-		bra.w	RememberState				; display sprite, or delete object if offscreen
+		RememberState
+		rts				; display sprite, or delete object if offscreen
 ; ===========================================================================
 Newt_ActIndex:	dc.w Newt_Action_ChkDistance-Newt_ActIndex	; 0
 		dc.w Newt_Action_WaitDrop-Newt_ActIndex		; 2
@@ -87,7 +88,7 @@ Newt_Action_WaitDrop:
 ; .fall:
 Newt_Action_Drop:
 		bsr.w	ObjectFall				; make Newtron fall
-		bsr.w	ObjFloorDist				; get distance to floor
+		jsr	(ObjFloorDist).l				; get distance to floor
 		tst.w	d1					; has Newtron hit the floor?
 		bpl.s	.return					; if not, branch
 		add.w	d1,obY(a0)				; align Newtron with floor on landing
@@ -109,7 +110,7 @@ Newt_Action_Drop:
 Newt_Action_MoveOnFloor:
 		bsr.w	SpeedToPos				; move Newtron sideways
 
-		bsr.w	ObjFloorDist				; get distance to floor
+		jsr	(ObjFloorDist).l				; get distance to floor
 		cmpi.w	#-8,d1					; is there a steep upward slope ahead?
 		blt.s	.detach					; if yes, branch
 		cmpi.w	#$C,d1					; is there a large drop ahead?

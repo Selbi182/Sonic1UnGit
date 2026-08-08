@@ -9,7 +9,8 @@ CirclingPlatform:
 		move.w	Circ_Index(pc,d0.w),d1
 		jsr	Circ_Index(pc,d1.w)
 		out_of_range.w	DeleteObject,circ_origX(a0)
-		bra.w	DisplaySprite
+		DisplaySprite
+		rts
 ; ===========================================================================
 Circ_Index:	dc.w Circ_Main-Circ_Index	; 0
 		dc.w Circ_ChkTouch-Circ_Index	; 2

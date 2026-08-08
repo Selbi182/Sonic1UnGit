@@ -132,7 +132,8 @@ LBall_Action:	; Routine 2
 
 LBall_ChkDel:
 		out_of_range.w	DeleteObject			; has lava ball gone out of range? if yes, delete it
-		bra.w	DisplaySprite				; display lava ball
+		DisplaySprite
+		rts				; display lava ball
 
 ; ===========================================================================
 LBall_TypeIndex:dc.w LBall_RiseAndFall-LBall_TypeIndex		; 0

@@ -39,7 +39,8 @@ Burro_Action:	; Routine 2
 
 		lea	(Ani_Burro).l,a1
 		bsr.w	AnimateSprite
-		bra.w	RememberState
+		RememberState
+		rts
 ; ===========================================================================
 Burro_ActIndex:	dc.w Burro_Action_TurnAround-Burro_ActIndex	; 0
 		dc.w Burro_Action_Move-Burro_ActIndex		; 2

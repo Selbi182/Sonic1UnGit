@@ -80,7 +80,8 @@ LBlk_Action:	; Routine 2
 
 	.chkdel:
 		out_of_range.w	DeleteObject,lblk_origX(a0)	; has block gone out of range? if yes, delete it
-		bra.w	DisplaySprite				; display block sprite
+		DisplaySprite
+		rts				; display block sprite
 
 ; ===========================================================================
 LBlk_Types:	dc.w LBlk_Stationary-LBlk_Types			; 0

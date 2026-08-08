@@ -10,7 +10,8 @@ Elevator:
 		jsr	Elev_Index(pc,d1.w)
 
 		out_of_range.w	DeleteObject,elev_origX(a0)
-		bra.w	DisplaySprite
+		DisplaySprite
+		rts
 ; ===========================================================================
 Elev_Index:	dc.w Elev_Main-Elev_Index
 		dc.w Elev_Platform-Elev_Index

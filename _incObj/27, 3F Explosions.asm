@@ -50,7 +50,8 @@ ExItem_Animate:	; Routine 4 (2 for Explosion)
 		beq.w	DeleteObject				; if yes, delete explosion object
 
 	.display:
-		bra.w	DisplaySprite				; display explosion sprite
+		DisplaySprite
+		rts				; display explosion sprite
 
 
 ; ===========================================================================

@@ -11,7 +11,8 @@ Signpost:
 		lea	(Ani_Sign).l,a1
 		bsr.w	AnimateSprite
 		out_of_range.w	DeleteObject
-		bra.w	DisplaySprite
+		DisplaySprite
+		rts
 ; ===========================================================================
 Sign_Index:	dc.w Sign_Main-Sign_Index
 		dc.w Sign_Touch-Sign_Index

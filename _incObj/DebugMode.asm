@@ -116,7 +116,8 @@ Debug_Action:	; Routine 2
 		move.w	(a2)+,d6				; load number of entries in debug item list
 
 		bsr.w	Debug_Control				; allow movement and object spawning, and update graphics
-		jmp	(DisplaySprite).l			; display debug object
+		DisplaySprite
+		rts			; display debug object
 ; End of function DebugMode
 
 

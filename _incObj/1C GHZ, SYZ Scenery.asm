@@ -30,7 +30,8 @@ Scen_Main:	; Routine 0
 
 Scen_ChkDel:	; Routine 2
 		out_of_range.w	DeleteObject			; delete object if it has gone offscreen
-		bra.w	DisplaySprite				; otherwise, keep displaying it
+		DisplaySprite
+		rts				; otherwise, keep displaying it
 ;
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

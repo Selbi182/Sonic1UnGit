@@ -28,7 +28,8 @@ CSI_Main:	; Routine 0
 ; ---------------------------------------------------------------------------
 
 CSI_Display:	; Routine 2
-		jmp	(DisplaySprite).l			; display element
+		DisplaySprite
+		rts			; display element
 ; ===========================================================================
 
 ; --- X-positions for Mini-Sonics ---
@@ -106,7 +107,8 @@ CSI_ShowMiniSonic: ; Routine 6
 		bchg	#0,obFrame(a0)				; alternate between "foot up" and "foot down" frames
 
 	.display:
-		jmp	(DisplaySprite).l			; display mini-Sonic sprite
+		DisplaySprite
+		rts			; display mini-Sonic sprite
 
 	.delete:
 		jmp	(DeleteObject).l			; delete mini-Sonic
@@ -122,7 +124,8 @@ ContSonic:
 		move.b	obRoutine(a0),d0
 		move.w	CSon_Index(pc,d0.w),d1
 		jsr	CSon_Index(pc,d1.w)
-		jmp	(DisplaySprite).l			; display Sonic
+		DisplaySprite
+		rts			; display Sonic
 ; ===========================================================================
 CSon_Index:	dc.w CSon_Main-CSon_Index			; 0
 		dc.w CSon_ChkLand-CSon_Index			; 2

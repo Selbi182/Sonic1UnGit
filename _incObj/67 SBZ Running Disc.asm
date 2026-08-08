@@ -185,7 +185,8 @@ Disc_MoveSpot:
 
 Disc_Display:
 		out_of_range.s	.delete,disc_origX(a0)		; is object out of range? if yes, branch
-		jmp	(DisplaySprite).l			; display small spot
+		DisplaySprite
+		rts			; display small spot
 
 	.delete:
 		jmp	(DeleteObject).l			; delete whole object

@@ -58,7 +58,8 @@ Shi_Shield:	; Routine 2
 		jsr	(LoadDynPLC).l				; load DPLCs
 
 	.display:
-		jmp	(DisplaySprite).l			; display shield sprite
+		DisplaySprite
+		rts			; display shield sprite
 
 	.hide:
 		rts						; hide shield sprite but don't delete it
@@ -119,7 +120,8 @@ Shi_Stars:	; Routine 4
 		beq.s	.display				; if yes, branch
 		move.b	(v_starsobj1+obFrame).w,obFrame(a0)	; borrow frame from first invincibility object
 .display:
-		jmp	(DisplaySprite).l			; keep displaying stars
+		DisplaySprite
+		rts			; keep displaying stars
 ; ===========================================================================
 
 Shi_Start_Delete:

@@ -129,7 +129,8 @@ Cat_Head:	; Routine 2
 
 	.display:
 		out_of_range.w	Cat_Despawn			; has Caterkiller gone offscreen? if yes, branch
-		jmp	(DisplaySprite).l			; display head sprite
+		DisplaySprite
+		rts			; display head sprite
 ; ---------------------------------------------------------------------------
 
 ; Cat_ChkGone:
@@ -334,7 +335,8 @@ Cat_BodySeg1:	; Routine 4, 8
 		rts						; return
 
 .display:
-		jmp	(DisplaySprite).l			; display sprite
+		DisplaySprite
+		rts			; display sprite
 
 ; ===========================================================================
 Cat_FragSpeed:	; X-speed
@@ -373,7 +375,8 @@ Cat_Fragment:	; Routine $C
 	.displayOrDelete:
 		tst.b	obRender(a0)				; has body fragment gone offscreen?
 		bpl.w	Cat_Despawn				; if yes, delete it
-		jmp	(DisplaySprite).l			; otherwise, display it
+		DisplaySprite
+		rts			; otherwise, display it
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

@@ -8,7 +8,8 @@ Chopper:
 		move.b	obRoutine(a0),d0
 		move.w	Chop_Index(pc,d0.w),d1
 		jsr	Chop_Index(pc,d1.w)
-		bra.w	RememberState
+		RememberState
+		rts
 ; ===========================================================================
 Chop_Index:	dc.w Chop_Main-Chop_Index	; 0
 		dc.w Chop_ChgSpeed-Chop_Index	; 2

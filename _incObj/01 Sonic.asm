@@ -139,7 +139,7 @@ Sonic_Display:
 
 ; Obj01_Display:
 .display:
-		jsr	(DisplaySprite).l			; display Sonic sprite normally
+		DisplaySprite
 
 ; Obj01_ChkInvin:
 .chkinvincible:
@@ -1743,7 +1743,8 @@ Sonic_Hurt:	; Routine 4
 		bsr.w	Sonic_RecordPosition			; record Sonic's previous position for the invincibility stars trail
 		bsr.w	Sonic_Animate				; run Sonic's animation scripts
 		bsr.w	Sonic_LoadGfx				; update Sonic's graphics if necessary
-		jmp	(DisplaySprite).l			; display Sonic's sprites
+		DisplaySprite
+		rts
 ; End of function Sonic_Hurt
 
 
@@ -1801,7 +1802,8 @@ Sonic_Death:	; Routine 6
 		bsr.w	Sonic_RecordPosition			; record Sonic's previous position for the invincibility stars trail (kinda pointless here...)
 		bsr.w	Sonic_Animate				; run Sonic's animation scripts
 		bsr.w	Sonic_LoadGfx				; update Sonic's graphics if necessary
-		jmp	(DisplaySprite).l			; display Sonic's sprite
+		DisplaySprite
+		rts
 ; End of function Sonic_Death
 
 

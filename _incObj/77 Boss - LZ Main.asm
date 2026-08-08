@@ -74,7 +74,8 @@ BossLabyrinth_ShipMain:	; Routine 2
 		and.b	obStatus(a0),d0				; AND with obStatus so now d0 contains X and Y logical flip bits only
 		andi.b	#~(sprite_xflip|sprite_yflip),obRender(a0) ; clear the x and y flip
 		or.b	d0,obRender(a0)				; OR the two together, so now DisplaySprite has X and Y orientation and above render bits
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 BossLabyrinth_ShipIndex:
 		dc.w BLZ_ShipStart-BossLabyrinth_ShipIndex
@@ -453,4 +454,5 @@ BossLabyrinth_Display:
 		and.b	obStatus(a0),d0				; AND with obStatus so now d0 contains X and Y logical flip bits only
 		andi.b	#~(sprite_xflip|sprite_yflip),obRender(a0) ; clear the x and y flip
 		or.b	d0,obRender(a0)				; OR the two together, so now DisplaySprite has X and Y orientation and above render bits
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts

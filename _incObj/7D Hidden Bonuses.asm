@@ -78,7 +78,8 @@ Bonus_Display:	; Routine 2
 		subq.w	#1,bonus_timelen(a0)			; decrement display time
 		bmi.s	.delete					; if time is zero, delete object
 		out_of_range.s	.delete				; has objet gone offscreen? if yes, delete
-		jmp	(DisplaySprite).l			; keep displaying object
+		DisplaySprite
+		rts			; keep displaying object
 
 	.delete:
 		jmp	(DeleteObject).l			; delete object

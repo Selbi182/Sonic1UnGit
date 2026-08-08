@@ -34,7 +34,8 @@ Bas_Action:	; Routine 2
 
 		lea	(Ani_Bas).l,a1
 		bsr.w	AnimateSprite
-		bra.w	RememberState
+		RememberState
+		rts
 ; ===========================================================================
 Bas_ActIndex:	dc.w Bas_Action_ChkSonic-Bas_ActIndex		; 0
 		dc.w Bas_Action_DropDown-Bas_ActIndex		; 2

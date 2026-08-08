@@ -51,7 +51,8 @@ Ledge_ChkTouch:	; Routine 2
 		move.w	#96/2,d1
 		lea	(Ledge_SlopeData).l,a2
 		bsr.w	SlopeObject				; sets obRoutine to 4 on touch (Ledge_OnPlatform)
-		bra.w	RememberState
+		RememberState
+		rts
 ; ===========================================================================
 
 Ledge_OnPlatform:	; Routine 4
@@ -70,7 +71,8 @@ Ledge_WalkOff:	; Routine $A
 		move.w	obX(a0),d2
 		bsr.w	SlopeObject_AssumeStoodOn
 
-		bra.w	RememberState
+		RememberState
+		rts
 ; ===========================================================================
 
 Ledge_FragmentPiece:	; Routine 6
@@ -79,7 +81,8 @@ Ledge_FragmentPiece:	; Routine 6
 		tst.b	collapsible_flag(a0)			; is ledge collapsing?
 		bne.w	.delayCollapse				; if yes, branch
 		subq.b	#1,collapsible_timedelay(a0)		; subtract 1 from time
-		bra.w	DisplaySprite
+		DisplaySprite
+		rts
 ; ---------------------------------------------------------------------------
 
 .delayCollapse:
@@ -120,7 +123,8 @@ Ledge_Fragment:
 		add.l	d2,obY(a0)				; add Y speed to Y position (note this affects the subpixel position)
 		add.w	#gravity,obVelY(a0)			; increase vertical speed (apply gravity)
 
-		bra.w	DisplaySprite
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 Ledge_Delete:	; Routine 8
@@ -190,7 +194,8 @@ CFlo_ChkTouch:	; Routine 2
 		bset	#sprite_xflip_bit,obRender(a0)		; flip platform to inverse collapsing pattern
 
 	.display:
-		bra.w	RememberState
+		RememberState
+		rts
 ; ===========================================================================
 
 CFlo_OnPlatform:	; Routine 4
@@ -206,7 +211,8 @@ CFlo_WalkOff:	; Routine $A
 
 		move.w	obX(a0),d2
 		bsr.w	MvSonicOnPtfm2
-		bra.w	RememberState
+		RememberState
+		rts
 ; ===========================================================================
 
 CFlo_FragmentPiece:	; Routine 6
@@ -215,7 +221,8 @@ CFlo_FragmentPiece:	; Routine 6
 		tst.b	collapsible_flag(a0)			; has Sonic touched the object?
 		bne.w	.delayCollapse				; if yes, branch
 		subq.b	#1,collapsible_timedelay(a0)		; subtract 1 from time
-		bra.w	DisplaySprite
+		DisplaySprite
+		rts
 ; ---------------------------------------------------------------------------
 
 .delayCollapse:
@@ -244,7 +251,8 @@ CFlo_FragmentPiece:	; Routine 6
 		bsr.w	ObjectFall
 		tst.b	obRender(a0)
 		bpl.s	CFlo_Delete
-		bra.w	DisplaySprite
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 CFlo_Delete:	; Routine 8
@@ -346,7 +354,7 @@ FragmentatePlatform:
 		dbf	d1,.loopFragments			; loop until all fragments have been spawned in
 
 .fragmentationDone:
-		bsr.w	DisplaySprite				; render first fragment this frame
+		DisplaySprite				; render first fragment this frame
 		move.w	#sfx_Collapse,d0			; set collapsing floor sound
 		jmp	(QueueSound2).l				; play it
 

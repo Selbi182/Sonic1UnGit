@@ -120,7 +120,8 @@ Orb_DisplayAndMove: ; Routine 4
 
 Orb_DisplayNoMove:
 		out_of_range.w	.deleteWithSpikeballs		; has Orbinaut gone offscreen? if yes, branch
-		bra.w	DisplaySprite				; otherwise, display it
+		DisplaySprite
+		rts				; otherwise, display it
 ; ---------------------------------------------------------------------------
 
 ; This is essentially a custom version of RememberState,
@@ -171,7 +172,8 @@ Orb_CircleSpikeball: ; Routine 6
 		neg.w	obVelX(a0)				; shoot spikeball to the right instead
 
 	.display:
-		bra.w	DisplaySprite				; display spikeball sprite
+		DisplaySprite
+		rts				; display spikeball sprite
 ; ---------------------------------------------------------------------------
 
 .circleBalls:
@@ -186,14 +188,16 @@ Orb_CircleSpikeball: ; Routine 6
 
 		move.b	orb_circledir(a1),d0			; get set circle direction (1 or -1)
 		add.b	d0,obAngle(a0)				; advance angle to circle
-		bra.w	DisplaySprite				; display spikeball sprite
+		DisplaySprite
+		rts				; display spikeball sprite
 ; ===========================================================================
 
 Orb_FiredSpikeball: ; Routine 8
 		bsr.w	SpeedToPos				; update spikeball's position
 		tst.b	obRender(a0)				; has spikeball gone offscreen?
 		bpl.w	DeleteObject				; if yes, delete it
-		bra.w	DisplaySprite				; keep displaying spikeball
+		DisplaySprite
+		rts				; keep displaying spikeball
 ; ===========================================================================
 
 		include	"_anim/Orbinaut.asm"

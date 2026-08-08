@@ -70,7 +70,8 @@ Bump_Display:
 		lea	(Ani_Bump).l,a1				; load bumper animation script
 		bsr.w	AnimateSprite				; advance animation
 		out_of_range.s	.delete				; is bumper out of range? if yes, branch
-		bra.w	DisplaySprite				; otherwise, keep displaying sprite
+		DisplaySprite
+		rts				; otherwise, keep displaying sprite
 ; ===========================================================================
 
 .delete:

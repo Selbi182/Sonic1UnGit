@@ -30,7 +30,8 @@ Spla_Display:	; Routine 2
 
 		lea	(Ani_Splash).l,a1			; load splash animation script
 		jsr	(AnimateSprite).l			; advance animation (will increase obRoutine on finish to delete)
-		jmp	(DisplaySprite).l			; display water surface
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 Spla_Delete:	; Routine 4

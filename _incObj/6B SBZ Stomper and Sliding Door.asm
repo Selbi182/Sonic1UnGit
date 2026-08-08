@@ -124,7 +124,8 @@ Sto_Action:	; Routine 2
 
 	.chkdel:
 		out_of_range.s	.chkgone,sto_origX(a0)		; has object gone out of range? if yes, branch
-		jmp	(DisplaySprite).l			; display object
+		DisplaySprite
+		rts			; display object
 
 	.chkgone:
 		cmpi.b	#id_LZ,(v_zone).w			; are we in LZ? (SBZ3/LZ4)

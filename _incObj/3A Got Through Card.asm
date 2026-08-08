@@ -86,11 +86,15 @@ Got_MoveIn:
 		cmpi.w	#$80+320+64,d0				; has card moved beyond $200 on x-axis (to the right)?
 		bgt.s	.return					; if yes, branch
 		cmpi.w	#$80-64+16,d0				; has card moved beyond $50 on the x-axis (to the left)?
-		bgt.w	DisplaySprite				; if not, display card
+		bgt.s	.display				; if not, display card
 
 	; locret_C60E:
 	.return:
 		rts						; return
+
+	.display:
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 	.startSBZ2Cutscene:
@@ -118,17 +122,19 @@ Got_Wait_Skippable:	; Routine 4, 8, $C
 
 Got_Wait:	; Routine 4, 8, $C
 		subq.w	#1,obTimeFrame(a0)			; subtract 1 from time delay
-		bne.w	DisplaySprite				; if time remains, branch
+		bne.s	Got_Wait_Display
 	Got_Wait_skip:
 		clr.w	obTimeFrame(a0)
 		addq.b	#2,obRoutine(a0)			; advance to whatever the next routine is
 
-		bra.w	DisplaySprite				; display card sprites
+	Got_Wait_Display:
+		DisplaySprite
+		rts				; display card sprites
 ; ===========================================================================
 
 ; Got_TimeBonus: <-- old misnomer
 Got_Bonus:	; Routine 6
-		bsr.w	DisplaySprite				; keep displaying card sprites
+		DisplaySprite
 		move.b	#1,(f_endactbonus).w			; set time/ring bonus HUD update flag
 
 		moveq	#btnABC,d0		; is button A, B, or C...
@@ -229,7 +235,8 @@ Got_NextLevel:	; Routine $A
 
 	; Got_Display2:
 	.display:
-		bra.w	DisplaySprite				; keep displaying card during fade-out
+		DisplaySprite
+		rts				; keep displaying card during fade-out
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -268,7 +275,8 @@ Got_SBZ2_MoveOut: ; Routine $E
 		bgt.s	Got_SBZ2_StartCutscene			; if yes, branch
 		cmpi.w	#$80-64+16,d0				; has card moved beyond $50 on the x-axis (to the left)?
 		ble.s	Got_SBZ2_StartCutscene			; if yes, branch
-		bra.w	DisplaySprite				; otherwise, keep displaying card
+		DisplaySprite
+		rts				; otherwise, keep displaying card
 
 ; ---------------------------------------------------------------------------
 

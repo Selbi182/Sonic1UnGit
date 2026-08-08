@@ -11,7 +11,8 @@ EndSonic:
 		move.b	ob2ndRout(a0),d0
 		move.w	ESon_Index(pc,d0.w),d1
 		jsr	ESon_Index(pc,d1.w)
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 ESon_Index:	dc.w ESon_Main-ESon_Index		; 0
 
@@ -145,7 +146,8 @@ EndChaos:
 		move.b	obRoutine(a0),d0
 		move.w	ECha_Index(pc,d0.w),d1
 		jsr	ECha_Index(pc,d1.w)
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 ECha_Index:	dc.w ECha_Main-ECha_Index	; 0
 		dc.w ECha_Move-ECha_Index	; 2
@@ -235,7 +237,8 @@ EndSTH:
 		move.b	obRoutine(a0),d0
 		move.w	ESth_Index(pc,d0.w),d1
 		jsr	ESth_Index(pc,d1.w)
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 ESth_Index:	dc.w ESth_Main-ESth_Index		; 0
 		dc.w ESth_Move-ESth_Index		; 2

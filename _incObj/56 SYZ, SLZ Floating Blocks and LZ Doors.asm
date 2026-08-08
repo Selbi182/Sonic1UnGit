@@ -140,7 +140,8 @@ FBlock_Action:	; Routine 2
 .chkDel:
 		out_of_range.s	.checkSYZSpecial,fb_origX(a0)	; has object gone out of range? if yes, branch
 	.display:
-		bra.w	DisplaySprite				; display object
+		DisplaySprite
+		rts				; display object
 
 	.checkSYZSpecial:
 		cmpi.b	#$37,obSubtype(a0)			; is this the special horizontally moving block in SYZ3?

@@ -130,7 +130,8 @@ BossFinal_Eggman:	; Routine 2
 		move.b	BossFinal_ParentObj(a0),d0		; copy object routine using this offset, saves an offset
 		move.w	BossFinal_Eggman_Index(pc,d0.w),d0	; use the object routine index and Eggman_Index to calculate our offset
 		jsr	BossFinal_Eggman_Index(pc,d0.w)		; jump into the index table using the calculated offset
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 BossFinal_Eggman_Index:
 		dc.w BossFinal_Eggman_Wait-BossFinal_Eggman_Index
@@ -577,7 +578,8 @@ BossFinal_Display:
 		and.b	obStatus(a0),d0				; AND obstatus with those flip bits
 		andi.b	#~(sprite_xflip|sprite_yflip),obRender(a0) ; clear the x and y flip
 		or.b	d0,obRender(a0)				; OR the two together, so now DisplaySprite has X and Y orientation and above render bits
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 ; loc_1A2C6:
@@ -658,7 +660,8 @@ BossFinal_Panel:	; Routine 4
 
 ; loc_1A3A6:
 .display:
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 ; loc_1A3AC:
@@ -810,7 +813,8 @@ EggmanCylinder_UpdatePos:
 
 ; loc_1A578:
 .exit:
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 ; loc_1A57E:
@@ -957,7 +961,8 @@ BossPlasma_Generator:; Routine 2
 		bne.s	.checkStatus				; if not, branch
 		move.b	#id_Explosion,obID(a0)			; change object to explosion
 		move.b	#0,obRoutine(a0)			; set object routine of new explosion object
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 ; loc_1A850:
@@ -988,7 +993,8 @@ BossPlasma_Collision:
 .display:
 		lea	Ani_PLaunch(pc),a1
 		jsr	(AnimateSprite).l
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 BossPlasma_MakeBalls:; Routine 4
@@ -1068,7 +1074,8 @@ BossPlasma_Balls: ; Routine 8
 		jsr	BossPlasma_Index2(pc,d0.w)		; jump into the table and use our offset to pick a routine
 		lea	Ani_Plasma(pc),a1
 		jsr	(AnimateSprite).l
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 BossPlasma_Index2:
 		dc.w BossPlasma_Spread-BossPlasma_Index2

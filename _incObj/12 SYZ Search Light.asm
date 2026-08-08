@@ -33,7 +33,8 @@ Light_Animate:	; Routine 2
 
 	.chkdel:
 		out_of_range.w	DeleteObject			; has object gone offscreen? if yes, delete it
-		bra.w	DisplaySprite				; display sprite
+		DisplaySprite
+		rts				; display sprite
 ; ===========================================================================
 
 Map_Light	include	"_maps/Light.asm"

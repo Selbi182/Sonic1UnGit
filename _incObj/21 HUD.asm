@@ -37,7 +37,8 @@ HUD_Flash:	; Routine 2
 
 .display:
 		move.b	d0,obFrame(a0)				; set new HUD frame ID
-		jmp	(DisplaySprite).l			; display HUD
+		DisplaySprite
+		rts			; display HUD
 ; ===========================================================================
 
 Map_HUD:	include	"_maps/HUD.asm"

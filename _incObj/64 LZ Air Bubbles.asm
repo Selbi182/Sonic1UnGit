@@ -123,7 +123,8 @@ Bub_ChkWater:	; Routine 4
 		tst.b	obRender(a0)				; has bubble gone offscreen?
 		bpl.s	.delete					; if yes, delete it
 		move.w	#spr_prio1,d0
-		jmp	(DisplaySprite3).l			; display bubble
+		DisplaySprite_direct
+		rts
 
 
 	.delete:
@@ -137,7 +138,8 @@ Bub_Bursting:	; Routine 6
 		tst.b	obRender(a0)				; has bubble gone offscreen?
 		bpl.s	.delete					; if yes, delete it
 		move.w	#spr_prio1,d0
-		jmp	(DisplaySprite3).l			; display bubble
+		DisplaySprite_direct
+		rts
 
 
 	.delete:
@@ -254,7 +256,8 @@ Bub_BubbleMaker: ; Routine $A
 
 .displaydo:
 		move.w	#spr_prio1,d0
-		jmp	(DisplaySprite3).l			; display bubble
+		DisplaySprite_direct
+		rts
 
 ; ===========================================================================
 

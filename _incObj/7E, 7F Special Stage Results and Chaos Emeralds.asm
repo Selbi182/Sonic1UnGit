@@ -90,11 +90,15 @@ SSR_Move:	; Routine 2
 		cmpi.w	#$80+320+64,d0				; has item moved beyond $200 on x-axis?
 		bgt.s	.return					; if yes, branch
 		cmpi.w	#$80-64+16,d0				; has card moved beyond $50 on the x-axis (to the left)?
-		bgt.w	DisplaySprite				; if not, display card
+		bgt.s	.display				; if not, display card
 
 	; locret_C86A:
 	.return:
 		rts						; return
+
+	.display:
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 	; loc_C86C:
@@ -114,11 +118,12 @@ SSR_Wait:	; Routine 4, 8, $C, $10
 
 	; SSR_Display:
 	.display:
-		bra.w	DisplaySprite				; display card sprites
+		DisplaySprite
+		rts				; display card sprites
 ; ===========================================================================
 
 SSR_RingBonus:	; Routine 6
-		bsr.w	DisplaySprite				; keep displaying card sprites
+		DisplaySprite
 		move.b	#1,(f_endactbonus).w			; set time/ring bonus HUD update flag
 
 		moveq	#btnABC,d0		; is button A, B, or C...
@@ -168,7 +173,8 @@ SSR_RingBonus:	; Routine 6
 
 SSR_Exit:	; Routine $A, $12
 		move.w	#1,(f_restart).w			; signal to SS_NormalExit that it should exit
-		bra.w	DisplaySprite				; keep displaying cards during fade-out
+		DisplaySprite
+		rts				; keep displaying cards during fade-out
 ; ===========================================================================
 
 SSR_Continue:	; Routine $E
@@ -178,7 +184,8 @@ SSR_Continue:	; Routine $E
 		jsr	(QueueSound2).l				; play it
 		addq.b	#2,obRoutine(a0)			; set to SSR_Wait (10, before SSR_Exit 12)
 		move.w	#6*60,obTimeFrame(a0)			; set time delay to exit after continue animation to 6 seconds
-		bra.w	DisplaySprite				; keep displaying sprite
+		DisplaySprite
+		rts				; keep displaying sprite
 ; ===========================================================================
 
 ; loc_C91A:
@@ -190,7 +197,8 @@ SSR_ContAni:	; Routine $14
 
 	; SSR_Display2:
 	.display:
-		bra.w	DisplaySprite				; display mini-Sonic
+		DisplaySprite
+		rts				; display mini-Sonic
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -302,7 +310,8 @@ SSRC_Flash:	; Routine 2
 
 	; SSRC_Display:
 	.display:
-		bra.w	DisplaySprite				; display emerald sprite
+		DisplaySprite
+		rts				; display emerald sprite
 
 ; ===========================================================================
 

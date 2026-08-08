@@ -63,7 +63,8 @@ Flap_Animate:
 		bsr.w	SolidObject				; make the door solid
 
 	.display:
-		bra.w	RememberState				; display door, or delete it if offscreen
+		RememberState
+		rts				; display door, or delete it if offscreen
 
 ; ===========================================================================
 

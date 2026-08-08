@@ -90,7 +90,8 @@ MBlock_StandOn:	; Routine 4
 ; MBlock_ChkDel:
 MBlock_DisplayOrDelete:
 		out_of_range.w	DeleteObject,mblock_origX(a0)	; has platform gone out of range? if yes, delete it
-		bra.w	DisplaySprite				; display platform sprite
+		DisplaySprite
+		rts				; display platform sprite
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

@@ -259,7 +259,8 @@ Swing_UpdateSwingPosition:
 
 Swing_ChkDel:
 		out_of_range.w	.deleteAll,swing_origX(a0)	; has platform gone out of range? if yes, delete it with all links
-		bra.w	DisplaySprite				; display platform
+		DisplaySprite
+		rts				; display platform
 ; ---------------------------------------------------------------------------
 
 ; Swing_DelAll:
@@ -289,7 +290,8 @@ Swing_Delete:	; Routine 6/8 (unused?)
 ; Swing_Display:
 Swing_ChainLink: ; Routine $A
 		; Note: Chain links are updated and deleted through the parent object!
-		bra.w	DisplaySprite				; just display chain sprite
+		DisplaySprite
+		rts				; just display chain sprite
 
 ; ===========================================================================
 

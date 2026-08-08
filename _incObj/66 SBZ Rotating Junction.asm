@@ -29,7 +29,7 @@ Jun_Main:	; Routine 0
 ; ---------------------------------------------------------------------------
 
 	.loop:
-		bsr.w	FindFreeObj				; find a free object slot
+		jsr	(FindFreeObj).l				; find a free object slot
 		bne.s	.next					; if object RAM is full, branch
 		move.b	#id_Junction,obID(a1)			; load circular cover-up filler sprites object
 		addq.b	#4,obRoutine(a1)			; set to Jun_Display (do nothing but display)
@@ -98,7 +98,8 @@ Jun_Action:	; Routine 2
 ; ---------------------------------------------------------------------------
 
 Jun_Display:	; Routine 4
-		bra.w	RememberState				; display object, or delete it if out of range
+		RememberState
+		rts				; display object, or delete it if out of range
 ; ===========================================================================
 
 ; Jun_Release:
@@ -127,8 +128,9 @@ Jun_Inside:	; Routine 6
 
 .updateInside:
 		bsr.s	Jun_Rotate				; keep rotating and animating junction
-		bsr.s	Jun_ChgPos				; align Sonic's position while inside junction
-		bra.w	RememberState				; display object, or delete it if out of range
+		bsr.w	Jun_ChgPos				; align Sonic's position while inside junction
+		RememberState
+		rts				; display object, or delete it if out of range
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

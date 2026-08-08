@@ -55,7 +55,8 @@ Hog_Action:	; Routine 2
 		clr.b	hog_launched(a0)			; clear flag to launch another ball on next animation finish
 
 	.display:
-		bra.w	RememberState				; display sprite or delete if offscreen
+		RememberState
+		rts				; display sprite or delete if offscreen
 ; ---------------------------------------------------------------------------
 
 .launchBall:
@@ -79,7 +80,7 @@ Hog_Action:	; Routine 2
 		move.b	obSubtype(a0),obSubtype(a1)		; copy object type from Ball Hog (explosion timer in seconds)
 
 	.finish:
-		bra.s	.display				; branch to display
+		bra.w	.display				; branch to display
 
 
 ; ===========================================================================
@@ -164,7 +165,8 @@ CBal_Animate:
 		addi.w	#224,d0					; add screen height
 		cmp.w	obY(a0),d0				; has cannonball fallen off the level?
 		blo.w	DeleteObject				; if yes, delete it
-		bra.w	DisplaySprite				; otherwise, keep displaying sprite
+		DisplaySprite
+		rts				; otherwise, keep displaying sprite
 
 ; ===========================================================================
 

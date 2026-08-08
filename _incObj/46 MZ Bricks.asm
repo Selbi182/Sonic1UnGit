@@ -47,7 +47,8 @@ Brick_Action:	; Routine 2
 
 .chkdel:
 		out_of_range.w	DeleteObject
-		bra.w	DisplaySprite
+		DisplaySprite
+		rts
 ; ===========================================================================
 Brick_TypeIndex:dc.w Brick_Type00-Brick_TypeIndex
 		dc.w Brick_Type01-Brick_TypeIndex

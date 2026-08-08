@@ -8,7 +8,8 @@ SmashWall:
 		move.b	obRoutine(a0),d0
 		move.w	Smash_Index(pc,d0.w),d1
 		jsr	Smash_Index(pc,d1.w)
-		bra.w	RememberState
+		RememberState
+		rts
 ; ===========================================================================
 Smash_Index:	dc.w Smash_Main-Smash_Index
 		dc.w Smash_Solid-Smash_Index
@@ -88,7 +89,8 @@ Smash_Fragment:	; Routine 4
 		addq.l	#4,sp					; don't return to SmashWall
 		tst.b	obRender(a0)				; has fragment gone offscreen?
 		bpl.w	DeleteObject				; if yes, delete it
-		bra.w	DisplaySprite				; otherwise, keep displaying fragment sprite
+		DisplaySprite
+		rts				; otherwise, keep displaying fragment sprite
 
 
 ; ===========================================================================

@@ -42,7 +42,8 @@ Over_MoveIn:	; Routine 2
 		neg.w	d1
 	.updateXPos:
 		add.w	d1,obX(a0)				; change item's position
-		bra.w	DisplaySprite				; display sprite while moving in
+		DisplaySprite
+		rts				; display sprite while moving in
 ; ===========================================================================
 
 .conjoined:
@@ -60,7 +61,8 @@ Over_Wait:	; Routine 4
 		tst.w	obTimeFrame(a0)				; has time delay reached zero?
 		beq.s	.changeMode				; if yes, branch
 		subq.w	#1,obTimeFrame(a0)			; subtract 1 from time delay
-		bra.w	DisplaySprite				; keep displaying sprites
+		DisplaySprite
+		rts				; keep displaying sprites
 ; ---------------------------------------------------------------------------
 
 .changeMode:
@@ -77,4 +79,5 @@ Over_Wait:	; Routine 4
 		clr.l	(v_lamp_time).w				; clear stored lamppost time
 		move.w	#1,(f_restart).w			; restart level
 	.display:
-		bra.w	DisplaySprite				; display sprites
+		DisplaySprite
+		rts				; display sprites

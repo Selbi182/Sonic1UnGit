@@ -44,7 +44,7 @@ SpinDust_Main:
 		jsr	(LoadDynPLC).l				; update dust tiles in VRAM
 
 	.display:
-		jmp	(DisplaySprite).l			; display dust sprite
+		DisplaySprite
 
 	.hide:
 		rts						; don't display dust sprite

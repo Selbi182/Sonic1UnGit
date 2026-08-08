@@ -141,13 +141,14 @@ Anml_Main:	; Routine 0
 		move.w	#spr_prio6,obPriority(a0)			; set sprite priority (very low)
 		move.b	#16/2,obActWid(a0)			; set sprite display width
 		move.b	#8-1,obTimeFrame(a0)			; initial animation delay for flying animals (slow gravity)
-		bra.w	DisplaySprite				; display animal
+		DisplaySprite
+		rts				; display animal
 ; ===========================================================================
 
 Anml_FromEnemy:
 		addq.b	#2,obRoutine(a0)			; advance to Anml_ChkFloor
 
-		bsr.w	RandomNumber				; get random number to select animal to spawn
+		jsr	(RandomNumber).l				; get random number to select animal to spawn
 		andi.w	#1,d0					; limit to two choices
 		moveq	#0,d1					; clear d1
 		move.b	(v_zone).w,d1				; get current zone ID
@@ -189,13 +190,15 @@ Anml_FromEnemy:
 		move.b	d0,obFrame(a1)				; set result as points frame ID (100, 200, 500, 1000...)
 
 	.display:
-		bra.w	DisplaySprite				; display animal
+		DisplaySprite
+		rts				; display animal
 ; ---------------------------------------------------------------------------
 
 	.fromPrison:
 		move.b	#$12,obRoutine(a0)			; advance to Anml_FromPrison
 		clr.w	obVelX(a0)				; don't initially move horizontally
-		bra.w	DisplaySprite				; display animal
+		DisplaySprite
+		rts				; display animal
 ; ===========================================================================
 
 ; loc_912A:
@@ -228,7 +231,8 @@ Anml_ChkFloor:	; Routine 2
 		bchg	#sprite_xflip_bit,obRender(a0)		; flip X-orientation
 
 	.display:
-		bra.w	DisplaySprite				; display animal
+		DisplaySprite
+		rts				; display animal
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -251,10 +255,11 @@ Anml_NormalGravity: ; Routine 4/8/A/C/10
 
 	.chkDel:
 		tst.b	obSubtype(a0)				; is this an ending sequence animal?
-		bne.s	Anml_End_ChkDel				; if yes, use alternate offscreen handler
+		bne.w	Anml_End_ChkDel				; if yes, use alternate offscreen handler
 		tst.b	obRender(a0)				; has animal gone offscreen?
 		bpl.w	DeleteObject				; if yes, delete it
-		bra.w	DisplaySprite				; otherwise, display it
+		DisplaySprite
+		rts				; otherwise, display it
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -293,7 +298,8 @@ Anml_SlowGravity: ; Routine 6/E
 		bne.s	Anml_End_ChkDel				; if yes, use alternate offscreen handler
 		tst.b	obRender(a0)				; has animal gone offscreen?
 		bpl.w	DeleteObject				; if yes, delete it
-		bra.w	DisplaySprite				; otherwise, display it
+		DisplaySprite
+		rts				; otherwise, display it
 ; ===========================================================================
 
 ; loc_9224:
@@ -307,7 +313,8 @@ Anml_End_ChkDel:
 		bpl.w	DeleteObject				; if not, delete it
 
 	.display:
-		bra.w	DisplaySprite				; display animal
+		DisplaySprite
+		rts				; display animal
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -324,7 +331,8 @@ Anml_FromPrison: ; Routine 12
 		move.w	#spr_prio3,obPriority(a0)			; set sprite priority to be above prison
 
 	.display:
-		bra.w	DisplaySprite				; display animal
+		DisplaySprite
+		rts				; display animal
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -585,7 +593,8 @@ Poi_Slower:	; Routine 2
 		bpl.w	DeleteObject				; if yes, delete it
 		bsr.w	SpeedToPos				; update position based on velocity
 		addi.w	#$18,obVelY(a0)				; reduce upward speed
-		bra.w	DisplaySprite				; display points object
+		DisplaySprite
+		rts				; display points object
 
 ; ===========================================================================
 

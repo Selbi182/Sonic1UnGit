@@ -35,7 +35,8 @@ Buzz_Action:	; Routine 2
 
 		lea	(Ani_Buzz).l,a1				; load Buzz Bomber animation script
 		bsr.w	AnimateSprite				; animate with correct slope ID
-		bra.w	RememberState				; display sprite, or delete object if offscreen
+		RememberState
+		rts				; display sprite, or delete object if offscreen
 ; ===========================================================================
 Buzz_ActIndex:	dc.w Buzz_Action_Wait-Buzz_ActIndex		; 0
 		dc.w Buzz_Action_Move-Buzz_ActIndex		; 2
@@ -171,7 +172,7 @@ Msl_Main:	; Routine 0
 		move.b	#8,obRoutine(a0)			; set to Msl_FromNewt
 		move.b	#col_12x12|col_hurt,obColType(a0)	; set ReactToItem entry to $87 (damaging, 12x12)
 		move.b	#1,obAnim(a0)				; set animation directly to ".missile"
-		bra.s	Msl_FromNewt_Animate			; branch to animate and move missile
+		bra.w	Msl_FromNewt_Animate			; branch to animate and move missile
 ; ===========================================================================
 
 Msl_Animate:	; Routine 2
@@ -182,7 +183,8 @@ Msl_Animate:	; Routine 2
 	.display:
 		lea	(Ani_Missile).l,a1			; load animation script
 		bsr.w	AnimateSprite				; animate missile (animation 0 ".flare" will advance obRoutine once it's finished)
-		bra.w	DisplaySprite				; display missile sprite
+		DisplaySprite
+		rts				; display missile sprite
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -214,7 +216,8 @@ Msl_FromBuzz:	; Routine 4
 		blo.s	Msl_Delete				; if yes, delete it
 		lea	(Ani_Missile).l,a1			; load animation script
 		bsr.w	AnimateSprite				; animate missile
-		bra.w	DisplaySprite				; display missile
+		DisplaySprite
+		rts				; display missile
 ; ===========================================================================
 
 Msl_Delete:	; Routine 6
@@ -230,7 +233,7 @@ Msl_FromNewt:	; Routine 8
 Msl_FromNewt_Animate:
 		lea	(Ani_Missile).l,a1			; load animation script
 		bsr.w	AnimateSprite				; animate missile
-		bsr.w	DisplaySprite				; display missile sprite
+		DisplaySprite				; display missile sprite
 		rts						; return
 ; ===========================================================================
 

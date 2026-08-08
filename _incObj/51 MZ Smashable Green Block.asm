@@ -8,7 +8,8 @@ SmashBlock:
 		move.b	obRoutine(a0),d0
 		move.w	Smab_Index(pc,d0.w),d1
 		jsr	Smab_Index(pc,d1.w)
-		bra.w	RememberState
+		RememberState
+		rts
 ; ===========================================================================
 Smab_Index:	dc.w Smab_Main-Smab_Index
 		dc.w Smab_Solid-Smab_Index
@@ -103,7 +104,8 @@ Smab_Fragment:	; Routine 4
 		addq.l	#4,sp					; don't return to SmashBlock
 		tst.b	obRender(a0)				; has fragment gone offscreen?
 		bpl.w	DeleteObject				; if yes, delete it
-		bra.w	DisplaySprite				; otherwise, keep displaying fragment sprite
+		DisplaySprite
+		rts				; otherwise, keep displaying fragment sprite
 
 ; ===========================================================================
 Smab_Speeds:	;  x-speed, y-speed

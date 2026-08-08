@@ -30,7 +30,8 @@ Rock_Solid:	; Routine 2
 		bsr.w	SolidObject				; make rock solid for Sonic
 
 		out_of_range.w	DeleteObject			; has object gone out of range? if yes, delete it
-		bra.w	DisplaySprite				; otherwise, display object
+		DisplaySprite
+		rts				; otherwise, display object
 
 ; ===========================================================================
 

@@ -35,7 +35,8 @@ Harp_Move:	; Routine 2
 		move.b	obFrame(a0),d0				; get current frame number after animations have run
 		move.b	Harp_ColTypes(pc,d0.w),obColType(a0)	; get collision type based on current harpoon frame ID
 
-		bra.w	RememberState				; display harpoon or delete if out of range
+		RememberState
+		rts				; display harpoon or delete if out of range
 
 ; ===========================================================================
 Harp_ColTypes:	dc.b col_16x8|col_hurt	; frame 0, sideways, retracted
@@ -55,7 +56,8 @@ Harp_Wait:	; Routine 4
 		bchg	#0,obAnim(a0)				; toggle between extending/retracting animation
 
 	.display:
-		bra.w	RememberState				; display harpoon or delete if out of range
+		RememberState
+		rts				; display harpoon or delete if out of range
 ; ===========================================================================
 
 		include	"_anim/Harpoon.asm"

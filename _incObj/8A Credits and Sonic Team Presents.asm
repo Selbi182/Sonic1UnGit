@@ -39,7 +39,8 @@ Cred_Main:	; Routine 0
 ; ===========================================================================
 
 Cred_Display:	; Routine 2
-		jmp	(DisplaySprite).l			; just display credits sprite
+		DisplaySprite
+		rts			; just display credits sprite
 ; ===========================================================================
 
 Map_Cred:	include	"_maps/Credits.asm"

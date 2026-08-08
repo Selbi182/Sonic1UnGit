@@ -287,7 +287,7 @@ React_BadnikHit:
 		move.w	#1000,d0				; give 10000 points from that point onward
 		move.w	#5*2,exitem_pointsframe(a1)		; use frame 5 for points object (10000)
 	.addPoints:
-		bsr.w	AddPoints				; add d0 to current score
+		jsr	(AddPoints).l				; add d0 to current score
 
 		; Change badnik into gray explosion
 		move.b	#id_ExplosionItem,obID(a1)		; change badnik into an to explosion/animal object

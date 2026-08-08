@@ -10,7 +10,8 @@ GlassBlock:
 		jsr	Glass_Index(pc,d1.w)
 
 		out_of_range.w	.delete
-		bra.w	DisplaySprite
+		DisplaySprite
+		rts
 
 	.delete:
 		bra.w	DeleteObject

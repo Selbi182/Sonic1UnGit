@@ -46,7 +46,8 @@ Bom_Action:	; Routine 2
 
 		lea	(Ani_Bomb).l,a1
 		bsr.w	AnimateSprite
-		bra.w	RememberState
+		RememberState
+		rts
 ; ===========================================================================
 Bom_ActIndex:	dc.w Bom_Action_Waiting-Bom_ActIndex		; 0
 		dc.w Bom_Action_Walking-Bom_ActIndex		; 2
@@ -155,7 +156,8 @@ Bom_Fuse:	; Routine 4
 
 		lea	(Ani_Bomb).l,a1				; load animation script
 		bsr.w	AnimateSprite				; animate fuse
-		bra.w	RememberState				; display or delete fuse
+		RememberState
+		rts				; display or delete fuse
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to advance burning the fuse, and spawn shrapnel on expiration.
@@ -213,7 +215,8 @@ Bom_Shrapnel:	; Routine 6
 
 		tst.b	obRender(a0)				; has shrapnel gone offscreen?
 		bpl.w	DeleteObject				; if yes, delete it
-		bra.w	DisplaySprite				; otherwise, display shrapnel
+		DisplaySprite
+		rts				; otherwise, display shrapnel
 ; ===========================================================================
 
 Bom_ShrSpeed:	;    X-vel  Y-vel

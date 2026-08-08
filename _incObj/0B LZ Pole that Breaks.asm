@@ -105,7 +105,8 @@ Pole_Action:	; Routine 2
 ; ---------------------------------------------------------------------------
 
 Pole_Display:	; Routine 4
-		bra.w	RememberState				; display pole, or delete it if out of range
+		RememberState
+		rts				; display pole, or delete it if out of range
 
 ; ===========================================================================
 

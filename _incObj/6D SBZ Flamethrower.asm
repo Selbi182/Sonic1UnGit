@@ -69,7 +69,8 @@ Flame_Animate:
 
 	.display:
 		out_of_range.w	DeleteObject			; has object gone out of range? if yes, delete it
-		bra.w	DisplaySprite				; display flamethrower sprite
+		DisplaySprite
+		rts				; display flamethrower sprite
 
 ; ===========================================================================
 

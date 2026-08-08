@@ -89,7 +89,8 @@ Yad_Action:	; Routine 2
 
 		lea	(Ani_Yad).l,a1
 		bsr.w	AnimateSprite
-		bra.w	RememberState
+		RememberState
+		rts
 ; ===========================================================================
 Yad_ActIndex:	dc.w Yad_Action_Wait-Yad_ActIndex	; 0
 		dc.w Yad_Action_Move-Yad_ActIndex	; 2

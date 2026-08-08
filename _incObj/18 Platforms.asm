@@ -325,7 +325,8 @@ Plat_ChangeMotion:
 
 Plat_ChkDel:
 		out_of_range.s	Plat_Delete,plat_origX(a0)	; has platform gone out of range? if yes, delete it
-		bra.w	DisplaySprite				; display platform sprite
+		DisplaySprite
+		rts				; display platform sprite
 ; ===========================================================================
 
 Plat_Delete:	; Routine 6

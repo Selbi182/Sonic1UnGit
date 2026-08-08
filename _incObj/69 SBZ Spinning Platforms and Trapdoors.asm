@@ -55,7 +55,7 @@ Spin_Main:	; Routine 0
 		subq.w	#1,d1					; subtract 1 to turn into bitmask
 		move.w	d1,spin_syncmask(a0)			; set synchronization toggle bitmask
 
-		bra.s	Spin_Spinner				; go straight to spinning platform logic
+		bra.w	Spin_Spinner				; go straight to spinning platform logic
 ; ===========================================================================
 
 Spin_Trapdoor:	; Routine 2
@@ -74,7 +74,7 @@ Spin_Trapdoor:	; Routine 2
 		jsr	(AnimateSprite).l			; (animations stay on last trapdoor frame indefinitely)
 
 		tst.b	obFrame(a0)				; is frame number 0 displayed? (trapdoor fully closed)
-		bne.s	.notSolid				; if not, branch
+		bne.w	.notSolid				; if not, branch
 		move.w	#128/2+sonic_solid_width,d1		; collision width
 		move.w	#24/2,d2				; collision height (initial)
 		move.w	d2,d3					; collision height (stood-on)
@@ -82,7 +82,8 @@ Spin_Trapdoor:	; Routine 2
 		move.w	obX(a0),d4				; collision X-position (stood-on)
 		bsr.w	SolidObject				; make trapdoor solid
 
-		bra.w	RememberState				; display trapdoor, or delete it if out of range
+		RememberState
+		rts				; display trapdoor, or delete it if out of range
 ; ---------------------------------------------------------------------------
 
 .notSolid:
@@ -94,7 +95,8 @@ Spin_Trapdoor:	; Routine 2
 		clr.b	obSolid(a0)				; clear trapdoor's solidity flag
 
 	.display:
-		bra.w	RememberState				; display trapdoor, or delete it if out of range
+		RememberState
+		rts				; display trapdoor, or delete it if out of range
 ; ===========================================================================
 
 Spin_Spinner:	; Routine 4
@@ -117,7 +119,7 @@ Spin_Spinner:	; Routine 4
 		jsr	(AnimateSprite).l			; (animations stay on last frame (ID 0) indefinitely)
 
 		tst.b	obFrame(a0)				; is frame number 0 displayed? (platform not spinning)
-		bne.s	.notSolid				; if not, branch
+		bne.w	.notSolid				; if not, branch
 		move.w	#32/2+sonic_solid_width,d1		; collision width
 		move.w	#14/2,d2				; collision height (initial)
 		move.w	d2,d3					; collision height (stood-on)
@@ -125,7 +127,8 @@ Spin_Spinner:	; Routine 4
 		move.w	obX(a0),d4				; collision X-position (stood-on)
 		bsr.w	SolidObject				; make platform solid
 
-		bra.w	RememberState				; display platform, or delete it if out of range
+		RememberState
+		rts				; display platform, or delete it if out of range
 ; ---------------------------------------------------------------------------
 
 .notSolid:
@@ -137,7 +140,8 @@ Spin_Spinner:	; Routine 4
 		clr.b	obSolid(a0)				; clear platform's solidity flag
 
 	.display:
-		bra.w	RememberState				; display platform, or delete it if out of range
+		RememberState
+		rts				; display platform, or delete it if out of range
 
 ; ===========================================================================
 

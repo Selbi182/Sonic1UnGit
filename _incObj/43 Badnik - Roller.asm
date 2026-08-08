@@ -22,7 +22,7 @@ Roll_Main:	; Routine 0
 
 		; Make the Roller fall until it has collided with the floor (while invisible)
 		bsr.w	ObjectFall				; increase gravity and update position
-		bsr.w	ObjFloorDist				; get distance between Roller and floor
+		jsr	(ObjFloorDist).l				; get distance between Roller and floor
 		tst.w	d1					; has Roller hit the floor?
 		bpl.s	.hide					; if not, branch
 		add.w	d1,obY(a0)				; match object's position with the floor
@@ -48,7 +48,8 @@ Roll_Action:	; Routine 2
 
 		lea	(Ani_Roll).l,a1				; load animation script
 		bsr.w	AnimateSprite				; animate Roller
-		bra.w	RememberState				; display or handle offscreen deletion
+		RememberState
+		rts				; display or handle offscreen deletion
 
 ; ===========================================================================
 Roll_ActIndex:	dc.w Roll_Action_FromLeft-Roll_ActIndex		; 0
@@ -97,7 +98,7 @@ Roll_Action_Rolling:
 		bsr.w	Roll_Action_StopAndUnfold		; (only once) make Roller stop and unfold 48px left of Sonic
 		bsr.w	SpeedToPos				; update Roller's position
 
-		bsr.w	ObjFloorDist				; find Roller's distance to floor
+		jsr	(ObjFloorDist).l				; find Roller's distance to floor
 		cmpi.w	#-8,d1					; is there a steep upward slope ahead?
 		blt.s	.ledgeHit				; if yes, branch
 		cmpi.w	#$C,d1					; is there a large drop ahead?
@@ -121,7 +122,7 @@ Roll_Action_Jumping:
 
 		tst.w	obVelY(a0)				; is Roller still going upwards?
 		bmi.s	.return					; if yes, branch
-		bsr.w	ObjFloorDist				; get distance to floor
+		jsr	(ObjFloorDist).l				; get distance to floor
 		tst.w	d1					; has Roller hit the floor again?
 		bpl.s	.return					; if not, branch
 

@@ -53,7 +53,8 @@ Crab_Action:	; Routine 2
 
 		lea	(Ani_Crab).l,a1				; load Crabmeat animation script
 		bsr.w	AnimateSprite				; animate with correct slope ID
-		bra.w	RememberState				; display sprite, or delete object if offscreen
+		RememberState
+		rts				; display sprite, or delete object if offscreen
 ; ===========================================================================
 Crab_ActIndex:	dc.w Crab_Action_WaitFire-Crab_ActIndex
 		dc.w Crab_Action_Scuttle-Crab_ActIndex
@@ -224,7 +225,8 @@ Crab_BallMove:	; Routine 8
 		addi.w	#224,d0					; add screen height
 		cmp.w	obY(a0),d0				; have balls moved below the level boundary?
 		blo.s	.delete					; if yes, branch
-		bra.w	DisplaySprite				; display balls
+		DisplaySprite
+		rts				; display balls
 
 	.delete:
 		bra.w	DeleteObject				; delete balls

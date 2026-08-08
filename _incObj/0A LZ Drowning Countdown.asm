@@ -89,12 +89,13 @@ Drown_ChkWater:	; Routine 4
 		add.w	drown_origX(a0),d0			; add initial X-position
 		move.w	d0,obX(a0)				; set wobbled X-position
 
-		bsr.s	Drown_ShowNumber			; handle number bubbles
+		bsr.w	Drown_ShowNumber			; handle number bubbles
 
 		jsr	(SpeedToPos).l				; update bubble position
 		tst.b	obRender(a0)				; has bubble gone offscreen?
 		bpl.s	.delete					; if yes, delete it
-		jmp	(DisplaySprite).l			; display bubble
+		DisplaySprite
+		rts			; display bubble
 
 	.delete:
 		jmp	(DeleteObject).l			; delete bubble
@@ -105,7 +106,8 @@ Drown_Display:	; Routine 6, Routine $E
 
 		lea	(Ani_Drown).l,a1			; load animation scripts
 		jsr	(AnimateSprite).l			; (note: all bubble animations advance obRoutine)
-		jmp	(DisplaySprite).l			; display bubble
+		DisplaySprite
+		rts			; display bubble
 ; ===========================================================================
 
 Drown_Delete:	; Routine 8, Routine $10
@@ -128,7 +130,8 @@ Drown_AirLeft:	; Routine $C
 		jsr	(AnimateSprite).l
 		tst.b	obRender(a0)				; has bubble gone offscreen?
 		bpl.s	.delete					; if yes, delete it
-		jmp	(DisplaySprite).l			; display bubble
+		DisplaySprite
+		rts			; display bubble
 
 	.delete:
 		jmp	(DeleteObject).l			; delete bubble

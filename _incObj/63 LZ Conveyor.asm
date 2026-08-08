@@ -12,7 +12,8 @@ LabyrinthConvey:
 		out_of_range.s	.outOfRange,lcon_baseX(a0)	; has platform object gone out of range? if yes, branch
 
 	.display:
-		bra.w	DisplaySprite				; display platform object
+		DisplaySprite
+		rts				; display platform object
 ; ---------------------------------------------------------------------------
 
 .outOfRange:
@@ -199,7 +200,8 @@ LCon_Wheel:	; Routine 6
 
 	.display:
 		addq.l	#4,sp					; skip returning to "LabyrinthConvey:" to avoid its custom deletion logic
-		bra.w	RememberState				; just display and delete the wheel sprite normally
+		RememberState
+		rts				; just display and delete the wheel sprite normally
 
 
 ; ===========================================================================

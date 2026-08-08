@@ -73,7 +73,8 @@ SonicSS_NoDebug:
 		jsr	SonicSS_Modes(pc,d1.w)			; jump to that mode
 
 		jsr	(Sonic_LoadGfx).l			; update Sonic's graphics if necessary (accessing Obj01)
-		jmp	(DisplaySprite).l			; display Sonic's sprites
+		DisplaySprite
+		rts
 
 
 ; ===========================================================================
@@ -401,7 +402,8 @@ SonicSS_ExitStage:
 		jsr	(Sonic_Animate).l			; animate Sonic (accessing Obj01)
 		jsr	(Sonic_LoadGfx).l			; update Sonic's graphics if necessary (accessing Obj01)
 		bsr.w	SS_FixCamera				; keep camera centered on Sonic
-		jmp	(DisplaySprite).l			; display Sonic's sprites
+		DisplaySprite
+		rts
 ; End of function SonicSS_ExitStage
 
 
@@ -425,7 +427,8 @@ SonicSS_ExitStage_Unused:
 		jsr	(Sonic_Animate).l			; animate Sonic (accessing Obj01)
 		jsr	(Sonic_LoadGfx).l			; update Sonic's graphics if necessary (accessing Obj01)
 		bsr.w	SS_FixCamera				; keep camera centered on Sonic
-		jmp	(DisplaySprite).l			; display Sonic's sprites
+		DisplaySprite
+		rts
 ; End of function SonicSS_ExitStage_Unused
 
 

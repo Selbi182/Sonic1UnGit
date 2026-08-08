@@ -121,7 +121,7 @@ TimeOver:
 
 		lea	(v_player).w,a0				; load Sonic object
 		movea.l	a0,a2					; avoid dangling pointer
-		bsr.w	KillSonic				; force kill Sonic
+		jsr	(KillSonic).l				; force kill Sonic
 
 		move.b	#1,(f_timeover).w			; set flag to load time over objects
 		rts						; return

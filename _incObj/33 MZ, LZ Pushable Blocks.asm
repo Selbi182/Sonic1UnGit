@@ -88,7 +88,8 @@ PushB_Action:	; Routine 2
 
 PushB_Display:
 		out_of_range.s	PushB_ChkWithinOrigin		; is block offscreen (current X-position)? if yes, branch
-		bra.w	DisplaySprite				; otherwise, keep displaying block sprite
+		DisplaySprite
+		rts				; otherwise, keep displaying block sprite
 ; ===========================================================================
 
 PushB_ChkWithinOrigin:

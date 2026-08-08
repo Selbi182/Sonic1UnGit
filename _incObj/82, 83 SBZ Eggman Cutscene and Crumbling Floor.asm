@@ -81,7 +81,8 @@ SEgg_Eggman:	; Routine 2
 		jsr	SEgg_EggIndex(pc,d1.w)			; jump into the table (but return later)
 		lea	Ani_SEgg(pc),a1				; return after the routine has been executed to load and animate sprites
 		jsr	(AnimateSprite).l
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 SEgg_EggIndex:	dc.w SEgg_ChkSonic-SEgg_EggIndex
 		dc.w SEgg_PreLeap-SEgg_EggIndex
@@ -187,7 +188,8 @@ SEgg_SwChk:
 		addq.b	#2,ob2ndRout(a0)			; increment routine counter
 
 SEgg_SwDisplay:
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 
@@ -310,7 +312,8 @@ FFloor_AllGone:	; Routine 6
 FFloor_Block:	; Routine 8
 		cmpi.w	#"GO",SEgg_ChildCmd(a0)			; is object set to disintegrate?
 		beq.s	FFloor_BlockBreak			; if yes, branch
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 ; loc_19C80:
@@ -318,7 +321,8 @@ FFloor_Frag:	; Routine $A
 		tst.b	obRender(a0)				; is the object on screen?
 		bpl.w	FalseFloor_Delete			; if no, branch
 		jsr	(ObjectFall).l
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 FFloor_BlockBreak:
@@ -365,7 +369,8 @@ FFloor_MakeFrag:
 FFloor_BreakSnd:
 		move.w	#sfx_WallSmash,d0
 		jsr	(QueueSound2).l				; play smashing sound
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 
 ; ===========================================================================
 FFloor_FragSpeed:

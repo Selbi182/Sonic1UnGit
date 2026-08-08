@@ -60,7 +60,8 @@ Moto_Action:	; Routine 2
 
 		lea	(Ani_Moto).l,a1				; load animation script
 		bsr.w	AnimateSprite				; animate Motobug
-		bra.w	RememberState
+		RememberState
+		rts
 
 ; ===========================================================================
 Moto_ActIndex:	dc.w Moto_Action_Ledge-Moto_ActIndex		; 0 - waiting at a ledge
@@ -117,7 +118,8 @@ Moto_Action_Drive:
 Moto_Smoke_Animate: ; Routine 4
 		lea	(Ani_Moto).l,a1				; load animation script
 		bsr.w	AnimateSprite				; advance animation (for smoke, obRoutine will increase on finish)
-		bra.w	DisplaySprite				; display smoke sprite
+		DisplaySprite
+		rts				; display smoke sprite
 ; ===========================================================================
 
 Moto_Smoke_Delete: ; Routine 6

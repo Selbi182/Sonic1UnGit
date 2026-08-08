@@ -14,7 +14,8 @@ SpinConvey:
 		out_of_range.s	.outOfRange,spinc_baseX(a0)	; has platform gone out of range? if yes, branch
 
 	.display:
-		jmp	(DisplaySprite).l			; display platform object
+		DisplaySprite
+		rts			; display platform object
 ; ---------------------------------------------------------------------------
 
 .outOfRange:
@@ -168,7 +169,7 @@ SpinC_Solid:	; Routine 2
 		move.w	d2,d3					; set platform collision height (stood-on)
 		addq.w	#1,d3					; +1px while stood-on
 		move.w	(sp)+,d4				; restore previous X-position as input for SolidObject
-		bra.w	SolidObject				; make platform solid
+		jmp	(SolidObject).l				; make platform solid
 ; ---------------------------------------------------------------------------
 
 .spinning:

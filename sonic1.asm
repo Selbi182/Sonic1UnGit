@@ -3967,7 +3967,6 @@ Map_Over:	include	"_maps/Game Over.asm"
 		include	"_incObj/_ExecuteObjects.asm"
 		include	"_incObj/_ObjectPointers.asm"
 		include	"_incObj/sub ObjectFall & SpeedToPos.asm"
-		include	"_incObj/sub DisplaySprite.asm"
 		include	"_incObj/sub DeleteObject.asm"
 		include	"_inc/BuildSprites.asm"
 		include	"_incObj/sub ChkObjectVisible.asm"
@@ -3991,7 +3990,6 @@ Map_Over:	include	"_maps/Game Over.asm"
 		include	"_incObj/4E MZ Wall of Lava.asm"
 		include	"_incObj/54 MZ Invisible Lava Tag.asm"
 		include	"_incObj/40 Badnik - Moto Bug.asm"
-		include	"_incObj/sub RememberState.asm"
 		include	"_incObj/50 Badnik - Yadrin.asm"
 		include	"_incObj/sub SolidObject.asm"
 		include	"_incObj/51 MZ Smashable Green Block.asm"
@@ -4023,6 +4021,7 @@ Map_Over:	include	"_maps/Game Over.asm"
 ; ===========================================================================
 ; >>> Main Sonic player object
 		include	"_incObj/01 Sonic.asm"
+		include	"_incObj/Sonic ReactToItem.asm"
 		include	"_incObj/05 SpinDust.asm"
 		include	"_incObj/06 AfterImage.asm"
 
@@ -4076,11 +4075,6 @@ Map_BossItems:	include	"_maps/Boss Items.asm"
 		include	"_incObj/82, 83 SBZ Eggman Cutscene and Crumbling Floor.asm"
 		include	"_incObj/85,84,86 Boss - FZ Main, Cylinders, and Plasma Balls.asm"
 		include	"_incObj/3E Prison Capsule.asm"
-
-
-; ===========================================================================
-; >>> Object-to-object touch response handler for Sonic
-		include	"_incObj/Sonic ReactToItem.asm"
 
 
 ; ===========================================================================

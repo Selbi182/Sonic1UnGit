@@ -58,12 +58,13 @@ Gird_Action:	; Routine 2
 		move.b	obHeight(a0),d2				; get object height as solidity height
 		move.w	d2,d3					; d2 = initial, d3 = while stood-on
 		addq.w	#1,d3					; +1px for stood-on height
-		bsr.w	SolidObject				; make girder blocks solid
+		jsr	(SolidObject).l				; make girder blocks solid
 ; ---------------------------------------------------------------------------
 
 	.chkdel:
 		out_of_range.s	.delete,gird_origX(a0)		; has object gone out of range (initial X-position)? if yes, branch
-		jmp	(DisplaySprite).l			; display girder block
+		DisplaySprite
+		rts			; display girder block
 
 	.delete:
 		jmp	(DeleteObject).l			; delete girder block

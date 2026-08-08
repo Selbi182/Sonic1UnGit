@@ -36,7 +36,8 @@ Pyl_Display:	; Routine 2
 		addi.w	#$100,d1				; add base Y-position to move it into visible frame
 		move.w	d1,obScreenY(a0)			; set new Y-position
 
-		bra.w	DisplaySprite				; keep displaying foreground pylons
+		DisplaySprite
+		rts				; keep displaying foreground pylons
 ; ===========================================================================
 
 Map_Pylon:	include	"_maps/Pylon.asm"

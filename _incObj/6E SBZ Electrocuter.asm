@@ -52,7 +52,8 @@ Elec_Shock:	; Routine 2
 		move.b	#col_144x16|col_hurt,obColType(a0)	; if yes, make object hurt Sonic this frame
 
 	.display:
-		bra.w	RememberState				; display sprite or delete if offscreen
+		RememberState
+		rts				; display sprite or delete if offscreen
 
 ; ===========================================================================
 

@@ -64,10 +64,11 @@ ADoor_Animate:
 		move.w	d2,d3					; collision height (stood-on)
 		addq.w	#1,d3					; stood-on height is +1px
 		move.w	obX(a0),d4				; object position (stood-on)
-		bsr.w	SolidObject				; make the door solid
+		jsr	(SolidObject).l				; make the door solid
 
 	.display:
-		bra.w	RememberState				; display door, or delete it if offscreen
+		RememberState
+		rts				; display door, or delete it if offscreen
 
 ; ===========================================================================
 

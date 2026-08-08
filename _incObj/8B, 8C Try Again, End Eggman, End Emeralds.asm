@@ -8,7 +8,8 @@ EndEggman:
 		move.b	obRoutine(a0),d0
 		move.w	EEgg_Index(pc,d0.w),d1
 		jsr	EEgg_Index(pc,d1.w)
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 EEgg_Index:	dc.w EEgg_Main-EEgg_Index	; 0
 		dc.w EEgg_Animate-EEgg_Index	; 2
@@ -88,7 +89,8 @@ TryChaos:
 		move.b	obRoutine(a0),d0
 		move.w	TCha_Index(pc,d0.w),d1
 		jsr	TCha_Index(pc,d1.w)
-		jmp	(DisplaySprite).l
+		DisplaySprite
+		rts
 ; ===========================================================================
 TCha_Index:	dc.w TCha_LoadEmeralds-TCha_Index	; 0
 		dc.w TCha_JuggleEmeralds-TCha_Index	; 2

@@ -13,8 +13,8 @@ DeleteObject:
 
 DeleteChild:	; object is already in a1
 		moveq	#0,d1					; overwrite with zeroes
-		moveq	#object_size/4-1,d0			; cover all $40 bytes of object RAM slot
-DelObj_Loop:	move.l	d1,(a1)+				; clear the object RAM
-		dbf	d0,DelObj_Loop				; repeat for length of object RAM
+	rept	object_size/4
+		move.l	d1,(a1)+				; clear the object RAM
+	endr
 		rts						; deletion done
 ; End of function DeleteObject

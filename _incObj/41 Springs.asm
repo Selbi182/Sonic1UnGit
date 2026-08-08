@@ -13,7 +13,8 @@ Springs:
 
 	.skip:
 		out_of_range_with_y_check.w	DeleteObject,obX(a0),obY(a0)
-		bra.w	DisplaySprite
+		DisplaySprite
+		rts
 ; ===========================================================================
 Spring_Index:	dc.w Spring_Main-Spring_Index		; 0
 		dc.w Spring_Up-Spring_Index		; 2
