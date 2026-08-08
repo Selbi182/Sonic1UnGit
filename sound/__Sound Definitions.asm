@@ -117,3 +117,173 @@ Sound_ExIndex:	sndtable flg__First
 	snddef	SpeedUpMusic,	bgm_Speedup
 	snddef	SlowDownMusic,	bgm_Slowdown
 	snddef	StopAllSound,	bgm_Stop
+
+
+
+; ===========================================================================
+; Relocated to have it all be in one file
+sound_defs_include	macro
+
+; ---------------------------------------------------------------------------
+; SMPS2ASM - A collection of macros that make SMPS's bytecode human-readable.
+; ---------------------------------------------------------------------------
+SonicDriverVer = 1 ; Tell SMPS2ASM that we're using Sonic 1's driver.
+		include "sound/_smps2asm_inc.asm"
+
+; ---------------------------------------------------------------------------
+; Music data
+; ---------------------------------------------------------------------------
+Music81:	include "sound/music/Mus81 - GHZ.asm"
+		even
+Music82:	include "sound/music/Mus82 - LZ.asm"
+		even
+Music83:	include "sound/music/Mus83 - MZ.asm"
+		even
+Music84:	include "sound/music/Mus84 - SLZ.asm"
+		even
+Music85:	include "sound/music/Mus85 - SYZ.asm"
+		even
+Music86:	include "sound/music/Mus86 - SBZ.asm"
+		even
+Music87:	include "sound/music/Mus87 - Invincibility.asm"
+		even
+Music88:	include "sound/music/Mus88 - Extra Life.asm"
+		even
+Music89:	include "sound/music/Mus89 - Special Stage.asm"
+		even
+Music8A:	include "sound/music/Mus8A - Title Screen.asm"
+		even
+Music8B:	include "sound/music/Mus8B - Ending.asm"
+		even
+Music8C:	include "sound/music/Mus8C - Boss.asm"
+		even
+Music8D:	include "sound/music/Mus8D - FZ.asm"
+		even
+Music8E:	include "sound/music/Mus8E - Sonic Got Through.asm"
+		even
+Music8F:	include "sound/music/Mus8F - Game Over.asm"
+		even
+Music90:	include "sound/music/Mus90 - Continue Screen.asm"
+		even
+Music91:	include "sound/music/Mus91 - Credits.asm"
+		even
+Music92:	include "sound/music/Mus92 - Drowning.asm"
+		even
+Music93:	include "sound/music/Mus93 - Get Emerald.asm"
+		even
+
+; ---------------------------------------------------------------------------
+; Sound effect data
+; ---------------------------------------------------------------------------
+SoundA0:	include "sound/sfx/SndA0 - Jump.asm"
+		even
+SoundA1:	include "sound/sfx/SndA1 - Lamppost.asm"
+		even
+SoundA2:	include "sound/sfx/SndA2.asm"
+		even
+SoundA3:	include "sound/sfx/SndA3 - Death.asm"
+		even
+SoundA4:	include "sound/sfx/SndA4 - Skid.asm"
+		even
+SoundA5:	include "sound/sfx/SndA5.asm"
+		even
+SoundA6:	include "sound/sfx/SndA6 - Hit Spikes.asm"
+		even
+SoundA7:	include "sound/sfx/SndA7 - Push Block.asm"
+		even
+SoundA8:	include "sound/sfx/SndA8 - SS Goal.asm"
+		even
+SoundA9:	include "sound/sfx/SndA9 - SS Item.asm"
+		even
+SoundAA:	include "sound/sfx/SndAA - Splash.asm"
+		even
+SoundAB:	include "sound/sfx/SndAB.asm"
+		even
+SoundAC:	include "sound/sfx/SndAC - Hit Boss.asm"
+		even
+SoundAD:	include "sound/sfx/SndAD - Get Bubble.asm"
+		even
+SoundAE:	include "sound/sfx/SndAE - Fireball.asm"
+		even
+SoundAF:	include "sound/sfx/SndAF - Shield.asm"
+		even
+SoundB0:	include "sound/sfx/SndB0 - Saw.asm"
+		even
+SoundB1:	include "sound/sfx/SndB1 - Electric.asm"
+		even
+SoundB2:	include "sound/sfx/SndB2 - Drown Death.asm"
+		even
+SoundB3:	include "sound/sfx/SndB3 - Flamethrower.asm"
+		even
+SoundB4:	include "sound/sfx/SndB4 - Bumper.asm"
+		even
+SoundB5:	include "sound/sfx/SndB5 - Ring.asm"
+		even
+SoundB6:	include "sound/sfx/SndB6 - Spikes Move.asm"
+		even
+SoundB7:	include "sound/sfx/SndB7 - Rumbling.asm"
+		even
+SoundB8:	include "sound/sfx/SndB8.asm"
+		even
+SoundB9:	include "sound/sfx/SndB9 - Collapse.asm"
+		even
+SoundBA:	include "sound/sfx/SndBA - SS Glass.asm"
+		even
+SoundBB:	include "sound/sfx/SndBB - Door.asm"
+		even
+SoundBC:	include "sound/sfx/SndBC - Teleport.asm"
+		even
+SoundBD:	include "sound/sfx/SndBD - ChainStomp.asm"
+		even
+SoundBE:	include "sound/sfx/SndBE - Roll.asm"
+		even
+SoundBF:	include "sound/sfx/SndBF - Get Continue.asm"
+		even
+SoundC0:	include "sound/sfx/SndC0 - Basaran Flap.asm"
+		even
+SoundC1:	include "sound/sfx/SndC1 - Break Item.asm"
+		even
+SoundC2:	include "sound/sfx/SndC2 - Drown Warning.asm"
+		even
+SoundC3:	include "sound/sfx/SndC3 - Giant Ring.asm"
+		even
+SoundC4:	include "sound/sfx/SndC4 - Bomb.asm"
+		even
+SoundC5:	include "sound/sfx/SndC5 - Cash Register.asm"
+		even
+SoundC6:	include "sound/sfx/SndC6 - Ring Loss.asm"
+		even
+SoundC7:	include "sound/sfx/SndC7 - Chain Rising.asm"
+		even
+SoundC8:	include "sound/sfx/SndC8 - Burning.asm"
+		even
+SoundC9:	include "sound/sfx/SndC9 - Hidden Bonus.asm"
+		even
+SoundCA:	include "sound/sfx/SndCA - Enter SS.asm"
+		even
+SoundCB:	include "sound/sfx/SndCB - Wall Smash.asm"
+		even
+SoundCC:	include "sound/sfx/SndCC - Spring.asm"
+		even
+SoundCD:	include "sound/sfx/SndCD - Switch.asm"
+		even
+SoundCE:	include "sound/sfx/SndCE - Ring Left Speaker.asm"
+		even
+SoundCF:	include "sound/sfx/SndCF - Signpost.asm"
+		even
+SoundD0:	include "sound/sfx/SndD1 - Spin Dash Rev.asm"
+		even
+SoundD1:	include "sound/sfx/SndD2 - Peelout Charge.asm"
+		even
+SoundD2:	include "sound/sfx/SndD3 - Peelout Release.asm"
+		even
+SoundD3:	include "sound/sfx/SndD4 - Peelout Stop.asm"
+		even
+
+; ---------------------------------------------------------------------------
+; Special sound effect data
+; ---------------------------------------------------------------------------
+SoundWaterfall:	include "sound/sfx/SndD0 - Waterfall.asm"
+		even
+
+	endm
