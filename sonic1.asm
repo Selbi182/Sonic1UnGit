@@ -1827,11 +1827,11 @@ Tit_LoadText:
 		move.b	#bgm_Title,d0				; set title screen music
 		bsr.w	QueueSound2				; play title screen music
 		move.b	#0,(f_debugmode).w			; disable debug mode (cheat remains active though)
-		move.w	#3000,(v_generictimer).w			; run title screen for 376 frames (6 seconds plus some change)
-	;	tst.b	(v_pal).w			; is Mega Drive set to PAL region?
-	;	beq.s	.notPAL					; if not, branch
-	;	subi.w	#60,(v_generictimer).w			; correct title screen duration for PAL
-	;.notPAL:
+		move.w	#376,(v_generictimer).w			; run title screen for 376 frames (6 seconds plus some change)
+		tst.b	(v_pal).w				; is Mega Drive set to PAL region?
+		beq.s	.notPAL					; if not, branch
+		subi.w	#60,(v_generictimer).w			; correct title screen duration for PAL
+	.notPAL:
 
 		clearRAM v_sonicteam,v_sonicteam+object_size	; delete RAM used by "SONIC TEAM PRESENTS" object (fully)
 
@@ -1969,6 +1969,7 @@ Tit_ChkStartOrDemo:
 Tit_ChkLevSel:
 		jmp	(TitleMenu_SelectionMade).l
 
+Tit_ChkLevSel_AbortDemo:
 		tst.b	(f_levselcheat).w			; check if level select code is on
 		beq.w	PlayLevel				; if not, begin game by playing normal level
 		btst	#bitA,(v_jpadhold1).w			; check if A was held while pressing Start
@@ -2166,7 +2167,7 @@ GotoDemo_PreDelayLoop:
 ; loc_33E4:
 GotoDemo_ChkLoop:
 		andi.b	#btnStart,(v_jpadpress1).w		; has Start button been pressed during pre-delay?
-		bne.w	Tit_ChkLevSel				; if yes, abort loading demo and load normal level instead
+		bne.w	Tit_ChkLevSel_AbortDemo			; if yes, abort loading demo and load normal level instead
 		tst.w	(v_generictimer).w			; has pre-delay timer expired?
 		bne.w	GotoDemo_PreDelayLoop			; if not, branch
 ; ---------------------------------------------------------------------------

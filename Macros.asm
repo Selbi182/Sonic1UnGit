@@ -401,21 +401,21 @@ demoinput:	macro buttons,duration
 
 		; If anyone reads this in the future and knows how to get
 		; switch-cases to work in ASM68K, please submit a PR...
-		if "\btn"="U"
+		if "\btn"="u"
 			btns_mask: = btns_mask|btnUp
-		elseif "\btn"="D"
+		elseif "\btn"="d"
 			btns_mask: = btns_mask|btnDn
-		elseif "\btn"="L"
+		elseif "\btn"="l"
 			btns_mask: = btns_mask|btnL
-		elseif "\btn"="R"
+		elseif "\btn"="r"
 			btns_mask: = btns_mask|btnR
-		elseif "\btn"="A"
+		elseif "\btn"="a"
 			btns_mask: = btns_mask|btnA
-		elseif "\btn"="B"
+		elseif "\btn"="b"
 			btns_mask: = btns_mask|btnB
-		elseif "\btn"="C"
+		elseif "\btn"="c"
 			btns_mask: = btns_mask|btnC
-		elseif "\btn"="S"
+		elseif "\btn"="s"
 			btns_mask: = btns_mask|btnStart
 		endif
 	endw

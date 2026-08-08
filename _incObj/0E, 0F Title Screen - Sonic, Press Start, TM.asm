@@ -130,6 +130,7 @@ PSB_PrsStart:	; Routine 2
 		move.b	#sfx_GiantRing,d0			; set giant ring sound
 		jsr	(QueueSound2).l				; play it
 		move.w	#$80+$58,obX(a0)			; adjust PSB X-position for new system
+		move.w	#3000,(v_generictimer).w	
 		; continue to PSB_TitleMenu...
 ; ---------------------------------------------------------------------------
 
