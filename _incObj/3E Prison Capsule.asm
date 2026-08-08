@@ -90,17 +90,21 @@ Pri_BodyMain:	; Routine 2
 
 ; Pri_Switched:
 Pri_Switch:	; Routine 4
-		move.w	#24/2+sonic_solid_width,d1		; solid width
-		move.w	#16/2,d2				; solid height (initial)
-		move.w	#16/2,d3				; solid height (stood on)
-		move.w	obX(a0),d4				; X-position (stood on)
-		jsr	(SolidObject).l				; make switch solid and set obSolid if Sonic stands on it
+	;	move.w	#24/2+sonic_solid_width,d1		; solid width
+	;	move.w	#16/2,d2				; solid height (initial)
+	;	move.w	#16/2,d3				; solid height (stood on)
+	;	move.w	obX(a0),d4				; X-position (stood on)
+	;	jsr	(SolidObject).l				; make switch solid and set obSolid if Sonic stands on it
 		lea	(Ani_Pri).l,a1				; load animation script
 		jsr	(AnimateSprite).l			; animate switch
 		move.w	pri_origY(a0),obY(a0)			; force Y-position to stay at initial
 
-		tst.b	obSolid(a0)				; is Sonic standing on the switch?
-		beq.s	.return					; if not, branch
+	;	tst.b	obSolid(a0)				; is Sonic standing on the switch?
+	;	beq.s	.return					; if not, branch
+	;	tst.b	d4
+	;	beq.s	.return
+		bsr.s	Pri_ChkSonic
+		beq.s	.return
 		addq.w	#8,obY(a0)				; move switch down 8px
 		move.b	#$A,obRoutine(a0)			; advance to Pri_Explosion
 		move.w	#1*60,obTimeFrame(a0)			; set time between animal spawns
@@ -115,6 +119,39 @@ Pri_Switch:	; Routine 4
 	.return:
 		rts						; return
 ; ===========================================================================
+
+Pri_ChkSonic:
+		lea	(v_player).w,a1				; load Sonic player object
+		move.w	obX(a1),d0				; get Sonic's current X-position
+		move.w	obX(a0),d1				; get bubble's current X-position
+		subi.w	#24/2+sonic_solid_width,d1					; check left
+		cmp.w	d0,d1					; is Sonic within left edge?
+		bhs.s	.noTouch				; if not, branch
+		addi.w	#(24/2+sonic_solid_width)*2,d1				; check right
+		cmp.w	d0,d1					; is Sonic within right edge?
+		blo.s	.noTouch				; if not, branch
+
+		move.w	obY(a1),d0				; get Sonic's current Y-position
+		move.w	obY(a0),d1				; get bubble's current Y-position
+		subi.w	#16,d1					; check top
+		cmp.w	d0,d1					; is Sonic within top edge?
+		bhs.s	.noTouch				; if not, branch
+		addi.w	#16*2,d1				; check bottom
+		cmp.w	d0,d1					; is Sonic within bottom edge?
+		blo.s	.noTouch				; if not, branch
+
+	.touch:
+		moveq	#1,d0					; set flag
+		rts						; return with result in CCR
+
+	.noTouch:
+		moveq	#0,d0					; clear flag
+		rts						; return with result in CCR
+; End of function Bub_ChkSonic
+
+
+; ===========================================================================
+
 
 Pri_Explosion:	; Routine $A (also routine 6/8, but those are unused)
 		moveq	#7,d0					; only spawn an explosion every 8 frames...
