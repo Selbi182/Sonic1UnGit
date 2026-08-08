@@ -363,9 +363,10 @@ RememberState	macro
 		bclr	#7,(a2)					; clear respawn table entry, so object manager can load this object again
 	.delete\@:
 		; inlined DeleteObject
+		movea.l	a0,a1
 		moveq	#0,d0					; overwrite with zeroes
 	rept	object_size/4
-		move.l	d0,(a0)+				; clear the object RAM
+		move.l	d0,(a1)+				; clear the object RAM
 	endr
 		rts						; deletion done
 		endm
