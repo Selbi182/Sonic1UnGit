@@ -337,6 +337,9 @@ CheckSumOk:
 		andi.b	#%11000000,d0				; filter to only overseas flag and PAL flag
 		move.b	d0,(v_megadrive).w			; store region settings
 
+		btst	#6,(v_megadrive).w			; is Mega Drive PAL?
+		sne.b	(v_pal).w				; remember flag if so
+
 		move.l	#'init',(v_init).w			; set flag so checksum won't run again
 
 GameInit:
@@ -450,7 +453,7 @@ VBlank:
 		; Wait here in a loop doing nothing for a while. This seems to be a pretty harsh attempt
 		; to push CRAM dots outside of the visible view area, due to Sonic 1 not using all
 		; the available screen space PAL offers, as they would otherwise be seen at the bottom.
-		btst	#6,(v_megadrive).w			; is Mega Drive PAL?
+		tst.b	(v_pal).w			; is Mega Drive PAL?
 		beq.s	.notPAL					; if not, branch
 		move.w	#$700,d0				; set to waste a bunch of cycles
 	.waitPAL:
@@ -511,7 +514,7 @@ VBlank_Lag:
 
 		; Same as in the opening block of the VBlank routine, this time during a lag frame.
 		; This only happens if the level is LZ (note, Sonic 2/3/&K would change this so it runs in any level).
-		btst	#6,(v_megadrive).w			; is Mega Drive PAL?
+		tst.b	(v_pal).w			; is Mega Drive PAL?
 		beq.s	.paletteTransfer			; if not, branch
 		move.w	#$700,d0				; set to waste a bunch of cycles
 	.waitPAL:
@@ -1841,7 +1844,7 @@ Tit_LoadText:
 		bsr.w	QueueSound2				; play title screen music
 		move.b	#0,(f_debugmode).w			; disable debug mode (cheat remains active though)
 		move.w	#3000,(v_generictimer).w			; run title screen for 376 frames (6 seconds plus some change)
-	;	btst	#6,(v_megadrive).w			; is Mega Drive set to PAL region?
+	;	tst.b	(v_pal).w			; is Mega Drive set to PAL region?
 	;	beq.s	.notPAL					; if not, branch
 	;	subi.w	#60,(v_generictimer).w			; correct title screen duration for PAL
 	;.notPAL:
@@ -2272,13 +2275,13 @@ LevSel_SndTest:
 		beq.s	LevSel_Right				; if not, branch
 		subq.w	#1,d0					; subtract 1 from sound test
 		bhs.s	LevSel_Right				; is result still positive? if yes, branch
-		moveq	#ext__Last-$80,d0 			; if sound test moves below 0, set to last entry (non-$80 based)
+		moveq	#$FF-$80,d0 			; if sound test moves below 0, set to last entry (non-$80 based)
 
 LevSel_Right:
 		btst	#bitR,d1				; is right pressed?
 		beq.s	LevSel_Refresh2				; if not, branch
 		addq.w	#1,d0					; add 1 to sound test
-		cmpi.w	#ext__Last-$80+1,d0			; is result now past the last entry?
+		cmpi.w	#$FF-$80+1,d0			; is result now past the last entry?
 		blo.s	LevSel_Refresh2				; if not, branch
 		moveq	#0,d0					; if sound test moves above last entry, set to 0
 
@@ -2288,15 +2291,15 @@ LevSel_Refresh2:
 		btst	#bitB,(v_jpadhold1).w			; was B held down while A was pressed?
 		bne.s	LevSel_A_WithB				; if yes, branch
 		addi.w	#$10,d0					; advance sound test selection by $10
-		cmpi.w	#ext__Last-$80+1,d0			; is result now past the last entry?
+		cmpi.w	#$FF-$80+1,d0			; is result now past the last entry?
 		blo.s	LevSel_SetSound				; if not, branch
-		subi.w	#ext__Last-$80+1,d0			; if sound test moves above last entry, wrap
+		subi.w	#$FF-$80+1,d0			; if sound test moves above last entry, wrap
 		bra.s	LevSel_SetSound				; skip over
 
 LevSel_A_WithB:
 		subi.w	#$10,d0					; reduce sound test selection by $10
 		bhs.s	LevSel_SetSound				; is result still positive? if yes, branch
-		addi.w	#ext__Last-$80+1,d0			; if sound test moves below 0, wrap
+		addi.w	#$FF-$80+1,d0			; if sound test moves below 0, wrap
 
 LevSel_SetSound:
 		move.w	d0,(v_levselsound).w			; set sound test number

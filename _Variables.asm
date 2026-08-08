@@ -497,7 +497,7 @@ v_demonum:		ds.w	1				; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1				; credits index number
 			ds.b	2				; unused
 v_megadrive:		ds.b	1				; Mega Drive machine type
-			ds.b	1				; unused
+v_pal:			ds.b	1				; set if PAL console
 f_debugmode:		ds.w	1				; debug mode flag
 v_init:			ds.l	1				; 'init' text string
 
