@@ -228,6 +228,7 @@ VSRAM_PlaneB:		equ	VSRAM_Buffer+2			; w
 		add.b	($FFFFF70C+1).w,d2	; d2 = (WaveValue + Cam_Y) & $FF
 		move.w	#224,d6			; d6 = Number of lines
 		move.w	($FFFFF646).w,d4	; d4 = WaterLevel
+		addq.w	#7,d4
 		sub.w	($FFFFF704).w,d4	; d4 = WaterLevel - Cam_Y
 		beq.s	.DeformWater_2
 		bmi.s	.DeformWater_2		; if water line is above screen, branch

@@ -570,6 +570,7 @@ ResetHomingAttack:
 		asr.w	obVelX(a0)
 		asr.w	obVelX(a0)
 		clr.b	homingattack(a0)			; reset homing attack flag so we can do another one
+		move.b	#1,jumping(a0)
 		move.w	#-$500,obVelY(a0)			; bounce Sonic upwards a little from the impact
 		btst	#6,obStatus(a0)				; is Sonic underwater?
 		beq.s	.return					; if not, branch

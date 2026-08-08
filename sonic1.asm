@@ -790,109 +790,93 @@ VBlank_StandardTransfers:
 
 ; PalToCRAM: <-- old misnomer
 HBlank:
-		disable_ints					; disable interrupts (VBlank in this context)
-		tst.w	(f_hblank_pal).w		; is palette set to change?
-		beq.w	.nochg				; if not, branch
-		move.w	#0,(f_hblank_pal).w		; clear palette change flag
+		tst.w	(f_hblank_pal).w			; is palette set to change?
+		beq.w	.nochg					; if not, branch
+		move.w	#0,(f_hblank_pal).w			; clear palette change flag
 
-		movem.l	d0-d1/a0-a2,-(sp)		; backup registers
+		movem.l	d0-d2/a0-a2,-(sp)			; backup registers
 
+		lea	(vdp_data_port).l,a1			; load VDP data port to a1
+		move.w	#$8A00+223,4(a1)			; reset horizontal interrupt counter
 
-		; Gotta keep stopping Z80 here to avoid CRAM dots.
-		; Might be caused by Mega PCM unpredictably affecting timings.
-
-		;stopZ80					; request Z80 stop
-		move.w	#$100,(z80_bus_request).l
-		;waitZ80					; wait until it stopped
-.wait:		btst	#0,(z80_bus_request).l
-		bne.s	.wait
-
-
-		moveq	#$F,d0				; waste a few cycles here...
-		dbf	d0,*				; ...to push artifacts off screen
-		nop					; more nops for precision
-		nop					; ''
-
-		lea	(vdp_data_port).l,a1		; load VDP data port to a1
-		move.w	#$8A00+223,4(a1)		; reset horizontal interrupt counter
-
-		lea	WaterTransition_LZ(pc),a2	; get water transition LUT
-		move.w	(a2)+,d1			; get number of entries in list
-		move.b	(v_waterline).w,d0		; get scanline that was written to
-		subi.b	#200,d0				; is H-int occurring below line 200?
-		bcs.s	.transferColors			; if it is, branch
-		sub.b	d0,d1				; skip relevant number of entries in LUT
-		bcs.s	.skipTransfer			; if everything was skipped, branch
+		lea	HBlank_LZWater(pc),a2			; get water transition LUT
+		move.w	#(HBlank_LZWater_End-HBlank_LZWater)/2-1,d1 ; get number of entries in list
+		move.b	(v_waterline).w,d0			; get scanline that was written to
+		subi.b	#200,d0					; is H-int occurring below line 200?
+		bcs.s	.transferColors				; if it is, branch
+		sub.b	d0,d1					; skip relevant number of entries in LUT
+		bcs.s	.skipTransfer				; if everything was skipped, branch
 
 	.transferColors:
-		move.w	(a2)+,d0			; get palette offset from LUT
-		lea	(v_palette_water).w,a0		; get buffered water palette
-		adda.w	d0,a0				; go to specified entry in palette buffer
-		addi.w	#$C000,d0			; prepare CRAM write
-		swap	d0				; move to upper word
-		move.l	d0,4(a1)			; write to CRAM at appropriate address
-		move.l	(a0)+,(a1)			; transfer two colors
-		move.w	(a0)+,(a1)			; transfer the third color
+		moveq	#0,d0					; clear d0
+		move.w	(a2)+,d0				; get palette offset from LUT
+		lea	(v_palette_water).w,a0			; get buffered water palette
+		adda.w	d0,a0					; go to specified entry in palette buffer
+		addi.w	#$C000,d0				; prepare CRAM write
+		swap	d0					; move to upper word
+		move.l	d0,4(a1)				; write to CRAM at appropriate address
 
-		moveq	#$24,d0				; waste a few cycles here...
-		dbf	d0,*				; ...to push artifacts off screen
-		nop					; more nops for precision
-		nop					; ''
+		swap	d1					; high word of D1 is used for buffering
+		move.l	(a0)+,d2				; buffer colors to registers for faster transfer
+		move.w	(a0)+,d1				; ''
 
-		dbf	d1,.transferColors		; repeat for number of colors to transfer
+		move.b	#320/2,d0				; trigger transfer once H-Counter has gone offscreen to the right
+	.waitH:	cmp.b	vdp_Hcounter-vdp_data_port(a1),d0	; read H-Counter, has it gone offscreen?
+		bhi.s	.waitH					; if not, loop until it has
 
-	.skipTransfer:
+		move.l	d2,(a1)					; transfer two colors
+		move.w	d1,(a1)					; transfer the third color
+		swap	d1					; use d1 as counter again
+		dbf	d1,.transferColors			; repeat for number of colors
+; ---------------------------------------------------------------------------
 
-		;startZ80				; restart Z80
-		move.w	#0,(z80_bus_request).l
+.skipTransfer:
+		movem.l	(sp)+,d0-d2/a0-a2			; restore registers
 
-		movem.l	(sp)+,d0-d1/a0-a2		; restore registers
-
-		tst.b	(f_doupdatesinhblank).w		; was frame update delayed by water surface being near the top of the screen?
-		bne.s	.delayed_transfer		; if yes, resume transfer now
+		tst.b	(f_doupdatesinhblank).w			; was frame update delayed by water surface being near the top of the screen?
+		bne.s	.delayed_transfer			; if yes, resume transfer now
 
 	.nochg:
-		rte					; return from horizontal interrupt and resume normal operation
+		rte						; return from horizontal interrupt and resume normal operation
 ; ===========================================================================
 
 ; loc_119E:
 .delayed_transfer:
-		clr.b	(f_doupdatesinhblank).w		; clear delayed updates flag
-		movem.l	d0-a6,-(sp)			; backup all registers except stack pointer (a7)
-		bsr.w	VBlank_UpdateScreen		; do all the screen updates that were skipped during VBlank now
-		jsr	(UpdateMusic).l			; update the sound driver
-		movem.l	(sp)+,d0-a6			; restore registers
-		rte					; return from horizontal interrupt and resume normal operation
+		clr.b	(f_doupdatesinhblank).w			; clear delayed updates flag
+		movem.l	d0-a6,-(sp)				; backup all registers except stack pointer (a7)
+		bsr.w	VBlank_UpdateScreen			; do all the screen updates that were skipped during VBlank now
+		jsr	(UpdateMusic).l				; update the sound driver
+		movem.l	(sp)+,d0-a6				; restore registers
+		rte						; return from horizontal interrupt and resume normal operation
 ; End of function HBlank
 
 ; ---------------------------------------------------------------------------
 
-WaterTransition_LZ:
-	dc.w (WaterTransition_LZ_End-WaterTransition_LZ)/2-2 ; number of entries - 1
-	dc.w $62	; line 4, color 1-2-3
-	dc.w $68	; line 4, color 4-5-6
-	dc.w $7A	; line 4, color D-E-F
-	dc.w $6E	; line 4, color 7-8-9
-	dc.w $74	; line 4, color A-B-C
+HBlank_LZWater:
+		dc.w $62	; line 4, color 1-2-3
+		dc.w $68	; line 4, color 4-5-6
+		dc.w $7A	; line 4, color D-E-F
+		dc.w $6E	; line 4, color 7-8-9
+		dc.w $74	; line 4, color A-B-C
 
-	dc.w $42	; line 3, color 1-2-3
-	dc.w $48	; line 3, color 4-5-6
-	dc.w $4E	; line 3, color 7-8-9
-	dc.w $54	; line 3, color A-B-C
-	dc.w $5A	; line 3, color D-E-F
+		dc.w $42	; line 3, color 1-2-3
+		dc.w $48	; line 3, color 4-5-6
+		dc.w $4E	; line 3, color 7-8-9
+		dc.w $54	; line 3, color A-B-C
+		dc.w $5A	; line 3, color D-E-F
 
-	dc.w $02	; line 1, color 1-2-3
-	dc.w $08	; line 1, color 4-5-6
-	dc.w $0E	; line 1, color 7-8-9
-	dc.w $14	; line 1, color A-B-C
-	dc.w $1A	; line 1, color D-E-F
+		dc.w $02	; line 1, color 1-2-3
+		dc.w $08	; line 1, color 4-5-6
+		dc.w $0E	; line 1, color 7-8-9
+		dc.w $14	; line 1, color A-B-C
+		dc.w $1A	; line 1, color D-E-F
 
-	dc.w $34	; line 2, color A-B-C
-	dc.w $22	; line 2, color 1-2-3
-	dc.w $3A	; line 2, color D-E-F
-	dc.w $2E	; line 2, color 7-8-9
-	dc.w $28	; line 2, color 4-5-6
-WaterTransition_LZ_End:
+		dc.w $34	; line 2, color A-B-C
+		dc.w $22	; line 2, color 1-2-3
+		dc.w $3A	; line 2, color D-E-F
+		dc.w $2E	; line 2, color 7-8-9
+		dc.w $28	; line 2, color 4-5-6
+HBlank_LZWater_End:
 
 
 ; ===========================================================================
@@ -2664,6 +2648,10 @@ Level_SkipTtlCard:
 		moveq	#palid_Sonic,d0				; load Sonic's palette to fade-in buffer
 		bsr.w	PalLoad_Fade				; (doesn't actually do anything, the PalFadeIn_Alt call below skips the first palette line)
 		bsr.w	LevelSizeLoad				; load level size and set default level boundaries
+
+		move.b	#id_VBlank_TitleCards,(v_vblank_routine).w ; set VBlank routine to $0C
+		bsr.w	WaitForVBlank				; wait until VBlank has finished
+
 		bsr.w	DeformLayers				; initialize background deformation
 		bset	#2,(v_fg_scroll_flags).w		; draw an extra column at the left side of the screen during level start
 		bsr.w	LevelDataLoad				; load block mappings and palettes

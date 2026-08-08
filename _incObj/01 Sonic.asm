@@ -2312,6 +2312,8 @@ Sonic_PanCamera:
 Sonic_HomingAttack:
 		tst.b	homingattack(a0)		; was the homing attack flag already set?
 		bne.s	.done		; if yes, branch
+		tst.b	jumping(a0)
+		beq.s	.done
 		moveq	#btnABC,d0		; is any of the buttons ABC...
 		and.b	(v_jpadpress2).w,d0	; ...pressed?
 		beq.s	.done		; if not, branch
