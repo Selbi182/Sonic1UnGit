@@ -37,7 +37,7 @@ LGrass_Main:	; Routine 0
 		move.l	#Map_LGrass,obMap(a0)			; set mappings
 		move.w	#ArtTile_Level|Tile_Pal3|Tile_Prio,obGfx(a0) ; set art tile, palette line, and high-priority flag
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#5,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio5,obPriority(a0)			; set sprite priority
 		move.w	obY(a0),lgrass_origY(a0)		; remember initial Y-position
 		move.w	obX(a0),lgrass_origX(a0)		; remember initial X-position
 
@@ -355,7 +355,7 @@ GFire_Main:	; Routine 0
 		move.w	#ArtTile_MZ_Fireball,obGfx(a0)		; set art tile
 		move.w	obX(a0),gfire_origX(a0)			; remember initial X-position
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#1,obPriority(a0)			; set sprite priority (above platform and Sonic)
+		move.w	#spr_prio1,obPriority(a0)			; set sprite priority (above platform and Sonic)
 		move.b	#col_16x16|col_hurt,obColType(a0)	; make fire balls harmful on touch
 		move.b	#16/2,obActWid(a0)			; set sprite display width
 

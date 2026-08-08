@@ -29,7 +29,7 @@ Mon_Main:	; Routine 0
 		move.l	#Map_Monitor,obMap(a0)			; set mappings
 		move.w	#ArtTile_Monitor,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set render mode to playfield-positioned
-		move.b	#3,obPriority(a0)			; set sprite priority to 3
+		move.w	#spr_prio3,obPriority(a0)			; set sprite priority to 3
 		move.b	#30/2,obActWid(a0)			; set render width
 
 		respawn_entry.s	.notbroken
@@ -205,7 +205,7 @@ Pow_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)			; advance to Pow_Move
 		move.w	#ArtTile_Monitor,obGfx(a0)		; set art tile
 		move.b	#sprite_rawmappings|sprite_cam_field,obRender(a0) ; set "raw-mappings" flag and playfield-positioned mode
-		move.b	#3,obPriority(a0)			; set sprite priority to 3
+		move.w	#spr_prio3,obPriority(a0)			; set sprite priority to 3
 		move.b	#16/2,obActWid(a0)			; set display width
 		move.w	#-$300,obVelY(a0)			; set initial upwards momentum of the icon
 

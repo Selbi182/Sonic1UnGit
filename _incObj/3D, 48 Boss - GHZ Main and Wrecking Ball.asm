@@ -45,7 +45,7 @@ BGHZ_LoadBoss:
 		move.w	#ArtTile_Eggman,obGfx(a1) 		; point to Eggman's art (VRAM tile index and palette line)
 		move.b	#sprite_cam_field,obRender(a1) 		; set the object to position based on where it is in the level and not a static position on screen
 		move.b	#64/2,obActWid(a1) 			; set width to 64 pixel radius (to know when sprite is off screen and should be hidden)
-		move.b	#3,obPriority(a1) 			; set sprite priority to 3 (0 is front of screen)
+		move.w	#spr_prio3,obPriority(a1) 			; set sprite priority to 3 (0 is front of screen)
 		move.b	(a2)+,obAnim(a1) 			; load appropriate animation index, then increment a2 (now we are one full entry lower in our ObjData table)
 
 ; BGHZ_ParentObj is used here as a reference back to the main boss controller.
@@ -464,7 +464,7 @@ GBall_LinkSetup:
 		move.b	d5,(a2)+				; set this index as the subtype and increment address
 		move.b	#sprite_cam_field,obRender(a1)		; set render flags to normal level/playfield coordinates (not screen relative)
 		move.b	#16/2,obActWid(a1)			; set radius of object in pixels (used for hiding sprites off screen)
-		move.b	#6,obPriority(a1)			; set object render priority to 6 (lower priority)
+		move.w	#spr_prio6,obPriority(a1)			; set object render priority to 6 (lower priority)
 		move.l	BGHZ_ParentObj(a0),BGHZ_ParentObj(a1)	; copy parent boss object pointer to link's parent object pointer
 		dbf	d1,GBall_MakeLinks 			; repeat sequence 5 more times
 
@@ -473,7 +473,7 @@ GBall_MakeBall:
 		move.l	#Map_GBall,obMap(a1) 			; load different mappings for final link
 		move.w	#ArtTile_GHZ_Giant_Ball|Tile_Pal3,obGfx(a1) ; use different graphics
 		move.b	#1,obFrame(a1)				; set current animation frame
-		move.b	#5,obPriority(a1)			; set object render priority to 5 (lower priority, but covers the links)
+		move.w	#spr_prio5,obPriority(a1)			; set object render priority to 5 (lower priority, but covers the links)
 		move.b	#col_40x40|col_hurt,obColType(a1) 	; make object hurt Sonic
 		rts
 ; ===========================================================================

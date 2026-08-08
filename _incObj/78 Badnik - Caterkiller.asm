@@ -55,7 +55,7 @@ Cat_Main:	; Routine 0
 		andi.b	#sprite_xflip|sprite_yflip,obRender(a0)	; clear render flags except X/Y-flip
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	obRender(a0),obStatus(a0)		; copy render flags to status flags
-		move.b	#4,obPriority(a0)			; set to sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set to sprite priority
 		move.b	#16/2,obActWid(a0)			; set sprite display width
 		move.b	#col_16x16|col_badnik,obColType(a0)	; set ReactToItem type for head to be destroyable ($B)
 
@@ -80,7 +80,7 @@ Cat_Main:	; Routine 0
 		addq.b	#2,d6					; alternate between the two
 		move.l	obMap(a0),obMap(a1)			; copy mappings
 		move.w	obGfx(a0),obGfx(a1)			; copy art tile and palette line
-		move.b	#5,obPriority(a1)			; set sprite priority (behind head)
+		move.w	#spr_prio5,obPriority(a1)			; set sprite priority (behind head)
 		move.b	#16/2,obActWid(a1)			; set sprite display width
 		move.b	#col_16x16|col_special,obColType(a1)	; special ReactToItem handler for body parts ($CB)
 		add.w	d5,d2					; increase body part gap distance

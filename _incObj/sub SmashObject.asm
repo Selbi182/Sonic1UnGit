@@ -35,7 +35,7 @@ SmashObject:
 		move.w	obX(a0),obX(a1)				; use same X-position as parent
 		move.w	obY(a0),obY(a1)				; use same Y-position as parent
 		move.w	obGfx(a0),obGfx(a1)			; use same art tile as parent
-		move.b	obPriority(a0),obPriority(a1)		; use same sprite priority as parent
+		move.w	obPriority(a0),obPriority(a1)		; use same sprite priority as parent
 		move.b	obActWid(a0),obActWid(a1)		; use same display width as parent
 
 		move.w	(a4)+,obVelX(a1)			; load next X-speed from input array

@@ -75,7 +75,7 @@ Sto_Main:	; Routine 0
 ; .isSBZ12:
 .continueSetup:
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 		move.w	obX(a0),sto_origX(a0)			; remember initial X-position
 		move.w	obY(a0),sto_origY(a0)			; remember initial Y-position
 

@@ -32,7 +32,7 @@ LBlk_Main:	; Routine 0
 		move.l	#Map_LBlock,obMap(a0)			; set mappings
 		move.w	#ArtTile_LZ_Blocks|Tile_Pal3,obGfx(a0)	; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
 
 		moveq	#0,d0					; clear d0
 		move.b	obSubtype(a0),d0			; get block subtype

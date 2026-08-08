@@ -39,7 +39,7 @@ Spring_Main:	; Routine 0
 		move.w	#ArtTile_Spring_Horizontal,obGfx(a0)	; set art tile for upright springs (palette line 1, red)
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield positioning mode
 		move.b	#32/2,obActWid(a0)			; set display width
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 
 		move.b	obSubtype(a0),d0			; get spring subtype
 	.checkSideways:

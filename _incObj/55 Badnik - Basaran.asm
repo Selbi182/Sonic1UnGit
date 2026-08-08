@@ -21,7 +21,7 @@ Bas_Main:	; Routine 0
 		move.w	#ArtTile_Basaran|Tile_Prio,obGfx(a0)	; set art tile and priority flag
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#24/2,obHeight(a0)			; set height
-		move.b	#2,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio2,obPriority(a0)			; set sprite priority
 		move.b	#col_16x16|col_badnik,obColType(a0)	; set ReactToItem type ($B)
 		move.b	#32/2,obActWid(a0)			; set sprite display width
 ; ---------------------------------------------------------------------------

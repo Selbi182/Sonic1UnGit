@@ -76,13 +76,13 @@ Glass_Main:	; Routine 0
 		move.w	obY(a1),glass_origY(a1)			; remember initial Y-position
 		move.b	obSubtype(a0),obSubtype(a1)		; copy subtype from parent
 		move.b	#64/2,obActWid(a1)			; set sprite display width for pillar
-		move.b	#4,obPriority(a1)			; set sprite priority for pillar
+		move.w	#spr_prio4,obPriority(a1)			; set sprite priority for pillar
 		move.b	(a2)+,obFrame(a1)			; load frame number (0/1/2)
 		move.l	a0,glass_parent(a1)			; remember parent object
 		dbf	d1,.loop				; repeat once to load "reflection object"
 
 		move.b	#32/2,obActWid(a1)			; use smaller sprite display width for shine
-		move.b	#3,obPriority(a1)			; use higher sprite priority for shine
+		move.w	#spr_prio3,obPriority(a1)			; use higher sprite priority for shine
 		addq.b	#1<<3,obSubtype(a1)			; add 8 to sheen subtype to treat it separately in Glass_Types
 		andi.b	#$F,obSubtype(a1)			; clear upper digit in sheen subtype (used for switch)
 

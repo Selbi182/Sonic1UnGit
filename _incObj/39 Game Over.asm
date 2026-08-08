@@ -31,7 +31,7 @@ Over_Main:
 		move.l	#Map_Over,obMap(a0)			; set mappings
 		move.w	#ArtTile_Game_Over|Tile_Prio,obGfx(a0)	; set art tile and priority flag
 		move.b	#sprite_cam_screen,obRender(a0)		; set to screen-positioned mode
-		move.b	#0,obPriority(a0)			; set to max sprite priority
+		move.w	#spr_prio0,obPriority(a0)			; set to max sprite priority
 ; ---------------------------------------------------------------------------
 
 Over_MoveIn:	; Routine 2

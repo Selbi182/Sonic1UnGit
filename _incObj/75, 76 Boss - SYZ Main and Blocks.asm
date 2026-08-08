@@ -57,7 +57,10 @@ BossSpringYard_LoadBoss:
 		clr.b	ob2ndRout(a1)				; clear second routine status (ShipIndex below)
 		move.b	(a2)+,obRoutine(a1)			; load first objData byte and increment
 		move.b	(a2)+,obAnim(a1)
-		move.b	(a2)+,obPriority(a1)
+		moveq	#0,d5
+		move.b	(a2)+,d5
+		lsl.w	#7,d5
+		move.w	d5,obPriority(a1)
 		move.l	#Map_Eggman,obMap(a1)			; load mappings and graphics for the object
 		move.w	#ArtTile_Eggman,obGfx(a1)
 		move.b	#sprite_cam_field,obRender(a1)		; set the object to position based on where it is in the level and not a static position on screen
@@ -745,7 +748,7 @@ BossBlock_MakeBlock:
 		move.b	#sprite_cam_field,obRender(a1)
 		move.b	#32/2,obActWid(a1)			; set object radius and height
 		move.b	#32/2,obHeight(a1)
-		move.b	#3,obPriority(a1)			; set object priority (higher priority)
+		move.w	#spr_prio3,obPriority(a1)			; set object priority (higher priority)
 		move.w	d5,obX(a1)				; set x-position
 		move.w	#$582,obY(a1)				; set Y position so all blocks are on the floor
 		move.w	d4,obSubtype(a1)			; set subtype to 0 and childcmd to 0

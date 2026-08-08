@@ -85,7 +85,7 @@ Elev_Main:	; Routine 0
 		move.l	#Map_Elev,obMap(a0)			; set mappings
 		move.w	#ArtTile_Level|Tile_Pal3,obGfx(a0)	; set art tile and palette line (part of level graphics)
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 		move.w	obX(a0),elev_origX(a0)			; remember initial X-position
 		move.w	obY(a0),elev_origY(a0)			; remember initial Y-position
 ; ---------------------------------------------------------------------------

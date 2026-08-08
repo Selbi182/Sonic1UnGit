@@ -26,7 +26,7 @@ GMake_Main:	; Routine 0
 		move.l	#Map_Geyser,obMap(a0)			; set mappings
 		move.w	#ArtTile_MZ_Lava|Tile_Pal4|Tile_Prio,obGfx(a0) ; set art tile, palette line (lava palcycle), and priority flag
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#1,obPriority(a0)			; set sprite priority (above Sonic)
+		move.w	#spr_prio1,obPriority(a0)			; set sprite priority (above Sonic)
 		move.b	#112/2,obActWid(a0)			; set sprite display width
 		move.w	#120,gmake_time(a0)			; set time delay between spawning lava to 2 seconds
 ; ---------------------------------------------------------------------------
@@ -155,7 +155,7 @@ Geyser_Main:	; Routine 0
 		move.w	obX(a0),obX(a1)				; copy X-position
 		move.w	obY(a0),obY(a1)				; copy Y-position
 		move.b	obSubtype(a0),obSubtype(a1)		; copy subtype
-		move.b	#1,obPriority(a1)			; set sprite priority (above Sonic)
+		move.w	#spr_prio1,obPriority(a1)			; set sprite priority (above Sonic)
 
 		move.b	#5,obAnim(a1)				; use to ".bubble4" animation geyser
 		tst.b	obSubtype(a0)				; is this a lava geyser?
@@ -186,7 +186,7 @@ Geyser_Main:	; Routine 0
 		addq.b	#2,obRoutine(a1)			; set third object to Geyser_Action
 		bset	#4,obGfx(a1)				; set custom display sprite height flag
 		addi.w	#$100,obY(a1)				; move bottom tip down
-		move.b	#0,obPriority(a1)			; set to maximum sprite priority (above lava wall)
+		move.w	#spr_prio0,obPriority(a1)			; set to maximum sprite priority (above lava wall)
 		move.w	geyser_origY(a0),geyser_origY(a1)	; copy original Y-position
 		move.l	gmake_parent(a0),gmake_parent(a1)	; remember bubbling (top) tip for (bottom) tip
 		move.b	#0,obSubtype(a0)			; force to type 00

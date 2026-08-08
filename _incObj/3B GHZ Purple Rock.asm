@@ -19,7 +19,7 @@ Rock_Main:	; Routine 0
 		move.w	#ArtTile_GHZ_Purple_Rock|Tile_Pal4,obGfx(a0) ; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#48/2,obActWid(a0)			; set sprite display width (corrected)
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 ; ---------------------------------------------------------------------------
 
 Rock_Solid:	; Routine 2

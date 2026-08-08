@@ -23,7 +23,7 @@ Pole_Main:	; Routine 0
 		move.w	#ArtTile_LZ_Pole|Tile_Pal3,obGfx(a0)	; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#16/2,obActWid(a0)			; set sprite display width
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 
 		move.b	#col_8x64|col_special,obColType(a0)	; set special ReactToItem collision type for poles
 		moveq	#0,d0					; clear d0 for mulu

@@ -44,7 +44,7 @@ Plat_Main:	; Routine 0
 
 	.continueSetup:
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 		move.w	obY(a0),plat_rawY(a0)			; remember initial raw Y-position
 		move.w	obY(a0),plat_origY(a0)			; remember initial Y-position
 		move.w	obX(a0),plat_origX(a0)			; remember initial X-position

@@ -34,7 +34,7 @@ Orb_Main:	; Routine 0
 
 	.continueSetup:
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 		move.b	#col_16x16|col_badnik,obColType(a0)	; set ReactToItem type
 		move.b	#24/2,obActWid(a0)			; set sprite display width
 
@@ -59,7 +59,7 @@ Orb_Main:	; Routine 0
 		move.l	obMap(a0),obMap(a1)			; copy mappings
 		move.w	obGfx(a0),obGfx(a1)			; copy art tile (zone-specific)
 		ori.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode
-		move.b	#4,obPriority(a1)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a1)			; set sprite priority
 		move.b	#16/2,obActWid(a1)			; set sprite display width
 		move.b	#3,obFrame(a1)				; use spikeball frame
 		move.b	#col_8x8|col_hurt,obColType(a1)		; set ReactToItem type (damaging)

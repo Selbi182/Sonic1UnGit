@@ -92,13 +92,13 @@ LBall_Main:	; Routine 0
 
 	.continueSetup:
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
 		move.b	#col_16x16|col_hurt,obColType(a0)	; make lava balls harmful on touch
 		move.w	obY(a0),lball_origY(a0)			; remember initial Y-position (for balls that fall back down)
 
 		tst.b	lball_fromboss(a0)			; was lava ball spawned from MZ boss? (balls that come from lava)
 		beq.s	.setSpeed				; if not, branch
-		addq.b	#2,obPriority(a0)			; use lower sprite priority
+		addi.w	#spr_prio2,obPriority(a0)			; use lower sprite priority
 
 	.setSpeed:
 		moveq	#0,d0					; clear d0

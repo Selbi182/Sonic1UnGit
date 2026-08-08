@@ -36,7 +36,7 @@ PushB_Main:	; Routine 0
 		move.w	#ArtTile_LZ_Push_Block|Tile_Pal3,obGfx(a0) ; LZ-specific art tile (unused)
 	.notLZ:
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
 		move.w	obX(a0),pblock_origX(a0)		; remember original X-position
 		move.w	obY(a0),pblock_origY(a0)		; remember original Y-position
 

@@ -60,7 +60,7 @@ MBlock_Main:	; Routine 0
 		move.b	(a2)+,obActWid(a0)			; set sprite display width and solidity width
 		move.b	(a2)+,obFrame(a0)			; set frame ID
 
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 		move.w	obX(a0),mblock_origX(a0)		; remember initial X-position
 		move.w	obY(a0),mblock_origY(a0)		; remember initial Y-position
 		andi.b	#$F,obSubtype(a0)			; mask out upper subtype digit

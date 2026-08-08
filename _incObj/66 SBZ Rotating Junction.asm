@@ -35,7 +35,7 @@ Jun_Main:	; Routine 0
 		addq.b	#4,obRoutine(a1)			; set to Jun_Display (do nothing but display)
 		move.w	obX(a0),obX(a1)				; copy parent X-position
 		move.w	obY(a0),obY(a1)				; copy parent Y-position
-		move.b	#3,obPriority(a1)			; set sprite priority (above parent)
+		move.w	#spr_prio3,obPriority(a1)			; set sprite priority (above parent)
 		move.b	#$10,obFrame(a1)			; use large circular sprite
 	.makeitem:
 		move.l	#Map_Jun,obMap(a1)			; set mappings
@@ -46,7 +46,7 @@ Jun_Main:	; Routine 0
 		dbf	d1,.loop				; spawn one more object
 
 		move.b	#96/2,obActWid(a0)			; set small sprite display width for parent
-		move.b	#4,obPriority(a0)			; set sprite priority for parent (behind circle)
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority for parent (behind circle)
 		move.w	#60,jun_unused(a0)			; unused leftover (judging by the value of 60, probably once a 1-second timer)
 		move.b	#1,jun_direction(a0)			; set default rotation to clockwise
 		move.b	obSubtype(a0),jun_switchid(a0)		; store which switch ID can trigger reversing the direction

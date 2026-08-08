@@ -24,7 +24,7 @@ Gar_Main:	; Routine 0
 		move.l	#Map_Gar,obMap(a0)			; set mappings
 		move.w	#ArtTile_LZ_Gargoyle|Tile_Pal3,obGfx(a0) ; set art tile and palette line
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
 		move.b	#32/2,obActWid(a0)			; set sprite display width
 
 		move.b	obSubtype(a0),d0			; get object subtype
@@ -61,7 +61,7 @@ Gar_FireBall:	; Routine 4
 		move.l	#Map_Gar,obMap(a0)			; set mappings
 		move.w	#ArtTile_LZ_Gargoyle,obGfx(a0)		; set art tile (different palette line than head)
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#4,obPriority(a0)			; set sprite priority (behind head)
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority (behind head)
 		move.b	#col_8x8|col_hurt,obColType(a0)		; make fireball harmful
 		move.b	#16/2,obActWid(a0)			; set sprite display width
 		move.b	#2,obFrame(a0)				; set to "fireball" frame

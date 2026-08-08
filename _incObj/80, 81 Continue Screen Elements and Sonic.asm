@@ -137,7 +137,7 @@ CSon_Main:	; Routine 0
 		move.l	#Map_Sonic,obMap(a0)			; set mappings (cross-referenced from main Sonic object)
 		move.w	#ArtTile_Sonic,obGfx(a0)		; set art tile (cross-referenced from main Sonic object)
 		move.b	#sprite_cam_field,obRender(a0)		; set playfield-positioned mode
-		move.b	#2,obPriority(a0)			; set sprite priority (behind other elements)
+		move.w	#spr_prio2,obPriority(a0)			; set sprite priority (behind other elements)
 		move.b	#id_Float3,obAnim(a0)			; use "floating" animation
 		move.w	#$400,obVelY(a0)			; make Sonic fall from above
 ; ---------------------------------------------------------------------------

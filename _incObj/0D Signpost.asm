@@ -30,7 +30,7 @@ Sign_Main:	; Routine 0
 		move.w	#ArtTile_Signpost,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield positioning mode
 		move.b	#48/2,obActWid(a0)			; set display width
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 
 Sign_Touch:	; Routine 2
 		move.w	(v_player+obX).w,d0			; get Sonic's X-position
@@ -88,7 +88,7 @@ Sign_Spin:	; Routine 4
 		move.l	#Map_Ring,obMap(a1)			; set sparkle mappings
 		move.w	#ArtTile_Ring|Tile_Pal2,obGfx(a1)	; set sparkle art tile
 		move.b	#sprite_cam_field,obRender(a1)		; set to playfield positioning mode
-		move.b	#2,obPriority(a1)			; set sprite priority
+		move.w	#spr_prio2,obPriority(a1)			; set sprite priority
 		move.b	#8,obActWid(a1)				; set display width
 
 	.return:

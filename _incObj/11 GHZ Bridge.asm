@@ -31,7 +31,7 @@ Bri_Main:	; Routine 0
 		move.l	#Map_Bri,obMap(a0)			; set mappings
 		move.w	#ArtTile_GHZ_Bridge|Tile_Pal3,obGfx(a0)	; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
 		move.b	#16/2,obActWid(a0)			; set sprite display width (one log)
 
 		move.w	obY(a0),d2				; copy Y-position from parent
@@ -80,7 +80,7 @@ Bri_Main:	; Routine 0
 		move.l	#Map_Bri,obMap(a1)			; set mappings
 		move.w	#ArtTile_GHZ_Bridge|Tile_Pal3,obGfx(a1)	; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode
-		move.b	#3,obPriority(a1)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a1)			; set sprite priority
 		move.b	#16/2,obActWid(a1)			; set sprite display width for individual log
 		addi.w	#16,d3					; position next log 16px further to the right
 
@@ -397,7 +397,7 @@ BriOpti_Main:
 		move.l	#Map_OptiBridge_Idle,obMap(a0)		; set default mappings to idle state
 		move.w	#ArtTile_GHZ_Bridge|Tile_Pal3,obGfx(a0)	; use third palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#3,obPriority(a0)			; set priority to 3
+		move.w	#spr_prio3,obPriority(a0)			; set priority to 3
 		clr.b	obFrame(a0)				; force frame 0
 		move.b	#BriOpti_LogCount*16/2,obActWid(a0)	; set width to bridge length (half of: number of logs * 16px width per log)
 		move.w	obX(a0),briopti_origX(a0)		; backup internal X position for offscreen deletion check

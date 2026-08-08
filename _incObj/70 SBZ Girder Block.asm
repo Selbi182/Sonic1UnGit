@@ -24,7 +24,7 @@ Gird_Main:	; Routine 0
 		move.l	#Map_Gird,obMap(a0)			; set mappings
 		move.w	#ArtTile_SBZ_Girder|Tile_Pal3,obGfx(a0)	; set art tile and palette line
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 		move.b	#192/2,obActWid(a0)			; set sprite display width and solidity width
 		move.b	#48/2,obHeight(a0)			; set solidity height
 		move.w	obX(a0),gird_origX(a0)			; remember initial X-position

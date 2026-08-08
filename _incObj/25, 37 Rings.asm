@@ -47,7 +47,7 @@ Ring_Setup_Self:
 Ring_Setup:
 		move.l	#Map_Ring,obMap(a1)			; set mappings
 		move.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode
-		move.b	#2,obPriority(a1)			; set sprite priority
+		move.w	#spr_prio2,obPriority(a1)			; set sprite priority
 		move.b	#col_12x12|col_item,obColType(a1)	; set to power-up collision type and hitbox 12x12 (=$47)
 		move.b	#16/2,obActWid(a1)			; set sprite display width
 		rts						; return
@@ -62,7 +62,7 @@ Ring_Setup:
 
 CollectRing:
 		moveq	#1,d0					; add 1 to rings
-		moveq	#32,d0					; add 1 to rings
+		;moveq	#32,d0					; add 32 to rings for quick testing
 ; ---------------------------------------------------------------------------
 
 AddRings:	; d0 = custom number of rings to add
@@ -285,7 +285,7 @@ ChkHitFloor_Rings:
 RLoss_Collect:	; Routine 2 (set from ReactToItem)
 		addq.b	#2,obRoutine(a0)			; advance to RLoss_Sparkle
 		move.b	#col_none,obColType(a0)			; prevent ring from being collected again
-		move.b	#1,obPriority(a0)			; make ring sparkles appear in front of Sonic's sprites
+		move.w	#spr_prio1,obPriority(a0)			; make ring sparkles appear in front of Sonic's sprites
 		bsr.w	CollectRing				; add 1 ring 
 ; ---------------------------------------------------------------------------
 

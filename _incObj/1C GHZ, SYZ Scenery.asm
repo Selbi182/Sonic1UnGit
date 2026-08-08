@@ -25,8 +25,7 @@ Scen_Main:	; Routine 0
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	(a1)+,obFrame(a0)			; set frame ID
 		move.b	(a1)+,obActWid(a0)			; set sprite display width
-		move.b	(a1)+,obPriority(a0)			; set sprite priority
-		move.b	(a1)+,obColType(a0)			; set collision type (always 0)
+		move.w	(a1)+,obPriority(a0)			; set sprite priority
 ; ---------------------------------------------------------------------------
 
 Scen_ChkDel:	; Routine 2
@@ -44,13 +43,15 @@ Scen_Values:
 	rept 3	; SLZ lava thrower (three identical definitions back to back, only the first is used)
 		dc.l Map_Scen
 		dc.w ArtTile_SLZ_Fireball_Launcher|Tile_Pal3
-		dc.b 0,	16/2, 2, col_none
+		dc.b 0,	16/2
+		dc.w spr_prio2
 	endr
 
 		; GHZ bridge stump
 		dc.l Map_Bri
 		dc.w ArtTile_GHZ_Bridge|Tile_Pal3
-		dc.b 1,	32/2, 1, col_none
+		dc.b 1,	32/2
+		dc.w spr_prio1
 
 		even
 

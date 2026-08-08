@@ -23,7 +23,7 @@ Smash_Main:	; Routine 0
 		move.w	#ArtTile_GHZ_SLZ_Smashable_Wall|Tile_Pal3,obGfx(a0) ; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#32/2,obActWid(a0)			; set sprite display width
-		move.b	#4,obPriority(a0)			; set sprite
+		move.w	#spr_prio4,obPriority(a0)			; set sprite
 		move.b	obSubtype(a0),obFrame(a0)		; set frame ID from subtype (0 = left // 1 = middle // 2 = right)
 ; ---------------------------------------------------------------------------
 

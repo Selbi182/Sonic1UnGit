@@ -26,7 +26,7 @@ Lamp_Main:	; Routine 0
 		move.w	#ArtTile_Lamppost,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#16/2,obActWid(a0)			; set sprite display width
-		move.b	#5,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio5,obPriority(a0)			; set sprite priority
 
 		respawn_entry.s	.fail
 		btst	#0,(a2)
@@ -96,7 +96,7 @@ Lamp_Blue:	; Routine 2
 		move.w	#ArtTile_Lamppost,obGfx(a1)		; set art tile
 		move.b	#sprite_cam_field,obRender(a1)		; set to playfield positioning mode
 		move.b	#16/2,obActWid(a1)			; set sprite display width
-		move.b	#4,obPriority(a1)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a1)			; set sprite priority
 		move.b	#2,obFrame(a1)				; use twirling object to "red ball only" frame
 		move.w	#32,lamp_time(a1)			; set twirling time to 32 frames
 

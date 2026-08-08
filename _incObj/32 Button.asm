@@ -26,7 +26,7 @@ But_Main:	; Routine 0
 	.continueSetup:
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#32/2,obActWid(a0)			; set sprite display width
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 		addq.w	#3,obY(a0)				; adjust button a few pixels down
 ; ---------------------------------------------------------------------------
 

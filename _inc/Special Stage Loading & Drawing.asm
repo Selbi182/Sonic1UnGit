@@ -84,8 +84,9 @@ SS_ShowLayout:
 		adda.w	d0,a0					; a0 = first row and cell to be rendered
 
 		lea	(v_ss_rotationmatrix).w,a4		; get calculated results in rotation matrix
-		move.w	#ss_matrixsize-1,d7			; render 16 rows
+		move.w	#ss_matrixsize-1,d6			; render 16 rows
 	.loopAllRows:
+		swap	d6
 		move.w	#ss_matrixsize-1,d6			; render 16 blocks per row
 	.loopRow:
 		moveq	#0,d0					; clear d0
@@ -126,12 +127,14 @@ SS_ShowLayout:
 		addq.w	#4,a4					; advance to next entry in rotation matrix
 		dbf	d6,.loopRow				; loop until all blocks in row have been rendered
 		lea	spritelayer_size-ss_matrixsize(a0),a0	; advance to next row ($80 bytes - 16 bytes that were already advanced)
-		dbf	d7,.loopAllRows				; loop until all rows were rendered
+		swap	d6
+		dbf	d6,.loopAllRows				; loop until all rows were rendered
 
 		move.b	d5,(v_spritecount).w			; write total number of rendered sprites to debug value
 
-		cmpi.b	#sprites_max,d5				; check sprite limit (Mega Drive can only handle 80 at a time)
-		beq.s	.spriteLimit				; if all sprite slots are taken up, abort process
+		tst.b	d7
+		;cmpi.b	#sprites_max,d5				; check if sprite limit was exhausted
+		beq.s	.spriteLimit				; if yes, branch
 
 		move.l	#0,(a2)					; unlink last sprite
 		rts						; return

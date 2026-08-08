@@ -35,7 +35,7 @@ BossLabyrinth_Main:	; Routine 0
 		move.w	obY(a0),obBossY(a0)
 		move.b	#col_48x48|col_boss,obColType(a0)	; set collision type
 		move.b	#8,obBossHits(a0) 			; set number of hits to 8
-		move.b	#4,obPriority(a0)			; set render priority
+		move.w	#spr_prio4,obPriority(a0)			; set render priority
 		lea	BossLabyrinth_ObjData(pc),a2		; load objdata table
 		movea.l	a0,a1					; copy main boss object
 		moveq	#2,d1					; set up a loop to loop 3 times
@@ -54,7 +54,7 @@ BossLabyrinth_LoadBoss:
 		clr.b	ob2ndRout(a1)				; clear secondary object routine
 		move.b	(a2)+,obRoutine(a1)			; load objdata table into boss' copy routine table and increment
 		move.b	(a2)+,obAnim(a1)			; load animation into boss' copy and increment
-		move.b	obPriority(a0),obPriority(a1)		; copy priority
+		move.w	obPriority(a0),obPriority(a1)		; copy priority
 		move.l	#Map_Eggman,obMap(a1)			; set up mappings, graphics, and render style
 		move.w	#ArtTile_Eggman,obGfx(a1)
 		move.b	#sprite_cam_field,obRender(a1)

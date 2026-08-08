@@ -21,7 +21,7 @@ TSon_Main:	; Routine 0
 		move.w	#$80+$5E,obScreenY(a0)			; set initial Y-position
 		move.l	#Map_TSon,obMap(a0)			; set mappings
 		move.w	#ArtTile_Title_Sonic|Tile_Pal2,obGfx(a0) ; set art tile and palette line
-		move.b	#7,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio7,obPriority(a0)			; set sprite priority
 		move.b	#30-1,obDelayAni(a0)			; set time delay before Sonic moves in to 0.5 seconds
 		lea	(Ani_TSon).l,a1				; load animation script
 		bsr.w	AnimateSprite				; advance animation once
@@ -89,7 +89,7 @@ PSB_Main:	; Routine 0
 		clr.w	obGfx(a0)				; force art tile ID $0000
 		clr.w	obX(a0)					; force X-position 0 to activate masking
 		move.w	#$80+104,obScreenY(a0)			; set Y-position to cover Sonic's torso to 104px
-		move.b	#6,obPriority(a0)			; set sprite priority for sprite mask (above Sonic)
+		move.w	#spr_prio6,obPriority(a0)			; set sprite priority for sprite mask (above Sonic)
 
 		; Object is either TM or masking sprites
 		addq.b	#2,obRoutine(a0)			; advance to PSB_Exit (static)
@@ -97,7 +97,7 @@ PSB_Main:	; Routine 0
 		bne.s	PSB_Exit				; if not, branch (object is masking sprites)
 
 		move.w	#ArtTile_Title_Trademark|Tile_Pal2,obGfx(a0) ; "TM" specific art tile
-		move.b	#0,obPriority(a0)			; set sprite priority for TM (highest)
+		move.w	#spr_prio0,obPriority(a0)			; set sprite priority for TM (highest)
 		move.w	#$80+$F8,obX(a0)			; +8px
 		move.w	#$80+$78,obScreenY(a0)			; set Y-position for TM
 ; ---------------------------------------------------------------------------

@@ -20,7 +20,7 @@ Edge_Main:	; Routine 0
 		move.w	#ArtTile_GHZ_Edge_Wall|Tile_Pal3,obGfx(a0) ; load art tile and palette line
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#16/2,obActWid(a0)			; set sprite display width
-		move.b	#6,obPriority(a0)			; set sprite priority (very low)
+		move.w	#spr_prio6,obPriority(a0)			; set sprite priority (very low)
 
 		move.b	obSubtype(a0),obFrame(a0)		; copy object type number to frame number
 		bclr	#4,obFrame(a0)				; clear 4th bit (deduct $10)

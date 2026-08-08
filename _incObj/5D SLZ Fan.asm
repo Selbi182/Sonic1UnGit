@@ -22,7 +22,7 @@ Fan_Main:	; Routine 0
 		move.w	#ArtTile_SLZ_Fan|Tile_Pal3,obGfx(a0)	; set art tile and palette line
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#32/2,obActWid(a0)			; set sprite display width
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 ; ---------------------------------------------------------------------------
 
 Fan_Action:	; Routine 2

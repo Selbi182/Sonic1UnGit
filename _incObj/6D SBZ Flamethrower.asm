@@ -23,7 +23,7 @@ Flame_Main:	; Routine 0
 		move.l	#Map_Flame,obMap(a0)			; set mappings
 		move.w	#ArtTile_SBZ_Flamethrower|Tile_Prio,obGfx(a0) ; set art tile and high-priority flag
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#1,obPriority(a0)			; set sprite priority (above Sonic)
+		move.w	#spr_prio1,obPriority(a0)			; set sprite priority (above Sonic)
 		move.w	obY(a0),flame_timer(a0)			; store obY (pointless, gets overwritten below)
 		move.b	#24/2,obActWid(a0)			; set sprite display width
 

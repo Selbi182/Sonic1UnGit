@@ -102,7 +102,8 @@ SSR_Move:	; Routine 2
 		cmpi.b	#2,obFrame(a0)				; is this the ring bonus element? (only one element can control)
 		bne.s	.checkOffScreen				; if not, branch
 		addq.b	#2,obRoutine(a0)			; set to SSR_Wait (4)
-		move.w	#3*60,obTimeFrame(a0)			; set time delay before tally to 3 seconds
+		move.w	#90,obTimeFrame(a0)
+		;move.w	#3*60,obTimeFrame(a0)			; set time delay before tally to 3 seconds
 		move.b	#id_SSRChaos,(v_ssresemeralds).w	; load collected chaos emeralds object
 ; ---------------------------------------------------------------------------
 
@@ -152,7 +153,8 @@ SSR_RingBonus:	; Routine 6
 		jsr	(QueueSound2).l				; play it
 
 		addq.b	#2,obRoutine(a0)			; set to SSR_Wait (8, before SSR_Exit A)
-		move.w	#3*60,obTimeFrame(a0)			; set post summing-up time delay to 3 seconds
+		move.w	#90,obTimeFrame(a0)
+		;move.w	#3*60,obTimeFrame(a0)			; set post summing-up time delay to 3 seconds
 
 		cmpi.w	#ss_continue_rings,(v_rings).w		; do you have at least 50 rings?
 		blo.s	.return					; if not, branch

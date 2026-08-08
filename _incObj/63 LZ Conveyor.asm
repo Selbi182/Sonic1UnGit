@@ -59,13 +59,13 @@ LCon_Main:	; Routine 0
 		move.w	#ArtTile_LZ_Conveyor_Belt|Tile_Pal3,obGfx(a0) ; set art tile and palette line
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#32/2,obActWid(a0)			; set sprite display width and platform collision width
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 
 		cmpi.b	#$7F,obSubtype(a0)			; is this the decorative wheel object?
 		bne.s	LCon_Main_Platform			; if not, branch
 		addq.b	#4,obRoutine(a0)			; advance to LCon_Wheel
 		move.w	#ArtTile_LZ_Conveyor_Belt,obGfx(a0)	; use palette line 1
-		move.b	#1,obPriority(a0)			; set sprite priority above other conveyor objects and Sonic
+		move.w	#spr_prio1,obPriority(a0)			; set sprite priority above other conveyor objects and Sonic
 		bra.w	LCon_Wheel				; go straight to wheel logic
 ; ---------------------------------------------------------------------------
 

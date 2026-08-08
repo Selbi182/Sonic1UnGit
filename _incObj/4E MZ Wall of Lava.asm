@@ -37,7 +37,7 @@ LWall_Main:	; Routine 0
 		move.b	#160/2,obActWid(a1)			; set sprite display width (very large)
 		move.w	obX(a0),obX(a1)				; copy X-position
 		move.w	obY(a0),obY(a1)				; copy Y-position
-		move.b	#1,obPriority(a1)			; set sprite priority (above Sonic)
+		move.w	#spr_prio1,obPriority(a1)			; set sprite priority (above Sonic)
 		move.b	#0,obAnim(a1)				; set to first animation (it only has one)
 		move.b	#col_128x64|col_hurt,obColType(a1)	; set ReactToItem type (damaging)
 		move.l	a0,lwall_parent(a1)			; remember parent object

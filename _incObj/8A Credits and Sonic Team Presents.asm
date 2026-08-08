@@ -22,7 +22,7 @@ Cred_Main:	; Routine 0
 		move.w	(v_creditsnum).w,d0			; load credits page index number (doesn't reset between game mode changes)
 		move.b	d0,obFrame(a0)				; display appropriate sprite
 		move.b	#sprite_cam_screen,obRender(a0)		; set to screen coordinates positioning mode
-		move.b	#0,obPriority(a0)			; set top sprite priority
+		move.w	#spr_prio0,obPriority(a0)			; set top sprite priority
 
 		cmpi.b	#id_Title,(v_gamemode).w		; is the mode #4 (title screen)?
 		bne.s	Cred_Display				; if not, branch

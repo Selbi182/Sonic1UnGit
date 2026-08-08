@@ -25,7 +25,7 @@ Hel_Main:	; Routine 0
 		move.w	#ArtTile_GHZ_Spike_Pole|Tile_Pal3,obGfx(a0) ; set art tile and palette (located inside main GHZ graphics)
 		move.b	#7,obStatus(a0)				; (unused leftover?)
 		move.b	#sprite_cam_field,obRender(a0)		; set playfield-positioned mode
-		move.b	#3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
 		move.b	#16/2,obActWid(a0)			; set sprite display width
 
 		move.w	obY(a0),d2				; get base Y-position of parent
@@ -63,7 +63,7 @@ Hel_Main:	; Routine 0
 		move.l	obMap(a0),obMap(a1)			; copy parent mappings
 		move.w	#ArtTile_GHZ_Spike_Pole|Tile_Pal3,obGfx(a1) ; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode
-		move.b	#3,obPriority(a1)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a1)			; set sprite priority
 		move.b	#16/2,obActWid(a1)			; set sprite display width
 
 		move.b	d6,helix_frame(a1)			; set base spike frame ID

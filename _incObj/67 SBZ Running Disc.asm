@@ -29,7 +29,7 @@ Disc_Main:	; Routine 0
 		move.l	#Map_Disc,obMap(a0)			; set mappings
 		move.w	#ArtTile_SBZ_Disc|Tile_Pal3|Tile_Prio,obGfx(a0) ; set art tile, palette line, and high-priority flag
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 		move.b	#16/2,obActWid(a0)			; set sprite display width
 
 		move.w	obX(a0),disc_origX(a0)			; remember initial X-position

@@ -33,7 +33,7 @@ Bub_Main:	; Routine 0
 		move.w	#ArtTile_LZ_Bubbles|Tile_Prio,obGfx(a0)	; set art tile and priority flag
 		move.b	#sprite_rendered|sprite_cam_field,obRender(a0) ; set to playfield-positioned mode and set rendered flag (avoid immediate deletion)
 		move.b	#32/2,obActWid(a0)			; set sprite display width
-		move.b	#1,obPriority(a0)			; set sprite priority (above Sonic)
+		move.w	#spr_prio1,obPriority(a0)			; set sprite priority (above Sonic)
 
 		move.b	obSubtype(a0),d0			; get bubble type
 		bpl.s	.bubble					; is this a bubble maker? (subtype $80 or above)
@@ -122,7 +122,7 @@ Bub_ChkWater:	; Routine 4
 
 		tst.b	obRender(a0)				; has bubble gone offscreen?
 		bpl.s	.delete					; if yes, delete it
-		move.w	#$80,d0
+		move.w	#spr_prio1,d0
 		jmp	(DisplaySprite3).l			; display bubble
 
 
@@ -136,7 +136,7 @@ Bub_Bursting:	; Routine 6
 
 		tst.b	obRender(a0)				; has bubble gone offscreen?
 		bpl.s	.delete					; if yes, delete it
-		move.w	#$80,d0
+		move.w	#spr_prio1,d0
 		jmp	(DisplaySprite3).l			; display bubble
 
 
@@ -253,7 +253,7 @@ Bub_BubbleMaker: ; Routine $A
 		rts						; otherwise, keep it hidden
 
 .displaydo:
-		move.w	#$80,d0
+		move.w	#spr_prio1,d0
 		jmp	(DisplaySprite3).l			; display bubble
 
 ; ===========================================================================

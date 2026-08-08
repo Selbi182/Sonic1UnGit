@@ -33,7 +33,7 @@ Ledge_Main:	; Routine 0
 		move.l	#Map_Ledge,obMap(a0)
 		move.w	#ArtTile_Level|Tile_Pal3,obGfx(a0)
 		ori.b	#sprite_cam_field,obRender(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#spr_prio4,obPriority(a0)
 		move.b	#7,collapsible_timedelay(a0)		; set time delay for collapse
 		move.b	#96/2,obActWid(a0)
 		move.b	obSubtype(a0),obFrame(a0)		; use subtype as frame ID (0 or 1)
@@ -161,7 +161,7 @@ CFlo_Main:	; Routine 0
 		move.w	#ArtTile_SBZ_Collapsing_Floor|Tile_Pal3,obGfx(a0) ; SBZ specific code
 	.notSBZ:
 		ori.b	#sprite_cam_field,obRender(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#spr_prio4,obPriority(a0)
 		move.b	#7,collapsible_timedelay(a0)		; set time delay for collapse
 		move.b	#136/2,obActWid(a0)
 ; ---------------------------------------------------------------------------
@@ -338,7 +338,7 @@ FragmentatePlatform:
 		move.w	obX(a0),obX(a1)				; copy X position
 		move.w	obY(a0),obY(a1)				; copy Y position
 		move.w	obGfx(a0),obGfx(a1)			; copy art tile
-		move.b	obPriority(a0),obPriority(a1)		; copy sprite priority
+		move.w	obPriority(a0),obPriority(a1)		; copy sprite priority
 		move.b	obActWid(a0),obActWid(a1)		; copy display width
 
 		move.b	(a4)+,collapsible_timedelay(a1)		; write next time delay from "CollapseData_..." array

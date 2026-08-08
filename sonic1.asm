@@ -2046,10 +2046,16 @@ LevSel_Credits:
 
 LevSel_Level_SS:
 		add.w	d0,d0					; double selected line for word-based indexing
-		move.w	LevSel_Ptrs(pc,d0.w),d0			; find relevant level pointer from table
+		lea	LevSel_Ptrs(pc),a0
+		move.w	(a0,d0.w),d0				; find relevant level pointer from table
 		bmi.w	LevelSelect				; if it's an invalid entry, branch back to main loop
+
 		cmpi.w	#id_SS<<8,d0				; check if selected level Special Stage (0700 is used as dummy value)
-		bne.s	LevSel_Level				; if not, branch
+		blt.s	LevSel_Level				; if not, branch
+
+		andi.w	#$0007,d0
+		move.b	d0,(v_lastspecial).w
+
 		move.b	#id_Special,(v_gamemode).w		; set screen mode to $10 (Special Stage)
 		clr.w	(v_zone_act).w				; clear level
 		move.b	#3,(v_lives).w				; set lives to 3
@@ -2110,7 +2116,12 @@ LevSel_Ptrs:
 		dc.w id_SBZ_act2
 		dc.w id_LZ_act4			; Scrap Brain Zone 3
 		dc.w id_FZ			; Final Zone
-		dc.w id_SS<<8			; Special Stage (dummy value)
+		dc.w id_SS<<8+$00		; Special Stage 1
+		dc.w id_SS<<8+$01		; Special Stage 2
+		dc.w id_SS<<8+$02		; Special Stage 3
+		dc.w id_SS<<8+$03		; Special Stage 4
+		dc.w id_SS<<8+$04		; Special Stage 5
+		dc.w id_SS<<8+$05		; Special Stage 6
 		dc.w $8000			; Sound Test
 LevSel_PtrsEnd:	even
 
@@ -2298,12 +2309,12 @@ LevSel_NoMove:
 ; Subroutine to load level select text
 ; ---------------------------------------------------------------------------
 
-levsel_line_count:	equ 21	; total number of lines
+levsel_line_count:	equ 26	; total number of lines
 levsel_line_length:	equ 24	; characters per line
 levsel_sndtest_row:	equ levsel_line_count-1  ; row index of the sound test
 levsel_sndtest_col:	equ levsel_line_length-8 ; column offset for the sound test number
 
-levsel_start_row:	equ 4	; top tile offset for start position
+levsel_start_row:	equ 1	; top tile offset for start position
 levsel_start_col:	equ 8	; left tile offset for start position
 levsel_vram_main:	equ vram_bg+(levsel_start_row<<7)+(levsel_start_col<<1)	; nametable address in VRAM
 levsel_vram_sndtestnum:	equ levsel_vram_main+(levsel_sndtest_row<<7)+(levsel_sndtest_col<<1) ; nametable address for sound test numbers
@@ -2438,26 +2449,31 @@ lstxt	macro textline
 	endm
 
 LevelMenuText:
-		lstxt "GREEN HILL ZONE  STAGE 1"
-		lstxt "                 STAGE 2"
-		lstxt "                 STAGE 3"
-		lstxt "MARBLE ZONE      STAGE 1"
-		lstxt "                 STAGE 2"
-		lstxt "                 STAGE 3"
-		lstxt "SPRING YARD ZONE STAGE 1"
-		lstxt "                 STAGE 2"
-		lstxt "                 STAGE 3"
-		lstxt "LABYRINTH ZONE   STAGE 1"
-		lstxt "                 STAGE 2"
-		lstxt "                 STAGE 3"
-		lstxt "STAR LIGHT ZONE  STAGE 1"
-		lstxt "                 STAGE 2"
-		lstxt "                 STAGE 3"
-		lstxt "SCRAP BRAIN ZONE STAGE 1"
-		lstxt "                 STAGE 2"
-		lstxt "                 STAGE 3"
+		lstxt "GREEN HILL ZONE    ACT 1"
+		lstxt "                   ACT 2"
+		lstxt "                   ACT 3"
+		lstxt "MARBLE ZONE        ACT 1"
+		lstxt "                   ACT 2"
+		lstxt "                   ACT 3"
+		lstxt "SPRING YARD ZONE   ACT 1"
+		lstxt "                   ACT 2"
+		lstxt "                   ACT 3"
+		lstxt "LABYRINTH ZONE     ACT 1"
+		lstxt "                   ACT 2"
+		lstxt "                   ACT 3"
+		lstxt "STAR LIGHT ZONE    ACT 1"
+		lstxt "                   ACT 2"
+		lstxt "                   ACT 3"
+		lstxt "SCRAP BRAIN ZONE   ACT 1"
+		lstxt "                   ACT 2"
+		lstxt "                   ACT 3"
 		lstxt "FINAL ZONE              "
-		lstxt "SPECIAL STAGE           "
+		lstxt "SPECIAL STAGE          1"
+		lstxt "                       2"
+		lstxt "                       3"
+		lstxt "                       4"
+		lstxt "                       5"
+		lstxt "                       6"
 		lstxt "SOUND SELECT            "
 		even
 
@@ -3307,7 +3323,7 @@ GM_Continue:
 		move.b	#id_ContSonic,(v_player).w		; load continue screen Sonic object
 		move.b	#id_ContScrItem,(v_continuetext).w	; load continue screen objects (text and misc elements)
 		move.b	#id_ContScrItem,(v_continuelight).w	; load floor light object Sonic is laying on
-		move.b	#3,(v_continuelight+obPriority).w	; set priority to be behind Sonic
+		move.w	#spr_prio3,(v_continuelight+obPriority).w	; set priority to be behind Sonic
 		move.b	#4,(v_continuelight+obFrame).w		; set correct frame for the light
 		move.b	#id_ContScrItem,(v_continueicon).w	; load continue icons object
 		move.b	#4,(v_continueicon+obRoutine).w		; set to continue icons routine

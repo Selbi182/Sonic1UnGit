@@ -41,7 +41,7 @@ FBlock_Main:	; Routine 0
 
 	.continueSetup:
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
 
 		moveq	#0,d0					; clear d0
 		move.b	obSubtype(a0),d0			; get object subtype

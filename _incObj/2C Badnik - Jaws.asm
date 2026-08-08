@@ -22,7 +22,7 @@ Jaws_Main:	; Routine 0
 		move.w	#ArtTile_Jaws|Tile_Pal2,obGfx(a0)	; set art tile and palette line
 		ori.b	#sprite_cam_field,obRender(a0)		; set playfield-positioned mode
 		move.b	#col_32x24|col_badnik,obColType(a0)	; set collision type to badnik, 32x24
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 		move.b	#48/2,obActWid(a0)			; set sprite display width (corrected)
 
 		moveq	#0,d0					; clear d0

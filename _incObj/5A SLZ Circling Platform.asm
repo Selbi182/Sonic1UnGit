@@ -24,7 +24,7 @@ Circ_Main:	; Routine 0
 		move.l	#Map_Circ,obMap(a0)			; set mappings
 		move.w	#ArtTile_Level|Tile_Pal3,obGfx(a0)	; set art tile and palette
 		move.b	#sprite_cam_field,obRender(a0)		; set playfield-positioned mode
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 		move.b	#48/2,obActWid(a0)			; set sprite display width and platform solidity width
 		move.w	obX(a0),circ_origX(a0)			; remember initial X-position
 		move.w	obY(a0),circ_origY(a0)			; remember initial Y-position

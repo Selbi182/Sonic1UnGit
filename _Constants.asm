@@ -230,8 +230,7 @@ obInertia:		equ $14					; potential speed (2 bytes)
 respawn_index:		equ $14					; S3K object manager respawn table address (2 bytes)
 obHeight:		equ $16					; height/2
 obWidth:		equ $17					; width/2
-obPriority:		equ $18					; sprite stack priority -- 0 is front
-obActWid:		equ $19					; action width
+obPriority:		equ $18					; sprite stack priority (2 bytes, S3K variant)
 obFrame:		equ $1A					; current frame displayed
 obAniFrame:		equ $1B					; current frame in animation script
 obAnim:			equ $1C					; current animation
@@ -241,6 +240,7 @@ obDelayAni:		equ $1F					; time to delay animation
 obColType:		equ $20					; collision response type
 obColProp:		equ $21					; collision extra property
 obStatus:		equ $22					; orientation or mode
+obActWid:		equ $23					; action width
 obRoutine:		equ $24					; routine number
 ob2ndRout:		equ $25					; secondary routine number
 obSolid:		equ ob2ndRout				; solid status flag
@@ -295,6 +295,16 @@ sub8_mapframe:		equ subspr_data+next_subspr*6+5	; objoff_39
 sub9_x_pos:		equ subspr_data+next_subspr*7+0	; objoff_3A/objoff_3B
 sub9_y_pos:		equ subspr_data+next_subspr*7+2	; objoff_3C/objoff_3D
 sub9_mapframe:		equ subspr_data+next_subspr*7+5	; objoff_3F
+
+; Sprite priorities
+spr_prio0:		equ $80*0
+spr_prio1:		equ $80*1
+spr_prio2:		equ $80*2
+spr_prio3:		equ $80*3
+spr_prio4:		equ $80*4
+spr_prio5:		equ $80*5
+spr_prio6:		equ $80*6
+spr_prio7:		equ $80*7
 
 ; Sonic's collision sizes
 sonic_width:		equ 18/2				; Sonic's width

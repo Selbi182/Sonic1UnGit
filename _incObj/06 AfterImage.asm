@@ -10,7 +10,7 @@ After_Init:
 		addq.b	#2,obRoutine(a0)		; Advance obRoutine to "After_Main"
 		move.l	#Map_Sonic,obMap(a0)
 		move.w	#ArtTile_Sonic,obGfx(a0)
-		move.b	#2,obPriority(a0)
+		move.w	#spr_prio2,obPriority(a0)
 		move.b	#$18,obWidth(a0)
 		move.b	#$18,obHeight(a0)
 		move.b	#4,obRender(a0)
@@ -38,5 +38,5 @@ After_Main:
 
 		move.b	(v_player+obFrame).w,obFrame(a0)	; Use player's current obFrame
 		move.b	(v_player+obRender).w,obRender(a0)	; Use player's current obRender
-		move.b	(v_player+obPriority).w,obPriority(a0)	; Use player's current obPriority
+		move.w	(v_player+obPriority).w,obPriority(a0)	; Use player's current obPriority
 		bra.w	DisplaySprite

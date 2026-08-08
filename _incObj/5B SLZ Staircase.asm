@@ -52,7 +52,7 @@ Stair_Main:	; Routine 0
 		move.l	#Map_Stair,obMap(a1)			; set mappings
 		move.w	#ArtTile_Level|Tile_Pal3,obGfx(a1)	; set art tile (part of main level graphics) and palette line
 		move.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode
-		move.b	#3,obPriority(a1)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a1)			; set sprite priority
 		move.b	#32/2,obActWid(a1)			; set sprite display width and solidity width
 		move.b	obSubtype(a0),obSubtype(a1)		; copy subtype from parent
 		move.w	d2,obX(a1)				; set X-position for block

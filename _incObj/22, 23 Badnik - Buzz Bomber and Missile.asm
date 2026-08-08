@@ -22,7 +22,7 @@ Buzz_Main:	; Routine 0
 		move.l	#Map_Buzz,obMap(a0)			; set mappings
 		move.w	#ArtTile_Buzz_Bomber,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
 		move.b	#col_48x24|col_badnik,obColType(a0)	; set ReactToItem entry to 8 (badnik, 48x24)
 		move.b	#48/2,obActWid(a0)			; set sprite display width
 ; ---------------------------------------------------------------------------
@@ -162,7 +162,7 @@ Msl_Main:	; Routine 0
 		move.l	#Map_Missile,obMap(a0)			; set mappings
 		move.w	#ArtTile_Buzz_Bomber|Tile_Pal2,obGfx(a0) ; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
 		move.b	#16/2,obActWid(a0)			; set sprite display width
 		andi.b	#3,obStatus(a0)				; clear status flags except X/Y-flip flags
 

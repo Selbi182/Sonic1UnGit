@@ -22,7 +22,7 @@ WFall_Main:	; Routine 0
 		move.w	#ArtTile_LZ_Splash|Tile_Pal3,obGfx(a0)	; set art tile and palette line (palette cycle)
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#48/2,obActWid(a0)			; set sprite display width
-		move.b	#1,obPriority(a0)			; set sprite priority (above Sonic)
+		move.w	#spr_prio1,obPriority(a0)			; set sprite priority (above Sonic)
 
 		move.b	obSubtype(a0),d0			; get object type
 		bpl.s	.setFrame				; branch if $00-$7F
@@ -35,7 +35,7 @@ WFall_Main:	; Routine 0
 		; Special variations of the splash subtype ($x9)
 		cmpi.b	#9,d0					; is object type $x9 (splash)?
 		bne.s	WFall_Display				; if not, branch
-		clr.b	obPriority(a0)				; use highest sprite priority (in front of other waterfalls)
+		clr.w	obPriority(a0)				; use highest sprite priority (in front of other waterfalls)
 		subq.b	#2,obRoutine(a0)			; go back to WFall_Animate
 		btst	#6,obSubtype(a0)			; is object subtype $49?
 		beq.s	.chkHidden				; if not, branch

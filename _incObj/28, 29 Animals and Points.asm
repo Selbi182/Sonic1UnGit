@@ -138,7 +138,7 @@ Anml_Main:	; Routine 0
 		move.b	#24/2,obHeight(a0)			; set height
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		bset	#sprite_xflip_bit,obRender(a0)		; set X-flip flag (face left)
-		move.b	#6,obPriority(a0)			; set sprite priority (very low)
+		move.w	#spr_prio6,obPriority(a0)			; set sprite priority (very low)
 		move.b	#16/2,obActWid(a0)			; set sprite display width
 		move.b	#8-1,obTimeFrame(a0)			; initial animation delay for flying animals (slow gravity)
 		bra.w	DisplaySprite				; display animal
@@ -171,7 +171,7 @@ Anml_FromEnemy:
 		move.b	#24/2,obHeight(a0)			; set height
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		bset	#sprite_xflip_bit,obRender(a0)		; set X-flip flag
-		move.b	#6,obPriority(a0)			; set sprite priority (very low)
+		move.w	#spr_prio6,obPriority(a0)			; set sprite priority (very low)
 		move.b	#16/2,obActWid(a0)			; set sprite display width
 		move.b	#8-1,obTimeFrame(a0)			; initial animation delay for flying animals (slow gravity)
 		move.b	#2,obFrame(a0)				; set initial frame to ".flap2"
@@ -321,7 +321,7 @@ Anml_FromPrison: ; Routine 12
 		subq.w	#1,animal_prisondelay(a0)		; decrement delay before animal jumps out of capsule
 		bne.w	.display				; if time remains
 		move.b	#2,obRoutine(a0)			; set animal to Anml_ChkFloor to make it start moving
-		move.b	#3,obPriority(a0)			; set sprite priority to be above prison
+		move.w	#spr_prio3,obPriority(a0)			; set sprite priority to be above prison
 
 	.display:
 		bra.w	DisplaySprite				; display animal
@@ -575,7 +575,7 @@ Poi_Main:	; Routine 0
 		move.l	#Map_Points,obMap(a0)			; set mappings
 		move.w	#ArtTile_Points|Tile_Pal2,obGfx(a0)	; set art tile and palette
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#1,obPriority(a0)			; set sprite priority (above Sonic)
+		move.w	#spr_prio1,obPriority(a0)			; set sprite priority (above Sonic)
 		move.b	#16/2,obActWid(a0)			; set display width
 		move.w	#-$300,obVelY(a0)			; move points object upwards
 ; ---------------------------------------------------------------------------

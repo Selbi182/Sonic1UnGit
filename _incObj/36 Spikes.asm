@@ -34,7 +34,7 @@ Spikes_Main:	; Routine 0
 		move.l	#Map_Spike,obMap(a0)			; load mappings
 		move.w	#ArtTile_Spikes,obGfx(a0)		; set art tile
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioning mode
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 
 		move.b	obSubtype(a0),d0			; get spikes subtype
 		andi.b	#$F,obSubtype(a0)			; clear upper nybble in subtype (lower nybble is for movement)

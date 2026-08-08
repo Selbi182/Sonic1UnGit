@@ -34,7 +34,7 @@ See_Main:	; Routine 0
 		move.l	#Map_Seesaw,obMap(a0)			; set mappings
 		move.w	#ArtTile_SLZ_Seesaw,obGfx(a0)		; set art tile
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 		move.b	#96/2,obActWid(a0)			; set sprite display width
 		move.w	obX(a0),see_origX(a0)			; remember initial X-position
 
@@ -141,7 +141,7 @@ See_Spikeball_Setup: ; Routine 6
 		move.l	#Map_SSawBall,obMap(a0)			; set spikeball mappings
 		move.w	#ArtTile_SLZ_Spikeball,obGfx(a0)	; set spikeball art tile
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#4,obPriority(a0)			; set sprite priority (same as seesaw, but always behind due to RAM location)
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority (same as seesaw, but always behind due to RAM location)
 		move.b	#col_16x16|col_hurt,obColType(a0)	; make spikeball harmful on touch
 		move.b	#24/2,obActWid(a0)			; set sprite display width
 

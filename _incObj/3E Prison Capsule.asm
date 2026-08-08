@@ -48,7 +48,10 @@ Pri_Main:	; Routine 0
 		lea	Pri_Var(pc,d0.w),a1			; get values for subtype
 		move.b	(a1)+,obRoutine(a0)			; set routine number
 		move.b	(a1)+,obActWid(a0)			; set sprite display width
-		move.b	(a1)+,obPriority(a0)			; set sprite priority
+		moveq	#0,d1
+		move.b	(a1)+,d1
+		lsl.w	#7,d1
+		move.w	d1,obPriority(a0)			; set sprite priority
 		move.b	(a1)+,obFrame(a0)			; set frame ID
 
 		; Another unused leftover from the deleted subtypes.

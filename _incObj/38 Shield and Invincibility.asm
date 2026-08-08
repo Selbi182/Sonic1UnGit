@@ -21,7 +21,7 @@ Shi_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)			; advance to Shi_Shield
 		move.l	#Map_Shield,obMap(a0)			; set shield mappings
 		move.b	#sprite_cam_field,obRender(a0)		; set playfield-positioning mode
-		move.b	#1,obPriority(a0)			; set sprite priority (above Sonic)
+		move.w	#spr_prio1,obPriority(a0)			; set sprite priority (above Sonic)
 		move.b	#32/2,obActWid(a0)			; set sprite display width
 		st.b	shistar_prev(a0)			; make sure initial frame art loads
 

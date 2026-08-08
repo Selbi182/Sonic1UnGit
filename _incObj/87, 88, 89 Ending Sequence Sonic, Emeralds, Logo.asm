@@ -45,7 +45,7 @@ ESon_GoodEnding:
 		move.w	#ArtTile_Ending_Sonic,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		clr.b	obStatus(a0)				; clear X-flip flag
-		move.b	#2,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio2,obPriority(a0)			; set sprite priority
 		move.b	#0,obFrame(a0)				; set to "looking at emeralds" frame
 		move.w	#(1*60)+20,eson_time(a0)		; set duration to look at emeralds to a bit under 1.5 seconds
 ; ---------------------------------------------------------------------------
@@ -121,7 +121,7 @@ ESon_BadEnding:	; Routine $10
 		move.w	#ArtTile_Ending_Sonic,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		clr.b	obStatus(a0)				; clear any X/Y-flip flags
-		move.b	#2,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio2,obPriority(a0)			; set sprite priority
 		move.b	#5,obFrame(a0)				; use first "leaping" frame
 		move.b	#2,obAnim(a0)				; set Sonic to "leap at screen" animation
 		move.b	#id_EndSTH,(v_endlogo).w		; load "SONIC THE HEDGEHOG" object
@@ -178,7 +178,7 @@ ECha_CreateEms:
 		move.l	#Map_ECha,obMap(a1)			; set mappings
 		move.w	#ArtTile_Ending_Emeralds,obGfx(a1)	; set art tile
 		move.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode
-		move.b	#1,obPriority(a1)			; set sprite priority (above Sonic)
+		move.w	#spr_prio1,obPriority(a1)			; set sprite priority (above Sonic)
 		move.w	obX(a0),echa_origX(a1)			; remember initial X-position for spinning animation
 		move.w	obY(a0),echa_origY(a1)			; remember initial Y-position for spinning animation
 		move.b	d2,obAnim(a1)				; set animation (unused here?)
@@ -251,7 +251,7 @@ ESth_Main:	; Routine 0
 		move.l	#Map_ESth,obMap(a0)			; set mappings
 		move.w	#ArtTile_Ending_STH,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_screen,obRender(a0)		; set to screen-positioned mode
-		move.b	#0,obPriority(a0)			; set to maximum sprite priority
+		move.w	#spr_prio0,obPriority(a0)			; set to maximum sprite priority
 ; ---------------------------------------------------------------------------
 
 ESth_Move:	; Routine 2

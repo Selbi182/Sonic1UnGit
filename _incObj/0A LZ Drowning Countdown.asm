@@ -37,7 +37,7 @@ Drown_Main:	; Routine 0
 		move.w	#ArtTile_LZ_Bubbles|Tile_Prio,obGfx(a0)	; set art tile and priority flag
 		move.b	#sprite_rendered|sprite_cam_field,obRender(a0) ; rendered flag to prevent immediate deletion and playfield-positioned mode
 		move.b	#32/2,obActWid(a0)			; set sprite display width
-		move.b	#1,obPriority(a0)			; set sprite priority (above Sonic)
+		move.w	#spr_prio1,obPriority(a0)			; set sprite priority (above Sonic)
 
 		move.b	obSubtype(a0),d0			; get bubble type
 		bpl.s	.numberBubble				; is this the special countdown object (set from Obj01_InWater)? if not, branch
@@ -145,7 +145,7 @@ Drown_ShowNumber:
 		move.w	#15,drown_numtime(a0)			; reset delay to 15 frames
 		clr.w	obVelY(a0)				; stop bubble from moving
 		move.b	#sprite_rendered,obRender(a0)		; change bubble to screen-fixed positioning mode
-		clr.b	obPriority(a0)
+		clr.w	obPriority(a0)
 
 		move.w	obX(a0),d0				; get playfield X-position
 		sub.w	(v_screenposx).w,d0			; subtract camera X-position

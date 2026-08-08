@@ -21,7 +21,7 @@ Harp_Main:	; Routine 0
 		move.l	#Map_Harp,obMap(a0)			; set mappings
 		move.w	#ArtTile_LZ_Harpoon,obGfx(a0)		; set art tile
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
 		move.b	obSubtype(a0),obAnim(a0)		; get harpoon type (0 = sideways // 2 = upright)
 		move.b	#40/2,obActWid(a0)			; set sprite display width
 		move.w	#60,harp_time(a0)			; set extending/retracting time delay to 1 second

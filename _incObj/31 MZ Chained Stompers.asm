@@ -92,7 +92,7 @@ CStom_Main:	; Routine 0
 		move.b	obSubtype(a0),obSubtype(a1)		; copy subtype from parent
 		move.b	#32/2,obActWid(a1)			; set sprite display width
 		move.w	d2,cstom_length(a1)			; write stomper length fetched from CStom_Lengths
-		move.b	#4,obPriority(a1)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a1)			; set sprite priority
 		move.b	(a2)+,obFrame(a1)			; set frame ID (0-3)
 
 		cmpi.b	#1,obFrame(a1)				; are we spawning the spikes object?
@@ -109,7 +109,7 @@ CStom_Main:	; Routine 0
 		move.l	a0,cstom_parent(a1)			; remember parent object (block)
 		dbf	d1,.loopMakeStomper			; repeat sequence 3 more times
 
-		move.b	#3,obPriority(a1)			; make base at the ceiling higher priority
+		move.w	#spr_prio3,obPriority(a1)			; make base at the ceiling higher priority
 
 .setupMainBlock:
 		moveq	#0,d0					; clear d0

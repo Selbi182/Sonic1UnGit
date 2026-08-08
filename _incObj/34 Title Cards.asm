@@ -54,7 +54,7 @@ Card_Loop:
 		move.w	#ArtTile_Title_Card|Tile_Prio,obGfx(a1)	; set art tile and sprite priority flag
 		move.b	#240/2,obActWid(a1)			; set display width (redundant for screen-positioned sprites)
 		move.b	#sprite_cam_screen,obRender(a1)		; set to screen-positioned sprite mode
-		move.b	#0,obPriority(a1)			; set to highest sprite priority
+		move.w	#spr_prio0,obPriority(a1)			; set to highest sprite priority
 		move.w	#1*60,obTimeFrame(a1)			; set time delay before moving out again to 1 second
 
 		lea	object_size(a1),a1			; advance to next card object (all elements are back-to-back in RAM)

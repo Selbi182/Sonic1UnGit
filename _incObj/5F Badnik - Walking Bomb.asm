@@ -24,7 +24,7 @@ Bom_Main:	; Routine 0
 		move.l	#Map_Bomb,obMap(a0)			; set mappings
 		move.w	#ArtTile_Bomb,obGfx(a0)			; set art tile
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.b	#3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
 		move.b	#24/2,obActWid(a0)			; set sprite display width
 
 		move.b	obSubtype(a0),d0			; get subtype (0 = normal badnik, 4 = fuse, 6 = shrapnel)
