@@ -21,8 +21,12 @@ BossStarLight_Index:
 		dc.w BossStarLight_PipeMain-BossStarLight_Index
 
 BossStarLight_SeesawList:	equ objoff_32 			; location within boss object to store a list of all seesaw objects
-BossStarLight_ParentObj:	equ objoff_3C 			; Pointer to main boss controller
-BossStarLight_SeesawSide:	equ objoff_3A			; stores basic value of which side of the saw the spike ball is on, doubled for word-traversal
+
+BossStarLight_ParentObj:	equ objoff_3A 			; Pointer to main boss controller
+BossStarLight_SeesawSide:	equ obWidth			; stores basic value of which side of the saw the spike ball is on, doubled for word-traversal
+;BossStarLight_ParentObj:	equ objoff_3C 			; Pointer to main boss controller
+;BossStarLight_SeesawSide:	equ objoff_3A			; stores basic value of which side of the saw the spike ball is on, doubled for word-traversal
+
 BossStarLight_GenericTimer:	equ objoff_26 			; timer for how many frames to do an action, whether its wait for explosions, or to move in a direction
 BossStarLight_SineCounter:	equ objoff_27 			; sine counter for bobbing motion
 ; ===========================================================================
@@ -38,11 +42,11 @@ BossStarLight_ObjData:
 BossStarLight_Main:
 		lea	(v_lvlobjspace).w,a1 			; load level object space address
 		lea	BossStarLight_SeesawList(a0),a2 	; load some scratch RAM from the boss object into a2 to keep track of seesaws
-		moveq	#id_Seesaw,d0
+		move.l	#Seesaw,d0
 		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d1
 
 .checkSeesaws:
-		cmp.b	obID(a1),d0 				; is the object a seesaw?
+		cmp.l	obID(a1),d0 				; is the object a seesaw?
 		bne.s	.skip 					; no, skip
 		tst.b	obSubtype(a1) 				; does the seesaw have a ball on it? (object subtype 00 contains a ball)
 		beq.s	.skip 					; yes, skip
@@ -72,7 +76,7 @@ BossStarLight_Main:
 BossStarLight_Loop:
 		jsr	(FindNextFreeObj).l 			; are there any free objects?
 		bne.s	BossStarLight_ShipMain			; no, leave early
-		move.b	#id_BossStarLight,obID(a1) 		; set object ID for this slot
+		move.l	#BossStarLight,obID(a1) 		; set object ID for this slot
 		move.w	obX(a0),obX(a1) 			; set object position to boss position
 		move.w	obY(a0),obY(a1)
 
@@ -285,7 +289,7 @@ BSLZ_MakeBall:
 		jsr	(FindNextFreeObj).l			; now look for a free slot after the seesaw object
 		movea.l	(sp)+,a0				; restore boss object pointer and increment stack
 		bne.s	.abortDrop				; did we find a free slot from FindNextFreeObj? was the Z flag set by NFree_Loop (beq)? if not, branch
-		move.b	#id_BossSpikeball,obID(a1) 		; load spiked ball object
+		move.l	#BossSpikeball,obID(a1) 		; load spiked ball object
 		move.w	obX(a0),obX(a1)				; set x and y of object to x and y of boss
 		move.w	obY(a0),obY(a1)
 		addi.w	#$20,obY(a1)				; offset y so that it comes out of the ball launcher
@@ -581,7 +585,7 @@ BossSpikeball_Bounce: ; Routine 4
 		movea.l	BossSpikeball_SeesawPtr(a0),a1		; copy offset address, a1 now contains the seesaw that this ball is tied to
 		moveq	#0,d0
 		move.b	BossStarLight_SeesawSide(a0),d0		; move spike ball's side value
-		sub.b	BossStarLight_SeesawSide(a1),d0		; subtract seesaw's side value with spike ball's value
+		sub.b	see_state_see(a1),d0			; subtract seesaw's side value with spike ball's value
 		beq.s	BossSpikeball_CalcPos			; if equal, the ball hasn't left the saw, so branch
 		bcc.s	.calcLaunch				; if no carry (2-0), the ball has been launched, so branch
 		neg.b	d0					; ball was on opposite side but has been launched, so negate, this is just calculating absolute value
@@ -672,13 +676,13 @@ BossSpikeball_CheckFlicker:
 ; loc_18EAA:
 BossSpikeball_HitBoss:	; Routine 6
 		lea	(v_lvlobjspace).w,a1
-		moveq	#id_BossStarLight,d0
+		move.l	#BossStarLight,d0
 		moveq	#object_size,d1
 		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d2
 
 ; loc_18EB4:
 .findBoss:
-		cmp.b	obID(a1),d0				; is the current index the boss object?
+		cmp.l	obID(a1),d0				; is the current index the boss object?
 		beq.s	BossSpikeball_CheckCollision		; if yes, branch
 		adda.w	d1,a1					; add object size to level object space (increment index via word)
 		dbf	d2,.findBoss				; decrement based on amount of objects in level and loop
@@ -798,7 +802,7 @@ BossSpikeball_FallingDown:
 
 ; loc_18FA2l:
 BossSpikeball_LaunchSonic:
-		move.b	d1,BossStarLight_SeesawSide(a1)		; tell seesaw what side ball is on
+		move.b	d1,see_state_see(a1)			; tell seesaw what side ball is on
 		move.b	d1,BossStarLight_SeesawSide(a0)		; update ball
 		cmp.b	obFrame(a1),d1				; is the seesaw already pushed down?
 		beq.s	.noLaunch				; if yes, seesaw can't flip, so skip
@@ -857,7 +861,7 @@ BossSpikeball_BallHitbox:
 ; ===========================================================================
 
 BossSpikeball_Explode:	; Routine 8
-		move.b	#id_Explosion,obID(a0)		; set object ID of ball to explosion
+		move.l	#Explosion,obID(a0)		; set object ID of ball to explosion
 		clr.b	obRoutine(a0)			; clear routine counter to 0
 		cmpi.w	#32,obSubtype(a0)		; is this the first explosion frame?
 		beq.s	BossSpikeball_MakeFrag		; if yes, branch
@@ -872,7 +876,7 @@ BossSpikeball_MakeFrag:
 BossSpikeball_Loop:
 		jsr	(FindFreeObj).l			; look for a free object slot
 		bne.s	.loop
-		move.b	#id_BossSpikeball,obID(a1) 	; load shrapnel object
+		move.l	#BossSpikeball,obID(a1) 	; load shrapnel object
 		move.b	#$A,obRoutine(a1)		; set routine to routine 10 (below)
 		move.l	#Map_BSBall,obMap(a1)		; set mappings
 		move.w	#spr_prio3,obPriority(a1)		; set priority (to appear in front of background)

@@ -115,7 +115,7 @@ Debug_Action:	; Routine 2
 		adda.w	(a2,d0.w),a2				; go to debug item list for Zone ID
 		move.w	(a2)+,d6				; load number of entries in debug item list
 
-		bsr.w	Debug_Control				; allow movement and object spawning, and update graphics
+		bsr.s	Debug_Control				; allow movement and object spawning, and update graphics
 		DisplaySprite
 		rts			; display debug object
 ; End of function DebugMode
@@ -256,17 +256,22 @@ Debug_ChgItem:
 
 		jsr	(FindFreeObj).l				; find a free object slot
 		bne.s	Debug_ExitDebugMode			; if none are free, branch
+
+		move.b	(v_debugitem).w,d0			; get currently selected item in debug list
+		mulu.w	#$C,d0
+		move.l	(a2,d0.w),obID(a1)
+
 		move.w	obX(a0),obX(a1)				; set new object's X-position
 		move.w	obY(a0),obY(a1)				; set new object's Y-position
-		move.b	obMap(a0),obID(a1)			; create object (ID is stored in list with mappings as map+(object<<24))
 		move.b	obRender(a0),obRender(a1)		; set new object's render flags
 		move.b	obRender(a0),obStatus(a1)		; set new object's status flags
 		andi.b	#$7F,obStatus(a1)			; make sure bit 7 in status flag is clear
 
 		moveq	#0,d0					; clear d0
 		move.b	(v_debugitem).w,d0			; get index of currently selected debug item
-		lsl.w	#3,d0					; each entry is 8 bytes
-		move.b	4(a2,d0.w),obSubtype(a1)		; load subtype for object from debug list entry
+		mulu.w	#$C,d0
+		;lsl.w	#3,d0					; each entry is 8 bytes
+		move.b	8(a2,d0.w),obSubtype(a1)		; load subtype for object from debug list entry
 
 		rts						; return
 
@@ -306,6 +311,10 @@ Debug_ExitDebugMode:
 		disable_ints
 		jsr	(Hud_Base).l
 		move.b	#60,(v_timecent).w
+		move.b	#1,(f_scorecount).w			; update score counter
+		move.b	#1,(f_ringcount).w			; update rings counter
+		move.b	#1,(f_timecount).w			; update time counter
+		move.b	#1,(f_endactbonus).w			; update ring bonus counter
 		enable_ints
 		rts
 ; End of function Debug_Control
@@ -324,10 +333,11 @@ Debug_ExitDebugMode:
 Debug_ShowItem:
 		moveq	#0,d0					; clear d0
 		move.b	(v_debugitem).w,d0			; get currently selected item in debug list
-		lsl.w	#3,d0					; each entry is 8 bytes
-		move.l	(a2,d0.w),obMap(a0)			; load mappings for displayed item
-		move.w	6(a2,d0.w),obGfx(a0)			; load VRAM setting for displayed item
-		move.b	5(a2,d0.w),obFrame(a0)			; load frame number for displayed item
+		;lsl.w	#3,d0					; each entry is 8 bytes
+		mulu.w	#$C,d0
+		move.l	4(a2,d0.w),obMap(a0)			; load mappings for displayed item
+		move.w	$A(a2,d0.w),obGfx(a0)			; load VRAM setting for displayed item
+		move.b	9(a2,d0.w),obFrame(a0)			; load frame number for displayed item
 		rts						; return
 ; End of function Debug_ShowItem
 
@@ -346,167 +356,165 @@ DebugList:
 		dc.w .EndingSS-DebugList
 
 dbug:		macro	map,object,subtype,frame,vram
-		dc.l	map+(object<<24)
+		dc.l	object
+		dc.l	map
 		dc.b	subtype,frame
 		dc.w	vram
 		endm
 
 dbugheader:	macro	*
 \*:
-		dc.w	((\*_end)-(\*)-2)/8
+		dc.w	((\*_end)-(\*)-2)/$C
 		endm
 
 ; ---------------------------------------------------------------------------
 
 .GHZ:		dbugheader
 		;	mappings	object			subtype	frame	VRAM setting
-		dbug 	Map_Ring,	id_Rings,		0,	0,	ArtTile_Ring|Tile_Pal2
-		dbug	Map_Monitor,	id_Monitor,		0,	0,	ArtTile_Monitor
-		dbug	Map_Crab,	id_Crabmeat,		0,	0,	ArtTile_Crabmeat
-		dbug	Map_Buzz,	id_BuzzBomber,		0,	0,	ArtTile_Buzz_Bomber
-		dbug	Map_Chop,	id_Chopper,		0,	0,	ArtTile_Chopper
-		dbug	Map_Spike,	id_Spikes,		0,	0,	ArtTile_Spikes
-		dbug	Map_Plat_GHZ,	id_BasicPlatform,	0,	0,	ArtTile_Level|Tile_Pal3
-		dbug	Map_PRock,	id_PurpleRock,		0,	0,	ArtTile_GHZ_Purple_Rock|Tile_Pal4
-		dbug	Map_Moto,	id_MotoBug,		0,	0,	ArtTile_Moto_Bug
-		dbug	Map_Spring,	id_Springs,		0,	0,	ArtTile_Spring_Horizontal
-		dbug	Map_Newt,	id_Newtron,		0,	0,	ArtTile_Newtron|Tile_Pal2
-		dbug	Map_Edge,	id_EdgeWalls,		0,	0,	ArtTile_GHZ_Edge_Wall|Tile_Pal3
-		dbug	Map_GBall,	id_Obj19,		0,	0,	ArtTile_GHZ_Giant_Ball|Tile_Pal3
-		dbug	Map_Lamp,	id_Lamppost,		1,	0,	ArtTile_Lamppost
-		dbug	Map_GRing,	id_GiantRing,		0,	0,	ArtTile_Giant_Ring|Tile_Pal2
-		dbug	Map_Bonus,	id_HiddenBonus,		1,	1,	ArtTile_Hidden_Points|Tile_Prio
+		dbug 	Map_Ring,	Rings,			0,	0,	ArtTile_Ring|Tile_Pal2
+		dbug	Map_Monitor,	Monitor,		0,	0,	ArtTile_Monitor
+		dbug	Map_Crab,	Crabmeat,		0,	0,	ArtTile_Crabmeat
+		dbug	Map_Buzz,	BuzzBomber,		0,	0,	ArtTile_Buzz_Bomber
+		dbug	Map_Chop,	Chopper,		0,	0,	ArtTile_Chopper
+		dbug	Map_Spike,	Spikes,			0,	0,	ArtTile_Spikes
+		dbug	Map_Plat_GHZ,	BasicPlatform,		0,	0,	ArtTile_Level|Tile_Pal3
+		dbug	Map_PRock,	PurpleRock,		0,	0,	ArtTile_GHZ_Purple_Rock|Tile_Pal4
+		dbug	Map_Moto,	MotoBug,		0,	0,	ArtTile_Moto_Bug
+		dbug	Map_Spring,	Springs,		0,	0,	ArtTile_Spring_Horizontal
+		dbug	Map_Newt,	Newtron,		0,	0,	ArtTile_Newtron|Tile_Pal2
+		dbug	Map_Edge,	EdgeWalls,		0,	0,	ArtTile_GHZ_Edge_Wall|Tile_Pal3
+		dbug	Map_Lamp,	Lamppost,		1,	0,	ArtTile_Lamppost
 .GHZ_end:
 
 ; ---------------------------------------------------------------------------
 
 .LZ:		dbugheader
 		;	mappings	object			subtype	frame	VRAM setting
-		dbug 	Map_Ring,	id_Rings,		0,	0,	ArtTile_Ring|Tile_Pal2
-		dbug	Map_Monitor,	id_Monitor,		0,	0,	ArtTile_Monitor
-		dbug	Map_Spring,	id_Springs,		0,	0,	ArtTile_Spring_Horizontal
-		dbug	Map_Jaws,	id_Jaws,		8,	0,	ArtTile_Jaws|Tile_Pal2
-		dbug	Map_Burro,	id_Burrobot,		0,	2,	ArtTile_Burrobot|Tile_Prio
-		dbug	Map_Harp,	id_Harpoon,		0,	0,	ArtTile_LZ_Harpoon
-		dbug	Map_Harp,	id_Harpoon,		2,	3,	ArtTile_LZ_Harpoon
-		dbug	Map_Push,	id_PushBlock,		0,	0,	ArtTile_LZ_Push_Block|Tile_Pal3
-		dbug	Map_But,	id_Button,		0,	0,	ArtTile_Button_Main
-		dbug	Map_Spike,	id_Spikes,		0,	0,	ArtTile_Spikes
-		dbug	Map_MBlockLZ,	id_MovingBlock,		4,	0,	ArtTile_LZ_Moving_Block|Tile_Pal3
-		dbug	Map_LBlock,	id_LabyrinthBlock,	1,	0,	ArtTile_LZ_Blocks|Tile_Pal3
-		dbug	Map_LBlock,	id_LabyrinthBlock,	$13,	1,	ArtTile_LZ_Blocks|Tile_Pal3
-		dbug	Map_LBlock,	id_LabyrinthBlock,	5,	0,	ArtTile_LZ_Blocks|Tile_Pal3
-		dbug	Map_Gar,	id_Gargoyle,		0,	0,	ArtTile_LZ_Gargoyle|Tile_Pal3
-		dbug	Map_LBlock,	id_LabyrinthBlock,	$27,	2,	ArtTile_LZ_Blocks|Tile_Pal3
-		dbug	Map_LBlock,	id_LabyrinthBlock,	$30,	3,	ArtTile_LZ_Blocks|Tile_Pal3
-		dbug	Map_LConv,	id_LabyrinthConvey,	$7F,	0,	ArtTile_LZ_Conveyor_Belt
-		dbug	Map_Orb,	id_Orbinaut,		0,	0,	ArtTile_LZ_Orbinaut
-		dbug	Map_Bub,	id_Bubble,		$84,	$13,	ArtTile_LZ_Bubbles|Tile_Prio
-		dbug	Map_WFall,	id_Waterfall,		2,	2,	ArtTile_LZ_Splash|Tile_Pal3|Tile_Prio
-		dbug	Map_WFall,	id_Waterfall,		9,	9,	ArtTile_LZ_Splash|Tile_Pal3|Tile_Prio
-		dbug	Map_Pole,	id_Pole,		0,	0,	ArtTile_LZ_Pole|Tile_Pal3
-		dbug	Map_Flap,	id_FlapDoor,		2,	0,	ArtTile_LZ_Flapping_Door|Tile_Pal3
-		dbug	Map_Lamp,	id_Lamppost,		1,	0,	ArtTile_Lamppost
+		dbug 	Map_Ring,	Rings,			0,	0,	ArtTile_Ring|Tile_Pal2
+		dbug	Map_Monitor,	Monitor,		0,	0,	ArtTile_Monitor
+		dbug	Map_Spring,	Springs,		0,	0,	ArtTile_Spring_Horizontal
+		dbug	Map_Jaws,	Jaws,			8,	0,	ArtTile_Jaws|Tile_Pal2
+		dbug	Map_Burro,	Burrobot,		0,	2,	ArtTile_Burrobot|Tile_Prio
+		dbug	Map_Harp,	Harpoon,		0,	0,	ArtTile_LZ_Harpoon
+		dbug	Map_Harp,	Harpoon,		2,	3,	ArtTile_LZ_Harpoon
+		dbug	Map_Push,	PushBlock,		0,	0,	ArtTile_LZ_Push_Block|Tile_Pal3
+		dbug	Map_But,	Button,			0,	0,	ArtTile_Button_Main
+		dbug	Map_Spike,	Spikes,			0,	0,	ArtTile_Spikes
+		dbug	Map_MBlockLZ,	MovingBlock,		4,	0,	ArtTile_LZ_Moving_Block|Tile_Pal3
+		dbug	Map_LBlock,	LabyrinthBlock,		1,	0,	ArtTile_LZ_Blocks|Tile_Pal3
+		dbug	Map_LBlock,	LabyrinthBlock,		$13,	1,	ArtTile_LZ_Blocks|Tile_Pal3
+		dbug	Map_LBlock,	LabyrinthBlock,		5,	0,	ArtTile_LZ_Blocks|Tile_Pal3
+		dbug	Map_Gar,	Gargoyle,		0,	0,	ArtTile_LZ_Gargoyle|Tile_Pal3
+		dbug	Map_LBlock,	LabyrinthBlock,		$27,	2,	ArtTile_LZ_Blocks|Tile_Pal3
+		dbug	Map_LBlock,	LabyrinthBlock,		$30,	3,	ArtTile_LZ_Blocks|Tile_Pal3
+		dbug	Map_LConv,	LabyrinthConvey,	$7F,	0,	ArtTile_LZ_Conveyor_Belt
+		dbug	Map_Orb,	Orbinaut,		0,	0,	ArtTile_LZ_Orbinaut
+		dbug	Map_Bub,	Bubble,			$84,	$13,	ArtTile_LZ_Bubbles|Tile_Prio
+		dbug	Map_WFall,	Waterfall,		2,	2,	ArtTile_LZ_Splash|Tile_Pal3|Tile_Prio
+		dbug	Map_WFall,	Waterfall,		9,	9,	ArtTile_LZ_Splash|Tile_Pal3|Tile_Prio
+		dbug	Map_Pole,	Pole,			0,	0,	ArtTile_LZ_Pole|Tile_Pal3
+		dbug	Map_Flap,	FlapDoor,		2,	0,	ArtTile_LZ_Flapping_Door|Tile_Pal3
+		dbug	Map_Lamp,	Lamppost,		1,	0,	ArtTile_Lamppost
 .LZ_end:
 
 ; ---------------------------------------------------------------------------
 
 .MZ:		dbugheader
 		;	mappings	object			subtype	frame	VRAM setting
-		dbug 	Map_Ring,	id_Rings,		0,	0,	ArtTile_Ring|Tile_Pal2
-		dbug	Map_Monitor,	id_Monitor,		0,	0,	ArtTile_Monitor
-		dbug	Map_Buzz,	id_BuzzBomber,		0,	0,	ArtTile_Buzz_Bomber
-		dbug	Map_Spike,	id_Spikes,		0,	0,	ArtTile_Spikes
-		dbug	Map_Spring,	id_Springs,		0,	0,	ArtTile_Spring_Horizontal
-		dbug	Map_Fire,	id_LavaMaker,		0,	0,	ArtTile_MZ_Fireball
-		dbug	Map_Brick,	id_MarbleBrick,		0,	0,	ArtTile_Level|Tile_Pal3
-		dbug	Map_Geyser,	id_GeyserMaker,		0,	0,	ArtTile_MZ_Lava|Tile_Pal4
-		dbug	Map_LWall,	id_LavaWall,		0,	0,	ArtTile_MZ_Lava|Tile_Pal4
-		dbug	Map_Push,	id_PushBlock,		0,	0,	ArtTile_MZ_Block|Tile_Pal3
-		dbug	Map_Yad,	id_Yadrin,		0,	0,	ArtTile_Yadrin|Tile_Pal2
-		dbug	Map_Smab,	id_SmashBlock,		0,	0,	ArtTile_MZ_Block|Tile_Pal3
-		dbug	Map_MBlock,	id_MovingBlock,		0,	0,	ArtTile_MZ_Block|Tile_Pal3
-		dbug	Map_CFlo,	id_CollapseFloor,	0,	0,	ArtTile_MZ_Block|Tile_Pal3
-		dbug	Map_LTag,	id_LavaTag,		0,	0,	ArtTile_Monitor|Tile_Prio
-		dbug	Map_Bas,	id_Basaran,		0,	0,	ArtTile_Basaran
-		dbug	Map_Cat,	id_Caterkiller,		0,	0,	ArtTile_MZ_SYZ_Caterkiller|Tile_Pal2
-		dbug	Map_Lamp,	id_Lamppost,		1,	0,	ArtTile_Lamppost
+		dbug 	Map_Ring,	Rings,			0,	0,	ArtTile_Ring|Tile_Pal2
+		dbug	Map_Monitor,	Monitor,		0,	0,	ArtTile_Monitor
+		dbug	Map_Buzz,	BuzzBomber,		0,	0,	ArtTile_Buzz_Bomber
+		dbug	Map_Spike,	Spikes,			0,	0,	ArtTile_Spikes
+		dbug	Map_Spring,	Springs,		0,	0,	ArtTile_Spring_Horizontal
+		dbug	Map_Fire,	LavaMaker,		0,	0,	ArtTile_MZ_Fireball
+		dbug	Map_Brick,	MarbleBrick,		0,	0,	ArtTile_Level|Tile_Pal3
+		dbug	Map_Geyser,	GeyserMaker,		0,	0,	ArtTile_MZ_Lava|Tile_Pal4
+		dbug	Map_LWall,	LavaWall,		0,	0,	ArtTile_MZ_Lava|Tile_Pal4
+		dbug	Map_Push,	PushBlock,		0,	0,	ArtTile_MZ_Block|Tile_Pal3
+		dbug	Map_Yad,	Yadrin,			0,	0,	ArtTile_Yadrin|Tile_Pal2
+		dbug	Map_Smab,	SmashBlock,		0,	0,	ArtTile_MZ_Block|Tile_Pal3
+		dbug	Map_MBlock,	MovingBlock,		0,	0,	ArtTile_MZ_Block|Tile_Pal3
+		dbug	Map_CFlo,	CollapseFloor,		0,	0,	ArtTile_MZ_Block|Tile_Pal3
+		dbug	Map_LTag,	LavaTag,		0,	0,	ArtTile_Monitor|Tile_Prio
+		dbug	Map_Bas,	Basaran,		0,	0,	ArtTile_Basaran
+		dbug	Map_Cat,	Caterkiller,		0,	0,	ArtTile_MZ_SYZ_Caterkiller|Tile_Pal2
+		dbug	Map_Lamp,	Lamppost,		1,	0,	ArtTile_Lamppost
 .MZ_end:
 
 ; ---------------------------------------------------------------------------
 
 .SLZ:		dbugheader
 		;	mappings	object			subtype	frame	VRAM setting
-		dbug 	Map_Ring,	id_Rings,		0,	0,	ArtTile_Ring|Tile_Pal2
-		dbug	Map_Monitor,	id_Monitor,		0,	0,	ArtTile_Monitor
-		dbug	Map_Elev,	id_Elevator,		0,	0,	ArtTile_Level|Tile_Pal3
-		dbug	Map_CFlo,	id_CollapseFloor,	0,	2,	ArtTile_SLZ_Collapsing_Floor|Tile_Pal3
-		dbug	Map_Plat_SLZ,	id_BasicPlatform,	0,	0,	ArtTile_Level|Tile_Pal3
-		dbug	Map_Circ,	id_CirclingPlatform,	0,	0,	ArtTile_Level|Tile_Pal3
-		dbug	Map_Stair,	id_Staircase,		0,	0,	ArtTile_Level|Tile_Pal3
-		dbug	Map_Fan,	id_Fan,			0,	0,	ArtTile_SLZ_Fan|Tile_Pal3
-		dbug	Map_Seesaw,	id_Seesaw,		0,	0,	ArtTile_SLZ_Seesaw
-		dbug	Map_Spring,	id_Springs,		0,	0,	ArtTile_Spring_Horizontal
-		dbug	Map_Fire,	id_LavaMaker,		0,	0,	ArtTile_SLZ_Fireball
-		dbug	Map_Scen,	id_Scenery,		0,	0,	ArtTile_SLZ_Fireball_Launcher|Tile_Pal3
-		dbug	Map_Bomb,	id_Bomb,		0,	0,	ArtTile_Bomb
-		dbug	Map_Orb,	id_Orbinaut,		0,	0,	ArtTile_SLZ_Orbinaut|Tile_Pal2
-		dbug	Map_Lamp,	id_Lamppost,		1,	0,	ArtTile_Lamppost
+		dbug 	Map_Ring,	Rings,			0,	0,	ArtTile_Ring|Tile_Pal2
+		dbug	Map_Monitor,	Monitor,		0,	0,	ArtTile_Monitor
+		dbug	Map_Elev,	Elevator,		0,	0,	ArtTile_Level|Tile_Pal3
+		dbug	Map_CFlo,	CollapseFloor,		0,	2,	ArtTile_SLZ_Collapsing_Floor|Tile_Pal3
+		dbug	Map_Plat_SLZ,	BasicPlatform,		0,	0,	ArtTile_Level|Tile_Pal3
+		dbug	Map_Circ,	CirclingPlatform,	0,	0,	ArtTile_Level|Tile_Pal3
+		dbug	Map_Stair,	Staircase,		0,	0,	ArtTile_Level|Tile_Pal3
+		dbug	Map_Fan,	Fan,			0,	0,	ArtTile_SLZ_Fan|Tile_Pal3
+		dbug	Map_Seesaw,	Seesaw,			0,	0,	ArtTile_SLZ_Seesaw
+		dbug	Map_Spring,	Springs,		0,	0,	ArtTile_Spring_Horizontal
+		dbug	Map_Fire,	LavaMaker,		0,	0,	ArtTile_SLZ_Fireball
+		dbug	Map_Scen,	Scenery,		0,	0,	ArtTile_SLZ_Fireball_Launcher|Tile_Pal3
+		dbug	Map_Bomb,	Bomb,			0,	0,	ArtTile_Bomb
+		dbug	Map_Orb,	Orbinaut,		0,	0,	ArtTile_SLZ_Orbinaut|Tile_Pal2
+		dbug	Map_Lamp,	Lamppost,		1,	0,	ArtTile_Lamppost
 .SLZ_end:
 
 ; ---------------------------------------------------------------------------
 
 .SYZ:		dbugheader
 		;	mappings	object			subtype	frame	VRAM setting
-		dbug 	Map_Ring,	id_Rings,		0,	0,	ArtTile_Ring|Tile_Pal2
-		dbug	Map_Monitor,	id_Monitor,		0,	0,	ArtTile_Monitor
-		dbug	Map_Spike,	id_Spikes,		0,	0,	ArtTile_Spikes
-		dbug	Map_Spring,	id_Springs,		0,	0,	ArtTile_Spring_Horizontal
-		dbug	Map_Roll,	id_Roller,		0,	0,	ArtTile_Roller
-		dbug	Map_Light,	id_SpinningLight,	0,	0,	ArtTile_Level
-		dbug	Map_Bump,	id_Bumper,		0,	0,	ArtTile_SYZ_Bumper
-		dbug	Map_Crab,	id_Crabmeat,		0,	0,	ArtTile_Crabmeat
-		dbug	Map_Buzz,	id_BuzzBomber,		0,	0,	ArtTile_Buzz_Bomber
-		dbug	Map_Yad,	id_Yadrin,		0,	0,	ArtTile_Yadrin|Tile_Pal2
-		dbug	Map_Plat_SYZ,	id_BasicPlatform,	0,	0,	ArtTile_Level|Tile_Pal3
-		dbug	Map_FBlock,	id_FloatingBlock,	0,	0,	ArtTile_Level|Tile_Pal3
-		dbug	Map_But,	id_Button,		0,	0,	ArtTile_Button_Main
-		dbug	Map_Cat,	id_Caterkiller,		0,	0,	ArtTile_MZ_SYZ_Caterkiller|Tile_Pal2
-		dbug	Map_Lamp,	id_Lamppost,		1,	0,	ArtTile_Lamppost
+		dbug 	Map_Ring,	Rings,			0,	0,	ArtTile_Ring|Tile_Pal2
+		dbug	Map_Monitor,	Monitor,		0,	0,	ArtTile_Monitor
+		dbug	Map_Spike,	Spikes,			0,	0,	ArtTile_Spikes
+		dbug	Map_Spring,	Springs,		0,	0,	ArtTile_Spring_Horizontal
+		dbug	Map_Roll,	Roller,			0,	0,	ArtTile_Roller
+		dbug	Map_Light,	SpinningLight,		0,	0,	ArtTile_Level
+		dbug	Map_Bump,	Bumper,			0,	0,	ArtTile_SYZ_Bumper
+		dbug	Map_Crab,	Crabmeat,		0,	0,	ArtTile_Crabmeat
+		dbug	Map_Buzz,	BuzzBomber,		0,	0,	ArtTile_Buzz_Bomber
+		dbug	Map_Yad,	Yadrin,			0,	0,	ArtTile_Yadrin|Tile_Pal2
+		dbug	Map_Plat_SYZ,	BasicPlatform,		0,	0,	ArtTile_Level|Tile_Pal3
+		dbug	Map_FBlock,	FloatingBlock,		0,	0,	ArtTile_Level|Tile_Pal3
+		dbug	Map_But,	Button,			0,	0,	ArtTile_Button_Main
+		dbug	Map_Cat,	Caterkiller,		0,	0,	ArtTile_MZ_SYZ_Caterkiller|Tile_Pal2
+		dbug	Map_Lamp,	Lamppost,		1,	0,	ArtTile_Lamppost
 .SYZ_end:
 ; ---------------------------------------------------------------------------
 
 .SBZ:		dbugheader
 		;	mappings	object			subtype	frame	VRAM setting
-		dbug 	Map_Ring,	id_Rings,		0,	0,	ArtTile_Ring|Tile_Pal2
-		dbug	Map_Monitor,	id_Monitor,		0,	0,	ArtTile_Monitor
-		dbug	Map_Bomb,	id_Bomb,		0,	0,	ArtTile_Bomb
-		dbug	Map_Orb,	id_Orbinaut,		0,	0,	ArtTile_SBZ_Orbinaut
-		dbug	Map_Cat,	id_Caterkiller,		0,	0,	ArtTile_SBZ_Caterkiller|Tile_Pal2
-		dbug	Map_BBall,	id_SwingingPlatform,	7,	2,	ArtTile_SBZ_Swing|Tile_Pal3
-		dbug	Map_Disc,	id_RunningDisc,		$E0,	0,	ArtTile_SBZ_Disc|Tile_Pal3|Tile_Prio
-		dbug	Map_MBlock,	id_MovingBlock,		$28,	2,	ArtTile_SBZ_Moving_Block_Short|Tile_Pal2
-		dbug	Map_But,	id_Button,		0,	0,	ArtTile_Button_Main
-		dbug	Map_Trap,	id_SpinPlatform,	3,	0,	ArtTile_SBZ_Trap_Door|Tile_Pal3
-		dbug	Map_Spin,	id_SpinPlatform,	$83,	0,	ArtTile_SBZ_Spinning_Platform
-		dbug	Map_Saw,	id_Saws,		2,	0,	ArtTile_SBZ_Saw|Tile_Pal3
-		dbug	Map_CFlo,	id_CollapseFloor,	0,	0,	ArtTile_SBZ_Collapsing_Floor|Tile_Pal3
-		dbug	Map_MBlock,	id_MovingBlock,		$39,	3,	ArtTile_SBZ_Moving_Block_Long|Tile_Pal3
-		dbug	Map_Stomp,	id_ScrapStomp,		0,	0,	ArtTile_SBZ_Moving_Block_Short|Tile_Pal2
-		dbug	Map_ADoor,	id_AutoDoor,		0,	0,	ArtTile_SBZ_Door|Tile_Pal3
-		dbug	Map_Stomp,	id_ScrapStomp,		$13,	1,	ArtTile_SBZ_Moving_Block_Short|Tile_Pal2
-		dbug	Map_Saw,	id_Saws,		1,	0,	ArtTile_SBZ_Saw|Tile_Pal3
-		dbug	Map_Stomp,	id_ScrapStomp,		$24,	1,	ArtTile_SBZ_Moving_Block_Short|Tile_Pal2
-		dbug	Map_Saw,	id_Saws,		4,	2,	ArtTile_SBZ_Saw|Tile_Pal3
-		dbug	Map_Stomp,	id_ScrapStomp,		$34,	1,	ArtTile_SBZ_Moving_Block_Short|Tile_Pal2
-		dbug	Map_VanP,	id_VanishPlatform,	0,	0,	ArtTile_SBZ_Vanishing_Block|Tile_Pal3
-		dbug	Map_Flame,	id_Flamethrower,	$64,	0,	ArtTile_SBZ_Flamethrower|Tile_Prio
-		dbug	Map_Flame,	id_Flamethrower,	$64,	$B,	ArtTile_SBZ_Flamethrower|Tile_Prio
-		dbug	Map_Elec,	id_Electro,		4,	0,	ArtTile_SBZ_Electric_Orb
-		dbug	Map_Gird,	id_Girder,		0,	0,	ArtTile_SBZ_Girder|Tile_Pal3
-		dbug	Map_Invis,	id_Invisibarrier,	$11,	0,	ArtTile_Monitor|Tile_Prio
-		dbug	Map_Hog,	id_BallHog,		4,	0,	ArtTile_Ball_Hog|Tile_Pal2
-		dbug	Map_Lamp,	id_Lamppost,		1,	0,	ArtTile_Lamppost
+		dbug 	Map_Ring,	Rings,			0,	0,	ArtTile_Ring|Tile_Pal2
+		dbug	Map_Monitor,	Monitor,		0,	0,	ArtTile_Monitor
+		dbug	Map_Bomb,	Bomb,			0,	0,	ArtTile_Bomb
+		dbug	Map_Orb,	Orbinaut,		0,	0,	ArtTile_SBZ_Orbinaut
+		dbug	Map_Cat,	Caterkiller,		0,	0,	ArtTile_SBZ_Caterkiller|Tile_Pal2
+		dbug	Map_BBall,	SwingingPlatform,	7,	2,	ArtTile_SBZ_Swing|Tile_Pal3
+		dbug	Map_Disc,	RunningDisc,		$E0,	0,	ArtTile_SBZ_Disc|Tile_Pal3|Tile_Prio
+		dbug	Map_MBlock,	MovingBlock,		$28,	2,	ArtTile_SBZ_Moving_Block_Short|Tile_Pal2
+		dbug	Map_But,	Button,			0,	0,	ArtTile_Button_Main
+		dbug	Map_Trap,	SpinPlatform,		3,	0,	ArtTile_SBZ_Trap_Door|Tile_Pal3
+		dbug	Map_Spin,	SpinPlatform,		$83,	0,	ArtTile_SBZ_Spinning_Platform
+		dbug	Map_Saw,	Saws,			2,	0,	ArtTile_SBZ_Saw|Tile_Pal3
+		dbug	Map_CFlo,	CollapseFloor,		0,	0,	ArtTile_SBZ_Collapsing_Floor|Tile_Pal3
+		dbug	Map_MBlock,	MovingBlock,		$39,	3,	ArtTile_SBZ_Moving_Block_Long|Tile_Pal3
+		dbug	Map_Stomp,	ScrapStomp,		0,	0,	ArtTile_SBZ_Moving_Block_Short|Tile_Pal2
+		dbug	Map_ADoor,	AutoDoor,		0,	0,	ArtTile_SBZ_Door|Tile_Pal3
+		dbug	Map_Stomp,	ScrapStomp,		$13,	1,	ArtTile_SBZ_Moving_Block_Short|Tile_Pal2
+		dbug	Map_Saw,	Saws,			1,	0,	ArtTile_SBZ_Saw|Tile_Pal3
+		dbug	Map_Stomp,	ScrapStomp,		$24,	1,	ArtTile_SBZ_Moving_Block_Short|Tile_Pal2
+		dbug	Map_Saw,	Saws,			4,	2,	ArtTile_SBZ_Saw|Tile_Pal3
+		dbug	Map_Stomp,	ScrapStomp,		$34,	1,	ArtTile_SBZ_Moving_Block_Short|Tile_Pal2
+		dbug	Map_VanP,	VanishPlatform,		0,	0,	ArtTile_SBZ_Vanishing_Block|Tile_Pal3
+		dbug	Map_Flame,	Flamethrower,		$64,	0,	ArtTile_SBZ_Flamethrower|Tile_Prio
+		dbug	Map_Flame,	Flamethrower,		$64,	$B,	ArtTile_SBZ_Flamethrower|Tile_Prio
+		dbug	Map_Elec,	Electro,		4,	0,	ArtTile_SBZ_Electric_Orb
+		dbug	Map_Gird,	Girder,			0,	0,	ArtTile_SBZ_Girder|Tile_Pal3
+		dbug	Map_Invis,	Invisibarrier,		$11,	0,	ArtTile_Monitor|Tile_Prio
+		dbug	Map_Hog,	BallHog,		4,	0,	ArtTile_Ball_Hog|Tile_Pal2
+		dbug	Map_Lamp,	Lamppost,		1,	0,	ArtTile_Lamppost
 .SBZ_end:
 
 ; ---------------------------------------------------------------------------
@@ -514,7 +522,7 @@ dbugheader:	macro	*
 ; This list is used by both the Ending Sequence and the Special Stages
 .EndingSS:	dbugheader
 		;	mappings	object			subtype	frame	VRAM setting
-		dbug 	Map_Ring,	id_Rings,		0,	0,	ArtTile_Ring|Tile_Pal2
+		dbug 	Map_Ring,	Rings,			0,	0,	ArtTile_Ring|Tile_Pal2
 .EndingSS_end:
 
 ; ---------------------------------------------------------------------------

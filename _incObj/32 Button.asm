@@ -131,7 +131,7 @@ But_MZBlock:
 	.findBlock:
 		tst.b	obRender(a1)				; is object on screen?
 		bpl.s	.nextObject				; if not, branch
-		cmpi.b	#id_PushBlock,obID(a1)			; is object a pushable green MZ block?
+		cmpi.l	#PushBlock,obID(a1)			; is object a pushable green MZ block?
 		beq.s	.blockFound				; if yes, branch
 	; loc_BE4E:
 	.nextObject:

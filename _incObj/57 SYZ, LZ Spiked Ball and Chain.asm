@@ -13,7 +13,15 @@ SBall_Child:
 		; Child objects are just displayed normally, rotation and deletion is handled by parent
 		move.w	#spr_prio4,d0
 		DisplaySprite_direct
-		rts
+
+		cmpi.l	#SpikeBall,object_size(a0)
+		bne.s	.exit
+		dbf	d7,.shortcut
+	.exit:	rts
+
+	.shortcut:
+		lea	object_size(a0),a0
+		bra.s	SpikeBall
 
 SBall_NotChild:
 		move.w	SBall_Index(pc,d0.w),d1
@@ -88,7 +96,7 @@ SBall_Main:	; Routine 0
 		move.b	d5,(a2)+				; store RAM index for child object in parent for twirl and delete logic
 
 		move.b	#4,obRoutine(a1)			; set to SBall_Child
-		move.b	obID(a0),obID(a1)			; copy object ID from parent
+		move.l	obID(a0),obID(a1)			; copy object ID from parent
 		move.l	obMap(a0),obMap(a1)			; copy mappings from parent
 		move.w	obGfx(a0),obGfx(a1)			; copy art tile from parent
 		move.b	obRender(a0),obRender(a1)		; copy render flags from parent

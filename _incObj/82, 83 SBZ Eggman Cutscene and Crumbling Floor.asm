@@ -57,7 +57,7 @@ SEgg_Main:	; Routine 0
 ; This is because when we are in ExecuteObjects, a0 is set to each object and sub objects own slot, so we need a way to find the original boss object.
 ; This cutscene chooses not to loop, and instead copy it manually as there are only 2 things to load here.
 		move.l	a0,SEgg_ParentObj(a1)
-		move.b	#id_ScrapEggman,obID(a1) 		; load switch object
+		move.l	#ScrapEggman,obID(a1) 		; load switch object
 		move.w	#boss_sbz2_x+$E0,obX(a1)		; set position
 		move.w	#boss_sbz2_y+$AC,obY(a1)
 		clr.b	ob2ndRout(a0)				; clear 2nd routine again
@@ -156,7 +156,7 @@ SEgg_Leap:
 ; SEgg_FindLoop:
 .findLoop:
 		adda.w	d1,a1					; jump to next object RAM
-		cmpi.b	#id_FalseFloor,obID(a1) 		; is object a block? (object $83)
+		cmpi.l	#FalseFloor,obID(a1) 		; is object a block? (object $83)
 		dbeq	d0,.findLoop 				; if not, repeat (max $3E times)
 
 		bne.s	.exit					; no objects were found, so leave
@@ -234,7 +234,7 @@ FFloor_MakeBlock:
 		jsr	(FindFreeObj).l
 		bne.s	FFloor_ExitMake				; if no free object slots found, exit
 		move.w	a1,(a2)+				; copy open slot into offset list above and increment offset list
-		move.b	#id_FalseFloor,obID(a1) 		; set object ID to FalseFloor for this slot
+		move.l	#FalseFloor,obID(a1) 		; set object ID to FalseFloor for this slot
 		move.l	#Map_FFloor,obMap(a1)			; copy mappings, art, and set it to use palette line 3
 		move.w	#ArtTile_Eggman_Trap_Floor|Tile_Pal3,obGfx(a1)
 		move.b	#sprite_cam_field,obRender(a1)		; set rendering flags, width and height

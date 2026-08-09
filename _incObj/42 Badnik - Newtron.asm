@@ -145,7 +145,7 @@ Newt_Action_GreenNewtron:
 
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	.return					; if object RAM is full, branch
-		move.b	#id_Missile,obID(a1)			; load missile object
+		move.l	#Missile,obID(a1)			; load missile object
 		move.w	obX(a0),obX(a1)				; copy Newtron's X-position
 		move.w	obY(a0),obY(a1)				; copy Newtron's Y-position
 		subq.w	#8,obY(a1)				; align missile vertically

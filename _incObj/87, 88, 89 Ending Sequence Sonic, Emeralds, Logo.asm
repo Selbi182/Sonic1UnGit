@@ -58,7 +58,7 @@ ESon_MakeEmeralds:
 
 		addq.b	#2,ob2ndRout(a0)			; advance to ESon_Animate ($4)
 		move.w	#(0<<8)+1,obAnim(a0)			; set to "hold" animation and restart it immediately
-		move.b	#id_EndChaos,(v_endemeralds).w		; load ending sequence chaos emeralds objects
+		move.l	#EndChaos,(v_endemeralds+obID).w		; load ending sequence chaos emeralds objects
 
 	.return:
 		rts						; return
@@ -102,7 +102,7 @@ ESon_MakeLogo:	; Routine $C
 		addq.b	#2,ob2ndRout(a0)			; advance to ESon_Animate ($E, no longer advances past that)
 		move.w	#3*60,eson_time(a0)			; unused (?) timer set to 3 seconds
 		move.b	#2,obAnim(a0)				; set Sonic to "leap at screen" animation
-		move.b	#id_EndSTH,(v_endlogo).w		; load "SONIC THE HEDGEHOG" object
+		move.l	#EndSTH,(v_endlogo+obID).w		; load "SONIC THE HEDGEHOG" object
 
 	.return:
 		rts						; return
@@ -125,7 +125,7 @@ ESon_BadEnding:	; Routine $10
 		move.w	#spr_prio2,obPriority(a0)			; set sprite priority
 		move.b	#5,obFrame(a0)				; use first "leaping" frame
 		move.b	#2,obAnim(a0)				; set Sonic to "leap at screen" animation
-		move.b	#id_EndSTH,(v_endlogo).w		; load "SONIC THE HEDGEHOG" object
+		move.l	#EndSTH,(v_endlogo+obID).w		; load "SONIC THE HEDGEHOG" object
 		bra.s	ESon_Animate				; execute new animation immediately
 
 	.return:
@@ -175,7 +175,7 @@ ECha_CreateEms:
 		moveq	#ss_emeralds_num-1,d1			; load one object per emerald (6)
 
 	.loopLoadEmeralds:
-		move.b	#id_EndChaos,obID(a1)			; load chaos emerald object
+		move.l	#EndChaos,obID(a1)			; load chaos emerald object
 		addq.b	#2,obRoutine(a1)			; set to ECha_Move
 		move.l	#Map_ECha,obMap(a1)			; set mappings
 		move.w	#ArtTile_Ending_Emeralds,obGfx(a1)	; set art tile

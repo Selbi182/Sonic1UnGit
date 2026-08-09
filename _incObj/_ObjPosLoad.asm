@@ -1,4 +1,12 @@
 ; ---------------------------------------------------------------------------
+objid_to_rom:	macro
+		add.w	d0,d0
+		add.w	d0,d0
+		lea	Obj_Index-4(pc),a2
+		move.l	(a2,d0.w),obID(a1)
+		endm
+
+; ---------------------------------------------------------------------------
 OPL_S1_Compatibility: equ 0
 ; If 1, adds compatibility for the Sonic 1 objpos layout without needing any
 ; further adjustments. This will account for the following limitations:
@@ -286,7 +294,7 @@ ObjMan_GoingDown_YWrap:
 ObjMan_GoingDown_NoYWrap:
 		addi.w	#$180,d3			; look one chunk down
 		cmpi.w	#$7FF,d3
-		bhi.s	ObjPosLoad_SameYRange		; don't do anything, if camera is too close to bottom
+		bhi.w	ObjPosLoad_SameYRange		; don't do anything, if camera is too close to bottom
 
 ObjPosLoad_YCheck:
 		jsr	(FindFreeObj).l			; get an empty object slot
@@ -331,7 +339,10 @@ OPLBack8:	; check if current object needs to be loaded
 	if OPL_S1_Compatibility
 		andi.b	#$7F,d0				; limit level-placeable objects to $7F (MSB is used for old remember state flag)
 	endif
-		move.b	d0,obID(a1)
+
+		;move.b	d0,obID(a1)
+		objid_to_rom
+
 		move.b	3(a0),obSubtype(a1)
 		move.w	a3,respawn_index(a1)
 		jsr	(FindFreeObj).l			; find new object slot
@@ -409,7 +420,9 @@ LoadObj_YWrap:
 	if OPL_S1_Compatibility
 		andi.b	#$7F,d0				; limit level-placeable objects to $7F (MSB is used for old remember state flag)
 	endif
-		move.b	d0,obID(a1)
+		;move.b	d0,obID(a1)
+		objid_to_rom
+
 		move.b	(a0)+,obSubtype(a1)
 		move.w	a3,respawn_index(a1)
 		bra.w	FindFreeObj			; find new object slot
@@ -462,7 +475,9 @@ LoadObj:
 	if OPL_S1_Compatibility
 		andi.b	#$7F,d0				; limit level-placeable objects to $7F (MSB is used for old remember state flag)
 	endif
-		move.b	d0,obID(a1)
+		;move.b	d0,obID(a1)
+		objid_to_rom
+
 		move.b	(a0)+,obSubtype(a1)
 		move.w	a3,respawn_index(a1)
 		bra.w	FindFreeObj

@@ -74,7 +74,7 @@ Sign_Spin:	; Routine 4
 
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	.return					; if object RAM is full, branch
-		move.b	#id_Rings,obID(a1)			; load rings object to use as sparkle effect
+		move.l	#Rings,obID(a1)			; load rings object to use as sparkle effect
 		move.b	#6,obRoutine(a1)			; set to Ring_Sparkle routine
 
 		move.b	(a2)+,d0				; get next X-position from Sign_SparkPos
@@ -111,7 +111,7 @@ Sign_SonicRun:	; Routine 6
 		tst.w	(v_debuguse).w				; is debug mode in use?
 		bne.w	Sign_Return				; if yes, don't load end cards until debug mode was exited
 
-		tst.b	(v_player+obID).w			; has Sonic's object been deleted (because he entered the giant ring)?
+		tst.l	(v_player+obID).w			; has Sonic's object been deleted (because he entered the giant ring)?
 		beq.s	Sign_LoadEndCards			; if yes, skip all other checks
 		btst	#1,(v_player+obStatus).w		; is Sonic airborne?
 		bne.w	Sign_Return				; if yes, don't do anything until he has landed
@@ -141,7 +141,7 @@ GotThroughAct:
 		move.w	(v_limitright2).w,(v_limitleft2).w	; set left level boundary to be the same as the right one
 		clr.b	(v_invinc).w				; disable invincibility
 		clr.b	(f_timecount).w				; stop time counter
-		move.b	#id_GotThroughCard,(v_endcard).w	; load end card object (and prevent this routine from running again)
+		move.l	#GotThroughCard,(v_endcard+obID).w	; load end card object (and prevent this routine from running again)
 		jsr	(Got_LoadArt).l				; load end-of-level title card graphics
 		move.b	#1,(f_endactbonus).w			; update bonus HUD for pre-tally display
 

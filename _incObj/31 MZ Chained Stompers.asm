@@ -78,7 +78,7 @@ CStom_Main:	; Routine 0
 
 	.makeStomper:
 		move.b	(a2)+,obRoutine(a1)			; load routine for object
-		move.b	#id_ChainStomp,obID(a1)			; create stomper object
+		move.l	#ChainStomp,obID(a1)			; create stomper object
 		move.w	obX(a0),obX(a1)				; copy X-position from parent
 		move.b	(a2)+,d0				; load relative Y-position for object
 		ext.w	d0					; make word-sized

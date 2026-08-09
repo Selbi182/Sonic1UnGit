@@ -49,7 +49,7 @@ Sonic_Main:	; Routine 0
 		move.w	#son_maxspeed,(v_sonspeedmax).w		; set Sonic's top speed
 		move.w	#son_acceleration,(v_sonspeedacc).w	; set Sonic's acceleration
 		move.w	#son_deceleration,(v_sonspeeddec).w	; set Sonic's deceleration
-		move.b	#id_SpinDust,(v_dustobj).w		; prepare Spin Dash dust object
+		move.l	#SpinDust,(v_dustobj+obID).w		; prepare Spin Dash dust object
 ; ---------------------------------------------------------------------------
 
 ; Obj01_Control:
@@ -231,7 +231,7 @@ Sonic_Water:
 		bne.s	.return					; was Sonic already underwater? if yes, nothing to do
 
 		bsr.w	ResumeMusic				; replenish air (music won't resume here, we've only just entered water...)
-		move.b	#id_DrownCount,(v_sonicbubbles).w	; load drown countdown object
+		move.l	#DrownCount,(v_sonicbubbles+obID).w	; load drown countdown object
 		move.b	#$81,(v_sonicbubbles+obSubtype).w	; prepare subtype so it sets itself to Drown_Countdown
 		move.w	#son_maxspeed/2,(v_sonspeedmax).w	; change Sonic's top speed (half of regular)
 		move.w	#son_acceleration/2,(v_sonspeedacc).w	; change Sonic's acceleration (half or regular)
@@ -246,7 +246,7 @@ Sonic_Water:
 		asr.w	obVelY(a0)				; divide Y-speed by 4 when entering water
 		asr.w	obVelY(a0)				; (can only do one bit shift at a time on RAM)
 		beq.s	.return					; if Sonic's new Y-speed is 0, don't load splash object
-		move.b	#id_Splash,(v_splash).w			; load splash object
+		move.l	#Splash,(v_splash+obID).w			; load splash object
 		move.w	#sfx_Splash,d0				; set splash sound
 		jmp	(QueueSound2).l				; play it
 ; ===========================================================================
@@ -268,7 +268,7 @@ Sonic_Water:
 	.noshoes2:
 		asl.w	obVelY(a0)				; double Y-speed while exiting water
 		beq.w	.return					; if Sonic's new Y-speed is 0, don't load splash object
-		move.b	#id_Splash,(v_splash).w			; load splash object
+		move.l	#Splash,(v_splash+obID).w			; load splash object
 		cmpi.w	#-$1000,obVelY(a0)			; is Sonic's new upwards speed too fast for collision detection to handle? (red springs probably cause this)
 		bgt.s	.belowmaxspeed				; if not, branch
 		move.w	#-$1000,obVelY(a0)			; set maximum speed on leaving water
@@ -953,7 +953,7 @@ Sonic_JumpMove:
 
 ; loc_132A4:
 Sonic_AirDrag:
-		tst.b	homingattack(a0)
+		tst.b	doublejump(a0)
 		bne.s	.return
 		cmpi.w	#-$400,obVelY(a0)			; is Sonic moving faster than -$400 upwards?
 		blo.s	.return					; if yes, branch (skip air drag)
@@ -1688,7 +1688,7 @@ Sonic_FloorRight:
 ; ---------------------------------------------------------------------------
 
 Sonic_ResetOnFloor:
-		clr.b	homingattack(a0)			; clear homing attack flag
+		clr.b	doublejump(a0)			; clear homing attack flag
 
 		bclr	#5,obStatus(a0)				; clear push flag
 		bclr	#1,obStatus(a0)				; clear in-air flag
@@ -1834,8 +1834,8 @@ Sonic_HandleDeath:
 
 		; GAME OVER
 		move.w	#0,restartime(a0)			; set to not restart the level
-		move.b	#id_GameOverCard,(v_gameovertext1).w	; load GAME object
-		move.b	#id_GameOverCard,(v_gameovertext2).w	; load OVER object
+		move.l	#GameOverCard,(v_gameovertext1+obID).w	; load GAME object
+		move.l	#GameOverCard,(v_gameovertext2+obID).w	; load OVER object
 		move.b	#1,(v_gameovertext2+obFrame).w		; set OVER object to correct frame
 		clr.b	(f_timeover).w				; clear time over flag
 		clr.b	(v_gameovertext1+obRoutine).w		; make sure "GAME"/"TIME" object initializes properly
@@ -1859,8 +1859,8 @@ Sonic_HandleDeath:
 		tst.b	(f_timeover).w				; is TIME OVER tag set?
 		beq.s	.return					; if not, branch
 		move.w	#0,restartime(a0)			; set to not restart the level
-		move.b	#id_GameOverCard,(v_gameovertext1).w	; load GAME object
-		move.b	#id_GameOverCard,(v_gameovertext2).w	; load OVER object
+		move.l	#GameOverCard,(v_gameovertext1+obID).w	; load GAME object
+		move.l	#GameOverCard,(v_gameovertext2+obID).w	; load OVER object
 		move.b	#2,(v_gameovertext1+obFrame).w		; set GAME frame to TIME
 		move.b	#3,(v_gameovertext2+obFrame).w		; set OVER frame to OVER (different frame ID, but looks identical)
 		bra.s	.gameOverBgmAndPatterns			; play music and load patterns
@@ -2312,14 +2312,14 @@ Sonic_PanCamera:
 ; ---------------------------------------------------------------------------
 
 Sonic_HomingAttack:
-		tst.b	homingattack(a0)		; was the homing attack flag already set?
+		tst.b	doublejump(a0)		; was the homing attack flag already set?
 		bne.s	.done		; if yes, branch
 		tst.b	jumping(a0)
 		beq.s	.done
 		moveq	#btnABC,d0		; is any of the buttons ABC...
 		and.b	(v_jpadpress2).w,d0	; ...pressed?
 		beq.s	.done		; if not, branch
-		move.b	#1,homingattack(a0)		; set the homing attack flag
+		move.b	#1,doublejump(a0)		; set the homing attack flag
 
 		bsr.s	.getspeed
 		btst	#6,obStatus(a0)				; is Sonic underwater?
@@ -2344,7 +2344,7 @@ Sonic_HomingAttack:
 		
 		move.w	#sfx_Teleport,d0	; play dash sound as a test
 		jsr	(QueueSound2).l		; (PlaySound_Special in older disassemblies)
-		bset	#7,homingattack(a0)
+		bset	#7,doublejump(a0)
 
 		btst	#bitDn,(v_jpadhold2).w
 		beq.s	.noDownDash
@@ -2395,7 +2395,7 @@ FindHomingTarget:
 		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d0 ; set loop count to all 96 objects (minus one for the first loop run)
 
 .loop:
-		tst.b	(a1)			; is the current object even initialized? (i.e. ID is not 0)
+		tst.l	obID(a1)		; is the current object even initialized? (i.e. ID is not 0)
 		beq.s	.next			; if it's a null object, go to next object
 		move.b	obColType(a1),d1	; load collision type to d1
 		beq.s	.next			; if it has no collision type, invalid object

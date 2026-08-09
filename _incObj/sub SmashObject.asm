@@ -16,7 +16,7 @@ SmashObject:
 		adda.w	(a3,d0.w),a3				; find mappings for current frame
 		addq.w	#1,a3					; skip over sprite piece count
 		bset	#sprite_rawmappings_bit,obRender(a0)	; set "raw-mappings" flag
-		move.b	obID(a0),d4				; copy object ID
+		move.l	obID(a0),d4				; copy object ID
 		move.b	obRender(a0),d5				; copy render flags
 		movea.l	a0,a1					; replace current object with first fragment
 		bra.s	.loadFirstFrag				; skip over object RAM search
@@ -29,7 +29,7 @@ SmashObject:
 
 	.loadFirstFrag:
 		move.b	#4,obRoutine(a1)			; set routine to 4 (assumed to be a simple ObjectFall, display, delete)
-		move.b	d4,obID(a1)				; use same object ID as parent
+		move.l	d4,obID(a1)				; use same object ID as parent
 		move.l	a3,obMap(a1)				; use same mappings as parent
 		move.b	d5,obRender(a1)				; use same render flags as parent (including "raw-mappings")
 		move.w	obX(a0),obX(a1)				; use same X-position as parent

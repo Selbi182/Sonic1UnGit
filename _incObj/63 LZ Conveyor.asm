@@ -154,7 +154,7 @@ LCon_Main_Spawner:
 
 	.makePlatform:
 		; Note: obRoutine is implicitly left at 0, so all platforms will run through LCon_Main again!
-		move.b	#id_LabyrinthConvey,obID(a1)		; load LZ conveyor platform object
+		move.l	#LabyrinthConvey,obID(a1)		; load LZ conveyor platform object
 		move.w	(a2)+,obX(a1)				; get next X-position
 		move.w	(a2)+,obY(a1)				; get next Y-position
 		move.w	(a2)+,d0				; get next subtype (stored as word, upper byte is always $00)

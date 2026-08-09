@@ -212,7 +212,7 @@ RLoss_Bounce:	; Routine 0
 		move.w	a0,(a1,d0.w)		; insert RAM address for object to queue
 
 	.Full:
-		cmpi.b	#id_RingLoss,object_size(a0)
+		cmpi.l	#RingLoss,object_size(a0)
 		bne.s	.exit
 		dbf	d7,.shortcut
 		rts
@@ -325,7 +325,7 @@ RLoss_SpawnRings:
 		move.w	(v_player+obY),d3				; spawn rings at parent Y-position
 
 .loop:
-		tst.b	(a4)
+		tst.l	(a4)
 		beq.s	.makerings_go
 		lea	-object_size(a4),a4
 		dbf	d4,.loop
@@ -333,7 +333,7 @@ RLoss_SpawnRings:
 	.makerings_go:
 		movea.w	a4,a1
 	.makerings:
-		move.b	#id_RingLoss,(a1)				; load new bouncing ring object
+		move.l	#RingLoss,obID(a1)				; load new bouncing ring object
 		move.w	d2,obX(a1)				; copy parent X-position
 		move.w	d3,obY(a1)				; copy parent Y-position
 

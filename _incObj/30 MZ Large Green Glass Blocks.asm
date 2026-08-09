@@ -63,7 +63,7 @@ Glass_Main:	; Routine 0
 
 	.makePillar:
 		move.b	(a2)+,obRoutine(a1)			; set routine for object (2/4/6/8)
-		move.b	#id_GlassBlock,obID(a1)			; load another glass block object
+		move.l	#GlassBlock,obID(a1)			; load another glass block object
 
 		move.w	obX(a0),obX(a1)				; copy X-position from parent
 		move.b	(a2)+,d0				; get relative Y-offset (this is always 0)

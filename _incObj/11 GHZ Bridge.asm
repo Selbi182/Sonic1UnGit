@@ -36,7 +36,7 @@ Bri_Main:	; Routine 0
 
 		move.w	obY(a0),d2				; copy Y-position from parent
 		move.w	obX(a0),d3				; get center X-position of bridge
-		move.b	obID(a0),d4				; copy parent object ID to children
+		move.l	obID(a0),d4				; copy parent object ID to children
 		lea	bridge_children(a0),a2			; load child object index array
 		moveq	#0,d1					; clear d1
 		;move.b	(a2),d1					; get subtype for bridge
@@ -74,7 +74,7 @@ Bri_Main:	; Routine 0
 		move.b	d5,(a2)+				; store new child index at the end of bridge_children
 
 		move.b	#$A,obRoutine(a1)			; set child log to Bri_ChildLog (display only)
-		move.b	d4,obID(a1)				; copy object ID from parent
+		move.l	d4,obID(a1)				; copy object ID from parent
 		move.w	d2,obY(a1)				; copy Y-position from parent
 		move.w	d2,bridge_origY(a1)			; remember initial Y-position
 		move.w	d3,obX(a1)				; write current X-position set in d3

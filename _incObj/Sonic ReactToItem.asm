@@ -206,7 +206,7 @@ React_Monitor:
 		bpl.s	.chkBreakMonitor			; if not, branch
 		btst	#1,obStatus(a0)				; is Sonic in air?
 		beq.s	.chkBreakMonitor			; if not, don't bump monitor
-		tst.b	homingattack(a0)
+		tst.b	doublejump(a0)
 		bne.s	.doBreakMonitor
 
 .chkBumpMonitor:
@@ -257,6 +257,8 @@ React_BossHit:
 		neg.w	obVelY(a0)				; repel Sonic verticallly
 		asr.w	obVelX(a0)				; halve current X-speed
 		asr.w	obVelY(a0)				; halve current Y-speed
+		clr.b	doublejump(a0)
+		move.b	#1,jumping(a0)
 		move.b	#col_none,obColType(a1)			; set boss to no collision while it's damaged
 
 		subq.b	#1,obBossHits(a1)			; decrement 1 boss HP
@@ -290,7 +292,7 @@ React_BadnikHit:
 		jsr	(AddPoints).l				; add d0 to current score
 
 		; Change badnik into gray explosion
-		move.b	#id_ExplosionItem,obID(a1)		; change badnik into an to explosion/animal object
+		move.l	#ExplosionItem,obID(a1)		; change badnik into an to explosion/animal object
 		move.b	#0,obRoutine(a1)			; set to "ExItem_Animal" routine to also spawn animal/points objects
 
 		; Bounce Sonic vertically
@@ -394,9 +396,9 @@ HurtSonic:
 		move.b	#2*60,flashtime(a0)			; set temporary invulnerability time to 2 seconds
 
 		move.w	#sfx_HitSpikes,d0			; use spike damage sound
-		cmpi.b	#id_Spikes,obID(a2)			; was damage caused by spikes?
+		cmpi.l	#Spikes,obID(a2)			; was damage caused by spikes?
 		beq.s	.sound					; if yes, branch
-		cmpi.b	#id_Harpoon,obID(a2)			; was damage caused by LZ harpoon?
+		cmpi.l	#Harpoon,obID(a2)			; was damage caused by LZ harpoon?
 		beq.s	.sound					; if yes, branch
 		move.w	#sfx_Death,d0				; use generic damage sound
 
@@ -456,29 +458,29 @@ KillSonic:
 		clr.b	(f_timecount).w				; stop time counter
 
 		move.w	#sfx_HitSpikes,d0			; play spikes death sound
-		cmpi.b	#id_Spikes,obID(a2)			; check if you were killed by spikes
+		cmpi.l	#Spikes,obID(a2)			; check if you were killed by spikes
 		beq.s	.sound					; if yes, branch
-		cmpi.b	#id_Harpoon,obID(a2)			; check if you were killed by a harpoon
+		cmpi.l	#Harpoon,obID(a2)			; check if you were killed by a harpoon
 		beq.s	.sound					; if yes, branch
 		move.w	#sfx_Death,d0				; play normal death sound
 
 	.sound:
-		move.b	obID(a2),d1		; get object ID of object that killed Sonic
-		cmpi.b	#id_LavaBall,d1		; MZ and SLZ lava balls (object 14)
+		move.l	obID(a2),d1		; get object ID of object that killed Sonic
+		cmpi.l	#LavaBall,d1		; MZ and SLZ lava balls (object 14)
 		beq.s	.firedeath
-		cmpi.b	#id_GrassFire,d1	; MZ grass fire (object 35)
+		cmpi.l	#GrassFire,d1	; MZ grass fire (object 35)
 		beq.s	.firedeath
-		cmpi.b	#id_LavaTag,d1		; MZ invisible lava tag (object 54)
+		cmpi.l	#LavaTag,d1		; MZ invisible lava tag (object 54)
 		beq.s	.firedeath
-		cmpi.b	#id_LavaGeyser,d1	; MZ lava geysers/falls (object 4D)
+		cmpi.l	#LavaGeyser,d1	; MZ lava geysers/falls (object 4D)
 		beq.s	.firedeath
-		cmpi.b	#id_LavaWall,d1		; MZ wall of lava from act 2 (object 4E)
+		cmpi.l	#LavaWall,d1		; MZ wall of lava from act 2 (object 4E)
 		beq.s	.firedeath
-		cmpi.b	#id_Gargoyle,d1		; LZ gargoyle fireballs (object 62)
+		cmpi.l	#Gargoyle,d1		; LZ gargoyle fireballs (object 62)
 		beq.s	.firedeath
-		cmpi.b	#id_Flamethrower,d1	; SBZ flamethrower (obejct 6D)
+		cmpi.l	#Flamethrower,d1	; SBZ flamethrower (obejct 6D)
 		beq.s	.firedeath
-		cmpi.b	#id_BossFire,d1		; MZ fire balls from boss (object 74)
+		cmpi.l	#BossFire,d1		; MZ fire balls from boss (object 74)
 		bne.s	.normal			; if it was none of the above, don't do burnt death
 
 	.firedeath:
@@ -563,12 +565,12 @@ React_LZPole:
 ; ===========================================================================
 
 ResetHomingAttack:
-		tst.b	homingattack(a0)			; was the homing attack flag set?
+		tst.b	doublejump(a0)			; was the homing attack flag set?
 		beq.s	.return					; if not, nothing to do
 	;	clr.w	obVelX(a0)				; clear Sonic's X-speed
 		asr.w	obVelX(a0)
 		asr.w	obVelX(a0)
-		clr.b	homingattack(a0)			; reset homing attack flag so we can do another one
+		clr.b	doublejump(a0)			; reset homing attack flag so we can do another one
 		move.b	#1,jumping(a0)
 		move.w	#-$500,obVelY(a0)			; bounce Sonic upwards a little from the impact
 		btst	#6,obStatus(a0)				; is Sonic underwater?

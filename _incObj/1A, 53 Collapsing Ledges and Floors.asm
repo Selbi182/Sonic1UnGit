@@ -303,7 +303,7 @@ FragmentatePlatform:
 		adda.w	(a3,d0.w),a3				; find sprite mapping for current frame ID
 		addq.w	#1,a3					; skip over piece count header
 		bset	#sprite_rawmappings_bit,obRender(a0)	; set "raw-mappings" flag
-		move.b	obID(a0),d4				; copy object ID to fragments
+		move.l	obID(a0),d4				; copy object ID to fragments
 		move.b	obRender(a0),d5				; copy render flags to fragments
 		movea.l	a0,a1					; overwrite main platform with first fragment object
 		bra.s	.firstFragment				; skip loop for first fragment
@@ -323,7 +323,7 @@ FragmentatePlatform:
 		bcs.s	.NFree_Found				; if underflowed, parent object is at the end of RAM, quit
 
 .NFree_Loop:
-		tst.b	obID(a2)				; is object RAM slot empty?
+		tst.l	obID(a2)				; is object RAM slot empty?
 		beq.s	.NFree_Found				; if yes, exit and use that slot
 		lea	object_size(a2),a2			; go to next object RAM slot
 		dbf	d0,.NFree_Loop				; repeat for all free object RAM slots after parent
@@ -340,7 +340,7 @@ FragmentatePlatform:
 		addq.w	#5,a3					; advance to next sprite piece in mappings
 	.firstFragment:
 		move.b	#6,obRoutine(a1)			; set fragment routine to "..._FragmentPiece"
-		move.b	d4,obID(a1)				; copy object ID
+		move.l	d4,obID(a1)				; copy object ID
 		move.l	a3,obMap(a1)				; copy mappings
 		move.b	d5,obRender(a1)				; copy render flags
 		move.w	obX(a0),obX(a1)				; copy X position

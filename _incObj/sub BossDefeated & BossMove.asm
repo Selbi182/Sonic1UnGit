@@ -11,7 +11,7 @@ BossDefeated:
 		jsr	(FindFreeObj).l				; find a free object slot
 		bne.s	.noExplosion 				; if RAM is full, branch
 
-		move.b	#id_Explosion,obID(a1)			; load explosion object
+		move.l	#Explosion,obID(a1)			; load explosion object
 		move.w	obX(a0),obX(a1) 			; set base explosion X-position to boss X-position
 		move.w	obY(a0),obY(a1)				; set base explosion Y-position to boss Y-position
 

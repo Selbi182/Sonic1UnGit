@@ -91,7 +91,7 @@ Bom_Action_Walking:
 Bom_Action_WaitAndExplode:
 		subq.w	#1,bom_time(a0)				; decrement time delay before exploding
 		bpl.s	.return					; if time remains, branch
-		move.b	#id_Explosion,obID(a0)			; change Bomb into an explosion
+		move.l	#Explosion,obID(a0)			; change Bomb into an explosion
 		move.b	#0,obRoutine(a0)			; set explosion object to init routine
 
 	.return:
@@ -128,7 +128,7 @@ Bom_CheckStartFuse:
 
 		bsr.w	FindNextFreeObj				; find a free object slot
 		bne.s	.return					; if object RAM is full, branch
-		move.b	#id_Bomb,obID(a1)			; load fuse object
+		move.l	#Bomb,obID(a1)			; load fuse object
 		move.w	obX(a0),obX(a1)				; copy X-position
 		move.w	obY(a0),obY(a1)				; copy Y-position
 		move.w	obY(a0),bom_origY(a1)			; remember original Y-position when making shrapnel
@@ -187,7 +187,7 @@ Bom_BurnFuseAndExplode:
 		bne.s	.nextShrapnel				; if object RAM is full, branch (should probably branch after the dbf...)
 
 	.firstShrapnel:
-		move.b	#id_Bomb,obID(a1)			; load shrapnel object
+		move.l	#Bomb,obID(a1)			; load shrapnel object
 		move.w	obX(a0),obX(a1)				; copy X-position
 		move.w	obY(a0),obY(a1)				; copy Y-position
 		move.b	#6,obSubtype(a1)			; set shrapnel to use Bom_Shrapnel routine

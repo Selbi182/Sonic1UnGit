@@ -253,7 +253,7 @@ PushB_SpawnLavaGeysers:
 .spawnGeyser:
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	.fail					; if object RAM is full, branch
-		move.b	#id_GeyserMaker,obID(a1)		; load lava geyser object
+		move.l	#GeyserMaker,obID(a1)		; load lava geyser object
 		move.w	obX(a0),obX(a1)				; spawn at block's current X-position...
 		add.w	d2,obX(a1)				; ...adjusted by 32px left or right
 		move.w	obY(a0),obY(a1)				; spawn at block's current Y-position...

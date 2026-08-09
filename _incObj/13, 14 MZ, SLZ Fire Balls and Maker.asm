@@ -40,7 +40,7 @@ LavaM_MakeLava:	; Routine 2
 
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	.return					; if object RAM is full, branch
-		move.b	#id_LavaBall,obID(a1)			; load lava ball object
+		move.l	#LavaBall,obID(a1)			; load lava ball object
 		move.w	obX(a0),obX(a1)				; copy maker's X-position
 		move.w	obY(a0),obY(a1)				; copy maker's Y-position
 		move.b	obSubtype(a0),obSubtype(a1)		; copy maker's subtype

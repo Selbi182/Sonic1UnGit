@@ -44,7 +44,7 @@ Gar_MakeFire:	; Routine 2
 
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	.return					; if object RAM is full, branch
-		move.b	#id_Gargoyle,obID(a1)			; load fireball object
+		move.l	#Gargoyle,obID(a1)			; load fireball object
 		addq.b	#4,obRoutine(a1)			; use Gar_FireBall routine
 		move.w	obX(a0),obX(a1)				; copy head's X-position
 		move.w	obY(a0),obY(a1)				; copy head'S Y-position

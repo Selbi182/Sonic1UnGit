@@ -78,7 +78,7 @@ BossFinal_Loop:
 		bne.s	BossFinal_Skip				; no free objects found, branch
 
 BossFinal_LoadBoss:
-		move.b	#id_BossFinal,obID(a1)			; copy boss ID and data, incrementing the table each time
+		move.l	#BossFinal,obID(a1)			; copy boss ID and data, incrementing the table each time
 		move.w	(a2)+,obX(a1)
 		move.w	(a2)+,obY(a1)
 		move.w	(a2)+,obGfx(a1)
@@ -101,7 +101,7 @@ BossFinal_Skip:
 		lea	BossFinal_PlasmaPtr(a0),a2		; load pointer location for plasma
 		jsr	(FindFreeObj).l
 		bne.s	.finalSetup				; no free objects found, branch
-		move.b	#id_BossPlasma,obID(a1) 		; load plasma ball object
+		move.l	#BossPlasma,obID(a1) 		; load plasma ball object
 		move.w	a1,(a2)					; store truncated energy ball address
 		move.l	a0,BossFinal_ParentObj(a1)		; copy main boss pointer to loaded object
 		lea	BossFinal_CylinderPtr(a0),a2		; load pointer location for cylinder
@@ -113,7 +113,7 @@ BossFinal_Skip:
 		jsr	(FindNextFreeObj).l
 		bne.s	.finalSetup				; no free objects found, branch
 		move.w	a1,(a2)+				; copy truncated cylinder address and increment
-		move.b	#id_EggmanCylinder,obID(a1) 		; load crushing cylinder object
+		move.l	#EggmanCylinder,obID(a1) 		; load crushing cylinder object
 		move.l	a0,BossFinal_ParentObj(a1)		; copy main boss pointer to loaded cylinder
 		move.b	d2,obSubtype(a1)			; set cylinder number
 		addq.w	#2,d2
@@ -959,7 +959,7 @@ BossPlasma_Generator:; Routine 2
 		movea.l	BossFinal_ParentObj(a0),a1		; copy Eggman's address
 		cmpi.b	#6,BossFinal_ParentObj(a1)		; are we in routine 6 (Fall routine)?
 		bne.s	.checkStatus				; if not, branch
-		move.b	#id_Explosion,obID(a0)			; change object to explosion
+		move.l	#Explosion,obID(a0)			; change object to explosion
 		move.b	#0,obRoutine(a0)			; set object routine of new explosion object
 		DisplaySprite
 		rts
@@ -1015,7 +1015,7 @@ BossPlasma_MakeBalls:; Routine 4
 .loop:
 		jsr	(FindNextFreeObj).l
 		bne.w	.checkStatus				; no free objects found, branch
-		move.b	#id_BossPlasma,obID(a1)			; set object ID to plasma
+		move.l	#BossPlasma,obID(a1)			; set object ID to plasma
 		move.w	obX(a0),obX(a1)				; copy position
 		move.w	#boss_fz_y+$2C,obY(a1)			; set Y location
 		move.b	#8,obRoutine(a1)			; set routine to Balls

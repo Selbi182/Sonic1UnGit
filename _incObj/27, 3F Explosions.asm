@@ -21,7 +21,7 @@ ExItem_Animal:	; Routine 0
 
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	ExItem_Main				; if object RAM is full, skip loading animal object
-		move.b	#id_Animals,obID(a1)			; load animal object
+		move.l	#Animals,obID(a1)			; load animal object
 		move.w	obX(a0),obX(a1)				; copy X-position
 		move.w	obY(a0),obY(a1)				; copy Y-position
 		move.w	exitem_pointsframe(a0),animal_pointsframe(a1) ; carry over points frame ID set in React_BadnikHit

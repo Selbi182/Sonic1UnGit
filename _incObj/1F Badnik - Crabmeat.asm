@@ -91,7 +91,7 @@ Crab_Action_Fire:
 	.loadLeftFireball:
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	.loadRightFireball			; if object RAM is full, branch (could just branch to return here, right will also fail)
-		move.b	#id_Crabmeat,obID(a1)			; load left fireball
+		move.l	#Crabmeat,obID(a1)			; load left fireball
 		move.b	#6,obRoutine(a1)			; set to Crab_BallMain
 		move.w	obX(a0),obX(a1)				; copy Crabmeat's X-position
 		subi.w	#$10,obX(a1)				; align with left claw
@@ -101,7 +101,7 @@ Crab_Action_Fire:
 	.loadRightFireball:
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	.return					; if object RAM is full, branch
-		move.b	#id_Crabmeat,obID(a1)			; load right fireball
+		move.l	#Crabmeat,obID(a1)			; load right fireball
 		move.b	#6,obRoutine(a1)			; set to Crab_BallMain
 		move.w	obX(a0),obX(a1)				; copy Crabmeat's X-position
 		addi.w	#$10,obX(a1)				; align with right claw

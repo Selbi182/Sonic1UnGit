@@ -48,7 +48,7 @@ BossSpringYard_Main:	; Routine 0
 BossSpringYard_Loop:
 		jsr	(FindNextFreeObj).l			; are there any free objects?
 		bne.s	BossSpringYard_ShipMain			; no, leave early
-		move.b	#id_BossSpringYard,obID(a1)		; set object ID for this slot
+		move.l	#BossSpringYard,obID(a1)		; set object ID for this slot
 		move.w	obX(a0),obX(a1)				; set object position to boss position
 		move.w	obY(a0),obY(a1)
 
@@ -407,11 +407,11 @@ BossSpringYard_FindBlocks:
 		clr.w	BossSpringYard_ObjPointer(a0) 	; clear the spike pointer address
 		lea	(v_lvlobjspace).w,a1
 		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d0
-		moveq	#id_BossBlock,d1			; set objectID for loop below
+		move.l	#BossBlock,d1			; set objectID for loop below
 		move.b	BossSpringYard_BlockIndex(a0),d2	; copy index calculated up in StatusUpdate to d2 so d2 contains the block he is over
 
 BossSpringYard_FindLoop:
-		cmp.b	obID(a1),d1				; is object a SYZ boss block?
+		cmp.l	obID(a1),d1				; is object a SYZ boss block?
 		bne.s	.skip					; if not, branch
 		cmp.b	obSubtype(a1),d2			; is this the specific block we are hovering over? (in 76 SYZ Boss Blocks.asm each block's subtype contains its index)
 		bne.s	.skip					; if not, branch
@@ -744,7 +744,7 @@ BossBlock_Loop:
 		bne.s	BossBlock_ExitLoop
 
 BossBlock_MakeBlock:
-		move.b	#id_BossBlock,obID(a1)			; set object ID
+		move.l	#BossBlock,obID(a1)			; set object ID
 		move.l	#Map_BossBlock,obMap(a1)		; set mappings, art, and render flags
 		move.w	#ArtTile_Level|Tile_Pal3,obGfx(a1)
 		move.b	#sprite_cam_field,obRender(a1)

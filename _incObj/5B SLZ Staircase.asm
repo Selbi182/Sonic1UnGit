@@ -49,7 +49,7 @@ Stair_Main:	; Routine 0
 		move.b	#4,obRoutine(a1)			; set stair element to Stair_Solid routine
 
 	.makeblocks:
-		move.b	#id_Staircase,obID(a1)			; load stair block object
+		move.l	#Staircase,obID(a1)			; load stair block object
 		move.l	#Map_Stair,obMap(a1)			; set mappings
 		move.w	#ArtTile_Level|Tile_Pal3,obGfx(a1)	; set art tile (part of main level graphics) and palette line
 		move.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode

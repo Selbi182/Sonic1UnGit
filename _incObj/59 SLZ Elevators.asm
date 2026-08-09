@@ -108,7 +108,7 @@ Elev_StoodOn:	; Routine 4
 		bsr.w	Elev_Types				; execute platform action type
 		move.w	(sp)+,d2				; restore previous X-position for as MvSonicOnPtfm input
 
-		tst.b	obID(a0)				; has platform already deleted itself?
+		tst.l	obID(a0)				; has platform already deleted itself?
 		beq.s	.deleted				; if yes, branch
 		jmp	(MvSonicOnPtfm2).l			; move Sonic with platform as it moves
 ; ---------------------------------------------------------------------------
@@ -288,7 +288,7 @@ Elev_Spawner:	; Routine 6
 
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	.chkdel					; if object RAM is full, branch
-		move.b	#id_Elevator,obID(a1)			; spawn another platform object
+		move.l	#Elevator,obID(a1)			; spawn another platform object
 		move.w	obX(a0),obX(a1)				; copy spawner's X-position
 		move.w	obY(a0),obY(a1)				; copy spawner's Y-position
 		move.b	#$E,obSubtype(a1)			; set to entry $E in Elev_Var2 (which sets action type 9)

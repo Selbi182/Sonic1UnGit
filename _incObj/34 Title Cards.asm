@@ -38,7 +38,7 @@ Card_LoadForZone:	; Routine 0
 		moveq	#4-1,d1					; set to affect all four title card objects
 
 Card_Loop:
-		move.b	#id_TitleCard,obID(a1)			; load another title card object
+		move.l	#TitleCard,obID(a1)			; load another title card object
 		move.w	(a3),obX(a1)				; load start x-position
 		move.w	(a3)+,card_finalX(a1)			; load finish x-position (same as start)
 		move.w	(a3)+,card_mainX(a1)			; load main target x-position

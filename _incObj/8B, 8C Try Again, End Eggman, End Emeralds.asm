@@ -33,9 +33,9 @@ EEgg_Main:	; Routine 0
 		beq.s	EEgg_Animate				; if yes, we have a good ending
 
 		; Bad Ending (load emeralds)
-		move.b	#id_CreditsText,(v_tryagain).w		; load credits object
+		move.l	#CreditsText,(v_tryagain+obID).w		; load credits object
 		move.w	#9,(v_creditsnum).w			; use "TRY AGAIN" text for credits text object
-		move.b	#id_TryChaos,(v_eggmanchaos).w		; load emeralds object on "TRY AGAIN" screen
+		move.l	#TryChaos,(v_eggmanchaos+obID).w		; load emeralds object on "TRY AGAIN" screen
 		move.b	#0,obAnim(a0)				; use "TRY AGAIN" animation for Eggman
 ; ---------------------------------------------------------------------------
 
@@ -110,7 +110,7 @@ TCha_LoadEmeralds: ; Routine 0
 		moveq	#ss_emeralds_num-1,d1			; load all emeralds...
 		sub.b	(v_emeralds).w,d1			; ...minus how many you have collected
 .loopEmeralds:
-		move.b	#id_TryChaos,obID(a1)			; load emerald object
+		move.l	#TryChaos,obID(a1)			; load emerald object
 		addq.b	#2,obRoutine(a1)			; advance to TCha_Move
 		move.l	#Map_ECha,obMap(a1)			; set mappings (same ones used in ending sequence)
 		move.w	#ArtTile_Try_Again_Emeralds,obGfx(a1)	; set art tile

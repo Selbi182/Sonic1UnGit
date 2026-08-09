@@ -88,7 +88,7 @@ Lamp_Blue:	; Routine 2
 
 		jsr	(FindFreeObj).l				; find a free object slot
 		bne.s	.storeInfo				; if object RAM is full, branch
-		move.b	#id_Lamppost,obID(a1)			; load twirling lamp object
+		move.l	#Lamppost,obID(a1)			; load twirling lamp object
 		move.b	#6,obRoutine(a1)			; set object to Lamp_Twirl routine
 		move.w	obX(a0),lamp_origX(a1)			; remember base X-position
 		move.w	obY(a0),lamp_origY(a1)			; remember base Y-position

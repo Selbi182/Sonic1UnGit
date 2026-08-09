@@ -42,7 +42,7 @@ SSR_Main:
 		addq.w	#1,d1					; if yes, also load Continue tally
 
 SSR_Loop:
-		move.b	#id_SSResult,obID(a1)			; load next end-of-level title card element
+		move.l	#SSResult,obID(a1)			; load next end-of-level title card element
 		move.w	(a2)+,obX(a1)				; load start x-position
 		move.w	(a2)+,ssr_mainX(a1)			; load target x-position
 		move.w	(a2)+,obY(a1)				; load y-position
@@ -108,7 +108,7 @@ SSR_Move:	; Routine 2
 		addq.b	#2,obRoutine(a0)			; set to SSR_Wait (4)
 		move.w	#90,obTimeFrame(a0)
 		;move.w	#3*60,obTimeFrame(a0)			; set time delay before tally to 3 seconds
-		move.b	#id_SSRChaos,(v_ssresemeralds).w	; load collected chaos emeralds object
+		move.l	#SSRChaos,(v_ssresemeralds+obID).w	; load collected chaos emeralds object
 ; ---------------------------------------------------------------------------
 
 SSR_Wait:	; Routine 4, 8, $C, $10
@@ -283,7 +283,7 @@ SSRC_Main:	; Routine 0
 		bcs.w	DeleteObject				; if you have no emeralds, delete emerald object
 
 SSRC_Loop:
-		move.b	#id_SSRChaos,obID(a1)			; load next chaos emerald object
+		move.l	#SSRChaos,obID(a1)			; load next chaos emerald object
 		move.w	(a2)+,obX(a1)				; get next x-position from SSRC_PosData
 		move.w	#$F0,obY(a1)				; set fixed y-position
 

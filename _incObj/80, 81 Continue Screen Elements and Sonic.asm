@@ -68,7 +68,7 @@ CSI_CreateMiniSonics:
 		andi.b	#1,d2					; limit it to 1 for even/odd check
 
 .loopMiniSonics:
-		move.b	#id_ContScrItem,obID(a1)		; load another mini-Sonic object
+		move.l	#ContScrItem,obID(a1)		; load another mini-Sonic object
 		move.w	(a2)+,obX(a1)				; get next X-position from CSI_MinSonXPos
 		tst.b	d2					; do you have an odd number of continues?
 		beq.s	.configMiniSonic			; if not, branch

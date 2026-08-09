@@ -45,7 +45,7 @@ BossLabyrinth_Main:	; Routine 0
 BossLabyrinth_Loop:
 		jsr	(FindNextFreeObj).l
 		bne.s	BossLabyrinth_ShipMain			; no free objets found, branch
-		move.b	#id_BossLabyrinth,obID(a1)		; set object ID
+		move.l	#BossLabyrinth,obID(a1)		; set object ID
 		move.w	obX(a0),obX(a1)				; copy position
 		move.w	obY(a0),obY(a1)
 

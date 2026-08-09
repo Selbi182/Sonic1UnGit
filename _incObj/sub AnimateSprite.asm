@@ -19,7 +19,7 @@ AnimateSprite:
 
 Anim_Run:
 		subq.b	#1,obTimeFrame(a0)			; subtract 1 from frame duration
-		bpl.s	Anim_Wait				; if time remains, do nothing
+		bpl.w	Anim_Wait				; if time remains, do nothing
 
 Anim_LoadNextFrame:
 		add.w	d0,d0					; double animation ID for word-based indexing
@@ -38,18 +38,18 @@ Anim_SetFrameAndFlipFlags:
 		; Ideally, all objects here are reworked to no longer need this exception.
 		cmpi.b	#$1F,d0					; is frame ID $1F or lower?
 		bls.s	.modern					; if yes, no need to check for legacy
-		move.b	(a0),d1					; get current object's ID
-		cmpi.b	#id_Crabmeat,d1				; check if it's an object still making use of the X/Y flip flags
+		move.l	(a0),d1					; get current object's ID
+		cmpi.l	#Crabmeat,d1				; check if it's an object still making use of the X/Y flip flags
 		beq.s	.legacy
-		cmpi.b	#id_LavaBall,d1
+		cmpi.l	#LavaBall,d1
 		beq.s	.legacy
-		cmpi.b	#id_GrassFire,d1
+		cmpi.l	#GrassFire,d1
 		beq.s	.legacy
-		cmpi.b	#id_BossFire,d1
+		cmpi.l	#BossFire,d1
 		beq.s	.legacy
-		cmpi.b	#id_SpinPlatform,d1
+		cmpi.l	#SpinPlatform,d1
 		beq.s	.legacy
-		cmpi.b	#id_SpinConvey,d1
+		cmpi.l	#SpinConvey,d1
 		bne.s	.modern					; if it's none of these, it's a new object that uses more than $1F frames
 
 .legacy:
@@ -101,7 +101,7 @@ Anim_End_FE:
 		sub.b	d0,obAniFrame(a0)			; decrement script index by that amount
 		sub.b	d0,d1					; jump back d0 bytes in the script
 		move.b	1(a1,d1.w),d0				; read new frame ID in script
-		bra.s	Anim_SetFrameAndFlipFlags		; display new frame
+		bra.w	Anim_SetFrameAndFlipFlags		; display new frame
 ; ===========================================================================
 
 ; afChange = change to a different animation

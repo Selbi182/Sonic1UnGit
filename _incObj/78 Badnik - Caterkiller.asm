@@ -75,7 +75,7 @@ Cat_Main:	; Routine 0
 		jsr	(FindNextFreeObj).l			; find a free object slot
 		bne.w	Cat_Despawn				; if object RAM is full, branch
 
-		move.b	#id_Caterkiller,obID(a1)		; load body segment object
+		move.l	#Caterkiller,obID(a1)		; load body segment object
 		move.b	d6,obRoutine(a1)			; goto Cat_BodySeg1 or Cat_BodySeg2 next
 		addq.b	#2,d6					; alternate between the two
 		move.l	obMap(a0),obMap(a1)			; copy mappings
@@ -324,7 +324,7 @@ Cat_BodySeg1:	; Routine 4, 8
 		cmpi.b	#$C,obRoutine(a1)			; has head already been set to fragment? (set to Cat_Fragment)
 		beq.s	Cat_FragmentateBody_NotifyHead		; if yes, branch
 
-		cmpi.b	#id_ExplosionItem,obID(a1)		; has the head been destroyed?
+		cmpi.l	#ExplosionItem,obID(a1)		; has the head been destroyed?
 		beq.s	.delete					; if yes, branch
 		cmpi.b	#$A,obRoutine(a1)			; is the parent going to delete itself? (set to Cat_Delete)
 		bne.s	.display				; if not, branch

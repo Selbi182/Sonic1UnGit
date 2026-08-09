@@ -200,7 +200,7 @@ Bub_BubbleMaker: ; Routine $A
 
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	.chkReset				; if object RAM is full, branch
-		move.b	#id_Bubble,obID(a1)			; load bubble object
+		move.l	#Bubble,obID(a1)			; load bubble object
 		move.w	obX(a0),obX(a1)				; horizontally spawn bubble at bubble maker
 		jsr	(RandomNumber).l			; get random number in d0
 		andi.w	#$F,d0					; limit to 16px
@@ -232,7 +232,7 @@ Bub_BubbleMaker: ; Routine $A
 	.chkReset:
 		cmpi.b	#2,obSubtype(a1)
 		beq.s	.blubb
-		move.b	#id_BubbleParticle,obID(a1)			; load bubble object
+		move.l	#BubbleParticle,obID(a1)			; load bubble object
 	.blubb:
 		subq.b	#1,bub_minicount(a0)			; decrement number of small bubbles to spawn
 		bpl.s	.animate				; if more remain, branch

@@ -160,7 +160,7 @@ Pri_Explosion:	; Routine $A (also routine 6/8, but those are unused)
 
 		jsr	(FindFreeObj).l				; find a free object slot
 		bne.s	.chkSpawnAnimals			; if object RAM is full, branch
-		move.b	#id_Explosion,obID(a1)			; load an explosion object
+		move.l	#Explosion,obID(a1)			; load an explosion object
 		move.w	obX(a0),obX(a1)				; use prison X-position for explosion base
 		move.w	obY(a0),obY(a1)				; use prison Y-position for explosion base
 		jsr	(RandomNumber).l			; get a random number in d0/d1
@@ -193,7 +193,7 @@ Pri_SpawnAnimals:
 	.loop:
 		jsr	(FindFreeObj).l				; find a free object slot
 		bne.s	.return					; if object RAM is full, branch
-		move.b	#id_Animals,obID(a1)			; load an animal object
+		move.l	#Animals,obID(a1)			; load an animal object
 		move.w	obX(a0),obX(a1)				; spawn at current X-position
 		move.w	obY(a0),obY(a1)				; spawn at current Y-position
 		add.w	d4,obX(a1)				; add X-offset for this animal
@@ -214,7 +214,7 @@ Pri_Animals:	; Routine $C
 		; These animals hop out almost as soon as they are spawned in.
 		jsr	(FindFreeObj).l				; find a free object slot
 		bne.s	.chkDelay				; if object RAM is full, branch
-		move.b	#id_Animals,obID(a1)			; load an animal object
+		move.l	#Animals,obID(a1)			; load an animal object
 		move.w	obX(a0),obX(a1)				; spawn at current X-position
 		move.w	obY(a0),obY(a1)				; spawn at current Y-position
 		jsr	(RandomNumber).l			; get a random number in d0/d1
@@ -237,12 +237,12 @@ Pri_Animals:	; Routine $C
 
 Pri_EndAct:	; Routine $E
 		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d0 ; number of objects to check
-		moveq	#id_Animals,d1				; set object ID to check
+		move.l	#Animals,d1				; set object ID to check
 		moveq	#object_size,d2				; set increment value per object to check
 		lea	(v_lvlobjspace).w,a1			; start dynamic object RAM space
 
 .loopFindAnimals:
-		cmp.b	obID(a1),d1				; has animal object been deleted?
+		cmp.l	obID(a1),d1				; has animal object been deleted?
 		beq.s	.return					; if not yet, branch
 		adda.w	d2,a1					; check next object RAM slot
 		dbf	d0,.loopFindAnimals			; repeat for entire object RAM space

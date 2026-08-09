@@ -64,7 +64,7 @@ Hog_Action:	; Routine 2
 
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	.finish					; if object RAM is full, branch
-		move.b	#id_Cannonball,obID(a1)			; load cannonball object ($20)
+		move.l	#Cannonball,obID(a1)			; load cannonball object ($20)
 		move.w	obX(a0),obX(a1)				; copy X-position
 		move.w	obY(a0),obY(a1)				; copy Y-position
 		move.w	#-$100,obVelX(a1)			; make cannonball bounce to the left
@@ -149,7 +149,7 @@ CBal_ChkExplode:
 		subq.w	#1,CBal_time(a0)			; decrement explosion timer
 		bpl.s	CBal_Animate				; if time remains, branch
 
-		move.b	#id_Explosion,obID(a0)			; change cannonball into a normal explosion ($3F)
+		move.l	#Explosion,obID(a0)			; change cannonball into a normal explosion ($3F)
 		move.b	#0,obRoutine(a0)			; reset routine counter
 		bra.w	Explosion				; jump to explosion code
 ; ===========================================================================

@@ -206,7 +206,7 @@ LGrass_Burnable:
 
 		bsr.w	FindNextFreeObj				; find a free object slot
 		bne.s	.updateflamesForNudge			; if object RAM is full, branch
-		move.b	#id_GrassFire,obID(a1)			; load sitting grass fire object
+		move.l	#GrassFire,obID(a1)			; load sitting grass fire object
 		move.w	obX(a0),obX(a1)				; copy parent X-position
 		move.w	lgrass_origY(a0),gfire_origY(a1)	; copy parent initial Y-position
 		addq.w	#8,gfire_origY(a1)			; adjust Y-position 8px down...
@@ -396,7 +396,7 @@ GFire_Spread:	; Routine 2
 
 		bsr.w	FindNextFreeObj				; find a free object slot ("next" ensures children always spawn behind parent sprite)
 		bne.s	.animate				; if object RAM is full, branch
-		move.b	#id_GrassFire,obID(a1)			; load another child fireball object
+		move.l	#GrassFire,obID(a1)			; load another child fireball object
 		move.w	obX(a0),obX(a1)				; spawn at parent's current X-position
 		move.w	d2,gfire_origY(a1)			; align new flame with slope height
 		move.w	gfire_nudge(a0),gfire_nudge(a1)		; transfer current depression distance

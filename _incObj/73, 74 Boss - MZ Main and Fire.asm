@@ -46,7 +46,7 @@ BossMarble_Main:	; Routine 0
 BossMarble_Loop:
 		jsr	(FindNextFreeObj).l			; are there any free objects?
 		bne.s	BossMarble_ShipMain			; no, leave early
-		move.b	#id_BossMarble,obID(a1)			; set object ID for this slot
+		move.l	#BossMarble,obID(a1)			; set object ID for this slot
 		move.w	obX(a0),obX(a1)				; set object position to boss position
 		move.w	obY(a0),obY(a1)
 
@@ -213,7 +213,7 @@ BossMarble_MakeLava:
 		bcc.s	.checkRight				; has the frame countdown spawn timer expired? if not, branch
 		jsr	(FindFreeObj).l				; timer has expired, find a free object slot
 		bne.s	.generateTimer				; no free objects, leave early
-		move.b	#id_LavaBall,obID(a1) 			; load lava ball object
+		move.l	#LavaBall,obID(a1) 			; load lava ball object
 		move.w	#boss_mz_y+$D8,obY(a1)			; set Y position to initially spawn from
 		jsr	(RandomNumber).l
 		andi.l	#$FFFF,d0				; mask to keep lower word only
@@ -288,7 +288,7 @@ BMZ_DropFire:
 		move.w	obBossX(a0),obX(a1)			; copy boss positions to object positions
 		move.w	obBossY(a0),obY(a1)
 		addi.w	#$18,obY(a1)				; set offset to lower object
-		move.b	#id_BossFire,obID(a1)			; load lava ball object
+		move.l	#BossFire,obID(a1)			; load lava ball object
 		move.b	#1,obSubtype(a1)			; set subtype to 1
 
 ; loc_184EA
@@ -634,7 +634,7 @@ BossFire_Duplicate2:
 		bne.s	.exit					; no free objects, leave
 		move.w	obX(a0),obX(a1)				; copy X and Y
 		move.w	obY(a0),obY(a1)
-		move.b	#id_BossFire,obID(a1)			; set object to fireball
+		move.l	#BossFire,obID(a1)			; set object to fireball
 		move.w	#103,obSubtype(a1)			; set spawn type to floor fire fire (obSubtype=0) and timer to 103 frames (BossFire_GenericTimer=$67, this child object is used in TempFlame) in one word write. this will be ran the next time objects are executed
 
 ; locret_187EE:

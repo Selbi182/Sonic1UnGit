@@ -176,7 +176,7 @@ DLE_GHZ3_Boss:
 		blo.s	.exit					; branch if camera is left of $2960
 		bsr.w	FindFreeObj				; find free OST slot
 		bne.s	.fail					; branch if not found
-		move.b	#id_BossGreenHill,obID(a1)		; load GHZ boss object
+		move.l	#BossGreenHill,obID(a1)		; load GHZ boss object
 		move.w	#boss_ghz_x+$100,obX(a1)
 		move.w	#boss_ghz_y-$80,obY(a1)
 
@@ -243,7 +243,7 @@ DLE_LZ3:
 
 		bsr.w	FindFreeObj				; find free OST slot
 		bne.s	.fail					; branch if not found
-		move.b	#id_BossLabyrinth,obID(a1)		; load LZ boss object
+		move.l	#BossLabyrinth,obID(a1)		; load LZ boss object
 
 	.fail:
 		move.w	#bgm_Boss,d0
@@ -445,7 +445,7 @@ DLE_MZ3_Boss:
 
 		bsr.w	FindFreeObj				; find free OST slot
 		bne.s	.fail					; branch if not found
-		move.b	#id_BossMarble,obID(a1)			; load MZ boss object
+		move.l	#BossMarble,obID(a1)			; load MZ boss object
 		move.w	#boss_mz_x+$1F0,obX(a1)
 		move.w	#boss_mz_y+$1C,obY(a1)
 
@@ -519,7 +519,7 @@ DLE_SLZ3_Boss:
 
 		bsr.w	FindFreeObj				; find free OST slot
 		bne.s	.fail					; branch if not found
-		move.b	#id_BossStarLight,obID(a1)		; load SLZ boss object
+		move.l	#BossStarLight,obID(a1)		; load SLZ boss object
 
 	.fail:
 		move.w	#bgm_Boss,d0
@@ -598,7 +598,7 @@ DLE_SYZ3_Main:
 
 		bsr.w	FindFreeObj				; find free OST slot
 		bne.s	.exit					; branch if not found
-		move.b	#id_BossBlock,obID(a1)			; load blocks that boss picks up
+		move.l	#BossBlock,obID(a1)			; load blocks that boss picks up
 		addq.b	#2,(v_dle_routine).w			; goto DLE_SYZ3_Boss next
 
 	.exit:
@@ -612,7 +612,7 @@ DLE_SYZ3_Boss:
 		move.w	#boss_syz_y,(v_limitbtm1).w
 		bsr.w	FindFreeObj				; find free OST slot
 		bne.s	.fail					; branch if not found
-		move.b	#id_BossSpringYard,obID(a1)		; load SYZ boss object
+		move.l	#BossSpringYard,obID(a1)		; load SYZ boss object
 		addq.b	#2,(v_dle_routine).w			; goto DLE_SYZ3_End next
 
 	.fail:
@@ -700,7 +700,7 @@ DLE_SBZ2_Blocks:
 
 		bsr.w	FindFreeObj				; find free OST slot
 		bne.s	.exit					; branch if not found
-		move.b	#id_FalseFloor,obID(a1)			; load collapsing block object
+		move.l	#FalseFloor,obID(a1)			; load collapsing block object
 		addq.b	#2,(v_dle_routine).w			; goto DLE_SBZ2_Eggman next
 		moveq	#plcid_EggmanSBZ2,d0
 		bra.w	AddPLC					; load SBZ2 Eggman gfx
@@ -716,7 +716,7 @@ DLE_SBZ2_Eggman:
 
 		bsr.w	FindFreeObj				; find free OST slot
 		bne.s	.fail					; branch if not found
-		move.b	#id_ScrapEggman,obID(a1)		; load SBZ2 Eggman object
+		move.l	#ScrapEggman,obID(a1)		; load SBZ2 Eggman object
 		addq.b	#2,(v_dle_routine).w			; goto DLE_SBZ2_End next
 
 	.fail:
@@ -770,7 +770,7 @@ DLE_FZ_Boss:
 
 		bsr.w	FindFreeObj				; find free OST slot
 		bne.s	.set_boundary				; branch if not found
-		move.b	#id_BossFinal,obID(a1)			; load FZ boss object
+		move.l	#BossFinal,obID(a1)			; load FZ boss object
 		addq.b	#2,(v_dle_routine).w			; goto DLE_FZ_Arena next
 		move.b	#1,(f_lockscreen).w			; lock screen
 

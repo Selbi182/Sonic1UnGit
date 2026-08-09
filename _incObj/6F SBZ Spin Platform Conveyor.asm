@@ -139,7 +139,7 @@ SpinC_Main_Spawner:
 	; SpinC_LoadPform:
 	.makePlatform:
 		; Note: obRoutine is implicitly left at 0, so all platforms will run through SpinC_Main again!
-		move.b	#id_SpinConvey,obID(a1)			; load SBZ conveyor platform object
+		move.l	#SpinConvey,obID(a1)			; load SBZ conveyor platform object
 		move.w	(a2)+,obX(a1)				; get next X-position
 		move.w	(a2)+,obY(a1)				; get next Y-position
 		move.w	(a2)+,d0				; get next subtype (stored as word, upper byte is always $00)

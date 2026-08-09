@@ -45,6 +45,7 @@ Bump_Hit:	; Routine 2
 		bset	#1,obStatus(a1)				; set Sonic to airborne
 		bclr	#5,obStatus(a1)				; clear pushing flag
 		clr.b	jumping(a1)				; clear jumping flag
+		clr.b	doublejump(a1)
 
 		move.b	#1,obAnim(a0)				; use bumper "hit" animation
 		move.w	#sfx_Bumper,d0				; set bumper sound
@@ -60,7 +61,7 @@ Bump_Hit:	; Routine 2
 
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	Bump_Display				; if object RAM is full, branch
-		move.b	#id_Points,obID(a1)			; load floating points object
+		move.l	#Points,obID(a1)			; load floating points object
 		move.w	obX(a0),obX(a1)				; set to use bumper's X-position
 		move.w	obY(a0),obY(a1)				; set to use bumper's Y-position
 		move.b	#4,obFrame(a1)				; set to use "10" frame

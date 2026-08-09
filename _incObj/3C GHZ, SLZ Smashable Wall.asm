@@ -46,7 +46,7 @@ Smash_Solid:	; Routine 2
 ; ===========================================================================
 
 .chkroll:
-		tst.b	homingattack(a1)
+		tst.b	doublejump(a1)
 		bne.s	.doSmash
 
 		cmpi.b	#id_Roll,obAnim(a1)			; is Sonic rolling?

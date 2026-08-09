@@ -98,7 +98,7 @@ Moto_Action_Drive:
 
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	.return					; if object RAM is full, branch
-		move.b	#id_MotoBug,obID(a1)			; load exhaust smoke particle object (handled through obAnim)
+		move.l	#MotoBug,obID(a1)			; load exhaust smoke particle object (handled through obAnim)
 		move.w	obX(a0),obX(a1)				; copy Motobug's X-position
 		move.w	obY(a0),obY(a1)				; copy Motobug's Y-position
 		move.b	obStatus(a0),obStatus(a1)		; copy Motobug's status flags (i.e. flipped or not)

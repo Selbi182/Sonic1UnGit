@@ -10,18 +10,10 @@
 ExecuteObjects:
 		lea	(v_objspace).w,a0			; set address for object RAM
 		moveq	#0,d0					; clear d0
-		move.b	(a0),d0					; load first object ID from RAM (v_player)
+		move.l	obID(a0),d0					; load first object ID from RAM (v_player)
 		beq.s	.noSonicObject				; if ID is 0, Sonic object isn't loader
-		subq.b	#1,d0
-		beq.s	.normalSonic
-		add.w	d0,d0					; quadruple for...
-		add.w	d0,d0					; ...long-based indexing
-		movea.l	Obj_Index(pc,d0.w),a1			; find relevant object pointer (minus -4 because entries skip ID 00)
-		jsr	(a1)					; run the object's code
-		bra.s	.noSonicObject
-	.normalSonic:
-		bsr.w	SonicPlayer
-
+		move.l	d0,a1
+		jsr	(a1)
 	.noSonicObject:
 		clr.w	(v_registeredcollision).w		; reset number of collision response entries to 0
 
@@ -31,11 +23,9 @@ ExecuteObjects:
 
 ; loc_D348:
 .run_object:
-		move.b	(a0),d0					; load object ID from RAM
+		move.l	obID(a0),d0					; load object ID from RAM
 		beq.s	.next_object				; if ID is 0, this is an empty object slot, branch
-		add.w	d0,d0					; quadruple for...
-		add.w	d0,d0					; ...long-based indexing
-		movea.l	Obj_Index-4(pc,d0.w),a1			; find relevant object pointer (minus -4 because entries skip ID 00)
+		movea.l	d0,a1
 		jsr	(a1)					; run the object's code
 
 		tst.b	obColType(a0)				; does this object have collision with Sonic?

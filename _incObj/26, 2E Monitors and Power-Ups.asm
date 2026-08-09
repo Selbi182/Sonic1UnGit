@@ -19,7 +19,7 @@ Mon_Index:	dc.w Mon_Main-Mon_Index				; 0 - init
 Mon_Main:	; Routine 0
 		cmpi.b	#8,obSubtype(a0)			; is monitor subtype valid? i.e. no higher than goggles monitor (ID 8)
 		bls.s	.valid					; if yes, branch
-		move.b	#id_Invisibarrier,obID(a0)		; otherwise, convert this monitor to an invisible solid barrier
+		move.l	#Invisibarrier,obID(a0)		; otherwise, convert this monitor to an invisible solid barrier
 		jmp	(Invisibarrier).l			; execute barrier logic
 .valid:
 
@@ -86,7 +86,7 @@ Mon_Solid:	; Routine 2
 		bsr.w	Mon_SolidSides				; check collision (0 = none; 1 = side; -1 = top/bottom)
 		beq.w	.checkpush				; if not, branch
 
-		tst.b	homingattack(a1)
+		tst.b	doublejump(a1)
 		bne.s	.checkpush
 		tst.w	obVelY(a1)				; is Sonic moving upwards?
 		bmi.s	.dontbreak				; if yes, branch
@@ -163,7 +163,7 @@ Mon_BreakOpen:	; Routine 4 (set from ReactToItem)
 
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	Mon_Explode				; if object RAM is full, branch
-		move.b	#id_PowerUp,obID(a1)			; load monitor contents object
+		move.l	#PowerUp,obID(a1)			; load monitor contents object
 		move.w	obX(a0),obX(a1)				; copy X position
 		move.w	obY(a0),obY(a1)				; copy Y position
 		move.b	obAnim(a0),obAnim(a1)			; copy animation (which also handles the power-up)
@@ -171,7 +171,7 @@ Mon_BreakOpen:	; Routine 4 (set from ReactToItem)
 Mon_Explode:
 		bsr.w	FindFreeObj				; find another free object slot
 		bne.s	Mon_RememberBroken			; if object RAM is full, branch
-		move.b	#id_ExplosionItem,obID(a1)		; load explosion object
+		move.l	#ExplosionItem,obID(a1)		; load explosion object
 		addq.b	#2,obRoutine(a1)			; skip over ExItem_Animal so no animal is spawned
 		move.w	obX(a0),obX(a1)				; copy X position
 		move.w	obY(a0),obY(a1)				; copy Y position
@@ -254,7 +254,7 @@ Pow_ChkShoes:
 		bne.s	Pow_ChkShield				; if not, branch
 
 		move.b	#1,(v_shoes).w				; set speed shoes flag (used for reverting when time ran out)
-		move.b	#id_AfterImage,(v_afterimage).w		; load after image object
+		move.l	#AfterImage,(v_afterimage+obID).w		; load after image object
 		move.w	#20*60,(v_player+shoetime).w		; set time limit for speed shoes to 20 seconds
 
 		move.w	#son_maxspeed*2,(v_sonspeedmax).w	; double Sonic's top speed
@@ -277,7 +277,7 @@ Pow_ChkShield:
 		bne.s	Pow_ChkInvinc				; if not, branch
 
 		move.b	#1,(v_shield).w				; give Sonic a shield
-		move.b	#id_ShieldItem,(v_shieldobj).w		; load shield object ($38)
+		move.l	#ShieldItem,(v_shieldobj+obID).w		; load shield object ($38)
 		move.w	#sfx_Shield,d0				; set shield sound effect
 		jmp	(QueueSound1).l				; play it
 ; ===========================================================================
@@ -289,13 +289,13 @@ Pow_ChkInvinc:
 		move.b	#1,(v_invinc).w				; make Sonic invincible
 		move.w	#20*60,(v_player+invtime).w		; set time limit for invincibility to 20 seconds
 
-		move.b	#id_ShieldItem,(v_starsobj1).w		; load 1st stars object
+		move.l	#ShieldItem,(v_starsobj1+obID).w		; load 1st stars object
 		move.b	#1,(v_starsobj1+obAnim).w		; set shortest travel delay
-		move.b	#id_ShieldItem,(v_starsobj2).w		; load 2nd stars object
+		move.l	#ShieldItem,(v_starsobj2+obID).w		; load 2nd stars object
 		move.b	#2,(v_starsobj2+obAnim).w		; set short travel delay
-		move.b	#id_ShieldItem,(v_starsobj3).w		; load 3rd stars object
+		move.l	#ShieldItem,(v_starsobj3+obID).w		; load 3rd stars object
 		move.b	#3,(v_starsobj3+obAnim).w		; set long travel delay
-		move.b	#id_ShieldItem,(v_starsobj4).w		; load 4th stars object
+		move.l	#ShieldItem,(v_starsobj4+obID).w		; load 4th stars object
 		move.b	#4,(v_starsobj4+obAnim).w		; set longest travel delay
 
 		tst.b	(f_lockscreen).w			; is boss mode on?

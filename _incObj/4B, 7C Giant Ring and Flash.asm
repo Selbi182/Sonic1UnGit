@@ -51,7 +51,7 @@ GRing_Collect:	; Routine 4
 
 		bsr.w	FindFreeObj				; find a free object RAM slot
 		bne.w	GRing_PlaySnd				; if RAM is full, branch
-		move.b	#id_RingFlash,obID(a1)			; load giant ring flash object
+		move.l	#RingFlash,obID(a1)			; load giant ring flash object
 		move.w	obX(a0),obX(a1)				; copy X-position
 		move.w	obY(a0),obY(a1)				; copy Y-position
 		move.l	a0,gring_parent(a1)			; make flash object remember parent ring object
@@ -132,7 +132,7 @@ Flash_Collect:
 
 	.deleteSonic:
 		addq.b	#2,obRoutine(a0)			; set to Flash_Delete
-		move.w	#0,(v_player).w				; delete Sonic object
+		move.l	#0,(v_player+obID).w				; delete Sonic object
 		addq.l	#4,sp					; skip returning to Flash_ChkDel
 		rts						; return
 ; End of function Flash_Collect

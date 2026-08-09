@@ -25,8 +25,8 @@ See_Index:	dc.w See_Main-See_Index			; 0
 see_origX:	equ objoff_30		; initial X-position
 see_origY:	equ objoff_34		; initial Y-position
 see_landspeed:	equ objoff_38		; stored Y-speed at which Sonic landed on seesaw
-see_state_see:	equ objoff_3A		; 0 = descending, 1 = flat, 2 = ascending
-see_state_ball:	equ objoff_3A		; 0 = ball on right side, 2 = ball on left side (can't be 1)
+see_state_see:	equ obWidth		; 0 = descending, 1 = flat, 2 = ascending
+see_state_ball:	equ obWidth		; 0 = ball on right side, 2 = ball on left side (can't be 1)
 see_parent:	equ objoff_3C		; RAM address of parent seesaw object
 ; ===========================================================================
 
@@ -44,7 +44,7 @@ See_Main:	; Routine 0
 
 		bsr.w	FindNextFreeObj				; find a free object slot
 		bne.s	.checkXFlip				; if object RAM is full, branch
-		move.b	#id_Seesaw,obID(a1)			; load spikeball object
+		move.l	#Seesaw,obID(a1)			; load spikeball object
 		addq.b	#6,obRoutine(a1)			; set to See_Spikeball routine
 		move.w	obX(a0),obX(a1)				; copy parent X-position
 		move.w	obY(a0),obY(a1)				; copy parent Y-position

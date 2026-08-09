@@ -72,7 +72,7 @@ Smab_Solid:	; Routine 2
 
 		bsr.w	FindFreeObj				; find a free object slot for the points
 		bne.s	Smab_Fragment				; if object RAM is full, branch
-		move.b	#id_Points,obID(a1)			; load floating points object
+		move.l	#Points,obID(a1)			; load floating points object
 		move.w	obX(a0),obX(a1)				; use block's X-position
 		move.w	obY(a0),obY(a1)				; use block's Y-position
 

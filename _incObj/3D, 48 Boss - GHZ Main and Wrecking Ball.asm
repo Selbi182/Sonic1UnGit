@@ -38,7 +38,7 @@ BGHZ_Loop:
 
 BGHZ_LoadBoss:
 		move.b	(a2)+,obRoutine(a1) 			; load appropriate routine counter for this slot, then increment a2
-		move.b	#id_BossGreenHill,obID(a1) 		; set object ID for this slot
+		move.l	#BossGreenHill,obID(a1) 		; set object ID for this slot
 		move.w	obX(a0),obX(a1) 			; copy boss position out of a0 into a1 for sub-object coordinates so that they start at the same position
 		move.w	obY(a0),obY(a1)
 		move.l	#Map_Eggman,obMap(a1) 			; point to Eggman's mappings
@@ -166,7 +166,7 @@ BGHZ_MakeBall:
 		addq.b	#2,ob2ndRout(a0) 			; advance the routine index so that when we are done we go to ShipMove
 		jsr	(FindNextFreeObj).l
 		bne.s	.skip 					; no free objects? skip loading
-		move.b	#id_BossBall,obID(a1) 			; load swinging ball object
+		move.l	#BossBall,obID(a1) 			; load swinging ball object
 		move.w	obBossX(a0),obX(a1) 			; copy boss position scratch RAM to actual object position
 		move.w	obBossY(a0),obY(a1)
 		move.l	a0,BGHZ_ParentObj(a1) 			; same thing as way up in LoadBoss, store a pointer of the main boss object for future reference
@@ -461,7 +461,7 @@ GBall_MakeLinks:
 		bne.s	GBall_MakeBall				; no, leave early
 		move.w	obX(a0),obX(a1)				; set object position to main ball controller position
 		move.w	obY(a0),obY(a1)
-		move.b	#id_BossBall,obID(a1) 			; load chain link object
+		move.l	#BossBall,obID(a1) 			; load chain link object
 		move.b	#6,obRoutine(a1)			; set routine to GBall_Link
 		move.l	#Map_Swing_GHZ,obMap(a1)		; load mappings and art
 		move.w	#ArtTile_GHZ_MZ_Swing,obGfx(a1)
@@ -647,7 +647,7 @@ GBall_UpdateBase:
 		move.b	obStatus(a1),obStatus(a0)		; copy object status
 		tst.b	obStatus(a1)				; has boss been beaten?
 		bpl.s	.not_beaten				; if not, branch
-		move.b	#id_Explosion,obID(a0)			; replace base with explosion object
+		move.l	#Explosion,obID(a0)			; replace base with explosion object
 		move.b	#0,obRoutine(a0)
 
 	.not_beaten:
@@ -661,7 +661,7 @@ GBall_Link:	; Routine 6
 		movea.l	BGHZ_ParentObj(a0),a1			; copy parent object address
 		tst.b	obStatus(a1)				; has Eggman's defeated flag been set (bit 7)?
 		bpl.s	GBall_Display3				; if not (positive number), branch
-		move.b	#id_Explosion,obID(a0)			; set ID to explosion
+		move.l	#Explosion,obID(a0)			; set ID to explosion
 		move.b	#0,obRoutine(a0)			; set object routine to 0 (start exploding)
 
 GBall_Display3:
@@ -685,7 +685,7 @@ GBall_Vanish:
 		bsr.w	BossDefeated
 		subq.b	#1,BGHZ_BossGenericTimer(a0)		; subtract 1 from timer
 		bpl.s	GBall_Display4				; if timer is above 0, branch
-		move.b	#id_Explosion,obID(a0)			; set ID to explosion
+		move.l	#Explosion,obID(a0)			; set ID to explosion
 		move.b	#0,obRoutine(a0)			; set object routine to 0 (start exploding)
 
 GBall_Display4:

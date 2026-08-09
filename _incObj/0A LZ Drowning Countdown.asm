@@ -285,8 +285,8 @@ Drown_Countdown:; Routine $A
 
 		jsr	(FindFreeObj).l				; find a free object slot
 		bne.w	.return					; if object RAM is full, branch
-		;move.b	#id_DrownCount,obID(a1)			; load an extra bubble object
-		move.b	#id_BubbleParticle,obID(a1)			; load an extra bubble object
+		;move.l	#DrownCount,obID(a1)			; load an extra bubble object
+		move.l	#BubbleParticle,obID(a1)			; load an extra bubble object
 
 		move.w	(v_player+obX).w,obX(a1)		; match X-position to Sonic
 		moveq	#6,d0					; offset it 6px to the right
@@ -329,7 +329,7 @@ Drown_Countdown:; Routine $A
 		bne.s	.decrementExtraBubbles			; was flag already set? if yes, branch
 		move.b	d2,obSubtype(a1)			; set bubble to be a number bubble instead
 		move.w	#28,drown_numtime(a1)			; delay for 28 frames before showing number bubble
-		move.b	#id_DrownCount,obID(a1)			; load an extra bubble object
+		move.l	#DrownCount,obID(a1)			; load an extra bubble object
 	.secondTry:
 		tst.b	drown_extrabubbles(a0)			; are more extra bubbles meant to be spawned?
 		bne.s	.decrementExtraBubbles			; if yes, branch
@@ -337,7 +337,7 @@ Drown_Countdown:; Routine $A
 		bne.s	.decrementExtraBubbles			; was flag already set? if yes, branch
 		move.b	d2,obSubtype(a1)			; set bubble to be a number bubble instead
 		move.w	#28,drown_numtime(a1)			; delay for 28 frames before showing number bubble
-		move.b	#id_DrownCount,obID(a1)			; load an extra bubble object
+		move.l	#DrownCount,obID(a1)			; load an extra bubble object
 
 .decrementExtraBubbles:
 		subq.b	#1,drown_extrabubbles(a0)		; decrement number of remaining extra bubbles to spawn

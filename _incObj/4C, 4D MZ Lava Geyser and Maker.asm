@@ -55,7 +55,7 @@ GMake_MakeLava:	; Routine 6
 
 		bsr.w	FindNextFreeObj				; find a free object slot
 		bne.s	.setAnim				; if object RAM is full, branch
-		move.b	#id_LavaGeyser,obID(a1)			; load big vertical lava wall object
+		move.l	#LavaGeyser,obID(a1)			; load big vertical lava wall object
 		move.w	obX(a0),obX(a1)				; copy X-position
 		move.w	obY(a0),obY(a1)				; copy Y-position
 		move.b	obSubtype(a0),obSubtype(a1)		; copy subtype (0 or 1)
@@ -147,7 +147,7 @@ Geyser_Main:	; Routine 0
 		bne.s	.next					; if object RAM is full, branch
 
 	.makeLava:
-		move.b	#id_LavaGeyser,obID(a1)			; load another lava object
+		move.l	#LavaGeyser,obID(a1)			; load another lava object
 		move.l	#Map_Geyser,obMap(a1)			; set mappings
 		move.w	#ArtTile_MZ_Lava|Tile_Pal4,obGfx(a1)	; set art tile and palette line (palcycle)
 		move.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode

@@ -1756,7 +1756,7 @@ GM_Title:		; fading out from previous game mode
 		clearRAM v_palette_fading			; set palette fade-in buffer to all-black
 		moveq	#palid_Sonic,d0				; load Sonic's palette...
 		bsr.w	PalLoad_Fade				; ...into fade-in buffer
-		move.b	#id_CreditsText,(v_sonicteam).w		; load "SONIC TEAM PRESENTS" object
+		move.l	#CreditsText,(v_sonicteam+obID).w	; load "SONIC TEAM PRESENTS" object
 		jsr	(ExecuteObjects).l			; execute objects to load STP object
 		jsr	(BuildSprites).l			; build sprites for the STP object
 		bsr.w	PaletteFadeIn				; fade-in STP screen
@@ -1835,17 +1835,17 @@ Tit_LoadText:
 
 		clearRAM v_sonicteam,v_sonicteam+object_size	; delete RAM used by "SONIC TEAM PRESENTS" object (fully)
 
-		move.b	#id_TitleSonic,(v_titlesonic).w		; load big Sonic object
-		move.b	#id_PSBTM,(v_pressstart).w		; load "PRESS START BUTTON" object
+		move.l	#TitleSonic,(v_titlesonic+obID).w	; load big Sonic object
+		move.l	#PSBTM,(v_pressstart+obID).w		; load "PRESS START BUTTON" object
 		jsr	(TitleMenu_LoadTextGraphics).l
 
 		tst.b	(v_megadrive).w				; is console Japanese?
 		bpl.s	.isjap					; if yes, don't load TM object
-		move.b	#id_PSBTM,(v_titletm).w			; load title screen HUD object
+		move.l	#PSBTM,(v_titletm+obID).w		; load title screen HUD object
 		move.b	#3,(v_titletm+obFrame).w		; set it to the "TM" frame
 	.isjap:
 
-		move.b	#id_PSBTM,(v_ttlsonichide).w		; load title screen HUD object
+		move.l	#PSBTM,(v_ttlsonichide+obID).w		; load title screen HUD object
 		move.b	#2,(v_ttlsonichide+obFrame).w		; load object which hides part of Sonic's torso behind the emblem
 
 		jsr	(ExecuteObjects).l			; load title screen objects
@@ -2637,7 +2637,7 @@ Level_GetBgm:
 		tst.w	(f_demo).w				; is this a credits demo?
 		bmi.s	Level_SkipTtlCard			; if yes, don't load title cards or change music
 		bsr.w	PlayCurrentActMusic			; play music for current act
-		move.b	#id_TitleCard,(v_titlecard).w		; load title card object
+		move.l	#TitleCard,(v_titlecard+obID).w		; load title card object
 ; ---------------------------------------------------------------------------
 
 Level_TtlCardLoop: ; move in title cards, stay on them until PLCs have finished
@@ -2681,7 +2681,7 @@ Level_SkipTtlCard:
 		bsr.w	ColIndexLoad				; set collision index for current zone
 		bsr.w	LZWaterFeatures				; initialize water features if zone is LZ
 
-		move.b	#id_SonicPlayer,(v_player).w		; load Sonic object
+		move.l	#SonicPlayer,(v_player+obID).w		; load Sonic object
 
 		tst.w	(f_demo).w				; is this a credits demo?
 		bmi.s	Level_ChkDebug				; if yes, don't load HUD
@@ -2703,7 +2703,7 @@ Level_LoadObj:
 		bne.s	.nopylon				; if not, don't load pylon
 		jsr	(FindFreeObj).l				; find a free object slot
 		bne.s	.nopylon				; if none are free, branch
-		move.b	#id_Pylon,(a1)				; manually load SLZ pylon
+		move.l	#Pylon,obID(a1)				; manually load SLZ pylon
 .nopylon:
 		jsr	(ObjPosLoad_Init).l			; initialize object manager
 		jsr	(RingsManager_Init).l			; initialize the S3K Rings Manager at level start
@@ -3032,8 +3032,8 @@ SyncEnd:
 ; ---------------------------------------------------------------------------
 
 SignpostArtLoad:
-		tst.w	(v_debuguse).w				; is debug mode being used?
-		bne.w	.return					; if yes, do not lock screen or load art
+	;	tst.w	(v_debuguse).w				; is debug mode being used?
+	;	bne.w	.return					; if yes, do not lock screen or load art
 		cmpi.b	#act3,(v_act).w				; is this a third act?
 		beq.s	.return					; if yes, don't load art (due to the boss fight)
 
@@ -3130,7 +3130,7 @@ SS_ContinueSetup:
 
 		move.l	#0,(v_screenposx).w			; reset X-camera position
 		move.l	#0,(v_screenposy).w			; reset Y-camera position
-		move.b	#id_SonicSpecial,(v_player).w		; load special stage Sonic object
+		move.l	#SonicSpecial,(v_player+obID).w		; load special stage Sonic object
 		move.b	#-1,(v_ssangleprev).w			; fill previous angle with obviously false value to force initial update
 		bsr.w	PalCycle_SS				; initialize palette cycle and background for fade-in
 		clr.w	(v_ssangle).w				; set stage angle to "upright"
@@ -3253,7 +3253,7 @@ SS_FinLoop_NoBrighten:
 
 		clearRAM v_objspace				; clear object RAM
 
-		move.b	#id_SSResult,(v_ssrescard).w		; load Special Stage Results screen object
+		move.l	#SSResult,(v_ssrescard+obID).w		; load Special Stage Results screen object
 ; ---------------------------------------------------------------------------
 
 SS_NormalExit:		; Special Stage results screen loop
@@ -3326,12 +3326,12 @@ GM_Continue:
 		clr.l	(v_screenposx).w			; clear X-camera position
 		move.l	#$1000000,(v_screenposy).w		; set Y-camera position to $100
 
-		move.b	#id_ContSonic,(v_player).w		; load continue screen Sonic object
-		move.b	#id_ContScrItem,(v_continuetext).w	; load continue screen objects (text and misc elements)
-		move.b	#id_ContScrItem,(v_continuelight).w	; load floor light object Sonic is laying on
+		move.l	#ContSonic,(v_player+obID).w		; load continue screen Sonic object
+		move.l	#ContScrItem,(v_continuetext+obID).w	; load continue screen objects (text and misc elements)
+		move.l	#ContScrItem,(v_continuelight+obID).w	; load floor light object Sonic is laying on
 		move.w	#spr_prio3,(v_continuelight+obPriority).w	; set priority to be behind Sonic
 		move.b	#4,(v_continuelight+obFrame).w		; set correct frame for the light
-		move.b	#id_ContScrItem,(v_continueicon).w	; load continue icons object
+		move.l	#ContScrItem,(v_continueicon+obID).w	; load continue icons object
 		move.b	#4,(v_continueicon+obRoutine).w		; set to continue icons routine
 
 		jsr	(ExecuteObjects).l			; initialize objects
@@ -3459,7 +3459,7 @@ End_LoadData:
 		move.b	#1,(f_debugmode).w			; enable debug mode
 
 End_LoadSonic:
-		move.b	#id_SonicPlayer,(v_player).w		; load Sonic object
+		move.l	#SonicPlayer,(v_player+obID).w		; load Sonic object
 		bset	#0,(v_player+obStatus).w		; make Sonic face left
 		move.b	#1,(f_lockctrl).w			; lock controls to keep simulating D-Pad
 		move.w	#(btnL<<8),(v_jpadhold2).w		; simulate holding down the left D-Pad button to move Sonic (and clear v_jpadpress2)
@@ -3633,7 +3633,7 @@ End_MoveSon3:
 
 		addq.b	#2,(v_sonicend).w			; advance ending cutscene routine number
 		move.w	#320/2,(v_player+obX).w			; force Sonic to the middle of the screen
-		move.b	#id_EndSonic,(v_player).w		; replace real Sonic object with a fake ending sequence Sonic object
+		move.l	#EndSonic,(v_player+obID).w		; replace real Sonic object with a fake ending sequence Sonic object
 		clr.w	(v_player+obRoutine).w			; reset routine counter to initialize fake ending Sonic
 
 End_MoveSonExit:
@@ -3682,7 +3682,7 @@ GM_Credits:
 		moveq	#palid_Sonic,d0				; load Sonic's palette...
 		bsr.w	PalLoad_Fade				; ...into fade-in buffer
 
-		move.b	#id_CreditsText,(v_credits).w		; load credits text object
+		move.l	#CreditsText,(v_credits+obID).w		; load credits text object
 		jsr	(ExecuteObjects).l			; execute objects to load credits text object
 		jsr	(BuildSprites).l			; build sprites for the credits text object
 
@@ -3830,7 +3830,7 @@ TryAgainEnd:		; fading out from previous game mode
 		bsr.w	PalLoad_Fade				; ...to fade-in buffer
 		clr.w	(v_palette_fading_line_3).w		; ensure the backdrop color is black
 
-		move.b	#id_EndEggman,(v_endeggman).w		; load end Eggman object
+		move.l	#EndEggman,(v_endeggman+obID).w		; load end Eggman object
 		jsr	(ExecuteObjects).l			; execute objects to load end objects
 		jsr	(BuildSprites).l			; build sprites for end objects
 ; ---------------------------------------------------------------------------

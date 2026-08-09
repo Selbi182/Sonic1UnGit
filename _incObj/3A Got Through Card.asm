@@ -38,7 +38,7 @@ Got_Main:
 		moveq	#7-1,d1					; set to affect all seven end-of-level card objects
 
 Got_Loop:
-		move.b	#id_GotThroughCard,obID(a1)		; load next end-of-level title card element
+		move.l	#GotThroughCard,obID(a1)		; load next end-of-level title card element
 		move.w	(a2),obX(a1)				; load start x-position
 		move.w	(a2)+,got_finalX(a1)			; load finish x-position (same as start)
 		move.w	(a2)+,got_mainX(a1)			; load main x-position

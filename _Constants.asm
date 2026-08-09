@@ -216,8 +216,11 @@ sprite_rendered:	equ 1<<sprite_rendered_bit
 
 ; Object variables
 obID:			equ 0					; object ID number
-obRender:		equ 1					; bitfield for x/y flip, display mode
-obGfx:			equ 2					; palette line & VRAM setting (2 bytes)
+obRender:		equ $2C					; bitfield for x/y flip, display mode
+obGfx:			equ $2A					; palette line & VRAM setting (2 bytes)
+
+;obRender:		equ 1					; bitfield for x/y flip, display mode
+;obGfx:			equ 2					; palette line & VRAM setting (2 bytes)
 obMap:			equ 4					; mappings address (4 bytes)
 obX:			equ 8					; x-axis position (2-4 bytes)
 obSubpixelX:		equ $A					; x-axis subpixel position for playfield items (2 bytes)
@@ -248,7 +251,7 @@ obSubtype:		equ $28					; object subtype
 
 ; Object variables used by Sonic
 flashtime:		equ $30					; time between flashes after getting hit (2 bytes)
-homingattack:		equ $31
+doublejump:		equ $31
 invtime:		equ $32					; time left for invincibility (2 bytes)
 shoetime:		equ $34					; time left for speed shoes (2 bytes)
 angleright:		equ $36					; angle of floor on Sonic's right side

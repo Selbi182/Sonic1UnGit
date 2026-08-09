@@ -31,7 +31,7 @@ Jun_Main:	; Routine 0
 	.loop:
 		jsr	(FindFreeObj).l				; find a free object slot
 		bne.s	.next					; if object RAM is full, branch
-		move.b	#id_Junction,obID(a1)			; load circular cover-up filler sprites object
+		move.l	#Junction,obID(a1)			; load circular cover-up filler sprites object
 		addq.b	#4,obRoutine(a1)			; set to Jun_Display (do nothing but display)
 		move.w	obX(a0),obX(a1)				; copy parent X-position
 		move.w	obY(a0),obY(a1)				; copy parent Y-position

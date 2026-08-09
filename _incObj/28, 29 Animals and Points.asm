@@ -182,7 +182,7 @@ Anml_FromEnemy:
 		bne.s	.fromPrison				; if yes, don't load points object
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	.display				; if object RAM is full, branch
-		move.b	#id_Points,obID(a1)			; load points object
+		move.l	#Points,obID(a1)			; load points object
 		move.w	obX(a0),obX(a1)				; copy X-position
 		move.w	obY(a0),obY(a1)				; copy Y-position
 		move.w	animal_pointsframe(a0),d0		; get carried-over frame ID from gray explosion object
@@ -567,7 +567,7 @@ Poi_Main:	; Routine 0
 		; If a points object already existed, hijack it
 		lea	(v_lvlobjspace).w,a1			; set start of level object RAM
 		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d2 ; go through all level objects
-	.loop:	cmpi.b	#id_Points,(a1)				; is this a points object?
+	.loop:	cmpi.l	#Points,(a1)				; is this a points object?
 		bne.s	.next					; if not, branch
 		cmpa.w	a0,a1					; is this THIS object? (the new points)
 		beq.s	.next					; if yes, branch

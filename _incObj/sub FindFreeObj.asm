@@ -12,7 +12,7 @@ FindFreeObj:
 		move.w	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d0 ; check entire dynamic object RAM
 
 FFree_Loop:
-		tst.b	obID(a1)				; is object RAM slot empty?
+		tst.l	obID(a1)				; is object RAM slot empty?
 		beq.s	FFree_Found				; if yes, exit and use that slot
 		lea	object_size(a1),a1			; go to next object RAM slot
 		dbf	d0,FFree_Loop				; repeat up to 95 times
@@ -42,7 +42,7 @@ FindNextFreeObj:
 		bcs.s	NFree_Found				; if underflowed, parent object is at the end of RAM, quit
 
 NFree_Loop:
-		tst.b	obID(a1)				; is object RAM slot empty?
+		tst.l	obID(a1)				; is object RAM slot empty?
 		beq.s	NFree_Found				; if yes, exit and use that slot
 		lea	object_size(a1),a1			; go to next object RAM slot
 		dbf	d0,NFree_Loop				; repeat for all free object RAM slots after parent

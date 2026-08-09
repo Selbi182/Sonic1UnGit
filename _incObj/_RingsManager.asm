@@ -274,7 +274,7 @@ AttractRing:
 		movea.l	a1,a3					; backup address of current ring (a1 gets overwritten in FindFreeObj)
 		jsr	(FindFreeObj).l				; find a free object slot
 		bne.s	.failAttract				; if object RAM is full, branch
-		move.b	#id_RingLoss,(a1)			; load a new individual ring object
+		move.l	#RingLoss,(a1)			; load a new individual ring object
 		move.b	#$A,obRoutine(a1)			; set to "Rings_Attracted" routine
 		move.w	(a3),obX(a1)				; set X-position of object based on X-position in table
 		move.w	2(a3),obY(a1)				; do the same for the Y-position

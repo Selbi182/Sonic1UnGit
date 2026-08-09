@@ -60,7 +60,7 @@ Swing_Main:	; Routine 0
 		move.b	#$C,obRoutine(a0)			; use Swing_Swinging routine (disable platform logic)
 
 Swing_CreateLinks:
-		move.b	obID(a0),d4				; copy parent object ID to children
+		move.l	obID(a0),d4				; copy parent object ID to children
 		moveq	#0,d1					; clear d1
 		lea	swing_children(a0),a2			; load child object index array (= obSubtype)
 		move.b	obSubtype(a0),d1
@@ -91,7 +91,7 @@ Swing_CreateLinks:
 		move.b	d5,(a2)+				; store new child index at the end of swing_children
 
 		move.b	#$A,obRoutine(a1)			; use Swing_ChainLink routine (display only)
-		move.b	d4,obID(a1)				; copy object ID from parent
+		move.l	d4,obID(a1)				; copy object ID from parent
 		move.l	obMap(a0),obMap(a1)			; copy mappings from parent
 		move.w	obGfx(a0),obGfx(a1)			; copy art tile from parent
 		bclr	#6,obGfx(a1)				; force palette line 1 instead of line 3 (gray)

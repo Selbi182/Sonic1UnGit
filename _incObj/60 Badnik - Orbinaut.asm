@@ -54,7 +54,7 @@ Orb_Main:	; Routine 0
 		andi.w	#$7F,d5					; limit to sane value
 		move.b	d5,(a2)+				; store RAM index for spikeball
 
-		move.b	obID(a0),obID(a1)			; load spiked orb object
+		move.l	obID(a0),obID(a1)			; load spiked orb object
 		move.b	#6,obRoutine(a1)			; set to Orb_CircleSpikeball routine
 		move.l	obMap(a0),obMap(a1)			; copy mappings
 		move.w	obGfx(a0),obGfx(a1)			; copy art tile (zone-specific)
@@ -153,7 +153,7 @@ Orb_DisplayNoMove:
 Orb_CircleSpikeball: ; Routine 6
 		movea.l	orb_parent(a0),a1			; load parent Orbinaut object
 
-		cmpi.b	#id_Orbinaut,obID(a1)			; has parent Orbinaut object been deleted?
+		cmpi.l	#Orbinaut,obID(a1)			; has parent Orbinaut object been deleted?
 		bne.w	DeleteObject				; if yes, delete spikeball
 
 		cmpi.b	#2,obFrame(a1)				; is Orbinaut angry?

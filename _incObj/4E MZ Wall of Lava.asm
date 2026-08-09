@@ -30,7 +30,7 @@ LWall_Main:	; Routine 0
 		bsr.w	FindNextFreeObj				; find a free object slot
 		bne.s	.next					; if object RAM is full, branch
 	.make:
-		move.b	#id_LavaWall,obID(a1)			; load another lava wall object
+		move.l	#LavaWall,obID(a1)			; load another lava wall object
 		move.l	#Map_LWall,obMap(a1)			; set mappings
 		move.w	#ArtTile_MZ_Lava|Tile_Pal4,obGfx(a1)	; set art tile and palette line (contains lava palcycle)
 		move.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode

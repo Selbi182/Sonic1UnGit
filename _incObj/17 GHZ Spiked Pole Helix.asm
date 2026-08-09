@@ -30,7 +30,7 @@ Hel_Main:	; Routine 0
 
 		move.w	obY(a0),d2				; get base Y-position of parent
 		move.w	obX(a0),d3				; get base X-position of parent
-		move.b	obID(a0),d4				; create children with same object ID as parent
+		move.l	obID(a0),d4				; create children with same object ID as parent
 
 		lea	helix_children(a0),a2			; load helix children array (will hold RAM indices for child spikes)
 		moveq	#0,d1					; clear d1
@@ -58,7 +58,7 @@ Hel_Main:	; Routine 0
 		move.b	d5,(a2)+				; copy child address index to parent RAM (helix_children)
 
 		move.b	#8,obRoutine(a1)			; set to Hel_ChildSpike
-		move.b	d4,obID(a1)				; copy parent object ID
+		move.l	d4,obID(a1)				; copy parent object ID
 		move.w	d2,obY(a1)				; copy parent Y-position
 		move.w	d3,obX(a1)				; copy parent X-position
 		move.l	obMap(a0),obMap(a1)			; copy parent mappings

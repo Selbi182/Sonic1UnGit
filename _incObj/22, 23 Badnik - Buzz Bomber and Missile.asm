@@ -65,7 +65,7 @@ Buzz_Action_Wait:
 Buzz_Action_Fire:
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	.return					; if object RAM is full, branch
-		move.b	#id_Missile,obID(a1)			; load missile object
+		move.l	#Missile,obID(a1)			; load missile object
 		move.w	obX(a0),obX(a1)				; copy Buzz Bomber's X-position
 		move.w	obY(a0),obY(a1)				; copy Buzz Bomber's Y-position
 		addi.w	#$1C,obY(a1)				; align missile vertically
@@ -194,7 +194,7 @@ Msl_Animate:	; Routine 2
 
 Msl_ChkCancel:
 		movea.l	msl_parent(a0),a1			; load parent Buzz Bomber object
-		cmpi.b	#id_ExplosionItem,obID(a1)		; has Buzz Bomber been destroyed?
+		cmpi.l	#ExplosionItem,obID(a1)		; has Buzz Bomber been destroyed?
 		bne.s	.return					; if not, branch (Z-flag = 0)
 		bsr.s	Msl_Delete				; delete missile and return here
 		moveq	#0,d0					; notify caller that missile has been deleted (Z-flag = 1)
