@@ -45,7 +45,7 @@ SSR_Loop:
 		move.b	#id_SSResult,obID(a1)			; load next end-of-level title card element
 		move.w	(a2)+,obX(a1)				; load start x-position
 		move.w	(a2)+,ssr_mainX(a1)			; load target x-position
-		move.w	(a2)+,obScreenY(a1)			; load y-position
+		move.w	(a2)+,obY(a1)				; load y-position
 		move.b	(a2)+,obRoutine(a1)			; load routine number
 		move.b	(a2)+,obFrame(a1)			; load frame ID
 		move.l	#Map_SSR,obMap(a1)			; set mappings
@@ -285,7 +285,7 @@ SSRC_Main:	; Routine 0
 SSRC_Loop:
 		move.b	#id_SSRChaos,obID(a1)			; load next chaos emerald object
 		move.w	(a2)+,obX(a1)				; get next x-position from SSRC_PosData
-		move.w	#$F0,obScreenY(a1)			; set fixed y-position
+		move.w	#$F0,obY(a1)				; set fixed y-position
 
 		lea	(v_emldlist).w,a3			; check which emeralds you have
 		move.b	(a3,d2.w),d3				; get next entry from array of collected emeralds

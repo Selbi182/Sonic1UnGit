@@ -425,11 +425,20 @@ GBall_Index:	dc.w GBall_Main-GBall_Index
 		dc.w GBall_Link-GBall_Index
 		dc.w GBall_Ball-GBall_Index
 
+GBall_LinkCount:	equ objoff_28
+GBall_LinkAddresses:	equ objoff_0E;GBall_LinkCount+1
 GBall_AnchorPos:	equ objoff_32				; offset used to calculate position of chain anchor on Eggman's ship
+GBall_PosY:		equ objoff_38
 GBall_PosX:		equ objoff_3A				; parent ship X-position
 GBall_LinkDist:		equ objoff_3C				; each link's distance from the swing pivot
 GBall_Swing_Direction:	equ objoff_3D				; current swinging direction (0 = clockwise, 1 = counterclockwise)
 GBall_Swing_Speed:	equ objoff_3E				; current swing speed (direction flips on $200/-$200)
+
+;GBall_AnchorPos:	equ objoff_32				; offset used to calculate position of chain anchor on Eggman's ship
+;GBall_PosX:		equ objoff_3A				; parent ship X-position
+;GBall_LinkDist:	equ objoff_3C				; each link's distance from the swing pivot
+;GBall_Swing_Direction:	equ objoff_3D				; current swinging direction (0 = clockwise, 1 = counterclockwise)
+;GBall_Swing_Speed:	equ objoff_3E				; current swing speed (direction flips on $200/-$200)
 ; ===========================================================================
 
 GBall_Main:	; Routine 0
@@ -438,8 +447,10 @@ GBall_Main:	; Routine 0
 		move.w	#-$200,obBossFlash(a0)			; set boss flash counter (to signify don't flash when hit)
 		move.l	#Map_BossItems,obMap(a0)		; load mappings and art
 		move.w	#ArtTile_Eggman_Weapons,obGfx(a0)
-		lea	obSubtype(a0),a2			; copy object subtype
-		move.b	#0,(a2)+				; clear object subtype and increment address
+		;lea	obSubtype(a0),a2			; copy object subtype
+		;move.b	#0,(a2)+				; clear object subtype and increment address
+		move.b	#0,GBall_LinkCount(a0)
+		lea	GBall_LinkAddresses(a0),a2
 		moveq	#6-1,d1					; prep for loop below, loop 6 times
 		movea.l	a0,a1					; copy Ball controller address
 		bra.s	GBall_LinkSetup
@@ -455,7 +466,7 @@ GBall_MakeLinks:
 		move.l	#Map_Swing_GHZ,obMap(a1)		; load mappings and art
 		move.w	#ArtTile_GHZ_MZ_Swing,obGfx(a1)
 		move.b	#1,obFrame(a1)				; set current animation frame
-		addq.b	#1,obSubtype(a0)			; set subtype of wrecking ball object to 1
+		addq.b	#1,GBall_LinkCount(a0)			; set subtype of wrecking ball object to 1
 
 ; loc_17B60:
 GBall_LinkSetup:
@@ -486,10 +497,11 @@ GBall_PosData:	dc.b 0,	$10, $20, $30, $40, $60	; y-position data for links and g
 
 GBall_Base:	; Routine 2
 		lea	(GBall_PosData).l,a3			; load position data
-		lea	obSubtype(a0),a2			; load object subtype into a2 to use for the index system calculated above
+		;lea	obSubtype(a0),a2			; load object subtype into a2 to use for the index system calculated above
+		lea	GBall_LinkAddresses(a0),a2
 		moveq	#0,d6
-		move.b	(a2)+,d6				; move current index value and increment (this contains how many links were spawned due to the addq.b above)
-
+		;move.b	(a2)+,d6				; move current index value and increment (this contains how many links were spawned due to the addq.b above)
+		move.b	GBall_LinkCount(a0),d6
 ; loc_17BC6:
 .convertIndex:
 		moveq	#0,d4
@@ -522,7 +534,7 @@ GBall_Base:	; Routine 2
 GBall_Display:
 		bsr.w	GBall_UpdateBase			; update base object
 		move.b	obAngle(a0),d0				; copy angle
-		jsr	(Swing_UpdateSwingPosition).l		; update wrecking ball position
+		bsr.s	GBall_UpdateSwingPosition		; update wrecking ball position
 		DisplaySprite
 		rts
 ; ===========================================================================
@@ -530,9 +542,89 @@ GBall_Display:
 ; GBall_Display2:
 GBall_Base2:	; Routine 4
 		bsr.w	GBall_UpdateBase			; update base object
-		jsr	(GBall_Move).l				; swing wrecking ball (part of Object 15, GBall_Swing_Direction and GBall_Swing_Speed are used here)
+		bsr.s	GBall_Move				; swing wrecking ball (part of Object 15, GBall_Swing_Direction and GBall_Swing_Speed are used here)
 		DisplaySprite
 		rts
+
+; ===========================================================================
+
+; Extracted from Object 15 for decoupling purposes
+
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Alternate swing logic, called from wrecking ball for GHZ boss.
+; See "GBall_Base2" in Object 4B.
+; ---------------------------------------------------------------------------
+
+; Obj48_Move:
+GBall_Move:
+		tst.b	GBall_Swing_Direction(a0)		; is wrecking ball set to swing counterclockwise?
+		bne.s	.swingCounterclockwise			; if yes, branch
+
+	.swingClockwise:
+		move.w	GBall_Swing_Speed(a0),d0		; get current wrecking ball swing speed
+		addq.w	#8,d0					; increase swing speed (clockwise)
+		move.w	d0,GBall_Swing_Speed(a0)		; store new swing speed
+		add.w	d0,obAngle(a0)				; update angle
+		cmpi.w	#$200,d0				; has speed crossed middle threshold?
+		bne.s	.updateSwing				; if not, branch
+		move.b	#1,GBall_Swing_Direction(a0)		; begin swinging counterclockwise next
+		bra.s	.updateSwing				; update swing position
+; ---------------------------------------------------------------------------
+
+	.swingCounterclockwise:
+		move.w	GBall_Swing_Speed(a0),d0		; get current wrecking ball swing speed
+		subq.w	#8,d0					; increase swing speed (counterclockwise)
+		move.w	d0,GBall_Swing_Speed(a0)		; store new swing speed
+		add.w	d0,obAngle(a0)				; update angle
+		cmpi.w	#-$200,d0				; has speed crossed middle threshold?
+		bne.s	.updateSwing				; if not, branch
+		move.b	#0,GBall_Swing_Direction(a0)		; begin swinging clockwise again
+
+	.updateSwing:
+		move.b	obAngle(a0),d0				; get latest angle
+		; fall-through to GBall_UpdateSwingPosition...
+
+; ---------------------------------------------------------------------------
+; Subroutine to convert angle to position for all chain links
+; 
+; input:
+;	d0 = current swing angle
+; ---------------------------------------------------------------------------
+
+; Swing_Move2:
+GBall_UpdateSwingPosition:
+		jsr	(CalcSine).l				; calculate sine and cosine values for current swing angle in d0
+		move.w	GBall_PosY(a0),d2			; get initial platform Y-position
+		move.w	GBall_PosX(a0),d3			; get initial platform X-position
+
+		lea	GBall_LinkAddresses(a0),a2			; load RAM indices for all objects in platform chain
+		moveq	#0,d6					; clear d6
+		;move.b	(a2)+,d6				; get number of objects in chain
+		move.b	GBall_LinkCount(a0),d6
+
+	.loopSwing:
+		moveq	#0,d4					; clear d4
+		move.b	(a2)+,d4				; get next RAM index for object
+		lsl.w	#object_size_bits,d4			; multiply by $40 (object_size)
+		addi.l	#v_objspace&$FFFFFF,d4			; add base object RAM offset
+		movea.l	d4,a1					; a1 = full RAM address to object
+
+		moveq	#0,d4					; clear d4
+		move.b	GBall_LinkDist(a1),d4			; get radius for object
+		move.l	d4,d5					; duplicate radius
+		muls.w	d0,d4					; multiply radius by sine value
+		asr.l	#8,d4					; shift result down a byte
+		muls.w	d1,d5					; multiply radius by cosine value
+		asr.l	#8,d5					; shift result down a byte
+		add.w	d2,d4					; add initial Y-position to sine
+		add.w	d3,d5					; add initial X-position to cosine
+		move.w	d4,obY(a1)				; update Y-position for object
+		move.w	d5,obX(a1)				; update X-position for object
+
+		dbf	d6,.loopSwing				; loop for all objects
+		rts						; return
+; End of function Swing_Move
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -548,11 +640,10 @@ GBall_UpdateBase:
 
 .no_chg:
 
-; swing_origX / swing_origY are defined in 15 Swinging Platforms.asm (same offset used here), the ball controller stores in a0 and then goes back to GBall_Display and Swing_Move2 uses these a0 values.
-		move.w	obX(a1),swing_origX(a0)			; get position from parent (ship)
+		move.w	obX(a1),GBall_PosX(a0)			; get position from parent (ship)
 		move.w	obY(a1),d0
 		add.w	GBall_AnchorPos(a0),d0			; copy anchor position offset into d0
-		move.w	d0,swing_origY(a0)			; move anchor to ship's Y plus offset
+		move.w	d0,GBall_PosY(a0)			; move anchor to ship's Y plus offset
 		move.b	obStatus(a1),obStatus(a0)		; copy object status
 		tst.b	obStatus(a1)				; has boss been beaten?
 		bpl.s	.not_beaten				; if not, branch

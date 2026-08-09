@@ -17,11 +17,11 @@ Cat_Index:	dc.w Cat_Main-Cat_Index		; 0 - init
 		dc.w Cat_Delete-Cat_Index	; A - delete head or segment
 		dc.w Cat_Fragment-Cat_Index	; C - fragmentated/bouncy state
 
-cat_inertia:	equ obAnim	; Caterkiller inertia (=$1C/$1D, both unused by Caterkiller)
-cat_waittime:	equ objoff_2A	; time to wait between actions
-cat_mode:	equ objoff_2B	; bit 4 (+$10) = mouth is open/segment moving up; bit 7 (+$80) = update animation
-cat_floormap:	equ objoff_2C	; height map of floor beneath caterkiller (16 bytes)
-cat_parent:	equ objoff_3C	; address of parent object (4 bytes - high byte is cat_segmentpos)
+cat_inertia:	equ obSubpixelY	; Caterkiller inertia
+cat_waittime:	equ objoff_1B	; time to wait between actions
+cat_mode:	equ objoff_29	; bit 4 (+$10) = mouth is open/segment moving up; bit 7 (+$80) = update animation
+cat_floormap:	equ objoff_30	; height map of floor beneath caterkiller (16 bytes)
+cat_parent:	equ objoff_1C	; address of parent object (4 bytes - high byte is cat_segmentpos)
 cat_segmentpos:	equ cat_parent	; segment position - starts as 0/4/8/$A, increments as it moves
 ; ===========================================================================
 

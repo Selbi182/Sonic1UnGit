@@ -7,7 +7,15 @@ SpikeBall:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		cmpi.b	#4,d0
-		beq.w	SBall_Child
+		bne.s	SBall_NotChild
+
+SBall_Child:
+		; Child objects are just displayed normally, rotation and deletion is handled by parent
+		move.w	#spr_prio4,d0
+		DisplaySprite_direct
+		rts
+
+SBall_NotChild:
 		move.w	SBall_Index(pc,d0.w),d1
 		jmp	SBall_Index(pc,d1.w)
 ; ===========================================================================
@@ -15,12 +23,13 @@ SBall_Index:	dc.w SBall_Main-SBall_Index
 		dc.w SBall_Move-SBall_Index
 		dc.w SBall_Child-SBall_Index
 
-sball_children:	equ objoff_29		; number of child objects (1 byte)
+sball_children:	equ objoff_30		; number of child objects (1 byte)
 		; $30-$37		; object RAM numbers of children (1 byte each)
-sball_origY:	equ objoff_38		; centre y-axis position (2 bytes)
-sball_origX:	equ objoff_3A		; centre x-axis position (2 bytes)
-sball_radius:	equ objoff_3C		; radius (1 byte)
-sball_speed:	equ objoff_3E		; rate of spin (2 bytes)
+sball_origY:	equ objoff_1C		; centre y-axis position (2 bytes)
+sball_origX:	equ objoff_1E		; centre x-axis position (2 bytes)
+sball_radius:	equ objoff_1B		; radius (1 byte)
+sball_speed:	equ objoff_0E		; rate of spin (2 bytes)
+sball_angle:	equ objoff_12
 ; ===========================================================================
 
 SBall_Main:	; Routine 0
@@ -50,7 +59,7 @@ SBall_Main:	; Routine 0
 		move.b	obStatus(a0),d0				; get X/Y-flip flags
 		ror.b	#2,d0					; shift those flags into topmost bits
 		andi.b	#%11000000,d0				; mask out other bits ($C0)
-		move.b	d0,obAngle(a0)				; set starting angle for chain based on flip flags
+		move.b	d0,sball_angle(a0)				; set starting angle for chain based on flip flags
 
 		lea	sball_children(a0),a2			; load child RAM index array
 		move.b	obSubtype(a0),d1			; get object subtype again
@@ -114,9 +123,9 @@ SBall_Main:	; Routine 0
 
 SBall_Move:	; Routine 2
 		move.w	sball_speed(a0),d0			; get twirl speed for chain (can be positive or negative)
-		add.w	d0,obAngle(a0)				; add it to current twirling angle
+		add.w	d0,sball_angle(a0)				; add it to current twirling angle
 
-		move.b	obAngle(a0),d0				; get new angle
+		move.b	sball_angle(a0),d0				; get new angle
 		jsr	(CalcSine).l				; calculate sine and cosine for current angle
 		move.w	sball_origY(a0),d2			; get initial Y-position
 		move.w	sball_origX(a0),d3			; get initial X-position
@@ -165,14 +174,6 @@ SBall_ChkDel:
 		dbf	d2,.deleteloop				; loop for all children in chain
 
 		rts						; return
-; ===========================================================================
-
-; SBall_Display:
-SBall_Child:	; Routine 4
-		; Child objects are just displayed normally, rotation and deletion is handled by parent
-		move.w	#spr_prio4,d0
-		DisplaySprite_direct
-		rts
 
 ; ===========================================================================
 

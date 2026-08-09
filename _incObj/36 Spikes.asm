@@ -101,7 +101,7 @@ Spikes_Upright:
 Spikes_Hurt:
 		tst.b	(v_invinc).w				; is Sonic invincible?
 		bne.s	Spikes_Display				; if so, skip getting hurt
-		tst.w	(v_player+flashtime).w			; is Sonic flashing after being hurt?
+		tst.b	(v_player+flashtime).w			; is Sonic flashing after being hurt?
 		bne.s	Spikes_Display				; if so, skip getting hurt
 		move.l	a0,-(sp)				; backup spikes RAM location
 		movea.l	a0,a2					; move spikes RAM location to a2 (input for HurtSonic)

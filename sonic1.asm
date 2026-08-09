@@ -1967,6 +1967,11 @@ Tit_ChkStartOrDemo:
 		beq.w	Tit_MainLoop				; if not, continue looping title screen
 
 Tit_ChkLevSel:
+		tst.b	(f_levselcheat).w			; check if level select code is on
+		beq.s	.nocheat
+		btst	#bitA,(v_jpadhold1).w			; check if A was held while pressing Start
+		bne.s	Tit_EnterLevelSelect
+	.nocheat:
 		jmp	(TitleMenu_SelectionMade).l
 
 Tit_ChkLevSel_AbortDemo:

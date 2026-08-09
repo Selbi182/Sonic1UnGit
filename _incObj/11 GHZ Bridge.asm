@@ -19,11 +19,11 @@ Bri_Index:	dc.w Bri_Main-Bri_Index		; 0
 		dc.w Bri_Delete-Bri_Index	; 8
 		dc.w Bri_ChildLog-Bri_Index	; A
 
-bridge_children:	equ obSubtype		; number of log objects, initially retrieved from subtype ($28)
+bridge_children:	equ objoff_30		; number of log objects, initially retrieved from subtype ($28)
 bridge_children_ram:	equ bridge_children+1	; RAM indices to log objects ($29-$39, usually read together with bridge_children)
-bridge_origY:		equ objoff_3C		; initial Y-position
-bridge_nudge:		equ objoff_3E		; general nudge Y-offset while Sonic is on bridge
-bridge_currentlog:	equ objoff_3F		; 0-based index of log Sonic is currently standing on
+bridge_origY:		equ objoff_1C		; initial Y-position
+bridge_nudge:		equ objoff_1E		; general nudge Y-offset while Sonic is on bridge
+bridge_currentlog:	equ objoff_1F		; 0-based index of log Sonic is currently standing on
 ; ===========================================================================
 
 Bri_Main:	; Routine 0
@@ -37,9 +37,10 @@ Bri_Main:	; Routine 0
 		move.w	obY(a0),d2				; copy Y-position from parent
 		move.w	obX(a0),d3				; get center X-position of bridge
 		move.b	obID(a0),d4				; copy parent object ID to children
-		lea	bridge_children(a0),a2			; load child object index array (= obSubtype)
+		lea	bridge_children(a0),a2			; load child object index array
 		moveq	#0,d1					; clear d1
-		move.b	(a2),d1					; get subtype for bridge
+		;move.b	(a2),d1					; get subtype for bridge
+		move.b	obSubtype(a0),d1					; get subtype for bridge
 		move.b	#0,(a2)+				; clear subtype, and initialize number of spawned children to 0
 		move.w	d1,d0					; copy bridge log count to d0
 		lsr.w	#1,d0					; divide by 2 (half-size)

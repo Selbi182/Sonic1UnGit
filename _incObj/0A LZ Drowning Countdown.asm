@@ -21,7 +21,6 @@ Drown_Index:	dc.w Drown_Main-Drown_Index		; 0
 		dc.w Drown_Display-Drown_Index		; E
 		dc.w Drown_Delete-Drown_Index		; 10
 
-drown_restarttime:	equ objoff_2C	; time to restart after Sonic drowns
 drown_origX:		equ objoff_30	; original x-axis position
 drown_displaytime:	equ objoff_32	; time to display each number
 drown_type:		equ objoff_33	; bubble type
@@ -29,6 +28,7 @@ drown_extrabubbles:	equ objoff_34	; number of extra bubbles to create
 drown_extrabubflag:	equ objoff_36	; flags for extra bubbles
 drown_numtime:		equ objoff_38	; time between each number changes
 drown_delaytime:	equ objoff_3A	; delay between bubbles
+drown_restarttime:	equ objoff_3C	; time to restart after Sonic drowns
 ; ===========================================================================
 
 Drown_Main:	; Routine 0
@@ -158,7 +158,7 @@ Drown_ShowNumber:
 		move.w	obY(a0),d0				; get playfield Y-position
 		sub.w	(v_screenposy).w,d0			; subtract camera Y-position
 		addi.w	#$80,d0					; add $80px sprite offscreen offset
-		move.w	d0,obScreenY(a0)			; set as new screen-fixed Y-position
+		move.w	d0,obY(a0)				; set as new screen-fixed Y-position
 
 		move.b	#$C,obRoutine(a0)			; goto Drown_AirLeft next
 

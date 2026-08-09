@@ -16,7 +16,7 @@ Cred_Index:	dc.w Cred_Main-Cred_Index
 Cred_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)			; advance to Cred_Display
 		move.w	#(320/2)+$80,obX(a0)			; set X-position to horizontally centered ($120)
-		move.w	#(224/2)+$80,obScreenY(a0)		; set Y-position to vertically centered ($F0)
+		move.w	#(224/2)+$80,obY(a0)			; set Y-position to vertically centered ($F0)
 		move.l	#Map_Cred,obMap(a0)			; set mappings pointer
 		move.w	#ArtTile_Credits_Font,obGfx(a0)		; default art tile offset
 		move.w	(v_creditsnum).w,d0			; load credits page index number (doesn't reset between game mode changes)

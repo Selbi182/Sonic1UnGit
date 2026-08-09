@@ -131,10 +131,10 @@ Sonic_Modes:	dc.w Sonic_MdNormal-Sonic_Modes			; 0 - while on the ground and not
 ; ---------------------------------------------------------------------------
 
 Sonic_Display:
-		move.w	flashtime(a0),d0			; get Sonic's remaining invulnerability frames after getting hurt
+		move.b	flashtime(a0),d0			; get Sonic's remaining invulnerability frames after getting hurt
 		beq.s	.display				; if there are none, branch
-		subq.w	#1,flashtime(a0)			; decrease invulnerability frames
-		lsr.w	#3,d0					; don't render Sonic's sprite every...
+		subq.b	#1,flashtime(a0)			; decrease invulnerability frames
+		lsr.b	#3,d0					; don't render Sonic's sprite every...
 		bcc.s	.chkinvincible				; ...3 or 4 frames
 
 ; Obj01_Display:
@@ -1773,7 +1773,7 @@ Sonic_HurtStop:
 		move.w	d0,obInertia(a0)			; set ground speed to 0
 		move.b	#id_Walk,obAnim(a0)			; set to walking animation
 		subq.b	#2,obRoutine(a0)			; set routine back to Sonic_Control
-		move.w	#2*60,flashtime(a0)			; set flash time to 2 seconds of invulnerability frames
+		move.b	#2*60,flashtime(a0)			; set flash time to 2 seconds of invulnerability frames
 
 ; locret_13860:
 .continuehurt:

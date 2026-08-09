@@ -42,7 +42,7 @@ Got_Loop:
 		move.w	(a2),obX(a1)				; load start x-position
 		move.w	(a2)+,got_finalX(a1)			; load finish x-position (same as start)
 		move.w	(a2)+,got_mainX(a1)			; load main x-position
-		move.w	(a2)+,obScreenY(a1)			; load y-position
+		move.w	(a2)+,obY(a1)				; load y-position
 		move.b	(a2)+,obRoutine(a1)			; load routine number
 		move.b	(a2)+,d0				; load frame ID
 

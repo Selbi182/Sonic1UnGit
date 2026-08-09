@@ -27,11 +27,11 @@ Over_Main:
 		beq.s	.moreSetup				; if not, branch
 		move.w	#$80+320+48,obX(a0)			; set start X-position for "OVER" object (offscreen right)
 	.moreSetup:
-		move.w	#$80+(224/2),obScreenY(a0)		; set Y-position to be vertically centered on screen
+		move.w	#$80+(224/2),obY(a0)			; set Y-position to be vertically centered on screen
 		move.l	#Map_Over,obMap(a0)			; set mappings
 		move.w	#ArtTile_Game_Over|Tile_Prio,obGfx(a0)	; set art tile and priority flag
 		move.b	#sprite_cam_screen,obRender(a0)		; set to screen-positioned mode
-		move.w	#spr_prio0,obPriority(a0)			; set to max sprite priority
+		move.w	#spr_prio0,obPriority(a0)		; set to max sprite priority
 ; ---------------------------------------------------------------------------
 
 Over_MoveIn:	; Routine 2
@@ -43,7 +43,7 @@ Over_MoveIn:	; Routine 2
 	.updateXPos:
 		add.w	d1,obX(a0)				; change item's position
 		DisplaySprite
-		rts				; display sprite while moving in
+		rts						; display sprite while moving in
 ; ===========================================================================
 
 .conjoined:

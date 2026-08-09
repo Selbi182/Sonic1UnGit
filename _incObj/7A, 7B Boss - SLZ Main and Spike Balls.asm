@@ -20,11 +20,11 @@ BossStarLight_Index:
 		dc.w BossStarLight_FlameMain-BossStarLight_Index
 		dc.w BossStarLight_PipeMain-BossStarLight_Index
 
-BossStarLight_SeesawList:	equ objoff_2A 			; location within boss object to store a list of all seesaw objects
-BossStarLight_ParentObj:	equ objoff_34 			; Pointer to main boss controller
+BossStarLight_SeesawList:	equ objoff_32 			; location within boss object to store a list of all seesaw objects
+BossStarLight_ParentObj:	equ objoff_3C 			; Pointer to main boss controller
 BossStarLight_SeesawSide:	equ objoff_3A			; stores basic value of which side of the saw the spike ball is on, doubled for word-traversal
-BossStarLight_GenericTimer:	equ objoff_3C 			; timer for how many frames to do an action, whether its wait for explosions, or to move in a direction
-BossStarLight_SineCounter:	equ objoff_3F 			; sine counter for bobbing motion
+BossStarLight_GenericTimer:	equ objoff_26 			; timer for how many frames to do an action, whether its wait for explosions, or to move in a direction
+BossStarLight_SineCounter:	equ objoff_27 			; sine counter for bobbing motion
 ; ===========================================================================
 
 BossStarLight_ObjData:
@@ -36,6 +36,27 @@ BossStarLight_ObjData:
 ; ===========================================================================
 
 BossStarLight_Main:
+		lea	(v_lvlobjspace).w,a1 			; load level object space address
+		lea	BossStarLight_SeesawList(a0),a2 	; load some scratch RAM from the boss object into a2 to keep track of seesaws
+		moveq	#id_Seesaw,d0
+		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d1
+
+.checkSeesaws:
+		cmp.b	obID(a1),d0 				; is the object a seesaw?
+		bne.s	.skip 					; no, skip
+		tst.b	obSubtype(a1) 				; does the seesaw have a ball on it? (object subtype 00 contains a ball)
+		beq.s	.skip 					; yes, skip
+		move.w	a1,(a2)+ 				; no ball, so move object address into the scratch RAM and increment, we are storing pointers to seesaws with no balls
+.skip:		adda.w	#object_size,a1 			; move the pointer forward one object size ($40 bytes, this means scanning all of the lvlobjspace to look for seesaws)
+		dbf	d1,.checkSeesaws 			; keep looking for saws
+
+		; Fix: Do not load boss until all three seesaws are spawned
+		suba.w	a0,a2
+		cmpa.w	#BossStarLight_SeesawList+(2*3),a2
+		beq.s	.seesawsOkay
+		rts
+		
+.seesawsOkay:
 		move.w	#boss_slz_x+$188,obX(a0) 		; set render position based on screen position + offset
 		move.w	#boss_slz_y+$18,obY(a0)
 		move.w	obX(a0),obBossX(a0) 			; copy to boss position using scratch RAM (objoff_30 and 38 respectively)
@@ -50,7 +71,7 @@ BossStarLight_Main:
 
 BossStarLight_Loop:
 		jsr	(FindNextFreeObj).l 			; are there any free objects?
-		bne.s	BossStarLight_Done			; no, leave early
+		bne.s	BossStarLight_ShipMain			; no, leave early
 		move.b	#id_BossStarLight,obID(a1) 		; set object ID for this slot
 		move.w	obX(a0),obX(a1) 			; set object position to boss position
 		move.w	obY(a0),obY(a1)
@@ -75,26 +96,6 @@ BossStarLight_LoadBoss:
 		move.l	a0,BossStarLight_ParentObj(a1)
 
 		dbf	d1,BossStarLight_Loop			; repeat sequence 3 more times
-
-; loc_1895C:
-BossStarLight_Done:
-		lea	(v_lvlobjspace).w,a1 			; load level object space address
-		lea	BossStarLight_SeesawList(a0),a2 	; load some scratch RAM from the boss object into a2 to keep track of seesaws
-		moveq	#id_Seesaw,d0
-		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d1
-
-; loc_18968:
-BossStarLight_CheckSaws:
-		cmp.b	obID(a1),d0 				; is the object a seesaw?
-		bne.s	.skip 					; no, skip
-		tst.b	obSubtype(a1) 				; does the seesaw have a ball on it? (object subtype 00 contains a ball)
-		beq.s	.skip 					; yes, skip
-		move.w	a1,(a2)+ 				; no ball, so move object address into the scratch RAM and increment, we are storing pointers to seesaws with no balls
-
-; loc_18974:
-.skip:
-		adda.w	#object_size,a1 			; move the pointer forward one object size ($40 bytes, this means scanning all of the lvlobjspace to look for seesaws)
-		dbf	d1,BossStarLight_CheckSaws 		; keep looking for saws
 
 BossStarLight_ShipMain:	; Routine 2
 		moveq	#0,d0

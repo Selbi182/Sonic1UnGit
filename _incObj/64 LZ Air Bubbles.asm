@@ -16,7 +16,7 @@ Bub_Index:	dc.w Bub_Main-Bub_Index		; 0
 		dc.w Bub_BurstDelete-Bub_Index	; 8
 		dc.w Bub_BubbleMaker-Bub_Index	; A
 
-bub_inhalable:	equ objoff_2E	; flag set when bubble is collectable
+bub_inhalable:	equ objoff_35	; flag set when bubble is collectable
 bub_origX: 	equ objoff_30	; original x-axis position
 bub_time:	equ objoff_32	; time until next large bubble spawn
 bub_timebase:	equ objoff_33	; base time to reset bub_time to after bubble spawn

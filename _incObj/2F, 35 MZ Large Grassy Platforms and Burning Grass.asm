@@ -12,8 +12,8 @@ LargeGrass:
 LGrass_Index:	dc.w LGrass_Main-LGrass_Index
 		dc.w LGrass_Action-LGrass_Index
 
-lgrass_origX:	equ objoff_2A	; initial X-position
-lgrass_origY:	equ objoff_2C	; initial Y-position
+lgrass_origX:	equ objoff_1C	; initial X-position
+lgrass_origY:	equ objoff_1E	; initial Y-position
 lgrass_coldata:	equ objoff_30	; pointer to platform slope collision data
 lgrass_nudge:	equ objoff_34	; (type $x5 only, burnable) nudge Y-offset while Sonic is standing on platform
 lgrass_burning:	equ objoff_35	; (type $x5 only, burnable) flag set when platform has started burning
@@ -343,8 +343,8 @@ GFire_Index:	dc.w GFire_Main-GFire_Index
 		dc.w GFire_Spread-GFire_Index
 		dc.w GFire_Move-GFire_Index
 
-gfire_origX:	equ objoff_2A	; initial X-position
-gfire_origY:	equ objoff_2C	; initial Y-position (set from parent)
+gfire_origX:	equ objoff_34	; initial X-position
+gfire_origY:	equ objoff_36	; initial Y-position (set from parent)
 gfire_coldata:	equ objoff_30	; pointer to platform slope collision data
 gfire_platform:	equ objoff_38	; pointer to parent platform object
 gfire_nudge:	equ objoff_3C	; current pixels parent platform is depressed from standing

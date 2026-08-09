@@ -20,12 +20,12 @@ Debug_Index:	dc.w Debug_Init-Debug_Index			; 0 - init
 Debug_Init:	; Routine 0
 		addq.b	#2,(v_debuguse).w			; set to Debug_Action
 
-		move.w	(v_limittop2).w,(v_limittopdb).w	; buffer level x-boundary
-		move.w	(v_limitbtm1).w,(v_limitbtmdb).w	; buffer level y-boundary
+	;	move.w	(v_limittop2).w,(v_limittopdb).w	; buffer level x-boundary
+	;	move.w	(v_limitbtm1).w,(v_limitbtmdb).w	; buffer level y-boundary
 		cmpi.b	#id_Special,(v_gamemode).w		; are we in a Special Stage?
 		beq.s	.wrapDone				; if yes, skip wrapping
-		move.w	#0,(v_limittop2).w			; unlock top screen boundary
-		move.w	#$800-224,(v_limitbtm1).w		; unlock bottom level boundary, minus screen height
+	;	move.w	#0,(v_limittop2).w			; unlock top screen boundary
+	;	move.w	#$800-224,(v_limitbtm1).w		; unlock bottom level boundary, minus screen height
 
 		; Do vertical wrapping in LZ3 and SBZ2
 		andi.w	#$7FF,(v_player+obY).w			; wrap Sonic's Y-position
@@ -286,8 +286,8 @@ Debug_ExitDebugMode:
 		move.w	d0,obSubpixelX(a0)			; clear Sonic's X subpixel portion
 		move.w	d0,obSubpixelY(a0)			; clear Sonic's Y subpixel portion
 
-		move.w	(v_limittopdb).w,(v_limittop2).w	; restore top level boundary
-		move.w	(v_limitbtmdb).w,(v_limitbtm1).w	; restore bottom level boundary
+	;	move.w	(v_limittopdb).w,(v_limittop2).w	; restore top level boundary
+	;	move.w	(v_limitbtmdb).w,(v_limitbtm1).w	; restore bottom level boundary
 
 		cmpi.b	#id_Special,(v_gamemode).w		; are you in the Special Stage?
 		bne.s	.notSS					; if not, branch

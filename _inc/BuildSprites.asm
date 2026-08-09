@@ -72,7 +72,7 @@ spritelayer	macro	screenpospossible
 
 	if narg=1
 	.screenCoords\@:
-		move.w	obScreenY(a0),d2			; special variable for screen Y
+		move.w	obY(a0),d2				; changed from obScreenY to be consistent
 		move.w	obX(a0),d3
 		bra.s	.drawObject\@
 	endif

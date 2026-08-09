@@ -18,10 +18,16 @@ Swing_Index:	dc.w Swing_Main-Swing_Index		; 0
 		dc.w Swing_ChainLink-Swing_Index	; A
 		dc.w Swing_Swinging-Swing_Index		; C
 
-swing_children:	equ obSubtype		; number of child link objects ($28 = child count, $29-$39 RAM indices to links)
-swing_origY:	equ objoff_38		; original y-axis position
-swing_origX:	equ objoff_3A		; original x-axis position
-swing_radius:	equ objoff_3C		; radius distance from center, individual per chain link
+swing_children:	equ objoff_30		; number of child link objects ($28 = child count, $29-$39 RAM indices to links)
+swing_origY:	equ objoff_1C		; original y-axis position
+swing_origX:	equ objoff_1E		; original x-axis position
+swing_radius:	equ objoff_1B		; radius distance from center, individual per chain link
+
+
+;swing_children:	equ obSubtype		; number of child link objects ($28 = child count, $29-$39 RAM indices to links)
+;swing_origY:	equ objoff_38		; original y-axis position
+;swing_origX:	equ objoff_3A		; original x-axis position
+;swing_radius:	equ objoff_3C		; radius distance from center, individual per chain link
 ; ===========================================================================
 
 Swing_Main:	; Routine 0
@@ -57,7 +63,8 @@ Swing_CreateLinks:
 		move.b	obID(a0),d4				; copy parent object ID to children
 		moveq	#0,d1					; clear d1
 		lea	swing_children(a0),a2			; load child object index array (= obSubtype)
-		move.b	(a2),d1					; get subtype for platform
+		move.b	obSubtype(a0),d1
+		;move.b	(a2),d1					; get subtype for platform
 		move.w	d1,-(sp)				; backup subtype for later
 		andi.w	#$F,d1					; limit subtype to lower digit (number of child objects to spawn)
 		move.b	#0,(a2)+				; clear subtype, and initialize number of spawned children to 0
@@ -178,51 +185,7 @@ Swing_Move:
 		neg.w	d0					; reverse movement direction
 		add.w	d1,d0					; keep in the same general range
 	.swing:
-		bra.s	Swing_UpdateSwingPosition		; swing all objects
 
-; ---------------------------------------------------------------------------
-; Alternate swing logic, called from wrecking ball for GHZ boss.
-; See "GBall_Base2" in Object 4B.
-; ---------------------------------------------------------------------------
-
-; Obj48_Move:
-GBall_Move:
-		tst.b	GBall_Swing_Direction(a0)		; is wrecking ball set to swing counterclockwise?
-		bne.s	.swingCounterclockwise			; if yes, branch
-
-	.swingClockwise:
-		move.w	GBall_Swing_Speed(a0),d0		; get current wrecking ball swing speed
-		addq.w	#8,d0					; increase swing speed (clockwise)
-		move.w	d0,GBall_Swing_Speed(a0)		; store new swing speed
-		add.w	d0,obAngle(a0)				; update angle
-		cmpi.w	#$200,d0				; has speed crossed middle threshold?
-		bne.s	.updateSwing				; if not, branch
-		move.b	#1,GBall_Swing_Direction(a0)		; begin swinging counterclockwise next
-		bra.s	.updateSwing				; update swing position
-; ---------------------------------------------------------------------------
-
-	.swingCounterclockwise:
-		move.w	GBall_Swing_Speed(a0),d0		; get current wrecking ball swing speed
-		subq.w	#8,d0					; increase swing speed (counterclockwise)
-		move.w	d0,GBall_Swing_Speed(a0)		; store new swing speed
-		add.w	d0,obAngle(a0)				; update angle
-		cmpi.w	#-$200,d0				; has speed crossed middle threshold?
-		bne.s	.updateSwing				; if not, branch
-		move.b	#0,GBall_Swing_Direction(a0)		; begin swinging clockwise again
-
-	.updateSwing:
-		move.b	obAngle(a0),d0				; get latest angle
-		; fall-through to Swing_UpdateSwingPosition...
-
-; ---------------------------------------------------------------------------
-; Subroutine to convert angle to position for all chain links
-; 
-; input:
-;	d0 = current swing angle
-; ---------------------------------------------------------------------------
-
-; Swing_Move2:
-Swing_UpdateSwingPosition:
 		bsr.w	CalcSine				; calculate sine and cosine values for current swing angle in d0
 		move.w	swing_origY(a0),d2			; get initial platform Y-position
 		move.w	swing_origX(a0),d3			; get initial platform X-position

@@ -21,8 +21,8 @@ Tele_Index:	dc.w Tele_Main-Tele_Index
 		dc.w Tele_PreBump-Tele_Index
 		dc.w Tele_Teleporting-Tele_Index
 
-tele_time:	equ objoff_2E	; remaining time Sonic should move in current direction
-tele_prebumpval:	equ objoff_32	; current pre-bump value before Sonic gets shot off (incremented by 2, triggers at $80)
+tele_time:	equ objoff_30	; remaining time Sonic should move in current direction
+tele_prebumpval:equ objoff_32	; current pre-bump value before Sonic gets shot off (incremented by 2, triggers at $80)
 tele_targetX:	equ objoff_36	; next X-position target
 tele_targetY:	equ objoff_38	; next Y-position target
 tele_current:	equ objoff_3A	; current entry in tele_entries (in multiples of 4)

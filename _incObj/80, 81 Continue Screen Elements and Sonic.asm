@@ -22,7 +22,7 @@ CSI_Main:	; Routine 0
 		move.b	#sprite_cam_screen,obRender(a0)		; set to screen-positioned mode
 		move.b	#120/2,obActWid(a0)			; set sprite display width
 		move.w	#$80+(320/2),obX(a0)			; set X-position to centered
-		move.w	#$80+64,obScreenY(a0)			; set Y-position
+		move.w	#$80+64,obY(a0)				; set Y-position
 
 		move.w	#0,(v_rings).w				; clear rings
 ; ---------------------------------------------------------------------------
@@ -74,7 +74,7 @@ CSI_CreateMiniSonics:
 		beq.s	.configMiniSonic			; if not, branch
 		subi.w	#10,obX(a1)				; shift mini-Sonics slightly to the left to center them
 	.configMiniSonic:
-		move.w	#$80+$50,obScreenY(a1)			; set fixed Y-position
+		move.w	#$80+$50,obY(a1)			; set fixed Y-position
 		move.b	#6,obFrame(a1)				; set to first mini-Sonic frame (foot down)
 		move.b	#6,obRoutine(a1)			; use CSI_ShowMiniSonic routine
 		move.l	#Map_ContScr,obMap(a1)			; set mappings

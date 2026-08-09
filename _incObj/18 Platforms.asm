@@ -15,11 +15,11 @@ Plat_Index:	dc.w Plat_Main-Plat_Index	; 0
 		dc.w Plat_Delete-Plat_Index	; 6
 		dc.w Plat_Action-Plat_Index	; 8
 
-plat_rawY:	equ objoff_2C	; raw Y-positon (without nudge Y-offset)
 plat_origX:	equ objoff_32	; initial X-position
 plat_origY:	equ objoff_34	; initial Y-position
 plat_nudgeval:	equ objoff_38	; nudge Y-offset while Sonic is on platform
 plat_delay:	equ objoff_3A	; multi-purpose delay timers
+plat_rawY:	equ objoff_3C	; raw Y-positon (without nudge Y-offset)
 ; ===========================================================================
 
 Plat_Main:	; Routine 0

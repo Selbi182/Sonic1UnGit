@@ -188,7 +188,7 @@ React_CollisionDetected:
 		beq.s	React_Monitor				; if yes, branch
 
 		; Assume object is a ring (standard, lost, or giant)
-	;	cmpi.w	#90,flashtime(a0)			; has Sonic recently been hurt and has more than 90 frames of flashing time left?
+	;	cmpi.b	#90,flashtime(a0)			; has Sonic recently been hurt and has more than 90 frames of flashing time left?
 	;	bhs.w	.return					; if yes, prevent collecting ring
 		addq.b	#2,obRoutine(a1)			; advance the ring's routine counter (e.g. Ring_Collect)
 
@@ -341,8 +341,7 @@ React_ChkHurt:
 
 ; .notinvincible:
 .damage:
-		nop						; useless nop (probably so an rts could easily be inserted here)
-		tst.w	flashtime(a0)				; is Sonic flashing?
+		tst.b	flashtime(a0)				; is Sonic flashing?
 		bne.s	.noDamage				; if yes, don't take damage
 
 		movea.l	a1,a2					; damaging object needs to be in a2 for HurtSonic/KillSonic
@@ -392,7 +391,7 @@ HurtSonic:
 		clr.b	spindash_flag(a0)			; clear Spin Dash flag 
 		move.w	#0,obInertia(a0)			; cancel ground speed
 		move.b	#id_Hurt,obAnim(a0)			; set Sonic to hurt animation
-		move.w	#2*60,flashtime(a0)			; set temporary invulnerability time to 2 seconds
+		move.b	#2*60,flashtime(a0)			; set temporary invulnerability time to 2 seconds
 
 		move.w	#sfx_HitSpikes,d0			; use spike damage sound
 		cmpi.b	#id_Spikes,obID(a2)			; was damage caused by spikes?

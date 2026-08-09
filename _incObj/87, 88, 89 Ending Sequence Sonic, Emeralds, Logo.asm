@@ -250,11 +250,11 @@ esth_time:	equ objoff_30		; time to stay on the text before exiting to credits (
 ESth_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)			; advance to ESth_Move
 		move.w	#$80-$A0,obX(a0)			; object starts outside the visible screen space
-		move.w	#$80+$58,obScreenY(a0)			; set fixed Y-position
+		move.w	#$80+$58,obY(a0)			; set fixed Y-position
 		move.l	#Map_ESth,obMap(a0)			; set mappings
 		move.w	#ArtTile_Ending_STH,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_screen,obRender(a0)		; set to screen-positioned mode
-		move.w	#spr_prio0,obPriority(a0)			; set to maximum sprite priority
+		move.w	#spr_prio0,obPriority(a0)		; set to maximum sprite priority
 ; ---------------------------------------------------------------------------
 
 ESth_Move:	; Routine 2

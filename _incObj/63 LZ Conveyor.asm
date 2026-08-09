@@ -39,7 +39,7 @@ LCon_Index:	dc.w LCon_Main-LCon_Index		; 0
 		dc.w LCon_OnPlatform-LCon_Index		; 4
 		dc.w LCon_Wheel-LCon_Index		; 6
 
-lcon_groupid:	equ objoff_2F	; copy of obSubtype from the initial group spawner
+lcon_groupid:	equ objoff_33	; copy of obSubtype from the initial group spawner
 lcon_baseX:	equ objoff_30	; base X-position for entire group (roughly in the center)
 lcon_nextX:	equ objoff_34	; next target X-position for platform
 lcon_nextY:	equ objoff_36	; next target Y-position for platform

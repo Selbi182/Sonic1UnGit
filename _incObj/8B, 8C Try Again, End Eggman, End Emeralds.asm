@@ -22,7 +22,7 @@ eegg_time:	equ objoff_30		; time between juggle motions
 EEgg_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)			; advance to EEgg_Animate
 		move.w	#$80+$A0,obX(a0)			; set X-position
-		move.w	#$80+$74,obScreenY(a0)			; set Y-position
+		move.w	#$80+$74,obY(a0)			; set Y-position
 		move.l	#Map_EEgg,obMap(a0)			; set mappings
 		move.w	#ArtTile_Try_Again_Eggman,obGfx(a0)	; set art tile
 		move.b	#sprite_cam_screen,obRender(a0)		; set to screen-positioned mode
@@ -118,8 +118,8 @@ TCha_LoadEmeralds: ; Routine 0
 		move.w	#spr_prio1,obPriority(a1)			; set sprite priority (above Eggman)
 		move.w	#$80+$84,obX(a1)			; start X-position
 		move.w	#$80+$A0,tcha_origX(a1)			; X-position for radius anchor point
-		move.w	#$80+$6C,obScreenY(a1)			; start Y-position
-		move.w	obScreenY(a1),tcha_origY(a1)		; use that as Y-position for radius anchor point
+		move.w	#$80+$6C,obY(a1)			; start Y-position
+		move.w	obY(a1),tcha_origY(a1)			; use that as Y-position for radius anchor point
 		move.b	#$1C,tcha_radius(a1)			; circle radius of juggled emeralds (doesn't change)
 
 		lea	(v_emldlist).w,a3			; get array of collected emeralds
@@ -180,7 +180,7 @@ TCha_JuggleEmeralds: ; Routine 2
 		add.w	tcha_origX(a0),d1			; move relative to anchor X-position
 		add.w	tcha_origY(a0),d0			; move relative to anchor Y-position
 		move.w	d1,obX(a0)				; set final X-position on circle
-		move.w	d0,obScreenY(a0)			; set final Y-position on circle
+		move.w	d0,obY(a0)				; set final Y-position on circle
 
 	.return:
 		rts						; return

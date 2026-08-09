@@ -42,7 +42,7 @@ Card_Loop:
 		move.w	(a3),obX(a1)				; load start x-position
 		move.w	(a3)+,card_finalX(a1)			; load finish x-position (same as start)
 		move.w	(a3)+,card_mainX(a1)			; load main target x-position
-		move.w	(a2)+,obScreenY(a1)			; load fixed y-position
+		move.w	(a2)+,obY(a1)				; load fixed y-position
 		move.b	(a2)+,obRoutine(a1)			; set initial routine number
 		move.b	(a2)+,d0				; get frame ID
 		bne.s	.setupCardObject			; if frame ID is non-zero, branch (i.e. not the level name)

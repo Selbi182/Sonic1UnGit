@@ -34,7 +34,7 @@ Pyl_Display:	; Routine 2
 		andi.w	#$3F,d1					; vertically wrap pylon every 64px
 		neg.w	d1					; make pylons move opposite to the camera direction
 		addi.w	#$100,d1				; add base Y-position to move it into visible frame
-		move.w	d1,obScreenY(a0)			; set new Y-position
+		move.w	d1,obY(a0)				; set new Y-position
 
 		DisplaySprite
 		rts				; keep displaying foreground pylons

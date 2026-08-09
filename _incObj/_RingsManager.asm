@@ -170,8 +170,8 @@ RingsManager_FindEnd_Backwards:
 ; ---------------------------------------------------------------------------
 
 Touch_Rings:
-		cmpi.w	#90,flashtime(a0)			; has Sonic recently been hurt and is still flashing? (1.5 seconds left)
-		bhs.w	Touch_Rings_return			; if yes, prevent picking up rings
+	;	cmpi.b	#90,flashtime(a0)			; has Sonic recently been hurt and is still flashing? (1.5 seconds left)
+	;	bhs.w	Touch_Rings_return			; if yes, prevent picking up rings
 
 		movea.l	(v_ringwindow_start).w,a1		; load ring layout start address
 		movea.l	(v_ringwindow_end).w,a2			; load ring layout end address

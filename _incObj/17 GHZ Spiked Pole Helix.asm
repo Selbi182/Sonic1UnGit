@@ -15,8 +15,8 @@ Hel_Index:	dc.w Hel_Main-Hel_Index		; 0
 		dc.w Hel_Delete-Hel_Index	; 6 (never set)
 		dc.w Hel_ChildSpike-Hel_Index	; 8
 
-helix_children:	equ obSubtype		; $28 = helix length // $29-38 = indices for child object RAM addresses
-helix_frame:	equ objoff_3E		; start frame (different for each spike)
+helix_children:	equ objofF_30		; $28 = helix length // $29-38 = indices for child object RAM addresses
+helix_frame:	equ objoff_29		; start frame (different for each spike)
 ; ===========================================================================
 
 Hel_Main:	; Routine 0
@@ -34,7 +34,8 @@ Hel_Main:	; Routine 0
 
 		lea	helix_children(a0),a2			; load helix children array (will hold RAM indices for child spikes)
 		moveq	#0,d1					; clear d1
-		move.b	(a2),d1					; get number of spikes to load from subtype (OST $28)
+		;move.b	(a2),d1					; get number of spikes to load from subtype (OST $28)
+		move.b	obSubtype(a0),d1
 		move.b	#0,(a2)+				; clear subtype and advance to helix_children
 		move.w	d1,d0					; copy spike count
 		lsr.w	#1,d0					; divide by 2 to center

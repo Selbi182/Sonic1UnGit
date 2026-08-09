@@ -221,7 +221,6 @@ obGfx:			equ 2					; palette line & VRAM setting (2 bytes)
 obMap:			equ 4					; mappings address (4 bytes)
 obX:			equ 8					; x-axis position (2-4 bytes)
 obSubpixelX:		equ $A					; x-axis subpixel position for playfield items (2 bytes)
-obScreenY:		equ obSubpixelX				; y-axis position for screen-fixed items (2 bytes)
 obY:			equ $C					; y-axis position (2-4 bytes)
 obSubpixelY:		equ $E					; y-axis subpixel position for playfield items (2 bytes)
 obVelX:			equ $10					; x-axis velocity (2 bytes)
@@ -248,8 +247,8 @@ obAngle:		equ $26					; angle
 obSubtype:		equ $28					; object subtype
 
 ; Object variables used by Sonic
-homingattack:		equ $2F
 flashtime:		equ $30					; time between flashes after getting hit (2 bytes)
+homingattack:		equ $31
 invtime:		equ $32					; time left for invincibility (2 bytes)
 shoetime:		equ $34					; time left for speed shoes (2 bytes)
 angleright:		equ $36					; angle of floor on Sonic's right side
@@ -317,6 +316,47 @@ sonic_duck_height:	equ 20/2				; Sonic's height (object collision, ducking)
 sonic_quick_size:	equ 20/2				; Sonic's size (quick terrain find)
 
 ; Miscellaneous object scratch-RAM
+objoff_00:		equ $00
+objoff_01:		equ $01
+objoff_02:		equ $02
+objoff_03:		equ $03
+objoff_04:		equ $04
+objoff_05:		equ $05
+objoff_06:		equ $06
+objoff_07:		equ $07
+objoff_08:		equ $08
+objoff_09:		equ $09
+objoff_0A:		equ $0A
+objoff_0B:		equ $0B
+objoff_0C:		equ $0C
+objoff_0D:		equ $0D
+objoff_0E:		equ $0E
+objoff_0F:		equ $0F
+objoff_10:		equ $10
+objoff_11:		equ $11
+objoff_12:		equ $12
+objoff_13:		equ $13
+objoff_14:		equ $14
+objoff_15:		equ $15
+objoff_16:		equ $16
+objoff_17:		equ $17
+objoff_18:		equ $18
+objoff_19:		equ $19
+objoff_1A:		equ $1A
+objoff_1B:		equ $1B
+objoff_1C:		equ $1C
+objoff_1D:		equ $1D
+objoff_1E:		equ $1E
+objoff_1F:		equ $1F
+objoff_20:		equ $20
+objoff_21:		equ $21
+objoff_22:		equ $22
+objoff_23:		equ $23
+objoff_24:		equ $24
+objoff_25:		equ $25
+objoff_26:		equ $26
+objoff_27:		equ $27
+objoff_28:		equ $28
 objoff_29:		equ $29
 objoff_2A:		equ $2A
 objoff_2B:		equ $2B

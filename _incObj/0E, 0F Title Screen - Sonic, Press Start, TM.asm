@@ -18,7 +18,7 @@ TSon_Index:	dc.w TSon_Main-TSon_Index
 TSon_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)			; advance to TSon_Delay
 		move.w	#$80+$78,obX(a0)			; +8px
-		move.w	#$80+$5E,obScreenY(a0)			; set initial Y-position
+		move.w	#$80+$5E,obY(a0)			; set initial Y-position
 		move.l	#Map_TSon,obMap(a0)			; set mappings
 		move.w	#ArtTile_Title_Sonic|Tile_Pal2,obGfx(a0) ; set art tile and palette line
 		move.w	#spr_prio7,obPriority(a0)			; set sprite priority
@@ -38,8 +38,8 @@ TSon_Delay:	; Routine 2
 ; ===========================================================================
 
 TSon_Move:	; Routine 4
-		subq.w	#8,obScreenY(a0)			; move Sonic up
-		cmpi.w	#$80+$16,obScreenY(a0)			; has Sonic reached final Y-position?
+		subq.w	#8,obY(a0)				; move Sonic up
+		cmpi.w	#$80+$16,obY(a0)			; has Sonic reached final Y-position?
 		bne.s	.display				; if not, branch
 		addq.b	#2,obRoutine(a0)			; advance to TSon_Animate
 	.display:
@@ -80,7 +80,7 @@ PSB_Main:	; Routine 0
 
 		addq.b	#2,obRoutine(a0)			; advance to PSB_PrsStart (animate)
 		move.w	#$80+$58,obX(a0)			; +8px
-		move.w	#$80+$B0,obScreenY(a0)			; set Y-position
+		move.w	#$80+$B0,obY(a0)			; set Y-position
 		move.l	#Map_PSB,obMap(a0)			; set mappings
 		move.w	#ArtTile_Title_PressStart,obGfx(a0)	; set art tile (separated from foreground emblem)
 
@@ -90,8 +90,8 @@ PSB_Main:	; Routine 0
 		; Set up sprite mask to hide Sonic's torso
 		clr.w	obGfx(a0)				; force art tile ID $0000
 		clr.w	obX(a0)					; force X-position 0 to activate masking
-		move.w	#$80+104,obScreenY(a0)			; set Y-position to cover Sonic's torso to 104px
-		move.w	#spr_prio6,obPriority(a0)			; set sprite priority for sprite mask (above Sonic)
+		move.w	#$80+104,obY(a0)			; set Y-position to cover Sonic's torso to 104px
+		move.w	#spr_prio6,obPriority(a0)		; set sprite priority for sprite mask (above Sonic)
 
 		; Object is either TM or masking sprites
 		addq.b	#2,obRoutine(a0)			; advance to PSB_Exit (static)
@@ -101,7 +101,7 @@ PSB_Main:	; Routine 0
 		move.w	#ArtTile_Title_Trademark|Tile_Pal2,obGfx(a0) ; "TM" specific art tile
 		move.w	#spr_prio0,obPriority(a0)			; set sprite priority for TM (highest)
 		move.w	#$80+$F8,obX(a0)			; +8px
-		move.w	#$80+$78,obScreenY(a0)			; set Y-position for TM
+		move.w	#$80+$78,obY(a0)			; set Y-position for TM
 ; ---------------------------------------------------------------------------
 
 PSB_Exit:	; Routine 4

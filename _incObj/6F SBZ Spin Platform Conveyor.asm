@@ -36,7 +36,7 @@ SpinC_Index:	dc.w SpinC_Main-SpinC_Index
 ; the LZ conveyor belt (Object 63), even calling some of its subroutines.
 ; As such not only are all its SSTs reused, some of them also MUST stay
 ; the same to function properly!
-spinc_groupid:		equ objoff_2F	; copy of obSubtype from the initial group spawner
+spinc_groupid:		equ objoff_33	; copy of obSubtype from the initial group spawner
 spinc_baseX:		equ objoff_30	; initial X-position for entire group (roughly in the center)
 spinc_nextX:		equ lcon_nextX	; next target X-position (=objoff_34)
 spinc_nextY:		equ lcon_nextY	; next target Y-position (=objoff_36)
