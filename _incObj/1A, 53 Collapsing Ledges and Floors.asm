@@ -256,8 +256,7 @@ CFlo_FragmentPiece:	; Routine 6
 ; ===========================================================================
 
 CFlo_Delete:	; Routine 8
-		bsr.w	DeleteObject
-		rts
+		bra.w	DeleteObject
 ; ===========================================================================
 
 
@@ -271,15 +270,7 @@ Fragmentate_8x2Floor:
 		move.b	#0,collapsible_flag(a0)			; reset collapsing flag
 
 Fragmentate_8x2Floor_NoReset:
-		; After looking through all object layouts, it appears that type A (swipe)
-		; is never used anywhere in the game. The developers probably preferred
-		; the visual flair of type B (shuffled) and ended up using it everywhere.
-		lea	(CollapseData_8x2_Swipe).l,a4		; use left-to-right collapse data by default
-		btst	#0,obSubtype(a0)			; is least significant bit in subtype set?
-		beq.s	.setupFrag				; if not, branch
 		lea	(CollapseData_8x2_Shuffle).l,a4		; use shuffled collapse data instead
-
-	.setupFrag:
 		moveq	#8-1,d1					; fragmentate floor into 8 pieces
 		addq.b	#1,obFrame(a0)				; advance to next frame which consists of 8 sprite pieces
 		bra.s	FragmentatePlatform			; skip over GHZ ledge
@@ -372,11 +363,6 @@ CollapseData_GHZLedge: ; 25 fragments, matching sprite piece order of ledge
 		dc.b $14, $10, $0C
 		even
 ; ---------------------------------------------------------------------------
-CollapseData_8x2_Swipe: ; 8 fragments, going left to right (unused)
-		dc.b $1E, $16, $0E, $06
-		dc.b $1A, $12, $0A, $02
-		even
-
 CollapseData_8x2_Shuffle: ; 8 fragments, shuffled order
 		dc.b $16, $1E, $1A, $12
 		dc.b $06, $0E, $0A, $02

@@ -195,8 +195,7 @@ Crab_SetAni_Ascending:
 ; ===========================================================================
 
 Crab_Delete:	; Routine 4 (unreachable, deletion is handled elsewhere)
-		bsr.w	DeleteObject				; delete object
-		rts						; return
+		bra.w	DeleteObject				; delete object
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

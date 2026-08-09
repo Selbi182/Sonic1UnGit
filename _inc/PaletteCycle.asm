@@ -5,16 +5,16 @@
 
 PaletteCycle:
 		tst.w	(f_restart).w				; is level set to restart?
-		beq.s	.doCycle				; if not, branch
-		rts						; don't execute palette cycle
+		bne.s	.exit
 
-	.doCycle:
-		moveq	#0,d2					; clear d2 (redundant, not used here)
 		moveq	#0,d0					; clear d0
 		move.b	(v_zone).w,d0				; get zone ID
 		add.w	d0,d0					; double for word-based indexing
 		move.w	PalCycle_Index(pc,d0.w),d0		; find palette routine for current zone
 		jmp	PalCycle_Index(pc,d0.w)			; jump to relevant palette routine
+
+	.exit:
+		rts						; don't execute palette cycle
 ; End of function PaletteCycle
 
 ; ---------------------------------------------------------------------------

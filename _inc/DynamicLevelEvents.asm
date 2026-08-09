@@ -537,7 +537,6 @@ DLE_SLZ3_Boss:
 DLE_SLZ3_End:
 		move.w	(v_screenposx).w,(v_limitleft2).w	; set boundary to current position
 		rts
-		rts	; redundant rts
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

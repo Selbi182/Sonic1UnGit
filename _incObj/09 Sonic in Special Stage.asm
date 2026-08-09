@@ -28,13 +28,11 @@ SonicSS_Normal:
 SonicSS_Index:	dc.w SonicSS_Main-SonicSS_Index			; 0 - object init
 		dc.w SonicSS_Control-SonicSS_Index		; 2 - main mode
 		dc.w SonicSS_ExitStage-SonicSS_Index		; 4 - rotate stage while exiting
-		dc.w SonicSS_ExitStage_Unused-SonicSS_Index	; 6 - unreachable secondary exiting state
 
 sonss_touchedblock_id:	equ	objoff_30	; ID of currently touched block (byte)
 sonss_touchedblock_ram: equ	objoff_32	; RAM address of currently touched block (longword)
 sonss_timeout_updown:	equ	objoff_36	; timeout before an UP/DOWN block can be triggered again (byte)
 sonss_timeout_r:	equ	objoff_37	; timeout before an R block can be triggered again (byte)
-sonss_exittimer:	equ	objoff_38	; (unused) timer for the secondary exiting routine (word)
 sonss_ghoststate:	equ	objoff_3A	; current solidity state of ghost blocks (byte)
 ; ===========================================================================
 
@@ -114,8 +112,7 @@ SonicSS_Display:
 		add.w	(v_ssrotate).w,d0			; apply current rotation speed
 		move.w	d0,(v_ssangle).w			; save new angle
 
-		jsr	(Sonic_Animate).l			; animate Sonic (accessing Obj01)
-		rts						; return
+		jmp	(Sonic_Animate).l			; animate Sonic (accessing Obj01)
 ; End of function SonicSS_Control
 
 
@@ -381,20 +378,10 @@ SS_FixCamera:
 SonicSS_ExitStage:
 		addi.w	#ss_rotatespeed,(v_ssrotate).w		; increase spin speed during exit sequence
 		cmpi.w	#$60*ss_rotatespeed,(v_ssrotate).w	; is the stage spinning fast enough? ($1800)
-		bne.s	.noexit					; if not, branch
+		blo.s	.noexit					; if not, branch
 		move.b	#id_Level,(v_gamemode).w		; change game mode to Level to trigger exit in main loop
 
-; loc_1BBF4:
-.noexit:	; Impossible condition, see notes below
-		cmpi.w	#2*($60*ss_rotatespeed),(v_ssrotate).w	; is stage spinning twice as fast as exit trigger above? ($3000)
-		blt.s	.noexit2				; if not, branch
-		move.w	#0,(v_ssrotate).w			; stop stage rotation
-		move.w	#$4000,(v_ssangle).w			; keep rotation fixed to 90 degrees clockwise
-		addq.b	#2,obRoutine(a0)			; advance to "SonicSS_ExitStage_Unused"
-		move.w	#60,sonss_exittimer(a0)			; set delay timer in there to one second
-
-; loc_1BC12:
-.noexit2:
+.noexit:
 		move.w	(v_ssangle).w,d0			; get current stage rotation angle
 		add.w	(v_ssrotate).w,d0			; apply current rotation speed
 		move.w	d0,(v_ssangle).w			; save new angle
@@ -405,31 +392,6 @@ SonicSS_ExitStage:
 		DisplaySprite
 		rts
 ; End of function SonicSS_ExitStage
-
-
-; ---------------------------------------------------------------------------
-; Unused secondary exiting mode. This would technically be triggered once
-; the stage is spinning fast enough during the exiting sequence above, but
-; this will in practice never be the case before the stage is forcibly exited
-; in the main game mode loop, as the code above already changes the game mode
-; before it has any chance to spin fast enough. It's likely that this was a
-; leftover from the prototype, where the stage would restart indefinitely.
-; ---------------------------------------------------------------------------
-
-; Obj09_Exit2: SonicSS_Exit2:
-SonicSS_ExitStage_Unused:
-		subq.w	#1,sonss_exittimer(a0)			; decrement remaining delay
-		bne.s	.timeremaining				; if time remains, branch
-		move.b	#id_Level,(v_gamemode).w		; change game mode to Level to trigger exit in main loop
-
-; loc_1BC40:
-.timeremaining:
-		jsr	(Sonic_Animate).l			; animate Sonic (accessing Obj01)
-		jsr	(Sonic_LoadGfx).l			; update Sonic's graphics if necessary (accessing Obj01)
-		bsr.w	SS_FixCamera				; keep camera centered on Sonic
-		DisplaySprite
-		rts
-; End of function SonicSS_ExitStage_Unused
 
 
 ; ===========================================================================
@@ -585,9 +547,6 @@ SonicSS_FindWall_CheckType:
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Subroutine to check for collision blocks that have no solidity (rings etc.)
-; 
-; output:
-;	d4 = (unused) 0 if block is a regular item or blank; -1 otherwise
 ; ---------------------------------------------------------------------------
 
 ; Obj09_ChkItems: SonicSS_ChkItems:
@@ -612,8 +571,6 @@ SonicSS_ChkItems_NonSolidActionBlock:
 
 		tst.b	sonss_ghoststate(a0)			; has ghost block or its trigger been passed?
 		bne.w	SonicSS_MakeGhostSolid			; if yes, branch
-
-		moveq	#0,d4					; blank
 		rts						; return
 ; ===========================================================================
 
@@ -640,7 +597,6 @@ SonicSS_GetContinue:
 
 ; Obj09_NoCont:
 SonicSS_NoContinue:
-		moveq	#0,d4					; regular item
 		rts						; return
 ; ===========================================================================
 
@@ -656,9 +612,7 @@ SonicSS_Chk1Up:
 
 ; Obj09_Get1Up:
 SonicSS_Get1Up:
-		jsr	(ExtraLife).l				; add 1 to number of lives
-		moveq	#0,d4					; regular item
-		rts						; return
+		jmp	(ExtraLife).l				; add 1 to number of lives
 ; ===========================================================================
 
 ; Obj09_ChkEmer:
@@ -689,10 +643,7 @@ SonicSS_GetEmerald:
 ; Obj09_NoEmer:
 SonicSS_NoEmerald:
 		move.w	#bgm_Emerald,d0				; set to emerald music
-		jsr	(QueueSound2).l				; play it
-
-		moveq	#0,d4					; regular item
-		rts						; return
+		jmp	(QueueSound2).l				; play it
 ; ===========================================================================
 
 ; Obj09_ChkGhost:
@@ -713,7 +664,6 @@ SonicSS_ChkGhostTag:
 
 ; Obj09_NoGhost:
 SonicSS_NoItemBlock:
-		moveq	#-1,d4					; is a ghost block or other non-item block
 		rts						; return
 
 
@@ -740,8 +690,6 @@ SonicSS_MakeGhostSolid:
 ; Obj09_GhostNotSolid:
 SonicSS_GhostNotSolid:
 		clr.b	sonss_ghoststate(a0)			; clear ghost trigger flag so this doesn't run again
-
-		moveq	#0,d4					; not a ghost block (by itself at least)
 		rts						; return
 ; End of function SonicSS_ChkItems_NotSolid
 
@@ -824,8 +772,7 @@ SonicSS_ChkGOAL:
 		addq.b	#2,obRoutine(a0)			; run routine "SonicSS_ExitStage"
 
 		move.w	#sfx_SSGoal,d0				; set "GOAL" sound
-		jsr	(QueueSound2).l				; play it
-		rts						; return
+		jmp	(QueueSound2).l				; play it
 ; ===========================================================================
 
 ; Obj09_UPblock:

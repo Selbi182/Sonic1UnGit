@@ -5,23 +5,14 @@
 
 LevelSizeLoad:
 		moveq	#0,d0					; clear d0
-		move.b	d0,(v_unused7).w			; clear unused variables
-		move.b	d0,(v_unused8).w			; ''
-		move.b	d0,(v_unused9).w			; ''
-		move.b	d0,(v_unused10).w			; ''
 		move.b	d0,(v_dle_routine).w			; reset DynamicLevelEvents routine
 		move.b	d0,(f_nobgscroll).w			; clear no-background scroll flag
 
 		move.w	(v_zone_act).w,d0			; get current zone and act
 		lsl.b	#6,d0					; align act ID bits next to zone ID
 		lsr.w	#4,d0					; send zone and act all back together but keep at x4
-		move.w	d0,d1					; copy
-		add.w	d0,d0					; multiply by 2
-		add.w	d1,d0					; multiply to x3 (d0 = index in LevelSizeArray for current zone and act)
+		add.w	d0,d0
 		lea	LevelSizeArray(pc,d0.w),a0		; load level boundaries
-
-		move.w	(a0)+,d0				; (unused) load first entry in level size array
-	;	move.w	d0,(v_unused11).w			; write to unused variable (this is always $0004)
 
 		move.l	(a0)+,d0				; load left and right level boundaries (two words, read as long)
 		move.l	d0,(v_limitleft2).w			; set left and right boundaries (actual)
@@ -37,8 +28,7 @@ LevelSizeLoad:
 
 		move.w	#$1010,(v_fg_xblock).w			; trigger v_fg_xblock/v_fg_yblock to immediately draw a new column on start
 
-		move.w	(a0)+,d0				; load final entry in level size array
-		move.w	d0,(v_lookshift).w			; write to vertical look shift (redundant, this is always $0060)
+		move.w	#$0060,(v_lookshift).w			; write to vertical look shift
 
 		move.w	#(320/2),(v_camera_pan).w		; Reset the horizontal camera pan value to half screen width
 

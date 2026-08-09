@@ -303,7 +303,6 @@ Drown_Countdown:; Routine $A
 		tst.w	drown_restarttime(a0)			; is Sonic currently drowning?
 		beq.w	.checkNumberBubble			; if not, branch
 		andi.w	#7,drown_delaytime(a0)			; make next extra bubble spawn in no more than 0-7 frames
-		addi.w	#0,drown_delaytime(a0)			; (pointless zero addition, probably a leftover)
 		move.w	(v_player+obY).w,d0			; get Sonic's current Y-position
 		subi.w	#12,d0					; spawn bubbles 12px higher (to match Sonic's mouth)
 		move.w	d0,obY(a1)				; set bubble Y-position while drowning

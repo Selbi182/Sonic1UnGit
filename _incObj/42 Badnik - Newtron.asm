@@ -126,8 +126,7 @@ Newt_Action_MoveOnFloor:
 
 ; .speed:
 Newt_Action_MoveInAir:
-		bsr.w	SpeedToPos				; move Newtron sideways
-		rts						; no longer align with floor
+		bra.w	SpeedToPos				; move Newtron sideways
 ; ===========================================================================
 
 ; .type01:

@@ -76,8 +76,7 @@ Bom_Action_Walking:
 
 		subq.w	#1,bom_time(a0)				; decrement time delay before stopping to walk
 		bmi.s	.stopWalking				; if time expired, branch
-		bsr.w	SpeedToPos				; update Bomb's position
-		rts						; return
+		bra.w	SpeedToPos				; update Bomb's position
 ; ---------------------------------------------------------------------------
 
 	.stopWalking:
@@ -143,7 +142,6 @@ Bom_CheckStartFuse:
 
 	.finishFuse:
 		move.w	#(2*60)+24-1,bom_time(a1)		; set fuse time to just over 2 seconds
-		move.l	a0,bom_parent(a1)			; make fuse remember parent bomb object (unused)
 
 	.return:
 		rts						; return
@@ -166,14 +164,12 @@ Bom_Fuse:	; Routine 4
 Bom_BurnFuseAndExplode:
 		subq.w	#1,bom_time(a0)				; decrement fuse timer
 		bmi.s	.fuseExpired				; if timer expired, branch
-		bsr.w	SpeedToPos				; update fuse's position
-		rts						; return
+		bra.w	SpeedToPos				; update fuse's position
 ; ---------------------------------------------------------------------------
 
 .fuseExpired:
 		addq.l	#4,sp					; skip returning to Bom_Fuse
 		clr.w	bom_time(a0)				; clear fuse timer
-		clr.b	obRoutine(a0)				; clear routine counter (redundant here)
 		move.w	bom_origY(a0),obY(a0)			; restore initial Y-position of bomb
 
 		moveq	#4-1,d1					; load four shrapnel objects

@@ -18,14 +18,9 @@ Prison:
 Pri_Index:	dc.w Pri_Main-Pri_Index		; 0
 		dc.w Pri_BodyMain-Pri_Index	; 2
 		dc.w Pri_Switch-Pri_Index	; 4
-		dc.w Pri_Explosion-Pri_Index	; 6 (unused)
-		dc.w Pri_Explosion-Pri_Index	; 8 (unused)
-		dc.w Pri_Explosion-Pri_Index	; A
-		dc.w Pri_Animals-Pri_Index	; C
-		dc.w Pri_EndAct-Pri_Index	; E
-		; Only the third Pri_Explosion is used in-game. The first two are
-		; leftover pointers for deleted subtypes of the object, which the
-		; S2NA symbol tables call masincenter and masincenter2.
+		dc.w Pri_Explosion-Pri_Index	; 6
+		dc.w Pri_Animals-Pri_Index	; 8
+		dc.w Pri_EndAct-Pri_Index	; A
 
 pri_origY:	equ objoff_30		; original y-axis position
 ; ===========================================================================
@@ -33,8 +28,6 @@ pri_origY:	equ objoff_30		; original y-axis position
 Pri_Var:	; routine, width, priority, frame
 		dc.b 2,	64/2, 4, 0	; subtype 0 - capsule
 		dc.b 4,	24/2, 5, 1	; subtype 1 - switch
-		dc.b 6,	32/2, 4, 3	; subtype 2 - (unused/deleted)
-		dc.b 8,	32/2, 3, 5	; subtype 3 - (unused/deleted)
 ; ===========================================================================
 
 Pri_Main:	; Routine 0
@@ -55,13 +48,6 @@ Pri_Main:	; Routine 0
 		move.w	d1,obPriority(a0)			; set sprite priority
 		move.b	(a1)+,obFrame(a0)			; set frame ID
 
-		; Another unused leftover from the deleted subtypes.
-		cmpi.w	#2*4,d0					; is this object subtype 2? (unused)
-		bne.s	.return					; if not, branch
-		move.b	#col_32x32|col_boss,obColType(a0)	; set special collision type
-		move.b	#8,obBossHits(a0)			; were capsules once supposed to behave like bosses?
-
-	.return:
 		rts						; return
 ; ===========================================================================
 
@@ -106,7 +92,7 @@ Pri_Switch:	; Routine 4
 		bsr.s	Pri_ChkSonic
 		beq.s	.return
 		addq.w	#8,obY(a0)				; move switch down 8px
-		move.b	#$A,obRoutine(a0)			; advance to Pri_Explosion
+		move.b	#6,obRoutine(a0)			; advance to Pri_Explosion
 		move.w	#1*60,obTimeFrame(a0)			; set time between animal spawns
 		clr.b	(f_timecount).w				; stop time counter
 		clr.b	(f_lockscreen).w			; lock screen position
@@ -153,7 +139,7 @@ Pri_ChkSonic:
 ; ===========================================================================
 
 
-Pri_Explosion:	; Routine $A (also routine 6/8, but those are unused)
+Pri_Explosion:	; Routine 6
 		moveq	#7,d0					; only spawn an explosion every 8 frames...
 		and.b	(v_vblank_byte).w,d0			; ...based in VBlank frame counter
 		bne.s	.chkSpawnAnimals			; skip on other frames
@@ -181,7 +167,7 @@ Pri_Explosion:	; Routine $A (also routine 6/8, but those are unused)
 
 Pri_SpawnAnimals:
 		move.b	#2,(v_bossstatus).w			; set prison as being opened
-		move.b	#$C,obRoutine(a0)			; advance to Pri_Animals (replace explosions with animals)
+		move.b	#8,obRoutine(a0)			; advance to Pri_Animals (replace explosions with animals)
 		move.b	#6,obFrame(a0)				; 'delete' switch by turning it invisible
 		move.w	#(2*60)+30,obTimeFrame(a0)		; time delay before starting to check if animals have gone offscreen
 		addi.w	#32,obY(a0)				; load all animals 32px below explosions

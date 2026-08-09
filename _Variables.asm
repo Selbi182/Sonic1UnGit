@@ -224,15 +224,15 @@ v_limitleft3:		ds.w	1				; left level boundary, at the end of an act
 v_scrshiftx:		ds.w	1				; x-screen shift (new - last) * $100
 v_scrshifty:		ds.w	1				; y-screen shift (new - last) * $100
 v_lookshift:		ds.w	1				; screen shift when Sonic looks up/down
-v_unused7:		ds.b	1				; unused
-v_unused8:		ds.b	1				; unused
+			ds.b	1				; unused
+			ds.b	1				; unused
 v_dle_routine:		ds.b	1				; dynamic level event - routine counter
 			ds.b	1				; unused
 f_nobgscroll:		ds.b	1				; flag set to cancel background scrolling
 			ds.b	1				; unused
-v_unused9:		ds.b	1				; unused
 			ds.b	1				; unused
-v_unused10:		ds.b	1				; unused
+			ds.b	1				; unused
+			ds.b	1				; unused
 			ds.b	1				; unused
 v_fg_xblock:		ds.b	1				; foreground x-block parity (for redraw)
 v_fg_yblock:		ds.b	1				; foreground y-block parity (for redraw)
@@ -271,7 +271,7 @@ v_palchgspeed:		ds.w	1				; palette fade/transition speed (0 is fastest)
 v_collindex:		ds.l	1				; ROM address for collision index of current level
 v_palss_num:		ds.w	1				; palette cycling in Special Stage - reference number
 v_palss_time:		ds.w	1				; palette cycling in Special Stage - time until next change
-v_palss_index:		ds.w	1				; palette cycling in Special Stage - index into palette cycle 2 (unused?)
+			ds.w	1				; unused
 v_ssbganim:		ds.w	1				; Special Stage background animation
 v_ssangleprev:		ds.b	1				; unused
 			ds.b	1				; unused
@@ -411,7 +411,7 @@ v_score:		ds.l	1				; score
 v_shield:		ds.b	1				; shield status (00 = no; 01 = yes)
 v_invinc:		ds.b	1				; invincibility status (00 = no; 01 = yes)
 v_shoes:		ds.b	1				; speed shoes status (00 = no; 01 = yes)
-v_unused1:		ds.b	1				; an unused fourth player status (Goggles?)
+			ds.b	1				; an unused fourth player status (Goggles?)
 v_lastlamp:		ds.b	2				; number of the last lamppost you hit
 v_lamp_xpos:		ds.w	1				; x-axis for Sonic to respawn at lamppost
 v_lamp_ypos:		ds.w	1				; y-axis for Sonic to respawn at lamppost
@@ -487,11 +487,11 @@ f_creditscheat:		ds.b	1				; hidden Japanese credits & 9E/9F sound test shortcut
 v_title_dcount:		ds.w	1				; number of times the d-pad is pressed on title screen
 v_title_ccount:		ds.w	1				; number of times C is pressed on title screen
 			ds.b	2				; unused
-v_unused2:		ds.w	1				; unused
-v_unused3:		ds.b	1				; unused
-v_unused4:		ds.b	1				; unused
-v_unused5:		ds.b	1				; unused
-v_unused6:		ds.b	1				; unused
+			ds.w	1				; unused
+			ds.b	1				; unused
+			ds.b	1				; unused
+			ds.b	1				; unused
+			ds.b	1				; unused
 f_demo:			ds.w	1				; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1				; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1				; credits index number

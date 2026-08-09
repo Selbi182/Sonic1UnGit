@@ -84,7 +84,6 @@ BBall_Type1_LeftRight:
 
 ; Subtype $x2
 BBall_Type2_UpDown:
-		move.w	#$60,d1					; (unused, probably a leftover from copying subtype $x1)
 		moveq	#0,d0					; clear d0
 		move.b	(v_oscillate+$E).w,d0			; get oscillatory value (frequency 2, middle value $30)
 		btst	#0,obStatus(a0)				; is spike ball Y-flipped?

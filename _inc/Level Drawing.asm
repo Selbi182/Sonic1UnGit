@@ -72,7 +72,6 @@ DrawBlock macro
 		move.l	d0,(a5)					; set VDP to VRAM write mode with plane address
 		move.l	(a1)+,(a6)				; dump bottom two tiles
 		bra.s	.skip
-		;rts						; return
 ; ---------------------------------------------------------------------------
 
 .drawFlipX:
@@ -91,7 +90,6 @@ DrawBlock macro
 		swap	d4					; swap them over
 		move.l	d4,(a6)					; dump bottom two tiles (reversed)
 		bra.s	.skip
-		;rts						; return
 ; ---------------------------------------------------------------------------
 
 .drawFlipY:
@@ -110,7 +108,6 @@ DrawBlock macro
 		eori.l	#$10001000,d5				; flip top two tiles
 		move.l	d5,(a6)					; dump top two tiles last so they draw at bottom
 		bra.s	.skip
-		;rts						; return
 ; ---------------------------------------------------------------------------
 
 .drawFlipXY:
@@ -128,7 +125,6 @@ DrawBlock macro
 		eori.l	#$18001800,d5				; flip and mirror the top two tiles
 		swap	d5					; swap them over
 		move.l	d5,(a6)					; dump top two tiles last so they draw at bottom
-		;rts						; return
 
 .skip:
 		endm
@@ -204,7 +200,6 @@ GetBlockData	macro	is2
 	; locret_6C1E:
 	.return:
 		endm
-		;rts						; return
 ; End of function GetBlockData
 
 

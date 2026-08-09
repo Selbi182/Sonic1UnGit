@@ -57,7 +57,6 @@ Bri_Main:	; Routine 0
 		cmp.w	obX(a0),d3				; is current X-position matching parent/middle log's initial X-position?
 		bne.s	.setupChild				; if not, branch
 		addi.w	#16,d3					; make next child horizontally skip over parent
-		move.w	d2,obY(a0)				; set parent Y-position (redundant)
 		move.w	d2,bridge_origY(a0)			; remember initial Y-position
 		move.w	a0,d5					; get parent address
 		subi.w	#v_objspace&$FFFF,d5			; make address 0-based
@@ -354,13 +353,11 @@ Bri_ChkDel:
 	.next:	dbf	d2,.loopDeleteLogs			; repeat for bridge length
 
 	.deleteParentLog:
-		bsr.w	DeleteObject				; finally, delete main parent log itself
-		rts						; return
+		bra.w	DeleteObject				; finally, delete main parent log itself
 ; ===========================================================================
 
 Bri_Delete:	; Routine 6/8 (unused?)
-		bsr.w	DeleteObject				; delete object
-		rts						; return
+		bra.w	DeleteObject				; delete object
 ; ===========================================================================
 
 ; Bri_Display:

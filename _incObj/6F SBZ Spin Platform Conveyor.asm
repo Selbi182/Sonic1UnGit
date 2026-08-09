@@ -43,7 +43,6 @@ spinc_nextY:		equ lcon_nextY	; next target Y-position (=objoff_36)
 spinc_posindex:		equ objoff_38	; index of next corner
 spinc_count:		equ objoff_39	; number of entries in group (multiplied by 4)
 spinc_increment:	equ objoff_3A	; value to increment to next entry in group (+4 or -4)
-spinc_reversed:		equ objoff_3B	; (unused in SBZ) flag set if conveyor direction is currently reversed
 spinc_targetdata:	equ objoff_3C	; pointer to corner data for group
 ; ===========================================================================
 
@@ -74,27 +73,6 @@ SpinC_Main:	; Routine 0
 		lsl.w	#2,d1					; multiply by 4 bytes per entry
 		move.b	d1,spinc_posindex(a0)			; set initial index in target positioning data specified by subtype
 		move.b	#4,spinc_increment(a0)			; set increment value forwards (4 bytes per entry)
-
-		tst.b	(f_conveyrev).w				; is conveyor direction currently (globally) reversed?
-		beq.s	.finishPlatform				; if not, branch
-		move.b	#1,spinc_reversed(a0)			; set movement-reversed flag
-		neg.b	spinc_increment(a0)			; set increment value backwards (-4)
-		moveq	#0,d1					; clear d1
-		move.b	spinc_posindex(a0),d1			; get initial index for target positioning data
-		add.b	spinc_increment(a0),d1			; go to previous entry (-4 since it's reversed)
-		cmp.b	spinc_count(a0),d1			; has new index exceeded group size?
-		bcs.s	.setTargetIndex				; if not, branch
-
-		; This was probably copy-pasted from spinc_Platform_Update, seeing how it
-		; still checks for non-reversed movement despite not being possible here.
-		move.b	d1,d0					; backup for reversal check
-		moveq	#0,d1					; reset corner index to 0 (not reversed)
-		tst.b	d0					; is movement currently reversed? (...it always is at this point)
-		bpl.s	.setTargetIndex				; if not, branch
-		move.b	spinc_count(a0),d1			; reset corner entry to last entry (reversed)
-		subq.b	#4,d1					; indices are 0-based
-	.setTargetIndex:
-		move.b	d1,spinc_posindex(a0)			; remember new index in target data
 
 	.finishPlatform:
 		move.w	(a2,d1.w),spinc_nextX(a0)		; retrieve first target X-position for platform
@@ -174,16 +152,12 @@ SpinC_Solid:	; Routine 2
 
 .spinning:
 		btst	#3,obStatus(a0)				; was Sonic on platform as it started spinning?
-		beq.s	.updatePlatform				; if not, branch
+		beq.s	SpinC_Platform_Update			; if not, branch
 		lea	(v_player).w,a1				; load Sonic player object
 		bclr	#3,obStatus(a1)				; clear Sonic's on-platform flag
 		bclr	#3,obStatus(a0)				; clear platform's stood-on flag
 		clr.b	obSolid(a0)				; clear platform's solidity state
 
-	.updatePlatform:
-		bra.w	SpinC_Platform_Update			; pointless zero-length branch... was something else here once?
-
-; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Subroutine to get next target coordinates and update platform position,
 ; as well as setting the spinning/not-spinning animation state

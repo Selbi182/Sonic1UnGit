@@ -337,7 +337,6 @@ Sto_AncientLift:
 
 .stopLift:
 		clr.b	obSubtype(a0)				; stop any further platform behavior (Sto_Stationary)
-		clr.b	sto_active(a0)				; clear active flag (redundant at this point)
 		rts						; return
 
 ; ===========================================================================

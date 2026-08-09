@@ -23,7 +23,6 @@ Hel_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)			; advance to Hel_ParentSpike (2)
 		move.l	#Map_Hel,obMap(a0)			; set mappings
 		move.w	#ArtTile_GHZ_Spike_Pole|Tile_Pal3,obGfx(a0) ; set art tile and palette (located inside main GHZ graphics)
-		move.b	#7,obStatus(a0)				; (unused leftover?)
 		move.b	#sprite_cam_field,obRender(a0)		; set playfield-positioned mode
 		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
 		move.b	#16/2,obActWid(a0)			; set sprite display width
@@ -133,8 +132,7 @@ Hel_ChkDel:
 ; ---------------------------------------------------------------------------
 
 Hel_Delete:	; Routine 6
-		bsr.w	DeleteObject				; delete spike object
-		rts						; return
+		bra.w	DeleteObject				; delete spike object
 ; ===========================================================================
 
 ; Hel_Display:

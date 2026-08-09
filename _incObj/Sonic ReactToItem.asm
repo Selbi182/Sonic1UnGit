@@ -272,8 +272,6 @@ React_BossHit:
 React_BadnikHit:
 		bsr.w	ResetHomingAttack
 
-		bset	#7,obStatus(a1)				; set flag that badnik has been broken (pretty much unused, badnik gets replaced by explosion)
-
 		; Points and points object
 		moveq	#0,d0
 		move.w	(v_itembonus).w,d0			; get current combo-score chain before landing on floor again
@@ -358,7 +356,6 @@ React_ChkHurt:
 ;	a2 = address of OST of object hurting Sonic
 ; 
 ; output:
-;	d0.l = (unused) -1
 ;	a1 = address of OST of ring loss object (if Sonic had rings)
 ; ---------------------------------------------------------------------------
 
@@ -404,8 +401,6 @@ HurtSonic:
 
 	.sound:
 		jsr	(QueueSound3).l				; play selected sound
-
-		moveq	#-1,d0					; collision detected
 		rts						; return
 ; ===========================================================================
 
@@ -422,9 +417,6 @@ HurtSonic:
 ; input:
 ;	a0 = address of OST of Sonic
 ;	a2 = address of OST of object killing Sonic
-; 
-; output:
-;	d0.l = (unused) -1
 ; ---------------------------------------------------------------------------
 
 KillSonic:
@@ -492,7 +484,6 @@ KillSonic:
 
 	; .dontdie:
 	.return:
-		moveq	#-1,d0					; collision detected
 		rts						; return
 ; End of function KillSonic
 

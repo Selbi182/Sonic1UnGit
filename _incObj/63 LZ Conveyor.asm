@@ -251,8 +251,7 @@ LCon_Platform_Update:
 		bsr.w	LCon_ChangeDir				; update platform's speeds for next target
 
 	.updatePos:
-		bsr.w	SpeedToPos				; update platform's current position
-		rts						; return
+		bra.w	SpeedToPos				; update platform's current position
 ; End of function LCon_Platform_Update
 
 ; ===========================================================================

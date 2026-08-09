@@ -129,7 +129,6 @@ Tele_Teleporting: ; Routine 6
 		addq.b	#4,d1					; advance to next index (4 bytes per entry)
 		cmp.b	tele_entries(a0),d1			; has final entry been completed?
 		blo.s	.nextTubeBend				; if not, branch
-		moveq	#0,d1					; clear d1 again (redundant at this point)
 		bra.s	.exitTeleporter				; make Sonic exit the teleporter
 ; ---------------------------------------------------------------------------
 

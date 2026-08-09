@@ -1104,7 +1104,7 @@ PlaySoundID:
 		move.b	#$80,SMPS_RAM.v_sound_id(a6)		; reset music flag
 		cmpi.b	#bgm__Last,d7				; is this music ($81-$93)?
 		bls.w	Sound_PlayBGM				; branch if yes
-		cmpi.b	#sfx__First,d7				; is this after music but before sfx? (redundant check)
+		cmpi.b	#sfx__First,d7				; is this after music but before sfx?
 		blo.w	.locret					; return if yes
 		cmpi.b	#sfx__Last,d7				; is this sfx ($A0-$CF)?
 		bls.w	Sound_PlaySFX				; branch if yes

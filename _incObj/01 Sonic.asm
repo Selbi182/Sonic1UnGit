@@ -108,8 +108,7 @@ Sonic_Control:	; Routine 2
 ; loc_12CB6:
 .ignoreobjcoll:
 		bsr.w	Sonic_Loops				; handle Sonic running through loops
-		bsr.w	Sonic_LoadGfx				; update Sonic's graphics if necessary
-		rts						; return
+		bra.w	Sonic_LoadGfx				; update Sonic's graphics if necessary
 ; End of function Sonic_Control
 
 
@@ -299,8 +298,7 @@ Sonic_MdNormal:	; While Sonic is on the ground and not rolling
 		bsr.w	Sonic_LevelBound			; make sure Sonic stays within level bounds and handle bottomless pits
 		jsr	(SpeedToPos).l				; update Sonic's position based on his current velocities
 		bsr.w	Sonic_AnglePos				; update Sonic's current angle as he walks along the floor
-		bsr.w	Sonic_SlopeRepel			; handle Sonic detaching from walls if not fast enough
-		rts
+		bra.w	Sonic_SlopeRepel			; handle Sonic detaching from walls if not fast enough
 ; ===========================================================================
 
 ; Obj01_MdJump:
@@ -319,8 +317,7 @@ Sonic_MdJump:	; While Sonic is in the air but not rolling
 ; loc_12E5C:
 .notunderwater:
 		bsr.w	Sonic_JumpAngle				; steadily return Sonic's angle while jumping to 0
-		bsr.w	Sonic_Floor				; handle collision with level while airborne
-		rts						; return
+		bra.w	Sonic_Floor				; handle collision with level while airborne
 ; ===========================================================================
 
 ; Obj01_MdRoll:
@@ -332,8 +329,7 @@ Sonic_MdRoll:	; While Sonic is on the ground and rolling
 		bsr.w	Sonic_LevelBound			; make sure Sonic stays within level bounds and handle bottomless pits
 		jsr	(SpeedToPos).l				; update Sonic's position based on his current velocities
 		bsr.w	Sonic_AnglePos				; update Sonic's current angle as he walks along the floor
-		bsr.w	Sonic_SlopeRepel			; handle Sonic detaching from walls if not fast enough
-		rts
+		bra.w	Sonic_SlopeRepel			; handle Sonic detaching from walls if not fast enough
 ; ===========================================================================
 
 ; Obj01_MdJump2:
@@ -355,8 +351,7 @@ Sonic_MdJump2:	; While Sonic is in the air and rolling (usually, but not limited
 ; loc_12EA6:
 .notunderwater:
 		bsr.w	Sonic_JumpAngle				; steadily return Sonic's angle while jumping to 0
-		bsr.w	Sonic_Floor				; handle collision with level while airborne
-		rts						; return
+		bra.w	Sonic_Floor				; handle collision with level while airborne
 ; End of Sonic_Modes
 
 
@@ -1312,7 +1307,6 @@ Sonic_SlopeResistRoll:
 ; ---------------------------------------------------------------------------
 
 Sonic_SlopeRepel:
-		nop						; (probably replaced with an rts during development to stick to walls)
 		tst.b	sticktoconvex(a0)			; is Sonic on an SBZ gear?
 		bne.s	.return					; if yes, branch
 		tst.w	locktime(a0)				; are left/right controls temporarily locked?
@@ -1799,7 +1793,6 @@ Sonic_Death:	; Routine 6
 
 		bsr.w	Sonic_HandleDeath			; handle Sonic falling, deducting a life, and maybe triggering game over
 		jsr	(ObjectFall).l				; apply gravity
-		bsr.w	Sonic_RecordPosition			; record Sonic's previous position for the invincibility stars trail (kinda pointless here...)
 		bsr.w	Sonic_Animate				; run Sonic's animation scripts
 		bsr.w	Sonic_LoadGfx				; update Sonic's graphics if necessary
 		DisplaySprite
@@ -2565,8 +2558,7 @@ Sonic_Spindash_ResetScr:
 
 .resetscr_end:
 		bsr.w	Sonic_LevelBound			; because we skipped the stack pointer...
-		bsr.w	Sonic_AnglePos				; ...we need to manually run some Sonic stuff
-		rts
+		bra.w	Sonic_AnglePos				; ...we need to manually run some Sonic stuff
 ; End of function Sonic_SpinDash
 
 

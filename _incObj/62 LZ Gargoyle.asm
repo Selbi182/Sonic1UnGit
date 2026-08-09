@@ -32,7 +32,6 @@ Gar_Main:	; Routine 0
 		andi.w	#$F,d0					; read only the lower digit
 		move.b	Gar_SpitRate(pc,d0.w),obDelayAni(a0)	; set fireball spit rate (multiples of 30 frames)
 		move.b	obDelayAni(a0),obTimeFrame(a0)		; set initial delay before spitting
-		andi.b	#$F,obSubtype(a0)			; clear out upper subtype digit (pointless...)
 ; ---------------------------------------------------------------------------
 
 Gar_MakeFire:	; Routine 2

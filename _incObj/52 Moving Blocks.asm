@@ -101,7 +101,6 @@ MBlock_DisplayOrDelete:
 MBlock_Move:
 		moveq	#0,d0					; clear d0
 		move.b	obSubtype(a0),d0			; get platform subtype
-		andi.w	#$F,d0					; limit to lower digit (redundant, it's already been cleared earlier)
 		add.w	d0,d0					; double for word-based indexing
 		move.w	MBlock_TypeIndex(pc,d0.w),d1		; find entry in jump table
 		jmp	MBlock_TypeIndex(pc,d1.w)		; execute behavior for platform subtype

@@ -184,7 +184,6 @@ Stair_Type01:	; Moves down automatically (usually only set from subtype 0 or 2)
 
 	.return:
 		rts						; return
-		rts						; redundant second rts
 ; ===========================================================================
 
 Map_Stair:	include	"_maps/Staircase.asm"

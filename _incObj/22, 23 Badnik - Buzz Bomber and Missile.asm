@@ -130,8 +130,7 @@ Buzz_Action_Move:
 ; ===========================================================================
 
 Buzz_Delete:	; Routine 4 (unreachable, deletion is handled elsewhere)
-		bsr.w	DeleteObject				; delete object
-		rts						; return
+		bra.w	DeleteObject				; delete object
 
 
 ; ===========================================================================
@@ -221,8 +220,7 @@ Msl_FromBuzz:	; Routine 4
 ; ===========================================================================
 
 Msl_Delete:	; Routine 6
-		bsr.w	DeleteObject				; delete missile
-		rts						; return
+		bra.w	DeleteObject				; delete missile
 ; ===========================================================================
 
 Msl_FromNewt:	; Routine 8

@@ -392,7 +392,6 @@ ContScrCounter:
 ; ---------------------------------------------------------------------------
 
 Hud_Write_8x16Digits_WithLeading_Continuous:
-		moveq	#0,d4					; clear d4 (redundant, leading zeroes are not skipped here)
 		lea	Art_Hud(pc),a1				; load uncompressed 8x16 HUD number graphics
 
 .loopdigits:
@@ -453,14 +452,10 @@ Hud_Secs:
 ; ---------------------------------------------------------------------------
 ; Subroutine to write a decimal representation of an input value as
 ; 8x16 tiles digits to VRAM, NOT skipping leading zeroes.
-;
-; This appears to be a dirty copy-paste of Hud_Write_8x16Digits_SkipLeading,
-; as it has some unused leftovers of that subroutine.
 ; ---------------------------------------------------------------------------
 
 ; loc_1C9BA: Hud_DrawDigits:
 Hud_Write_8x16Digits_WithLeading:
-		moveq	#0,d4					; clear d4 (redundant, leading zeroes are not skipped here)
 		lea	Art_Hud(pc),a1				; load uncompressed 8x16 HUD number graphics
 
 .loopdigits:

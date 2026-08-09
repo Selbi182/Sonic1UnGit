@@ -94,7 +94,6 @@ Saw_Type1_PizzaLeftRight:
 ; ===========================================================================
 
 Saw_Type2_PizzaUpDown:
-		move.w	#$30,d1					; (unused, probably a leftover from copying subtype 1)
 		moveq	#0,d0					; clear d0
 		move.b	(v_oscillate+6).w,d0			; get oscillatory value (frequency 2, middle value $18)
 		btst	#0,obStatus(a0)				; is saw X-flipped?

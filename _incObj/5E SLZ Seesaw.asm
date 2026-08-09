@@ -74,8 +74,7 @@ See_Seesaw_Platform: ; Routine 2
 		move.w	obVelY(a1),see_landspeed(a0)		; remember Y-speed at which Sonic landed on seesaw
 
 		move.w	#96/2,d1				; width of seesaw for SlopeObject
-		jsr	(SlopeObject).l				; handle platform (sets obRoutine to 4 = See_Seesaw_StoodOn if stood on)
-		rts						; return
+		jmp	(SlopeObject).l				; handle platform (sets obRoutine to 4 = See_Seesaw_StoodOn if stood on)
 ; ===========================================================================
 
 See_Seesaw_StoodOn: ; Routine 4
@@ -92,8 +91,7 @@ See_Seesaw_StoodOn: ; Routine 4
 
 		move.w	#96/2,d1				; width of seesaw for SlopeObject_AssumeStoodOn
 		move.w	obX(a0),d2				; get platform X-position for SlopeObject_AssumeStoodOn input
-		jsr	(SlopeObject_AssumeStoodOn).l		; (part of Object 1A - Collapsing GHZ Ledges)
-		rts						; return
+		jmp	(SlopeObject_AssumeStoodOn).l		; (part of Object 1A - Collapsing GHZ Ledges)
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -254,7 +252,6 @@ See_Spikeball_InAir_FallingDown:
 		cmp.w	obY(a0),d1				; has spikeball landed on the seesaw again?
 		bgt.s	.return					; if not, branch
 
-		movea.l	see_parent(a0),a1			; reload parent seesaw object (redundant)
 		moveq	#2,d1					; bounce if spikeball landed on left side
 		tst.w	obVelX(a0)				; is spikeball moving to the right?
 		bmi.s	.checkBounce				; if not, branch

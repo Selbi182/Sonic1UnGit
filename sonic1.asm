@@ -579,8 +579,7 @@ VBlank_Title:
 
 ; loc_C5E: VBla_06:
 VBlank_Unused06:
-		bsr.w	VBlank_StandardTransfers		; do standard screen transfers...
-		rts						; ...and nothing else
+		bra.w	VBlank_StandardTransfers		; do standard screen transfers and nothing else
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -1779,11 +1778,9 @@ Tit_LoadText:
 		move.b	#0,(v_lastlamp).w			; clear lamppost counter
 		move.w	#0,(v_debuguse).w			; exit debug mode if necessary
 		move.w	#0,(f_demo).w				; disable demo mode
-		move.w	#0,(v_unused2).w			; unused variable
 		move.w	#id_GHZ_act1,(v_zone_act).w		; set level to GHZ1 (000)
 		move.w	#0,(v_pcyc_time).w			; disable palette cycling
 		bsr.w	LevelSizeLoad				; load level size (will use GHZ1's sizes)
-		bsr.w	DeformLayers				; initialize background deformation before fade-in (redundant here)
 
 		move.l	#Blk16_Title,(v_rom_blocks).w		; set Blk16 pointer to use Title blocks
 		move.l	#Blk256_Title,(v_rom_chunks).w		; set Blk256 pointer to use Title blocks
@@ -2091,8 +2088,7 @@ PlayLevel:
 		move.b	d0,(v_continues).w			; clear continues
 		move.l	#5000,(v_scorelife).w			; extra life is awarded at 50000 points
 		move.b	#bgm_Fade,d0				; set music fade-out command
-		bsr.w	QueueSound2				; fade out music
-		rts						; return to MainGameLoop to start level
+		bra.w	QueueSound2				; fade out music
 ; End of function GM_Title
 
 ; ===========================================================================
@@ -2260,8 +2256,7 @@ LevSel_Down:
 
 LevSel_Refresh:
 		move.w	d0,(v_levselitem).w			; set new selection
-		bsr.w	LevSelTextLoad				; refresh text
-		rts
+		bra.w	LevSelTextLoad				; refresh text
 ; ===========================================================================
 
 LevSel_SndTest:
@@ -2378,8 +2373,7 @@ LevSel_DrawSnd:
 		lsr.b	#4,d0					; move first digit to lower nybble
 		bsr.w	LevSel_ChgSnd				; draw 1st digit
 		move.b	d2,d0					; restore backup
-		bsr.w	LevSel_ChgSnd				; draw 2nd digit
-		rts
+		bra.w	LevSel_ChgSnd				; draw 2nd digit
 ; ===========================================================================
 
 LevSel_ChgSnd:
@@ -2722,7 +2716,6 @@ Level_SkipClr:
 		move.b	d0,(v_shield).w				; clear shield
 		move.b	d0,(v_invinc).w				; clear invincibility
 		move.b	d0,(v_shoes).w				; clear speed shoes
-		move.b	d0,(v_unused1).w			; clear unused flag (goggles?)
 		move.w	d0,(v_debuguse).w			; exit debug mode if necessary
 		move.w	d0,(f_restart).w			; clear level restart flag
 		move.w	d0,(v_framecount).w			; reset frames since level start to 0
@@ -3264,15 +3257,12 @@ SS_NormalExit:		; Special Stage results screen loop
 		jsr	(BuildSprites).l			; build sprites
 		tst.w	(f_restart).w				; has the SSR object signaled that we can exit?
 		beq.s	SS_NormalExit				; if not, loop results screen
-		tst.l	(v_plc_buffer).w			; is PLC buffer empty?
-		bne.s	SS_NormalExit				; if not, loop (pointless here, SSR object has its own check)
 ; ---------------------------------------------------------------------------
 
 		; Exit Special Stage normally
 		move.w	#sfx_EnterSS,d0				; play special stage exit sound
 		bsr.w	QueueSound2 				; play it
-		bsr.w	PaletteWhiteOut				; fade-out to white
-		rts						; return to MainGameLoop
+		bra.w	PaletteWhiteOut				; fade-out to white
 ; ===========================================================================
 
 SS_ToSegaScreen:
@@ -3477,7 +3467,6 @@ End_LoadSonic:
 		move.b	d0,(v_shield).w				; clear shield
 		move.b	d0,(v_invinc).w				; clear invincibility
 		move.b	d0,(v_shoes).w				; clear speed shoes
-		move.b	d0,(v_unused1).w			; clear unused flag (goggles?)
 		move.w	d0,(v_debuguse).w			; exit debug mode if necessary
 		move.w	d0,(f_restart).w			; clear level restart flag
 		move.w	d0,(v_framecount).w			; reset frames since level start to 0
@@ -3493,7 +3482,6 @@ End_LoadSonic:
 
 		; fade-in palette and enter main loop
 		enable_display					; enable screen output
-		move.w	#$003F,(v_pfade_start).w		; set palette fade-in position and size	(redundant)
 		bsr.w	PaletteFadeIn				; fade-in palette
 
 ; ---------------------------------------------------------------------------
@@ -3544,8 +3532,6 @@ End_AllEmlds:		; during the slow white-in
 		move.b	#id_VBlank_Ending,(v_vblank_routine).w	; set VBlank routine to $18
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
 		addq.w	#1,(v_framecount).w			; add 1 to level timer
-
-		bsr.w	End_MoveSonic				; control simulated button inputs for Sonic (redundant at this point)
 
 		jsr	(ExecuteObjects).l			; continue executing objects during white-in
 		bsr.w	DeformLayers				; continue upgrading background deformation during white-in
@@ -3602,7 +3588,6 @@ End_MoveSonic:
 		bhs.s	End_MoveSonExit				; if not, branch
 
 		addq.b	#2,(v_sonicend).w			; advance ending cutscene routine number
-		move.b	#1,(f_lockctrl).w			; lock player's controls (redundant, already locked)
 		move.w	#(btnR<<8),(v_jpadhold2).w		; simulate holding down the right D-Pad button to trigger skidding animation
 		rts						; return
 ; ===========================================================================
@@ -3730,7 +3715,6 @@ Cred_WaitLoop:		; while a credits page is displayed and graphics are getting dec
 
 EndingDemoLoad:
 		move.w	(v_creditsnum).w,d0			; get current credits page
-		andi.w	#$F,d0					; limit to 16 possible entries (redundant)
 		add.w	d0,d0					; double for word-based indexing
 		move.w	EndDemo_Levels(pc,d0.w),d0		; get relevant zone and act for the next credits demo
 		move.w	d0,(v_zone_act).w			; set level from level array
@@ -3844,7 +3828,6 @@ TryAgainEnd:		; fading out from previous game mode
 ; ---------------------------------------------------------------------------
 
 TryAg_MainLoop:
-		bsr.w	PauseGame				; allow to pause game (redundant, start exits the screen)
 		move.b	#id_VBlank_Title,(v_vblank_routine).w	; set VBlank routine to $04 (uses the same one as the title screen)
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
 

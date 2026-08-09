@@ -14,7 +14,6 @@ Jun_Index:	dc.w Jun_Main-Jun_Index
 		dc.w Jun_Display-Jun_Index
 		dc.w Jun_Inside-Jun_Index
 
-jun_unused:	equ objoff_30		; (set to 60, but unused)
 jun_grabframe:	equ objoff_32		; frame ID that triggered Sonic getting grabbed by junction
 jun_direction:	equ objoff_34		; current rotation direction (1 = clockwise, -1 = counterclockwise)
 jun_switchdown:	equ objoff_36		; flag set while reversal switch is pressed down by Sonic
@@ -47,7 +46,6 @@ Jun_Main:	; Routine 0
 
 		move.b	#96/2,obActWid(a0)			; set small sprite display width for parent
 		move.w	#spr_prio4,obPriority(a0)			; set sprite priority for parent (behind circle)
-		move.w	#60,jun_unused(a0)			; unused leftover (judging by the value of 60, probably once a 1-second timer)
 		move.b	#1,jun_direction(a0)			; set default rotation to clockwise
 		move.b	obSubtype(a0),jun_switchid(a0)		; store which switch ID can trigger reversing the direction
 ; ---------------------------------------------------------------------------

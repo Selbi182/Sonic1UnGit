@@ -100,7 +100,6 @@ ESon_MakeLogo:	; Routine $C
 		bne.s	.return					; if time remains, branch
 
 		addq.b	#2,ob2ndRout(a0)			; advance to ESon_Animate ($E, no longer advances past that)
-		move.w	#3*60,eson_time(a0)			; unused (?) timer set to 3 seconds
 		move.b	#2,obAnim(a0)				; set Sonic to "leap at screen" animation
 		move.l	#EndSTH,(v_endlogo+obID).w		; load "SONIC THE HEDGEHOG" object
 
@@ -183,7 +182,6 @@ ECha_CreateEms:
 		move.w	#spr_prio1,obPriority(a1)			; set sprite priority (above Sonic)
 		move.w	obX(a0),echa_origX(a1)			; remember initial X-position for spinning animation
 		move.w	obY(a0),echa_origY(a1)			; remember initial Y-position for spinning animation
-		move.b	d2,obAnim(a1)				; set animation (unused here?)
 		move.b	d2,obFrame(a1)				; use current emerald color frame
 		addq.b	#1,d2					; advance to next frame for next color
 		move.b	d3,obAngle(a1)				; set angle variance for this emerald

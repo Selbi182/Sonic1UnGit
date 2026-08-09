@@ -100,8 +100,7 @@ LevelLayoutLoad2:
 
 LoadZoneTiles:
 		jsr	(GetLevelHeader).l	; load level header for current zone/act into a2
-		move.l	(a2)+,d0		; Move the first longword of data that a2 points to to d0, this contains the zone's first PLC ID and its art's address.
-						; The auto increment is pointless as a2 is overwritten later, and nothing reads from a2 before then
+		move.l	(a2),d0			; Move the first longword of data that a2 points to to d0, this contains the zone's first PLC ID and its art's address.
 		andi.l	#$FFFFFF,d0    		; Filter out the first byte, which contains the first PLC ID, leaving the address of the zone's art in d0
 		movea.l	d0,a0			; Load the address of the zone's art into a0 (source)
 		lea	(v_ram_start).l,a1	; Load v_ram_start (in this context, an art buffer) into a1 (destination)

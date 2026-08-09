@@ -165,7 +165,6 @@ Swing_StoodOn:	; Routine 4
 		bsr.w	MvSonicOnPtfm				; move Sonic with platform as it swings
 
 		bra.w	Swing_ChkDel				; delete platform and links if out of range
-		rts						; useless rts
 ; ===========================================================================
 
 	; Move Sonic with platform, shared by almost all other platform objects.
@@ -246,8 +245,7 @@ Swing_ChkDel:
 ; ===========================================================================
 
 Swing_Delete:	; Routine 6/8 (unused?)
-		bsr.w	DeleteObject				; delete object
-		rts						; return
+		bra.w	DeleteObject				; delete object
 ; ===========================================================================
 
 ; Swing_Display:

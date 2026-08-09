@@ -4,9 +4,7 @@
 ; ---------------------------------------------------------------------------
 
 lvlsize macro left,right,top,bottom
-	; $0004 is an unused value, $0060 is the default vertical screen shift.
-	; Both are always the same and redundant.
-	dc.w $0004, left, right, top, bottom, $0060
+	dc.w left, right, top, bottom
 	endm
 
 ; ---------------------------------------------------------------------------

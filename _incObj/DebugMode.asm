@@ -129,7 +129,6 @@ Debug_Action:	; Routine 2
 
 Debug_Control:
 		moveq	#0,d4					; clear d4 for button input buffer
-		move.w	#1,d1					; set d1 to 1 (useless, cleared again below)
 
 		move.b	(v_jpadpress1).w,d4			; get buttons that were pressed this frame
 		andi.w	#btnDir,d4				; is up/down/left/right pressed?
@@ -298,8 +297,6 @@ Debug_ExitDebugMode:
 		bne.s	.notSS					; if not, branch
 		clr.w	(v_ssangle).w				; make Special Stage "upright"
 		move.w	#ss_rotatespeed,(v_ssrotate).w		; restart maze rotation
-		move.l	#Map_Sonic,(v_player+obMap).w		; reset Sonic's mappings (redundant, already done)
-		move.w	#ArtTile_Sonic,(v_player+obGfx).w	; reset Sonic's art tile (redundant, already done)
 		move.b	#id_Roll,(v_player+obAnim).w		; reset Sonic's animation to rolling
 		bset	#2,(v_player+obStatus).w		; force rolling state
 		bset	#1,(v_player+obStatus).w		; force in-air state

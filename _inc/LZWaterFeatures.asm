@@ -28,7 +28,6 @@ LZWaterFeatures:
 		move.w	(v_waterpos1).w,d0			; get water height including surface sway again (could've used d0 again...)
 		sub.w	(v_screenposy).w,d0			; subtract current camera Y-position
 		bhs.s	.checkWaterVisible			; if water is below top of screen, branch
-		tst.w	d0					; check result again (redundant)
 		bpl.s	.checkWaterVisible			; if water is below top of screen, branch
 		move.b	#223,(v_hblank_line).w			; HBlank interrupt every 224 scanlines (starts at 0)
 		move.b	#1,(f_wtr_state).w			; set screen is all underwater

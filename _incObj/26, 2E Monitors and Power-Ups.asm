@@ -216,7 +216,6 @@ Pow_Main:	; Routine 0
 		moveq	#0,d0					; clear d0
 		move.b	obAnim(a0),d0				; get monitor subtype
 		addq.b	#2,d0					; skip over the two extra static frames
-		move.b	d0,obFrame(a0)				; set frame (redundant for raw mappings)
 		movea.l	#Map_Monitor,a1				; load monitor mappings
 		add.b	d0,d0					; double frame ID for word-based indexing
 		adda.w	(a1,d0.w),a1				; go to relevant mapping for monitor type

@@ -30,8 +30,6 @@ OscillateNumInit:
 		dc.w $3080, $10E				; $2E - SYZ/SLZ floating blocks
 		dc.w $5080, $1C2				; $32 - SYZ/SLZ floating blocks
 		dc.w $7080, $276				; $36 - SYZ/SLZ floating blocks
-		dc.w   $80,    0				; $3A - unused
-		dc.w   $80,    0				; $3E - unused
 	.baselines_end:
 		even
 ; ===========================================================================
@@ -102,8 +100,6 @@ OscillateNumDo:
 		dc.w 3,	$30					; $2E - SYZ/SLZ floating blocks
 		dc.w 5,	$50					; $32 - SYZ/SLZ floating blocks
 		dc.w 7,	$70					; $36 - SYZ/SLZ floating blocks
-		dc.w 2,	$10					; $3A - unused
-		dc.w 2,	$10					; $3E - unused
 	.settings_end:
 		even
 ; ===========================================================================

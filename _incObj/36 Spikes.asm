@@ -180,8 +180,7 @@ Spikes_WaitAndMove:
 		tst.b	obRender(a0)				; are spikes off-screen?
 		bpl.s	.return					; if yes, don't play sound
 		move.w	#sfx_SpikesMove,d0			; set "spikes moving" sound
-		jsr	(QueueSound2).l				; play it
-		bra.s	.return					; return (could've been an rts)
+		jmp	(QueueSound2).l				; play it
 ; ---------------------------------------------------------------------------
 
 	.doSpikesMove:
@@ -193,13 +192,14 @@ Spikes_WaitAndMove:
 		move.w	#0,spikes_move_pos(a0)			; fix position delta to 0px
 		move.w	#0,spikes_move_direction(a0)		; set to retract spikes on next run
 		move.w	#60,spikes_move_delay(a0)		; set time delay to 1 second
-		bra.s	.return					; return (could've been an rts)
+		rts
 ; ---------------------------------------------------------------------------
 
 	.retractSpikes:
 		addi.w	#8*$100,spikes_move_pos(a0)		; move out by 8px
 		cmpi.w	#32*$100,spikes_move_pos(a0)		; has target retraction of 32px been reached?
 		blo.s	.return					; if still moving out, branch
+
 		move.w	#32*$100,spikes_move_pos(a0)		; fix position delta to 32px
 		move.w	#1,spikes_move_direction(a0)		; set to move in spikes again on next run
 		move.w	#60,spikes_move_delay(a0)		; set time delay to 1 second

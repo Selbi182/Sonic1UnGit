@@ -66,7 +66,7 @@ Lamp_Blue:	; Routine 2
 .noEntry:
 		move.b	#4,obRoutine(a0)			; goto Lamp_Finish next
 		move.b	#3,obFrame(a0)				; use red lamppost frame
-		bra.w	.donothing				; branch to rts
+		rts
 ; ===========================================================================
 
 .chkhit:

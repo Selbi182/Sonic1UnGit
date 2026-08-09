@@ -32,14 +32,11 @@ Plat_Main:	; Routine 0
 		cmpi.b	#id_SYZ,(v_zone).w			; check if level is SYZ
 		bne.s	.checkSLZ				; if not, branch
 		move.l	#Map_Plat_SYZ,obMap(a0)			; SYZ-specific mappings
-		move.b	#64/2,obActWid(a0)			; set SYZ width (redundant, it's the same as GHZ)
 
 	.checkSLZ:
 		cmpi.b	#id_SLZ,(v_zone).w			; check if level is SLZ
 		bne.s	.continueSetup				; if not, branch
 		move.l	#Map_Plat_SLZ,obMap(a0)			; SLZ-specific mappings
-		move.b	#64/2,obActWid(a0)			; set SLZ width (redundant, it's the same as GHZ)
-		move.w	#ArtTile_Level|Tile_Pal3,obGfx(a0)	; set SLZ art tile (redundant, it's the same as GHZ)
 		move.b	#3,obSubtype(a0)			; force Plat_FallAfterStand behavior
 
 	.continueSetup:
@@ -55,7 +52,6 @@ Plat_Main:	; Routine 0
 		cmpi.b	#$A,d0					; is object type $A? (large vertical GHZ2 platform, Plat_DownUp_LargeGHZ2)
 		bne.s	.setframe				; if not, branch
 		addq.b	#1,d1					; use frame 1 instead
-		move.b	#64/2,obActWid(a0)			; set width (redundant, it's still the same)
 	.setframe:
 		move.b	d1,obFrame(a0)				; set platform frame ID
 ; ---------------------------------------------------------------------------

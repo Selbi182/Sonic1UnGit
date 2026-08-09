@@ -137,7 +137,7 @@ PalCycle_SS:
 ; ===========================================================================
 
 PalCycle_SS_2:	; usepalcycle2 flag set
-		move.w	(v_palss_index).w,d1			; get SS palette index ID (unused, this is always 0)
+		moveq	#0,d1
 		cmpi.w	#$80|$A,d0				; is offset $80-$89?
 		blo.s	.offset_80_89				; if yes, branch
 		addq.w	#1,d1

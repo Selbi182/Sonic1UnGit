@@ -5,7 +5,6 @@
 
 PauseGame:
 	if Enable_InfiniteLives=0
-		nop						; useless nop (probably so an rts could easily be inserted here)
 		tst.b	(v_lives).w				; do you have any lives left?
 		beq.s	.unpauseGame				; if not, branch (prevents pausing during a game over)
 	endif
@@ -30,7 +29,6 @@ PauseGame:
 		btst	#bitA,(v_jpadpress1).w			; is button A pressed?
 		beq.s	.checkSlowMotion			; if not, branch
 		move.b	#id_Title,(v_gamemode).w		; return to title screen
-		nop						; useless nop
 		bra.s	.unpauseMusic				; unpause music
 ; ---------------------------------------------------------------------------
 
