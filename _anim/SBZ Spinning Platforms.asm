@@ -21,18 +21,18 @@ Ani_Spin:	dc.w .trapopen-Ani_Spin
 
 .spin1:		dc.b 1
 		dc.b 0, 1, 2, 3, 4
-		dc.b 3|aniYFlip, 2|aniYFlip, 1|aniYFlip, 0|aniYFlip
-		dc.b 1|aniXFlip|aniYFlip, 2|aniXFlip|aniYFlip, 3|aniXFlip|aniYFlip, 4|aniXFlip|aniYFlip
-		dc.b 3|aniXFlip, 2|aniXFlip, 1|aniXFlip
+		dc.b $D, $C, $B, $A
+		dc.b $10, $11, $12, $13
+		dc.b 8, 7, 6, 5
 		dc.b 0
 		dc.b afBack, 1
 		even
 
 .spin2:		dc.b 1
 		dc.b 0, 1, 2, 3, 4
-		dc.b 3|aniYFlip, 2|aniYFlip, 1|aniYFlip, 0|aniYFlip
-		dc.b 1|aniXFlip|aniYFlip, 2|aniXFlip|aniYFlip, 3|aniXFlip|aniYFlip, 4|aniXFlip|aniYFlip
-		dc.b 3|aniXFlip, 2|aniXFlip, 1|aniXFlip
+		dc.b $D, $C, $B, $A
+		dc.b $10, $11, $12, $13
+		dc.b 8, 7, 6, 5
 		dc.b 0
 		dc.b afBack, 1
 		even

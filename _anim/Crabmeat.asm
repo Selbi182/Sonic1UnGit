@@ -22,22 +22,22 @@ Ani_Crab:	dc.w .stand-Ani_Crab
 		even
 
 .standsloperev:	dc.b 15
-		dc.b 2|aniXFlip
+		dc.b 8
 		dc.b afEnd
 		even
 
 .walk:		dc.b 15
-		dc.b 1, 1|aniXFlip, 0
+		dc.b 1, 7, 0
 		dc.b afEnd
 		even
 
 .walkslope:	dc.b 15
-		dc.b 1|aniXFlip, 3, 2
+		dc.b 7, 3, 2
 		dc.b afEnd
 		even
 
 .walksloperev:	dc.b 15
-		dc.b 1, 3|aniXFlip, 2|aniXFlip
+		dc.b 1, 9, 8
 		dc.b afEnd
 		even
 

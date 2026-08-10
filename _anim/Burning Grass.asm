@@ -5,6 +5,6 @@
 Ani_GFire:	dc.w .burn-Ani_GFire
 
 .burn:		dc.b 5
-		dc.b 0, 0|aniXFlip, 1, 1|aniXFlip
+		dc.b 0, 6, 1, 7
 		dc.b afEnd
 		even

@@ -8,7 +8,7 @@ Ani_Fire:	dc.w .vertical-Ani_Fire
 		dc.w .horicollide-Ani_Fire
 
 .vertical:	dc.b 5
-		dc.b 0, 0|aniXFlip, 1, 1|aniXFlip
+		dc.b 0, 6, 1, 7
 		dc.b afEnd
 		even
 
@@ -18,7 +18,7 @@ Ani_Fire:	dc.w .vertical-Ani_Fire
 		even
 
 .horizontal:	dc.b 5
-		dc.b 3, 3|aniYFlip, 4, 4|aniYFlip
+		dc.b 3, 8, 4, 9
 		dc.b afEnd
 		even
 

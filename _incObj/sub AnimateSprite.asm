@@ -33,39 +33,6 @@ Anim_LoadNextFrame:
 ; ---------------------------------------------------------------------------
 
 Anim_SetFrameAndFlipFlags:
-		; Some objects in Sonic 1 rely on the X/Y flip flags in animation scripts,
-		; so this section is needed to ensure backwards compatibility with those.
-		; Ideally, all objects here are reworked to no longer need this exception.
-		cmpi.b	#$1F,d0					; is frame ID $1F or lower?
-		bls.s	.modern					; if yes, no need to check for legacy
-		move.l	(a0),d1					; get current object's ID
-		cmpi.l	#Crabmeat,d1				; check if it's an object still making use of the X/Y flip flags
-		beq.s	.legacy
-		cmpi.l	#LavaBall,d1
-		beq.s	.legacy
-		cmpi.l	#GrassFire,d1
-		beq.s	.legacy
-		cmpi.l	#BossFire,d1
-		beq.s	.legacy
-		cmpi.l	#SpinPlatform,d1
-		beq.s	.legacy
-		cmpi.l	#SpinConvey,d1
-		bne.s	.modern					; if it's none of these, it's a new object that uses more than $1F frames
-
-.legacy:
-		move.b	d0,d1					; copy new frame ID
-		andi.b	#$1F,d0					; limit possible frame IDs to $20 (other bits are occupied by flags)
-
-		move.b	d0,obFrame(a0)				; write new frame ID to object
-
-		move.b	obStatus(a0),d0				; get object's current status flags
-		rol.b	#3,d1					; shift aniXFlip and aniYFlip into low bits to match obStatus format
-		eor.b	d0,d1					; xor with existing flip state of object
-		bra.s	.setflip				; remaining code is the same
-; ---------------------------------------------------------------------------
-
-
-.modern:
 		move.b	d0,obFrame(a0)				; load sprite number
 		move.b	obStatus(a0),d1				; get object's current status flags
 .setflip:

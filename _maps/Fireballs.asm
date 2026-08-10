@@ -8,6 +8,10 @@ Map_Fire_internal:	mappingsTable
 	mappingsTableEntry.w	.horizontal1
 	mappingsTableEntry.w	.horizontal2
 	mappingsTableEntry.w	.horicollide
+	mappingsTableEntry.w	.vertical1_flipped
+	mappingsTableEntry.w	.vertical2_flipped
+	mappingsTableEntry.w	.horizontal1_flipped
+	mappingsTableEntry.w	.horizontal2_flipped
 
 .vertical1:	spriteHeader
 	spritePiece	-8, -$18, 2, 4, 0, 0, 0, 0, 0
@@ -33,4 +37,19 @@ Map_Fire_internal:	mappingsTable
 	spritePiece	-$10, -8, 3, 2, $26, 0, 0, 0, 0
 .horicollide_End
 
+.vertical1_flipped:	spriteHeader
+	spritePiece	-8, -$18, 2, 4, 0, 1, 0, 0, 0
+.vertical1_flipped_End
+
+.vertical2_flipped:	spriteHeader
+	spritePiece	-8, -$18, 2, 4, 8, 1, 0, 0, 0
+.vertical2_flipped_End
+
+.horizontal1_flipped:	spriteHeader
+	spritePiece	-$18, -8, 4, 2, $16, 0, 1, 0, 0
+.horizontal1_flipped_End
+
+.horizontal2_flipped:	spriteHeader
+	spritePiece	-$18, -8, 4, 2, $1E, 0, 1, 0, 0
+.horizontal2_flipped_End
 	even

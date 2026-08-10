@@ -401,9 +401,6 @@ afRoutine:		equ $FC	; increment routine counter
 afReset:		equ $FB	; reset animation and 2nd object routine counter
 af2ndRoutine:		equ $FA	; increment 2nd routine counter
 
-aniXFlip:		equ $20 ; horizontally mirrors the current frame
-aniYFlip:		equ $40 ; vertically mirrors the current frame
-
 ; Boss locations
 ; The main values are based on where the camera boundaries mainly lie
 ; The end values are where the camera scrolls towards after defeat

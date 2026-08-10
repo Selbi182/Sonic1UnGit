@@ -9,6 +9,9 @@ Map_Crab_internal:	mappingsTable
 	mappingsTableEntry.w	.firing
 	mappingsTableEntry.w	.ball1
 	mappingsTableEntry.w	.ball2
+	mappingsTableEntry.w	.walk_flipped
+	mappingsTableEntry.w	.slope1_flipped
+	mappingsTableEntry.w	.slope2_flipped
 
 .stand:	spriteHeader
 	spritePiece	-$18, -$10, 3, 2, 0, 0, 0, 0, 0	; standing/middle walking frame
@@ -55,4 +58,24 @@ Map_Crab_internal:	mappingsTable
 	spritePiece	-8, -8, 2, 2, $40, 0, 0, 0, 0 ; projectile
 .ball2_End
 
+.walk_flipped:	spriteHeader
+	spritePiece	0, -$10, 3, 2, $A, 1, 0, 0, 0
+	spritePiece	-$18, -$10, 3, 2, $10, 1, 0, 0, 0
+	spritePiece	0, 0, 2, 2, $16, 1, 0, 0, 0
+	spritePiece	-$18, 0, 3, 2, $1A, 1, 0, 0, 0
+.walk_flipped_End
+
+.slope1_flipped:	spriteHeader
+	spritePiece	0, -$14, 3, 2, 0, 1, 0, 0, 0
+	spritePiece	-$18, -$14, 3, 2, 0, 0, 0, 0, 0
+	spritePiece	-$10, -4, 2, 2, 6, 0, 0, 0, 0
+	spritePiece	0, -4, 2, 3, $20, 1, 0, 0, 0
+.slope1_flipped_End
+
+.slope2_flipped:	spriteHeader
+	spritePiece	0, -$14, 3, 2, $A, 1, 0, 0, 0
+	spritePiece	-$18, -$14, 3, 2, $10, 1, 0, 0, 0
+	spritePiece	-$18, -4, 3, 2, $26, 1, 0, 0, 0
+	spritePiece	0, -4, 2, 3, $2C, 1, 0, 0, 0
+.slope2_flipped_End
 	even
