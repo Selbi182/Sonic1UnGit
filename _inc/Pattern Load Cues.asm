@@ -339,6 +339,7 @@ PLC_Ending:	plcheader
 		plcm	KosPM_Flicky,		ArtTile_Ending_Flicky		; flicky
 		plcm	KosPM_Squirrel,		ArtTile_Ending_Squirrel		; squirrel
 		plcm	KosPM_EndStH,		ArtTile_Ending_STH		; "SONIC THE HEDGEHOG"
+		plcm	KosPM_Hud,		ArtTile_HUD			; HUD
 PLC_Ending_end:
 
 ; ---------------------------------------------------------------------------

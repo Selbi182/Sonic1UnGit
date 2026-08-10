@@ -2551,13 +2551,13 @@ Level_NoMusicFade:
 
 		; load title cards, queue PLCs, setup screen, play music
 		tst.w	(f_demo).w				; is an ending sequence demo running?
-		bmi.s	Level_ClrRam				; if yes, don't load title screen or main level patterns
-
+		bmi.s	.skipTitleCards				; if yes, branch
 		jsr	(TitleCards_LoadArt).l			; load level title card graphics
 
+.skipTitleCards:
 		jsr	(GetLevelHeader).l			; load level header for current zone/act into a2
 		moveq	#0,d0					; clear d0
-		move.b	(a2),d0					; get first PLC entry
+		move.b	$1C(a2),d0				; get PLC entry
 		beq.s	Level_MainPLC				; if it's null, branch (never the case)
 		bsr.w	AddPLC					; load level patterns for current Zone
 
@@ -3448,7 +3448,7 @@ End_LoadSonic:
 		move.w	#-$600,(v_player+obInertia).w		; set Sonic's initial speed (speed cap immediately limits this to -$600)
 
 		move.b	#1,(v_draw_hud).w			; enable HUD drawing
-		jsr	(ObjPosLoad).l				; run the object manager to load level objects
+		jsr	(ObjPosLoad_Init).l			; initialize object manager
 		jsr	(ExecuteObjects).l			; execute all objects in object RAM
 		jsr	(BuildSprites).l			; build sprite table
 
@@ -3467,7 +3467,6 @@ End_LoadSonic:
 		move.b	#1,(f_ringcount).w			; update rings counter
 		move.b	#0,(f_timecount).w			; stop time counter for the ending sequence
 
-		move.w	#1800,(v_generictimer).w		; set generic timer to 30 seconds (unused in ending sequence)
 		move.b	#id_VBlank_Ending,(v_vblank_routine).w	; set VBlank routine to $18
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
 ; ---------------------------------------------------------------------------

@@ -29,6 +29,7 @@ PauseGame:
 		btst	#bitA,(v_jpadpress1).w			; is button A pressed?
 		beq.s	.checkSlowMotion			; if not, branch
 		move.b	#id_Title,(v_gamemode).w		; return to title screen
+		addq.w	#4,sp					; don't return to Level_MainLoop
 		bra.s	.unpauseMusic				; unpause music
 ; ---------------------------------------------------------------------------
 
