@@ -79,7 +79,7 @@ id_SS_ZONE5:		specialStageData	0, Map_SS_Shared, Tile_Pal1, ArtTile_SS_Zone_5		;
 id_SS_ZONE6:		specialStageData	0, Map_SS_Shared, Tile_Pal1, ArtTile_SS_Zone_6		; $39 - ''   6 block (unused)
 
 ; Non-solid action blocks
-id_SS_Ring:		specialStageData	0, Map_Ring,      Tile_Pal2, ArtTile_Ring		; $3A - ring
+id_SS_Ring:		specialStageData	0, Map_Ring,      Tile_Pal2, ArtTile_SS_Ring		; $3A - ring
 id_SS_Emerald1_Blue:	specialStageData	0, Map_SS_Chaos3, Tile_Pal1, ArtTile_SS_Emerald		; $3B - emerald (blue)
 id_SS_Emerald2_Yellow:	specialStageData	0, Map_SS_Chaos3, Tile_Pal2, ArtTile_SS_Emerald		; $3C - ''      (yellow)
 id_SS_Emerald3_Pink:	specialStageData	0, Map_SS_Chaos3, Tile_Pal3, ArtTile_SS_Emerald		; $3D - ''      (pink)
@@ -87,10 +87,10 @@ id_SS_Emerald4_Green:	specialStageData	0, Map_SS_Chaos3, Tile_Pal4, ArtTile_SS_E
 id_SS_Emerald5_Red:	specialStageData	0, Map_SS_Chaos1, Tile_Pal1, ArtTile_SS_Emerald		; $3F - ''      (red)
 id_SS_Emerald6_Grey:	specialStageData	0, Map_SS_Chaos2, Tile_Pal1, ArtTile_SS_Emerald		; $40 - ''      (grey)
 id_SS_Ghost:		specialStageData	0, Map_SS_Shared, Tile_Pal1, ArtTile_SS_Ghost_Block	; $41 - ghost block
-id_SS_Ring_Ani1:	specialStageData	1, Map_Ring,      Tile_Pal2, ArtTile_Ring		; $42 - ring (sparkle when collecting)
-id_SS_Ring_Ani2:	specialStageData	2, Map_Ring,      Tile_Pal2, ArtTile_Ring		; $43 - ''
-id_SS_Ring_Ani3:	specialStageData	3, Map_Ring,      Tile_Pal2, ArtTile_Ring		; $44 - ''
-id_SS_Ring_Ani4:	specialStageData	4, Map_Ring,      Tile_Pal2, ArtTile_Ring		; $45 - ''
+id_SS_Ring_Ani1:	specialStageData	6, Map_Ring,      Tile_Pal2, ArtTile_SS_Ring		; $42 - ring (sparkle when collecting)
+id_SS_Ring_Ani2:	specialStageData	7, Map_Ring,      Tile_Pal2, ArtTile_SS_Ring		; $43 - ''
+id_SS_Ring_Ani3:	specialStageData	8, Map_Ring,      Tile_Pal2, ArtTile_SS_Ring		; $44 - ''
+id_SS_Ring_Ani4:	specialStageData	9, Map_Ring,      Tile_Pal2, ArtTile_SS_Ring		; $45 - ''
 id_SS_Emerald_Ani1:	specialStageData	0, Map_SS_Glass,  Tile_Pal2, ArtTile_SS_Emerald_Sparkle	; $46 - emerald (sparkle when collecting)
 id_SS_Emerald_Ani2:	specialStageData	1, Map_SS_Glass,  Tile_Pal2, ArtTile_SS_Emerald_Sparkle	; $47 - ''
 id_SS_Emerald_Ani3:	specialStageData	2, Map_SS_Glass,  Tile_Pal2, ArtTile_SS_Emerald_Sparkle	; $48 - ''

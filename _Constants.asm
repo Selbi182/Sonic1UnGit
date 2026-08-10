@@ -641,6 +641,8 @@ ArtTile_SS_Background_Clouds:	equ $000
 ArtTile_SS_Background_Fish:	equ $051
 ArtTile_SS_Wall:		equ $142
 ArtTile_SS_Plane_1:		equ $200
+ArtTile_SS_Ring:		equ $233
+ArtTile_SS_Sparkles:		equ $237
 ArtTile_SS_Bumper:		equ $23B
 ArtTile_SS_Goal:		equ $251
 ArtTile_SS_Up_Down:		equ $263
@@ -657,12 +659,12 @@ ArtTile_SS_Glass:		equ $5F0
 ArtTile_SS_Plane_5:		equ $600
 ArtTile_SS_Plane_6:		equ $700
 ArtTile_SS_Emerald:		equ $770
-ArtTile_SS_Zone_1:		equ $797
-ArtTile_SS_Zone_2:		equ $7A0
-ArtTile_SS_Zone_3:		equ $7A9
-ArtTile_SS_Zone_4:		equ $797
-ArtTile_SS_Zone_5:		equ $7A0
-ArtTile_SS_Zone_6:		equ $7A9
+ArtTile_SS_Zone_1:		equ $790
+ArtTile_SS_Zone_2:		equ $799
+ArtTile_SS_Zone_3:		equ $7A2
+ArtTile_SS_Zone_4:		equ $7A9
+ArtTile_SS_Zone_5:		equ $7B0
+ArtTile_SS_Zone_6:		equ $7B7
 
 ; Special Stage Results
 ArtTile_SS_Results_Emeralds:	equ $541

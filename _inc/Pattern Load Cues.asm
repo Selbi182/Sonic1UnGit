@@ -27,21 +27,14 @@ plcm:	macro gfx,vram
 ArtLoadCues:
 
 plcid_Main:		plcptr	PLC_Main
-plcid_Main2:		plcptr	PLC_Main2
 plcid_Explode:		plcptr	PLC_Explode
 plcid_GameOver:		plcptr	PLC_GameOver
 plcid_GHZ:		plcptr	PLC_GHZ
-plcid_GHZ2:		plcptr	PLC_GHZ2
 plcid_LZ:		plcptr	PLC_LZ
-plcid_LZ2:		plcptr	PLC_LZ2
 plcid_MZ:		plcptr	PLC_MZ
-plcid_MZ2:		plcptr	PLC_MZ2
 plcid_SLZ:		plcptr	PLC_SLZ
-plcid_SLZ2:		plcptr	PLC_SLZ2
 plcid_SYZ:		plcptr	PLC_SYZ
-plcid_SYZ2:		plcptr	PLC_SYZ2
 plcid_SBZ:		plcptr	PLC_SBZ
-plcid_SBZ2:		plcptr	PLC_SBZ2
 plcid_Boss:		plcptr	PLC_Boss
 plcid_Signpost:		plcptr	PLC_Signpost
 plcid_SpecialStage:	plcptr	PLC_SpecialStage
@@ -69,18 +62,12 @@ plcid_Credits:		plcptr	PLC_Credits
 PLC_Main:	plcheader
 		plcm	KosPM_Hud,		ArtTile_HUD			; HUD
 		plcm	KosPM_Sparkles,		ArtTile_Sparkles		; ring sparkles
+		plcm	KosPM_Lamp,		ArtTile_Lamppost		; lamppost
+		plcm	KosPM_Monitors,		ArtTile_Monitor			; monitors
 	if Enable_InfiniteLives=0
 		plcm	KosPM_Lives,		ArtTile_Lives_Counter		; lives counter
 	endif
 PLC_Main_end:
-
-; ---------------------------------------------------------------------------
-; Pattern load cues - standard block 2
-; ---------------------------------------------------------------------------
-PLC_Main2:	plcheader
-		plcm	KosPM_Lamp,		ArtTile_Lamppost		; lamppost
-		plcm	KosPM_Monitors,		ArtTile_Monitor			; monitors
-PLC_Main2_end:
 
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - explosion
@@ -110,16 +97,13 @@ PLC_GHZ:	plcheader
 		plcm	KosPM_Spikes,		ArtTile_Spikes			; spikes
 		plcm	KosPM_HSpring,		ArtTile_Spring_Horizontal	; horizontal spring
 		plcm	KosPM_VSpring,		ArtTile_Spring_Vertical		; vertical spring
-PLC_GHZ_end:
-
-PLC_GHZ2:	plcheader
 		plcm	KosPM_Swing,		ArtTile_GHZ_MZ_Swing		; swinging platform
 		plcm	KosPM_Bridge,		ArtTile_GHZ_Bridge		; bridge
 		plcm	KosPM_SpikePole,	ArtTile_GHZ_Spike_Pole		; spiked pole
 		plcm	KosPM_Ball,		ArtTile_GHZ_Giant_Ball		; giant ball
 		plcm	KosPM_GhzWall1,		ArtTile_GHZ_SLZ_Smashable_Wall	; breakable wall
 		plcm	KosPM_GhzWall2,		ArtTile_GHZ_Edge_Wall		; normal wall
-PLC_GHZ2_end:
+PLC_GHZ_end:
 
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - Labyrinth
@@ -135,9 +119,6 @@ PLC_LZ:		plcheader
 		plcm	KosPM_LzDoor1,		ArtTile_LZ_Door			; vertical door
 		plcm	KosPM_Harpoon,		ArtTile_LZ_Harpoon		; harpoon
 		plcm	KosPM_Burrobot,		ArtTile_Burrobot		; burrobot enemy
-PLC_LZ_end:
-
-PLC_LZ2:	plcheader
 		plcm	KosPM_LzPole,		ArtTile_LZ_Pole			; pole that breaks
 		plcm	KosPM_LzDoor2,		ArtTile_LZ_Blocks		; large horizontal door
 		plcm	KosPM_LzWheel,		ArtTile_LZ_Conveyor_Belt	; wheel
@@ -150,7 +131,7 @@ PLC_LZ2:	plcheader
 		plcm	KosPM_Spikes,		ArtTile_Spikes			; spikes
 		plcm	KosPM_HSpring,		ArtTile_Spring_Horizontal	; horizontal spring
 		plcm	KosPM_VSpring,		ArtTile_Spring_Vertical		; vertical spring
-PLC_LZ2_end:
+PLC_LZ_end:
 
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - Marble
@@ -165,15 +146,12 @@ PLC_MZ:		plcheader
 		plcm	KosPM_Yadrin,		ArtTile_Yadrin			; yadrin enemy
 		plcm	KosPM_Basaran,		ArtTile_Basaran			; basaran enemy
 		plcm	KosPM_Cater,		ArtTile_MZ_SYZ_Caterkiller	; caterkiller enemy
-PLC_MZ_end:
-
-PLC_MZ2:	plcheader
 		plcm	KosPM_MzSwitch,		ArtTile_Button_Main		; switch
 		plcm	KosPM_Spikes,		ArtTile_Spikes			; spikes
 		plcm	KosPM_HSpring,		ArtTile_Spring_Horizontal	; horizontal spring
 		plcm	KosPM_VSpring,		ArtTile_Spring_Vertical		; vertical spring
 		plcm	KosPM_MzBlock,		ArtTile_MZ_Block		; green stone block
-PLC_MZ2_end:
+PLC_MZ_end:
 
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - Star Light
@@ -187,16 +165,13 @@ PLC_SLZ:	plcheader
 		plcm	KosPM_Spikes,		ArtTile_Spikes			; spikes
 		plcm	KosPM_HSpring,		ArtTile_Spring_Horizontal	; horizontal spring
 		plcm	KosPM_VSpring,		ArtTile_Spring_Vertical		; vertical spring
-PLC_SLZ_end:
-
-PLC_SLZ2:	plcheader
 		plcm	KosPM_Seesaw,		ArtTile_SLZ_Seesaw		; seesaw
 		plcm	KosPM_Fan,		ArtTile_SLZ_Fan			; fan
 		plcm	KosPM_Pylon,		ArtTile_SLZ_Pylon		; foreground pylon
 		plcm	KosPM_SlzSwing,		ArtTile_SLZ_Swing		; swinging platform
 		plcm	KosPM_SlzCannon,	ArtTile_SLZ_Fireball_Launcher	; fireball launcher
 		plcm	KosPM_SlzSpike,		ArtTile_SLZ_Spikeball		; spikeball
-PLC_SLZ2_end:
+PLC_SLZ_end:
 
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - Spring Yard
@@ -206,9 +181,6 @@ PLC_SYZ:	plcheader
 		plcm	KosPM_Buzz,		ArtTile_Buzz_Bomber		; buzz bomber enemy
 		plcm	KosPM_Yadrin,		ArtTile_Yadrin			; yadrin enemy
 		plcm	KosPM_Roller,		ArtTile_Roller			; roller enemy
-PLC_SYZ_end:
-
-PLC_SYZ2:	plcheader
 		plcm	KosPM_Bumper,		ArtTile_SYZ_Bumper		; bumper
 		plcm	KosPM_SyzSpike1,	ArtTile_SYZ_Big_Spikeball	; large spikeball
 		plcm	KosPM_SyzSpike2,	ArtTile_SYZ_Spikeball_Chain	; small spikeball
@@ -216,7 +188,7 @@ PLC_SYZ2:	plcheader
 		plcm	KosPM_Spikes,		ArtTile_Spikes			; spikes
 		plcm	KosPM_HSpring,		ArtTile_Spring_Horizontal	; horizontal spring
 		plcm	KosPM_VSpring,		ArtTile_Spring_Vertical		; vertical spring
-PLC_SYZ2_end:
+PLC_SYZ_end:
 
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - Scrap Brain
@@ -233,9 +205,6 @@ PLC_SBZ:	plcheader
 		plcm	KosPM_FlamePipe,	ArtTile_SBZ_Flamethrower	; flaming pipe
 		plcm	KosPM_SbzFloor,		ArtTile_SBZ_Collapsing_Floor	; collapsing floor
 		plcm	KosPM_SbzBlock,		ArtTile_SBZ_Vanishing_Block	; vanishing block
-PLC_SBZ_end:
-
-PLC_SBZ2:	plcheader
 		plcm	KosPM_Cater,		ArtTile_SBZ_Caterkiller		; caterkiller enemy
 		plcm	KosPM_Bomb,		ArtTile_Bomb			; bomb enemy
 		plcm	KosPM_Orbinaut,		ArtTile_SBZ_Orbinaut		; orbinaut enemy
@@ -249,7 +218,7 @@ PLC_SBZ2:	plcheader
 		plcm	KosPM_Spikes,		ArtTile_Spikes			; spikes
 		plcm	KosPM_HSpring,		ArtTile_Spring_Horizontal	; horizontal spring
 		plcm	KosPM_VSpring,		ArtTile_Spring_Vertical		; vertical spring
-PLC_SBZ2_end:
+PLC_SBZ_end:
 
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - act 3 boss
@@ -277,6 +246,7 @@ PLC_Signpost_end:
 PLC_SpecialStage:	plcheader
 		plcm	KosPM_SSBgCloud,	ArtTile_SS_Background_Clouds	; bubble and cloud background
 		plcm	KosPM_SSBgFish,		ArtTile_SS_Background_Fish	; bird and fish background
+		plcm	KosPM_Sparkles,		ArtTile_SS_Sparkles		; ring sparkles
 		plcm	KosPM_Bumper,		ArtTile_SS_Bumper		; bumper
 		plcm	KosPM_SSGOAL,		ArtTile_SS_Goal			; GOAL block
 		plcm	KosPM_SSUpDown,		ArtTile_SS_Up_Down		; UP and DOWN blocks
@@ -291,12 +261,10 @@ PLC_SpecialStage:	plcheader
 		plcm	KosPM_SSZone1,		ArtTile_SS_Zone_1		; ZONE 1 block
 		plcm	KosPM_SSZone2,		ArtTile_SS_Zone_2		; ZONE 2 block
 		plcm	KosPM_SSZone3,		ArtTile_SS_Zone_3		; ZONE 3 block
-PLC_SpecialStage_end:
-
-		; Unused
 		plcm	KosPM_SSZone4,		ArtTile_SS_Zone_4		; ZONE 4 block
 		plcm	KosPM_SSZone5,		ArtTile_SS_Zone_5		; ZONE 5 block
 		plcm	KosPM_SSZone6,		ArtTile_SS_Zone_6		; ZONE 6 block
+PLC_SpecialStage_end:
 
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - GHZ animals
@@ -352,6 +320,7 @@ PLC_SBZAnimals_end:
 PLC_SSResult:	plcheader
 		plcm	KosPM_ResultEm,		ArtTile_SS_Results_Emeralds	; emeralds
 		plcm	KosPM_MiniSonic,	ArtTile_Mini_Sonic		; mini Sonic
+		plcm	KosPM_Hud,		ArtTile_HUD			; HUD
 PLC_SSResult_end:
 
 ; ---------------------------------------------------------------------------

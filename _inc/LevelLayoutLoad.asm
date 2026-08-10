@@ -6,8 +6,7 @@
 LevelDataLoad:
 	; --- Load Level Header ---
 		jsr	(GetLevelHeader).l			; load level header for current zone/act into a2
-		move.l	a2,-(sp)				; remember header address for later
-		addq.l	#4,a2					; skip 1st PLC and level gfx entry (handled in GM_Level)
+		addq.l	#4,a2					; skip PLC and level gfx entry (handled in GM_Level)
 
 	; --- 16x16 Block Mappings ---
 		move.l	(a2)+,(v_rom_blocks).w			; set ROM Blk16 pointer
@@ -16,25 +15,17 @@ LevelDataLoad:
 		move.l	(a2)+,(v_rom_chunks).w			; load ROM Blk256 pointer
 
 	; --- Level Layout (FG/BG) ---
-		bsr.w	LevelLayoutLoad				; load FG and BG layout
+		bsr.s	LevelLayoutLoad				; load FG and BG layout
 
-	; --- Music (unused) ---
-		move.w	(a2)+,d0				; load music (unused)
+	; --- Collision index ---
+		move.l	(a2)+,d1				; get col index and palette
+		move.b	d1,d0					; move palette ID to d0 for below
+		lsr.l	#8,d1					; shift out palette to only have collision index left
+		move.l	d1,(v_collindex).w			; write collision index to RAM
 
 	; --- Palette ---
-		move.w	(a2),d0					; load palette ID
-		andi.w	#$FF,d0					; only use lower byte (palette ID is duplicated in headers)
-		bsr.w	PalLoad_Fade				; load specified palette into fade-in buffer
-
-	; --- 2nd PLC ---
-		movea.l	(sp)+,a2				; restore base level header pointer
-		addq.w	#4,a2					; advance to 2nd PLC entry
-		moveq	#0,d0
-		move.b	(a2),d0					; load 2nd PLC entry from level headers
-		beq.s	.skipPLC				; if 2nd PLC is 0 (i.e. the ending sequence), branch
-		bsr.w	AddPLC					; load secondary pattern load cues
-	.skipPLC:
-		rts
+		andi.w	#$FF,d0					; only use lower byte
+		bra.w	PalLoad_Fade				; load specified palette into fade-in buffer
 ; End of function LevelDataLoad
 
 ; ===========================================================================

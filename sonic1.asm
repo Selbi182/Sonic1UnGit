@@ -378,9 +378,6 @@ GameInit:
 	if (BootToLevel>=0)
 		move.b	#id_Level,(v_gamemode).w
 		move.w	#BootToLevel,(v_zone_act).w
-		moveq	#plcid_Main,d0				; load main patterns (rings, etc.)
-		bsr.w	QuickPLC				; (these get loaded once for the title screen and then never again, except when exiting Special Stages)
-
 		enable_display
 	endif
 
@@ -1212,7 +1209,7 @@ AddPLC:
 		; WARNING: This will just silently drop the new PLC request and move on
 		; like nothing happened. Ideally, you would raise an error here or some
 		; other debugging functionality to troubleshoot any queue overflows!
-		;RaiseError "PLC queue overflow"		; comment this in if you have vladikcomper's Debugger
+		RaiseError "PLC queue overflow"			; comment this in if you have vladikcomper's Debugger
 		bra.s	.return					; otherwise, just silently return...
 ; End of function AddPLC
 
@@ -1848,8 +1845,6 @@ Tit_LoadText:
 		jsr	(ExecuteObjects).l			; load title screen objects
 		bsr.w	DeformLayers				; initialize background deformation before fade-in
 		jsr	(BuildSprites).l			; build sprites for the title screen objects before fade-in
-		moveq	#plcid_Main,d0				; load main patterns (rings, etc.)
-		bsr.w	NewPLC					; (these get loaded once for the title screen and then never again, except when exiting Special Stages)
 
 		move.w	#0,(v_title_dcount).w			; clear D-Pad counter for title screen cheats
 		move.w	#0,(v_title_ccount).w			; clear C counter for title screen cheats
@@ -2563,12 +2558,12 @@ Level_NoMusicFade:
 		jsr	(GetLevelHeader).l			; load level header for current zone/act into a2
 		moveq	#0,d0					; clear d0
 		move.b	(a2),d0					; get first PLC entry
-		beq.s	Level_NoPLC				; if it's null, branch (never the case)
+		beq.s	Level_MainPLC				; if it's null, branch (never the case)
 		bsr.w	AddPLC					; load level patterns for current Zone
-; loc_37FC:
-Level_NoPLC:
-		moveq	#plcid_Main2,d0				; load secondary standard patterns (monitors, etc.)
-		bsr.w	AddPLC					; (these can be overwritten by stuff like the sign post art)
+
+Level_MainPLC:
+		moveq	#plcid_Main,d0				; load standard patterns
+		bsr.w	AddPLC					; merged to have set 1 and 2
 
 Level_ClrRam:
 		clearRAM v_objspace				; clear object RAM
@@ -2642,19 +2637,17 @@ Level_TtlCardLoop: ; move in title cards, stay on them until PLCs have finished
 
 		lea	(v_titlecard).w,a0			; get title card elements
 		moveq	#4-1,d1					; number of title card elements
-
-Level_CheckTtlCard:
-		move.w	obX(a0),d0				; get current position of a title card element
+.checkTtlCard:	move.w	obX(a0),d0				; get current position of a title card element
 		cmp.w	card_mainX(a0),d0			; has this title card element reached its target position?
 		bne.s	Level_TtlCardLoop			; if not, loop until it has
 		lea	object_size(a0),a0			; next title card element
-		dbf	d1,Level_CheckTtlCard			; loop until every element has reached its target position
+		dbf	d1,.checkTtlCard			; loop until every element has reached its target position
+
 		tst.l	(v_plc_buffer).w			; have patterns been fully decompressed and loaded?
 		bne.s	Level_TtlCardLoop			; if not, loop until they have
 ; ---------------------------------------------------------------------------
 
 		; PLCs have finished, load/initialize remaining data
-
 		move.b	#id_VBlank_TitleCards,(v_vblank_routine).w ; set VBlank routine to $0C
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
 		jsr	(Hud_Base).l				; load basic HUD graphics (only in levels, not in the ending demos)
@@ -2672,7 +2665,6 @@ Level_SkipTtlCard:
 		bset	#2,(v_fg_scroll_flags).w		; draw an extra column at the left side of the screen during level start
 		bsr.w	LevelDataLoad				; load block mappings and palettes
 		bsr.w	LoadTilesFromStart			; fully draw the foreground and background once before fade-in
-		bsr.w	ColIndexLoad				; set collision index for current zone
 		bsr.w	LZWaterFeatures				; initialize water features if zone is LZ
 
 		move.l	#SonicPlayer,(v_player+obID).w		; load Sonic object
@@ -2880,20 +2872,6 @@ Level_FDLoop_NoDim:
 
 
 ; ===========================================================================
-; ---------------------------------------------------------------------------
-; Collision index pointer loading subroutine
-; ---------------------------------------------------------------------------
-
-ColIndexLoad:
-		jsr	(GetLevelHeader).l			; load level header for current zone/act into a2
-		move.l	$C(a2),d0				; get collision/palette entry from level header
-		lsr.l	#8,d0					; shift out palette to only have collision index left
-		move.l	d0,(v_collindex).w			; write collision index to RAM
-		rts
-; End of function ColIndexLoad
-
-
-; ===========================================================================
 ; >>> Routines to set and update values that change on a fixed timer
 	include	"_inc/Oscillatory Routines.asm"
 
@@ -2907,11 +2885,15 @@ InitRingFrame:
 		st.b	(v_ani1_prev).w			; Make sure initial frame art loads
 		st.b	(v_ani2_prev).w
 		st.b	(v_ani3_prev).w
+
+		cmpi.b	#id_Special,(v_gamemode).w
+		beq.w	LoadRingFrame_SS
+		; otherwise fall through to LoadRingFrame
 ; ---------------------------------------------------------------------------
 
 LoadRingFrame:
 		cmpi.b	#6,(v_player+obRoutine).w	; Is Sonic dead?
-		bhs.w	.end				; If so, branch
+		bhs.s	.noring				; If so, branch
 
 		moveq	#0,d1				; Get ring frame offset for regular rings
 		move.b	(v_ani1_frame).w,d1
@@ -2926,9 +2908,6 @@ LoadRingFrame:
 		jsr	(QueueDMATransfer).l		; (or DMA_68KtoVRAM)
 
 .noring:
-		cmpi.b	#id_Special,(v_gamemode).w	; Are we in a special stage?
-		beq.s	.end				; If so, branch
-
 		tst.b	(v_gfxbigring).w		; Is a there a special stage ring?
 		beq.s	.nossring			; If not, branch
 
@@ -2961,10 +2940,26 @@ LoadRingFrame:
 		lsl.l	#7,d1				; Each ring frame takes $80 bytes, so multiply by $80
 		add.l	#Art_Ring,d1			; Queue a DMA transfer for this ring frame
 		move.w	#ArtTile_Ring_Loss*tile_size,d2
-		move.w	#$80/2,d3
+		moveq	#$80/2,d3
 		jmp	(QueueDMATransfer).l		; (or DMA_68KtoVRAM)
 
 .end:
+		rts
+; ---------------------------------------------------------------------------
+		
+LoadRingFrame_SS:
+		moveq	#0,d1				; Get ring frame offset for regular rings
+		move.b	(v_ani1_frame).w,d1
+		cmp.b	(v_ani1_prev).w,d1		; Has it changed?
+		beq.s	.noring				; If not, branch
+		move.b	d1,(v_ani1_prev).w		; Mark frame's art as loaded
+
+		lsl.l	#7,d1				; Each ring frame takes $80 bytes, so multiply by $80
+		addi.l	#Art_Ring,d1			; Queue a DMA transfer for this ring frame
+		move.w	#ArtTile_SS_Ring*tile_size,d2
+		moveq	#$80/2,d3
+		jmp	(QueueDMATransfer).l		; (or DMA_68KtoVRAM)
+.noring:
 		rts
 ; End of function InitRingFrame and LoadRingFrame
 
@@ -3165,7 +3160,7 @@ SS_MainLoop:
 
 		jsr	(ExecuteObjects).l			; execute Special Stage object
 		jsr	(BuildSprites).l			; build sprites
-		bsr.w	LoadRingFrame
+		bsr.w	LoadRingFrame_SS
 		jsr	(SS_ShowLayout).l			; render Special Stage layout
 		bsr.w	SS_BGAnimate				; animate Special Stage background
 
@@ -3230,8 +3225,6 @@ SS_FinLoop_NoBrighten:
 
 		moveq	#palid_SSResult,d0			; load Special Stage results screen palette...
 		bsr.w	PalLoad					; ...directly to active palette
-		moveq	#plcid_Main,d0				; load main patterns (rings, etc.)
-		bsr.w	NewPLC					; add to new PLC queue
 		moveq	#plcid_SSResult,d0			; load Special Stage results screen patterns
 		bsr.w	AddPLC					; add to PLC queue
 
@@ -3434,7 +3427,6 @@ End_LoadData:
 		bset	#2,(v_fg_scroll_flags).w		; draw an extra column at the left side of the screen during level start
 		bsr.w	LevelDataLoad				; load block mappings and palettes
 		bsr.w	LoadTilesFromStart			; fully draw the foreground and background once before fade-in
-		move.l	#Col_GHZ,(v_collindex).w		; load collision index (hardcoded to GHZ instead of using ColIndexLoad)
 		enable_ints					; enable interrupts
 
 		moveq	#palid_Sonic,d0				; load Sonic's palette...
@@ -3680,8 +3672,8 @@ GM_Credits:
 		bsr.w	AddPLC					; load level patterns for next credits demo
 
 Cred_SkipObjGfx:
-		moveq	#plcid_Main2,d0				; load secondary standard patterns
-		bsr.w	AddPLC					; (monitors, etc.)
+		moveq	#plcid_Main,d0				; load main patterns
+		bsr.w	AddPLC
 ; ---------------------------------------------------------------------------
 
 		; fade-in palette and enter wait loop

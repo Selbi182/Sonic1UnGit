@@ -27,6 +27,17 @@ v_spritequeue:		ds.b	spritelayer_num*spritelayer_size ; sprite display queue, in
 ; Previously v_16x16 block mappings
 
 v_16x16_start:
+
+plc_slot_size:		equ	4+2				; size of a single PLC slot: 6 bytes = 4 bytes (data address) + 2 bytes (VRAM target address)
+v_plc_buffer:		ds.b	plc_slot_size*41		; pattern load cues buffer (maximum 30 PLCs)
+v_plc_buffer_only_end:
+v_plc_BufferPtr:	ds.w	1				; pointer to decompression buffer location
+v_plc_VRAMAddr:		ds.w	1				; VRAM destination address
+v_plc_ArtPtr:		ds.l	1				; pointer within compressed art (for multi-module art)
+v_plc_Modules:		ds.b	1				; number of remaining modules (for multi-module art)
+v_plc_Busy:		ds.b	1				; flag set while PLC is being executed
+v_plc_buffer_end:
+
 Art_Buffer:		ds.b	$1000				; art decompression buffer used for PLCs
 Art_Buffer_End:							; end of decompression buffer
 
@@ -46,7 +57,7 @@ v_ringanimqueue:	ds.w	$3F				; queue of recently collected rings storing pointer
 v_ringmanager_size:	equ	*-v_ringmanager			; size of all RAM occupied by rings manager
 
 v_registeredcollision:	ds.b	$80				; collision response queue for ReactToItem
-v_registeredcollision_rings:	ds.b	$80				; collision response queue for ReactToItem
+v_registeredcollision_rings:	ds.b	$80			; sprite render queue for lost rings
 
 v_16x16_end:		ds.b	$1800-(v_16x16_end-v_16x16_start) ; unused
 ; ---------------------------------------------------------------------------
@@ -190,16 +201,7 @@ f_doupdatesinhblank:	ds.b	1				; defers performing various tasks to the Horizont
 v_pal_buffer:		ds.b	$30				; palette data buffer (used for palette cycling)
 v_misc_variables_end:
 
-plc_slot_size:		equ	4+2				; size of a single PLC slot: 6 bytes = 4 bytes (data address) + 2 bytes (VRAM target address)
-v_plc_buffer:		ds.b	plc_slot_size*19		; pattern load cues buffer (maximum 19 PLCs)
-v_plc_buffer_only_end:
-v_plc_BufferPtr:	ds.w	1				; pointer to decompression buffer location
-v_plc_VRAMAddr:		ds.w	1				; VRAM destination address
-v_plc_ArtPtr:		ds.l	1				; pointer within compressed art (for multi-module art)
-v_plc_Modules:		ds.b	1				; number of remaining modules (for multi-module art)
-v_plc_Busy:		ds.b	1				; flag set while PLC is being executed
-			ds.b	4				; unused
-v_plc_buffer_end:
+			ds.b	$80				; unused
 
 v_levelvariables:						; variables that are reset between levels
 v_screenposx:		ds.l	1				; screen position x
