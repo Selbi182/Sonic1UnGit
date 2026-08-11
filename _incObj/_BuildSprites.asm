@@ -312,6 +312,8 @@ BuildHUD:
 		bne.s	.drawHud				; branch otherwise
 		tst.w	(v_rings).w				; do you have any rings?
 		bne.s	.checkTime				; if so, branch
+		tst.b	(v_draw_hud).w
+		bmi.s	.drawHud
 		addq.w	#2,d1					; make ring counter flash red
 
 .checkTime:

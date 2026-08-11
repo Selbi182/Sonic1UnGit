@@ -2671,7 +2671,7 @@ Level_SkipTtlCard:
 
 		tst.w	(f_demo).w				; is this a credits demo?
 		bmi.s	Level_ChkDebug				; if yes, don't load HUD
-		move.b	#1,(v_draw_hud).w			; enable HUD drawing
+		move.b	#-1,(v_draw_hud).w			; enable HUD drawing (but don't flash it yet)
 
 Level_ChkDebug:
 		tst.b	(f_debugcheat).w			; has debug cheat been entered?
@@ -2758,7 +2758,10 @@ Level_WtrNotSbz:
 
 Level_Delay:
 		move.w	#$202F,(v_pfade_start).w		; set to fade in 2nd, 3rd & 4th palette lines
-		bsr.w	PalFadeIn_Alt				; fade-in main palette
+	;	bsr.w	PalFadeIn_Alt				; fade-in main palette
+		bsr.w	PalFadeIn_Playable_Alt
+		move.b	#1,(v_draw_hud).w			; enable HUD drawing (and allow flashing)
+
 ; ---------------------------------------------------------------------------
 
 		; level has faded in, make title cards move and enter main loop
