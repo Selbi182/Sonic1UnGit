@@ -400,7 +400,7 @@ gmptr:		macro *,gamemode
 
 id_Sega:	gmptr	GM_Sega					; Sega Screen ($00)
 id_Title:	gmptr	GM_Title				; Title Screen ($04)
-id_Demo:	gmptr	GM_Level				; Demo Mode ($08)
+id_Demo:	gmptr	GM_Level				; Demo Mode ($08) (deleted)
 id_Level:	gmptr	GM_Level				; Normal Level ($0C)
 id_Special:	gmptr	GM_Special				; Special Stage ($10)
 id_Continue:	gmptr	GM_Continue				; Continue Screen ($14)
@@ -425,7 +425,7 @@ id_VBlank_Lag:		equ $00					; (lag frame)
 id_VBlank_Sega:		equ $02					; Sega Screen
 id_VBlank_Title:	equ $04					; Title Screen, Credits
 id_VBlank_Unused06:	equ $06					; (unused)
-id_VBlank_Levels:	equ $08					; Levels, Demos
+id_VBlank_Levels:	equ $08					; Levels
 id_VBlank_SpecialStage:	equ $0A					; Special Stages
 id_VBlank_TitleCards:	equ $0C					; Title Cards
 id_VBlank_Unused0E:	equ $0E					; (unused)
@@ -478,7 +478,7 @@ VBlank_Index:	dc.w VBlank_Lag-VBlank_Index			; $00 - (lag frame)
 		dc.w VBlank_Sega-VBlank_Index			; $02 - Sega Screen
 		dc.w VBlank_Title-VBlank_Index			; $04 - Title Screen, Credits, Try Again
 		dc.w VBlank_Unused06-VBlank_Index		; $06 - (unused)
-		dc.w VBlank_Levels-VBlank_Index			; $08 - Levels, Demos
+		dc.w VBlank_Levels-VBlank_Index			; $08 - Levels
 		dc.w VBlank_SpecialStage-VBlank_Index		; $0A - Special Stages
 		dc.w VBlank_TitleCards-VBlank_Index		; $0C - Title Cards
 		dc.w VBlank_Unused0E-VBlank_Index		; $0E - (unused)
@@ -590,7 +590,7 @@ VBlank_Paused:
 		; fall-through...
 
 ; ---------------------------------------------------------------------------
-; VBlank 08 - Levels and Demos
+; VBlank 08 - Levels
 ; ---------------------------------------------------------------------------
 
 ; loc_C6E: VBla_08:
@@ -1774,7 +1774,6 @@ Tit_LoadText:
 
 		move.b	#0,(v_lastlamp).w			; clear lamppost counter
 		move.w	#0,(v_debuguse).w			; exit debug mode if necessary
-		move.w	#0,(f_demo).w				; disable demo mode
 		move.w	#id_GHZ_act1,(v_zone_act).w		; set level to GHZ1 (000)
 		move.w	#0,(v_pcyc_time).w			; disable palette cycling
 		bsr.w	LevelSizeLoad				; load level size (will use GHZ1's sizes)
@@ -1953,8 +1952,6 @@ Tit_CountC:
 
 ; loc_3230:
 Tit_ChkStartOrDemo:
-		tst.w	(v_generictimer).w			; has title screen timer expired?
-		beq.w	GotoDemo				; if yes, launch Demo mode
 		andi.b	#btnStart,(v_jpadpress1).w		; check if Start is pressed
 		beq.w	Tit_MainLoop				; if not, continue looping title screen
 
@@ -2132,89 +2129,6 @@ LevSelCode_J:
 		even
 
 LevSelCode_US:	dc.b btnUp,btnDn,btnL,btnR,0,$FF
-		even
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Demo mode loading routine
-; ---------------------------------------------------------------------------
-
-GotoDemo:	; wait half a second on the final frame of Sonic's finger wagging before going to demo
-		move.w	#30,(v_generictimer).w			; set timeout to 30 frames
-
-; loc_33B6:
-GotoDemo_PreDelayLoop:
-		move.b	#id_VBlank_Title,(v_vblank_routine).w	; set VBlank routine to $04
-		bsr.w	WaitForVBlank				; wait for VBlank to finish
-		bsr.w	DeformLayers				; run background deformation
-		bsr.w	PaletteCycle				; run normal palette cycle routine (this briefly uses GHZ's cycle)
-
-		move.w	(v_player+obX).w,d0			; get current title screen position (big Sonic object)
-		addq.w	#2,d0					; move it 2px to the right
-		move.w	d0,(v_player+obX).w			; write new X position
-		cmpi.w	#$1C00,d0				; has Sonic object passed $1C00 on x-axis?
-		blo.s	GotoDemo_ChkLoop			; if not, branch
-		; Will never happen due to the short title screen generic timer.
-		; This likely was an old failsafe before Demos were introduced.
-		move.b	#id_Sega,(v_gamemode).w			; return to Sega screen
-		rts
-; ===========================================================================
-
-; loc_33E4:
-GotoDemo_ChkLoop:
-		andi.b	#btnStart,(v_jpadpress1).w		; has Start button been pressed during pre-delay?
-		bne.w	Tit_ChkLevSel_AbortDemo			; if yes, abort loading demo and load normal level instead
-		tst.w	(v_generictimer).w			; has pre-delay timer expired?
-		bne.w	GotoDemo_PreDelayLoop			; if not, branch
-; ---------------------------------------------------------------------------
-
-		; start loading demo now
-		move.b	#bgm_Fade,d0				; set music fade-out command
-		bsr.w	QueueSound2				; fade out music
-
-		move.w	(v_demonum).w,d0			; load demo number
-		andi.w	#7,d0					; limit to four demo entries
-		add.w	d0,d0					; double for word-based indexing
-		move.w	Demo_Levels(pc,d0.w),d0			; load level number for demo
-		move.w	d0,(v_zone_act).w			; set level for demo
-
-		addq.w	#1,(v_demonum).w			; add 1 to demo number
-		cmpi.w	#4,(v_demonum).w			; is demo number less than 4?
-		blo.s	GotoDemo_NoReset			; if yes, branch
-		move.w	#0,(v_demonum).w			; reset demo number to 0
-
-; loc_3422:
-GotoDemo_NoReset:
-		move.w	#1,(f_demo).w				; turn demo mode on
-		move.b	#id_Demo,(v_gamemode).w			; set game mode to 08 (demo)
-
-		cmpi.w	#$600,d0				; is level number 0600 (Special Stage dummy value)?
-		bne.s	GotoDemo_NotSS				; if not, branch
-		move.b	#id_Special,(v_gamemode).w		; set game mode to $10 (Special Stage)
-		clr.w	(v_zone_act).w				; clear level number
-		clr.b	(v_lastspecial).w			; clear special stage number to play demo in stage 1
-
-; Demo_Level:
-GotoDemo_NotSS:
-		move.b	#3,(v_lives).w				; set lives to 3
-		moveq	#0,d0					; clear d0
-		move.w	d0,(v_rings).w				; clear rings
-		move.l	d0,(v_time).w				; clear time
-		move.l	d0,(v_score).w				; clear score
-		move.l	#5000,(v_scorelife).w			; extra life is awarded at 50000 points
-		rts						; return to MainGameLoop to start demo
-; End of function GotoDemo
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Levels used in demos
-; ---------------------------------------------------------------------------
-
-Demo_Levels:	; previously in "misc/Demo Level Order - Intro.bin"
-		dc.w id_GHZ_act1
-		dc.w id_MZ_act1
-		dc.w id_SYZ_act1
-		dc.w $600 ; used as dummy value to start the Special Stage demo
 		even
 
 ; ===========================================================================
@@ -2538,23 +2452,15 @@ PlayCurrentActMusic:
 ; Level:
 GM_Level:	; fading out from previous game mode
 		bset	#7,(v_gamemode).w			; add $80 to screen mode (for pre level sequence)
-
-		tst.w	(f_demo).w				; is an ending sequence demo running?
-		bmi.s	Level_NoMusicFade			; if yes, don't fade out music
 		move.b	#bgm_Fade,d0				; queue music fade-out command
 		bsr.w	QueueSound2				; fade out music
-
-Level_NoMusicFade:
 		bsr.w	ClearPLC				; clear any remaining PLC entries
 		bsr.w	PaletteFadeOut				; fade out from the previous screen
 ; ---------------------------------------------------------------------------
 
 		; load title cards, queue PLCs, setup screen, play music
-		tst.w	(f_demo).w				; is an ending sequence demo running?
-		bmi.s	.skipTitleCards				; if yes, branch
 		jsr	(TitleCards_LoadArt).l			; load level title card graphics
 
-.skipTitleCards:
 		jsr	(GetLevelHeader).l			; load level header for current zone/act into a2
 		moveq	#0,d0					; clear d0
 		move.b	$1C(a2),d0				; get PLC entry
@@ -2623,8 +2529,6 @@ Level_GetBgm:
 		bsr.w	WaitForVBlank				; transfer data up to this point
 		bsr.w	LoadZoneTiles				; load main zone art (S2 Art Loader)
 
-		tst.w	(f_demo).w				; is this a credits demo?
-		bmi.s	Level_SkipTtlCard			; if yes, don't load title cards or change music
 		bsr.w	PlayCurrentActMusic			; play music for current act
 		move.l	#TitleCard,(v_titlecard+obID).w		; load title card object
 ; ---------------------------------------------------------------------------
@@ -2650,7 +2554,7 @@ Level_TtlCardLoop: ; move in title cards, stay on them until PLCs have finished
 		; PLCs have finished, load/initialize remaining data
 		move.b	#id_VBlank_TitleCards,(v_vblank_routine).w ; set VBlank routine to $0C
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
-		jsr	(Hud_Base).l				; load basic HUD graphics (only in levels, not in the ending demos)
+		jsr	(Hud_Base).l				; load basic HUD graphics
 
 Level_SkipTtlCard:
 		bsr.w	InitRingFrame
@@ -2669,8 +2573,6 @@ Level_SkipTtlCard:
 
 		move.l	#SonicPlayer,(v_player+obID).w		; load Sonic object
 
-		tst.w	(f_demo).w				; is this a credits demo?
-		bmi.s	Level_ChkDebug				; if yes, don't load HUD
 		move.b	#-1,(v_draw_hud).w			; enable HUD drawing (but don't flash it yet)
 
 Level_ChkDebug:
@@ -2720,31 +2622,6 @@ Level_SkipClr:
 		move.b	#1,(f_debugmode).w			; disable debug mode (cheat remains active though)
 	endif
 
-		move.w	#0,(v_btnpushtime1).w			; clear button push counters for demos
-		lea	(DemoDataPtr).l,a1			; load demo data
-		moveq	#0,d0					; clear d0
-		move.b	(v_zone).w,d0				; get current Zone ID
-		lsl.w	#2,d0					; multiply by 4 for longword-based indexing
-		movea.l	(a1,d0.w),a1				; get demo pointer for current level
-		tst.w	(f_demo).w				; are we in a regular (not-credits) demo?
-		bpl.s	Level_Demo				; if yes, branch
-		lea	(DemoEndDataPtr).l,a1			; load ending demo data
-		move.w	(v_creditsnum).w,d0			; get current credits page
-		subq.w	#1,d0					; subtract by 1
-		lsl.w	#2,d0					; multiply by 4 for longword-based indexing
-		movea.l	(a1,d0.w),a1				; get demo pointer for current credits page
-
-Level_Demo:
-		move.b	1(a1),(v_btnpushtime2).w		; load initial demo key press duration
-		subq.b	#1,(v_btnpushtime2).w			; subtract 1 from demo key pressduration
-		move.w	#1800,(v_generictimer).w		; run regular demos for 30 seconds
-		tst.w	(f_demo).w				; is this a regular (not-credits) demo?
-		bpl.s	Level_ChkWaterPal			; if not, branch
-		move.w	#540,(v_generictimer).w			; run credits demos for 9 seconds each
-		cmpi.w	#4,(v_creditsnum).w			; is this credits demo 4? (Labyrinth)
-		bne.s	Level_ChkWaterPal			; if not, branch
-		move.w	#510,(v_generictimer).w			; run this specific demo for 0.5 seconds less
-
 Level_ChkWaterPal:
 		cmpi.b	#id_LZ,(v_zone).w			; is level LZ/SBZ3?
 		bne.s	Level_Delay				; if not, branch
@@ -2765,25 +2642,10 @@ Level_Delay:
 ; ---------------------------------------------------------------------------
 
 		; level has faded in, make title cards move and enter main loop
-		tst.w	(f_demo).w				; is an ending sequence demo running?
-		bmi.s	Level_ClrCardArt			; if yes, load explosion and animal graphics now
 		addq.b	#2,(v_ttlcardname+obRoutine).w		; make title card move (name)
 		addq.b	#4,(v_ttlcardzone+obRoutine).w		; make title card move ("ZONE")
 		addq.b	#4,(v_ttlcardact+obRoutine).w		; make title card move ("ACT")
 		addq.b	#4,(v_ttlcardoval+obRoutine).w		; make title card move (blue oval)
-		bra.s	Level_StartGame
-; ===========================================================================
-
-Level_ClrCardArt:
-		; This portion is only for the credits demos to loads explosions
-		; and animal graphics right now, as normally they get loaded by
-		; the title cards (which aren't loaded for credits demos).
-		moveq	#plcid_Explode,d0			; load explosion graphics
-		jsr	(AddPLC).l				; queue PLC
-		moveq	#0,d0					; clear d0
-		move.b	(v_zone).w,d0				; get current Zone ID
-		addi.w	#plcid_GHZAnimals,d0			; add offset to animal patterns (+$15)
-		jsr	(AddPLC).l				; load animal patterns
 
 Level_StartGame:
 		bclr	#7,(v_gamemode).w			; subtract $80 from mode to end pre-level stuff
@@ -2799,7 +2661,6 @@ Level_MainLoop:
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
 		addq.w	#1,(v_framecount).w			; add 1 to level timer
 
-		bsr.w	MoveSonicInDemo				; simulate controls in demos (immediately returns outside demos)
 		bsr.w	LZWaterFeatures				; apply water features if in Labyrinth Zone
 		jsr	(ExecuteObjects).l			; execute all objects in object RAM
 
@@ -2815,63 +2676,16 @@ Level_MainLoop:
 		bsr.w	SignpostArtLoad				; check if sign post art needs to be loaded and lock left boundary
 
 Level_CheckRestart:
-		cmpi.b	#id_Demo,(v_gamemode).w			; are we in a demo?
-		beq.s	Level_ChkDemo				; if yes, branch
 		tst.w	(f_restart).w				; is the level set to restart?
 		bne.w	GM_Level				; if yes, restart leve
 		cmpi.b	#id_Level,(v_gamemode).w		; is game mode still set to level?
 		beq.w	Level_MainLoop				; if yes, loop level game mode
 		rts						; if game mode changed, return to MainGameLoop
-; ===========================================================================
-
-Level_ChkDemo:
-		tst.w	(f_restart).w				; is level set to restart?
-		bne.s	Level_EndDemo				; if yes, branch
-		tst.w	(v_generictimer).w			; is there time left on the demo?
-		beq.s	Level_EndDemo				; if not, branch
-		cmpi.b	#id_Demo,(v_gamemode).w			; is game mode still demo?
-		beq.w	Level_MainLoop				; if yes, loop level game mode
-		move.b	#id_Sega,(v_gamemode).w			; otherwise, return to Sega screen
-		rts						; return to MainGameLoop
-; ===========================================================================
-
-Level_EndDemo:
-		cmpi.b	#id_Demo,(v_gamemode).w			; is game mode still demo?
-		bne.s	Level_FadeDemo				; if not, slowly fade-out demo
-		move.b	#id_Sega,(v_gamemode).w			; return to Sega screen
-		tst.w	(f_demo).w				; is demo mode on & not ending sequence?
-		bpl.s	Level_FadeDemo				; if yes, branch
-		move.b	#id_Credits,(v_gamemode).w		; return to credits game mode (next credits page)
-
-Level_FadeDemo:
-		move.w	#60,(v_generictimer).w			; run fade-out for one second
-		move.w	#$003F,(v_pfade_start).w		; set palette fade-out position and size
-		clr.w	(v_palchgspeed).w			; do first palette dimming immediately
-
-Level_FDLoop:
-		move.b	#id_VBlank_Levels,(v_vblank_routine).w	; set VBlank routine to $08
-		bsr.w	WaitForVBlank				; wait until VBlank has finished
-		bsr.w	MoveSonicInDemo				; continue updating demo controls during fade-out
-		jsr	(ExecuteObjects).l			; continue executing objects during fade-out
-		jsr	(BuildSprites).l			; continue building sprites during fade-out
-		jsr	(ObjPosLoad).l				; continue running object manager during fade-out
-
-		subq.w	#1,(v_palchgspeed).w			; decrement palette fade-out delay
-		bpl.s	Level_FDLoop_NoDim			; if time remains, branch
-		move.w	#2,(v_palchgspeed).w			; reset palette fade-out delay
-		bsr.w	FadeOut_ToBlack				; dim palette further
-
-; loc_3BC8:
-Level_FDLoop_NoDim:
-		tst.w	(v_generictimer).w			; has fade-out loop finished?
-		bne.s	Level_FDLoop				; if not, loop
-		rts						; return to MainGameLoop
 ; End of function GM_Level
 
 ; ===========================================================================
 ; >>> Misc level logic for specific circumstances
 	include	"_inc/LZWaterFeatures.asm"
-	include	"_inc/MoveSonicInDemo.asm"
 
 
 ; ===========================================================================
@@ -3046,13 +2860,6 @@ SignpostArtLoad:
 		rts						; return
 ; End of function SignpostArtLoad
 
-; ===========================================================================
-; >>> Demo inputs for title screen demos
-Demo_GHZ:	include	"demodata/Intro - GHZ.asm"
-Demo_MZ:	include	"demodata/Intro - MZ.asm"
-Demo_SYZ:	include	"demodata/Intro - SYZ.asm"
-Demo_SS:	include	"demodata/Intro - Special Stage.asm"
-
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -3127,19 +2934,10 @@ SS_ContinueSetup:
 		clr.w	(v_ssangle).w				; set stage angle to "upright"
 		move.w	#ss_rotatespeed,(v_ssrotate).w		; set initial stage rotation speed ($40, see object 09)
 
-		move.w	#0,(v_btnpushtime1).w			; clear button push counters for demos
-		lea	(DemoDataPtr).l,a1			; load demo data
-		moveq	#6,d0					; hardcoded to load the entry for the Special Stage demo
-		lsl.w	#2,d0					; multiply by 4 for longword-based indexing
-		movea.l	(a1,d0.w),a1				; get demo pointer for current level
-		move.b	1(a1),(v_btnpushtime2).w		; load initial demo key press duration
-		subq.b	#1,(v_btnpushtime2).w			; subtract 1 from demo key pressduration
-
 		clr.w	(v_rings).w				; clear rings
 		clr.b	(v_lifecount).w				; clear extra lives flags when getting 100/200 rings
 
 		move.w	#0,(v_debuguse).w			; exit debug mode if necessary
-		move.w	#1800,(v_generictimer).w		; run regular demos for 30 seconds
 		tst.b	(f_debugcheat).w			; has debug cheat been entered?
 		beq.s	SS_NoDebug				; if not, branch
 		btst	#bitA,(v_jpadhold1).w			; is A button held?
@@ -3158,7 +2956,6 @@ SS_MainLoop:
 		bsr.w	PauseGame				; handle pausing the game when pressing start
 		move.b	#id_VBlank_SpecialStage,(v_vblank_routine).w ; set VBlank routine to $0A
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
-		bsr.w	MoveSonicInDemo				; simulate controls in demos (immediately returns outside demos)
 		move.w	(v_jpadhold1).w,(v_jpadhold2).w		; copy controller 1 inputs to Sonic player object inputs
 
 		jsr	(ExecuteObjects).l			; execute Special Stage object
@@ -3167,25 +2964,16 @@ SS_MainLoop:
 		jsr	(SS_ShowLayout).l			; render Special Stage layout
 		bsr.w	SS_BGAnimate				; animate Special Stage background
 
-		tst.w	(f_demo).w				; is demo mode on?
-		beq.s	SS_ChkEnd				; if not, branch
-		tst.w	(v_generictimer).w			; is there time left on the demo?
-		beq.w	SS_ToSegaScreen				; if not, return to Sega screen
-
 SS_ChkEnd:
 		cmpi.b	#id_Special,(v_gamemode).w		; is game mode still the Special Stage?
 		beq.w	SS_MainLoop				; if yes, loop game mode
 ; ---------------------------------------------------------------------------
 
 		; Exiting Special Stage...
-		tst.w	(f_demo).w				; are we exiting from a demo?
-		bne.w	SS_ToNextScreen				; if yes, return to next game mode
-
 		move.b	#id_Level,(v_gamemode).w		; set screen mode to $0C (level)
 		cmpi.w	#id_FZ+1,(v_zone_act).w			; is level number higher than FZ (0502)?
 		blo.s	SS_Finish				; if not, branch
 		clr.w	(v_zone_act).w				; set to GHZ1 (possibly as a failsafe)
-
 
 SS_Finish:
 		move.w	#60,(v_generictimer).w			; run fade-out for one second
@@ -3195,7 +2983,6 @@ SS_Finish:
 SS_FinLoop:
 		move.b	#id_VBlank_Continue,(v_vblank_routine).w ; set VBlank routine to $16 (uses the same one as the continue screen)
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
-		bsr.w	MoveSonicInDemo				; continue updating demo controls during fade-out
 		move.w	(v_jpadhold1).w,(v_jpadhold2).w		; continue copying 1P inputs to Sonic object (even though controls are locked...)
 		jsr	(ExecuteObjects).l			; continue executing objects during fade-out
 		jsr	(BuildSprites).l			; continue building sprites during fade-out
@@ -3264,12 +3051,6 @@ SS_NormalExit:		; Special Stage results screen loop
 SS_ToSegaScreen:
 		move.b	#id_Sega,(v_gamemode).w			; set game mode to Sega screen
 		rts						; return to MainGameLoop
-; ===========================================================================
-
-SS_ToNextScreen:
-		cmpi.b	#id_Level,(v_gamemode).w		; was demo exited with the instruction to go to a level next?
-		beq.s	SS_ToSegaScreen				; if yes, return to the Sega screen instead (if demo finished)
-		rts						; otherwise, go to new game mode (which is the title screen, if demo was aborted)
 ; ENd of function GM_Special
 
 ; ===========================================================================
@@ -3424,7 +3205,7 @@ End_LoadData:
 
 		moveq	#plcid_Ending,d0			; load ending sequence patterns (GHZ art, animals, etc.)
 		bsr.w	QuickPLC				; execute PLCs immediately (no queue)
-		jsr	(Hud_Base).l				; load basic HUD graphics (only in levels, not in the ending demos)
+		jsr	(Hud_Base).l				; load basic HUD graphics
 		bsr.w	LevelSizeLoad				; load level size and set default level boundaries
 		bsr.w	DeformLayers				; initialize background deformation
 		bset	#2,(v_fg_scroll_flags).w		; draw an extra column at the left side of the screen during level start
@@ -3627,10 +3408,7 @@ End_MoveSonExit:
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Credits ending sequence. This game mode works in tandem with the regular
-; demo game mode, with both redirecting to here after their respective timer
-; has expired. The variable v_creditsnum for the current page is deliberately
-; located near the end of RAM so it doesn't get cleared during mode change.
+; Credits ending sequence
 ; ---------------------------------------------------------------------------
 
 ; CreditsScreen:
@@ -3664,18 +3442,6 @@ GM_Credits:
 		move.l	#CreditsText,(v_credits+obID).w		; load credits text object
 		jsr	(ExecuteObjects).l			; execute objects to load credits text object
 		jsr	(BuildSprites).l			; build sprites for the credits text object
-
-		bsr.w	EndingDemoLoad				; prepare loading the next ending demo
-
-		jsr	(GetLevelHeader).l			; load level header for current zone/act into a2
-		moveq	#0,d0					; clear d0
-		move.b	(a2),d0					; get first PLC entry
-		beq.s	Cred_SkipObjGfx				; if it's null, branch (never the case)
-		bsr.w	AddPLC					; load level patterns for next credits demo
-
-Cred_SkipObjGfx:
-		moveq	#plcid_Main,d0				; load main patterns
-		bsr.w	AddPLC
 ; ---------------------------------------------------------------------------
 
 		; fade-in palette and enter wait loop
@@ -3692,86 +3458,14 @@ Cred_WaitLoop:		; while a credits page is displayed and graphics are getting dec
 
 		tst.w	(v_generictimer).w			; have at least 2 seconds elapsed?
 		bne.s	Cred_WaitLoop				; if not, loop
-		tst.l	(v_plc_buffer).w			; have 2 seconds elapsed but level gfx have not finished decompressing?
-		bne.s	Cred_WaitLoop				; if yes, still loop until graphics are finished
 ; ---------------------------------------------------------------------------
 
 		; credits page has finished displaying, go to next game mode
+		addq.w	#1,(v_creditsnum).w			; increase credits page number for next time
 		cmpi.w	#9,(v_creditsnum).w			; are we past the final credits page?
 		beq.w	TryAgainEnd				; if yes, go to Try Again/End screen instead
-		rts						; otherwise, return to MainGameLoop to enter Demo mode
+		rts						; otherwise, return to MainGameLoop
 ; End of function GM_Credits
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Ending sequence demo loading subroutine
-; ---------------------------------------------------------------------------
-
-EndingDemoLoad:
-		move.w	(v_creditsnum).w,d0			; get current credits page
-		add.w	d0,d0					; double for word-based indexing
-		move.w	EndDemo_Levels(pc,d0.w),d0		; get relevant zone and act for the next credits demo
-		move.w	d0,(v_zone_act).w			; set level from level array
-
-		addq.w	#1,(v_creditsnum).w			; increase credits page number for next time
-		cmpi.w	#9,(v_creditsnum).w			; are we past the final credits page now?
-		bhs.s	EndDemo_Exit				; if yes, don't load another demo
-
-		move.w	#$8001,(f_demo).w 			; set demo mode to its credits/ending variant
-		move.b	#id_Demo,(v_gamemode).w			; set game mode to demo (activates once credits page has finished)
-
-		move.b	#3,(v_lives).w				; set lives to 3
-		moveq	#0,d0					; set d0 to 0
-		move.w	d0,(v_rings).w				; clear rings
-		move.l	d0,(v_time).w				; clear time
-		move.l	d0,(v_score).w				; clear score
-		move.b	d0,(v_lastlamp).w			; clear lamppost counter
-
-		cmpi.w	#4,(v_creditsnum).w			; is specifically the 4th demo about to run? (SLZ demo)
-		bne.s	EndDemo_Exit				; if not, branch
-		lea	(EndDemo_LampVar).l,a1			; load special lamppost variables for SLZ demo
-		lea	(v_lastlamp).w,a2			; write to lamppost buffer
-		move.w	#(EndDemo_LampVar_End-EndDemo_LampVar)/4-1,d0 ; write for all entries
-EndDemo_LampLoad:
-		move.l	(a1)+,(a2)+				; copy lamppost variables for SLZ demo
-		dbf	d0,EndDemo_LampLoad			; loop until everything is loaded
-
-EndDemo_Exit:
-		rts						; return
-; End of function EndingDemoLoad
-
-; ---------------------------------------------------------------------------
-; Levels used in the end sequence demos
-; ---------------------------------------------------------------------------
-
-EndDemo_Levels:		; previously in "misc/Demo Level Order - Ending.bin"
-		dc.w id_GHZ_act1
-		dc.w id_MZ_act2
-		dc.w id_SYZ_act3
-		dc.w id_LZ_act3
-		dc.w id_SLZ_act3
-		dc.w id_SBZ_act1
-		dc.w id_SBZ_act2
-		dc.w id_GHZ_act1
-		even
-
-; ---------------------------------------------------------------------------
-; Lamppost variables in the Star Light Zone credits demo
-; ---------------------------------------------------------------------------
-EndDemo_LampVar:
-		dc.b 1,	1					; number of the last lamppost
-		dc.w $A00, $62C					; x/y-axis position
-		dc.w 13						; rings
-		dc.l 0						; time
-		dc.b 0,	0					; dynamic level event routine counter
-		dc.w $800					; level bottom boundary
-		dc.w $957, $5CC					; x/y axis screen position
-		dc.w $4AB, $3A6, 0, $28C, 0, 0			; scroll info
-		dc.w $308					; water height
-		dc.b 1,	1					; water routine and state
-EndDemo_LampVar_End:
-; ===========================================================================
-
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -3844,21 +3538,6 @@ TryAg_Exit:		; exit end screen and restart the gam
 
 ; >>> Objects on final screen
 	include	"_incObj/8B, 8C Try Again, End Eggman, End Emeralds.asm"
-
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Ending sequence demos
-; ---------------------------------------------------------------------------
-
-Demo_EndGHZ1:	include	"demodata/Ending - GHZ1.asm"
-Demo_EndMZ:	include	"demodata/Ending - MZ.asm"
-Demo_EndSYZ:	include	"demodata/Ending - SYZ.asm"
-Demo_EndLZ:	include	"demodata/Ending - LZ.asm"
-Demo_EndSLZ:	include	"demodata/Ending - SLZ.asm"
-Demo_EndSBZ1:	include	"demodata/Ending - SBZ1.asm"
-Demo_EndSBZ2:	include	"demodata/Ending - SBZ2.asm"
-Demo_EndGHZ2:	include	"demodata/Ending - GHZ2.asm"
 
 
 ; ===========================================================================

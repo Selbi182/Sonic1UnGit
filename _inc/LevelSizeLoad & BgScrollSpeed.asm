@@ -42,21 +42,6 @@ LevelSizeLoad:
 LevelSizeArray:
 		include	"_inc/LevelSizeArray.asm"
 
-; ---------------------------------------------------------------------------
-; Ending start location array
-; (Previously separated into "_inc/Start Location Array - Ending.asm")
-; ---------------------------------------------------------------------------
-EndingStLocArray:
-		binclude	"startpos/Credits Demos/ghz1 (Credits demo 1).bin"
-		binclude	"startpos/Credits Demos/mz2 (Credits demo).bin"
-		binclude	"startpos/Credits Demos/syz3 (Credits demo).bin"
-		binclude	"startpos/Credits Demos/lz3 (Credits demo).bin"
-		binclude	"startpos/Credits Demos/slz3 (Credits demo).bin"
-		binclude	"startpos/Credits Demos/sbz1 (Credits demo).bin"
-		binclude	"startpos/Credits Demos/sbz2 (Credits demo).bin"
-		binclude	"startpos/Credits Demos/ghz1 (Credits demo 2).bin"
-
-
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Initialize Sonic's start location, initial screen position
@@ -88,13 +73,6 @@ LevSz_StartLoc:
 		lsl.b	#6,d0
 		lsr.w	#4,d0					; d0 = index in StartLocArray for current zone and act
 		lea	StartLocArray(pc,d0.w),a1		; load Sonic's start location
-
-		tst.w	(f_demo).w				; is ending credits demo mode on?
-		bpl.s	.setSonicPosition			; if not, branch
-		move.w	(v_creditsnum).w,d0			; get current credits text page
-		subq.w	#1,d0					; sub 1 for 0-based indexing
-		lsl.w	#2,d0					; multiply by 4 bytes per entry
-		lea	EndingStLocArray(pc,d0.w),a1		; load Sonic's start location in ending credits demo
 
 	; LevSz_SonicPos:
 	.setSonicPosition:

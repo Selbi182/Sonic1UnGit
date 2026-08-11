@@ -146,7 +146,7 @@ v_eggmanchaos:		equ	v_objspace+object_size*32	; object variable space for the em
 v_snddriver_ram:	makeStruct__SMPS_RAM			; sound driver state
 			ds.b	$40				; unused
 
-v_gamemode:		ds.b	1				; game mode (00=Sega; 04=Title; 08=Demo; 0C=Level; 10=SS; 14=Cont; 18=End; 1C=Credit; +8C=PreLevel)
+v_gamemode:		ds.b	1				; game mode (00=Sega; 04=Title; 08=Demo(deleted); 0C=Level; 10=SS; 14=Cont; 18=End; 1C=Credit; +8C=PreLevel)
 			ds.b	1				; unused
 
 v_jpadhold2:		ds.b	1				; joypad input - held (Sonic controls, can be overridden)
@@ -267,8 +267,8 @@ v_opl_data:		ds.b	$10				; ObjPosLoad - data buffer
 v_ssangle:		ds.w	1				; Special Stage angle
 v_ssrotate:		ds.w	1				; Special Stage rotation speed
 			ds.b	$C				; unused
-v_btnpushtime1:		ds.w	1				; button push duration - in level
-v_btnpushtime2:		ds.w	1				; button push duration - in demo
+			ds.w	1				; unused
+			ds.w	1				; unused
 v_palchgspeed:		ds.w	1				; palette fade/transition speed (0 is fastest)
 v_collindex:		ds.l	1				; ROM address for collision index of current level
 v_palss_num:		ds.w	1				; palette cycling in Special Stage - reference number
@@ -494,8 +494,8 @@ v_title_ccount:		ds.w	1				; number of times C is pressed on title screen
 			ds.b	1				; unused
 			ds.b	1				; unused
 			ds.b	1				; unused
-f_demo:			ds.w	1				; demo mode flag (0 = no; 1 = yes; $8001 = ending)
-v_demonum:		ds.w	1				; demo level number (not the same as the level number)
+			ds.w	1				; unused
+			ds.w	1				; unused
 v_creditsnum:		ds.w	1				; credits index number
 			ds.b	2				; unused
 v_megadrive:		ds.b	1				; Mega Drive machine type

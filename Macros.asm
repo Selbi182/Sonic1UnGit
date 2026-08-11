@@ -385,45 +385,7 @@ gotoROM:	macro
 		move.b	#0,(sram_port).l
 		endm
 
-; ---------------------------------------------------------------------------
-; macro to simplify editing the demo scripts
-; (taken from the Sonic 2 disassembly, adapted for ASM68K)
-; ---------------------------------------------------------------------------
 
-demoinput:	macro buttons,duration
-	btns_mask: = 0
-
-	i:   = 1
-	len: = strlen("\buttons")
-	while (i<=len)
-		btn:	substr i,i,"\buttons"
-		i: = i+1
-
-		; If anyone reads this in the future and knows how to get
-		; switch-cases to work in ASM68K, please submit a PR...
-		if "\btn"="u"
-			btns_mask: = btns_mask|btnUp
-		elseif "\btn"="d"
-			btns_mask: = btns_mask|btnDn
-		elseif "\btn"="l"
-			btns_mask: = btns_mask|btnL
-		elseif "\btn"="r"
-			btns_mask: = btns_mask|btnR
-		elseif "\btn"="a"
-			btns_mask: = btns_mask|btnA
-		elseif "\btn"="b"
-			btns_mask: = btns_mask|btnB
-		elseif "\btn"="c"
-			btns_mask: = btns_mask|btnC
-		elseif "\btn"="s"
-			btns_mask: = btns_mask|btnStart
-		endif
-	endw
-	dc.b	btns_mask,\duration-1
-    endm
-
-abs: macro val
-	endm
 ; ---------------------------------------------------------------------------
 ; macro to emit a linear range of bytes [first..last] inclusive
 ; input: start, end, increment, (optional) repeat each single step
