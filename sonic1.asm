@@ -4226,7 +4226,7 @@ Art_BigRing_size:	equ	*-Art_BigRing
 ; ---------------------------------------------------------------------------
 ; Level layout index
 ; ---------------------------------------------------------------------------
-Level_Null:	dc.w	$0000, $0000
+Level_Null:	dc.w	$0000, $0000, $000
 		even
 
 Level_GHZ1:	binclude	"levels/ghz1.bin"
@@ -4294,7 +4294,7 @@ Level_Titlebg:	binclude	"levels/titlebg.bin"
 ; ---------------------------------------------------------------------------
 ; Sprite locations index
 ; ---------------------------------------------------------------------------
-ObjPos_Null:	dc.w	$FFFF, $0000
+ObjPos_Null:	dc.w	$FFFF, $0000, $0000
 		even
 
 ObjPos_GHZ1:	binclude	"objpos/ghz1.bin"
@@ -4346,7 +4346,7 @@ ObjPos_End:	binclude	"objpos/ending.bin"
 ; ---------------------------------------------------------------------------
 ; Ring locations index for RingManager
 ; ---------------------------------------------------------------------------
-Rings_Null:	dc.w	$FFFF, $0000
+Rings_Null:	dc.w	$FFFF, $0000, $0000
 		even
 
 Rings_GHZ1:	binclude	"objpos/Rings/ghz1.bin"
