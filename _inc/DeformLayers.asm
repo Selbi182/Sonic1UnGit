@@ -172,71 +172,47 @@ Deform_GHZ:
 ; ---------------------------------------------------------------------------
 
 Deform_LZ:
-Camera_RAM:		equ	$FFFFF700
-Camera_FG:		equ 	$FFFFF700
-CamXpos: 		equ 	$FFFFF700			; l 	Camera X position (FG)
-CamYpos: 		equ 	$FFFFF704			; l 	Camera Y position (FG)
-Camera_BG:		equ 	$FFFFF708
-CamXpos2:		equ 	$FFFFF708			; l 	Camera X position (BG1)
-CamYpos2:		equ 	$FFFFF70C			; l 	Camera Y position (BG1)
-CamXpos3:		equ 	$FFFFF710			; l 	Camera X position (BG2)
-CamYpos3:		equ 	$FFFFF714			; l 	Camera Y position (BG2)
-CamXpos4:		equ 	$FFFFF718			; l 	Camera X position (BG3)
-CamYpos4:		equ 	$FFFFF71C			; l 	Camera Y position (BG3)
-CamXpos5:		equ	$FFFFF720			; l	Camera X position (BG4)
-Camera_RAM_Size:	equ	$FFFFF724-Camera_RAM
-
-CamXShift:		equ	$FFFFF73A			; w	Camera X shift from the previous frame (FG, 8.8 fixed)
-CamYShift:		equ	$FFFFF73C			; w	Camera Y shift from the previous frame (FG, 8.8 fixed)
-
-
-HSRAM_Buffer:		equ	$FFFFCC00			;	Horizontal scroll RAM buffer
-HSRAM_Buffer_End:	equ	HSRAM_Buffer+240*4
-VSRAM_Buffer:		equ	$FFFFF616			;	Verical Scroll RAM (VSRAM) buffer
-VSRAM_PlaneA:		equ	VSRAM_Buffer+0			; w
-VSRAM_PlaneB:		equ	VSRAM_Buffer+2			; w
-
 		; Calculate x-position for the background
-		move.w	CamXPos, d0
-		asr.w	#1, d0
-		move.w	d0, CamXPos2
+		move.w	(v_screenposx).w,d0
+		asr.w	#1,d0
+		move.w	d0,(v_bgscreenposx).w
 
 		; Calculate y-position for the background
 		; based on displacement since the last camera move
-		move.w	CamYShift, d0		; d0 = CamYShift (8.8 fixed)
+		move.w	(v_scrshifty).w,d0		; d0 = CamYShift (8.8 fixed)
 		ext.l	d0
-		lsl.l	#8-1, d0		; d0 = CamYShift / 2 (16.16 fixed)
-		add.l	d0, CamYPos2
+		lsl.l	#8-1,d0		; d0 = CamYShift / 2 (16.16 fixed)
+		add.l	d0,(v_bgscreenposy).w
 
-		move.w	($FFFFF70C).w,VSRAM_PlaneB	; load 'Cam_BG_Y' into VSRAM buffer
+		move.w	(v_bgscreenposy).w,(v_bgscrposy_vdp).w
 
 		; Setup scroll value
-		lea	HSRAM_Buffer,a1
-		move.w	CamXpos, d0
+		lea	(v_hscrolltablebuffer).w,a1
+		move.w	(v_screenposx).w,d0
 		neg.w	d0			; d0 = Plane A scrolling
 		move.w	d0,d1			; d1 = Plane A scrolling (backup)
 		swap	d0
-		move.w	CamXpos2, d0
+		move.w	(v_bgscreenposx).w,d0
 		neg.w	d0			; d0 = Plane B scrolling
 
 		; Calculate water line and decide where to start
 		moveq	#0,d2
-		move.b	($FFFFF7D8).w,d2
+		move.b	(v_lz_deform).w,d2
 		move.w	d2,d3
-		addi.w	#$80,($FFFFF7D8).w	; WaveValue += 0.5    
-		add.b	($FFFFF704+1).w,d3	; d3 = (WaveValue + Cam_Y) & $FF
-		add.b	($FFFFF70C+1).w,d2	; d2 = (WaveValue + Cam_Y) & $FF
+		addi.w	#$80,(v_lz_deform).w	; WaveValue += 0.5    
+		add.b	(v_screenposy+1).w,d3	; d3 = (WaveValue + Cam_Y) & $FF
+		add.b	(v_bgscreenposy+1).w,d2	; d2 = (WaveValue + Cam_Y) & $FF
 		move.w	#224,d6			; d6 = Number of lines
-		move.w	($FFFFF646).w,d4	; d4 = WaterLevel
+		move.w	(v_waterpos1).w,d4	; d4 = WaterLevel
 		addq.w	#7,d4
-		sub.w	($FFFFF704).w,d4	; d4 = WaterLevel - Cam_Y
+		sub.w	(v_screenposy).w,d4	; d4 = WaterLevel - Cam_Y
 		beq.s	.DeformWater_2
-		bmi.s	.DeformWater_2		; if water line is above screen, branch
+		bmi.s	.DeformWater_2		; if water line is above screen,branch
 		cmp.w	d6,d4			; d4 > Lines on screen?
-		blt.s	.DeformDry_Partial	; if not, branch
+		blt.s	.DeformDry_Partial	; if not,branch
 
 ; ---------------------------------------------------------------------------
-; Works, if full screen is dry
+; Works,if full screen is dry
 
 		subq.w	#1,d6
 
@@ -246,17 +222,18 @@ VSRAM_PlaneB:		equ	VSRAM_Buffer+2			; w
 		rts
 
 ; ---------------------------------------------------------------------------
-; Works, if only part of screen is dry
+; Works,if only part of screen is dry
 
 .DeformDry_Partial:
 		move.w	d4,d5			; d5 = WaterLevel
 		subq.w	#1,d4
 
-	.0:	move.l	d0,(a1)+
-		dbf	d4,.0
+	.loopDry:
+		move.l	d0,(a1)+
+		dbf	d4,.loopDry
 
 ; ---------------------------------------------------------------------------
-; Works if screen is full of water, or water at least takes place
+; Works if screen is full of water,or water at least takes place
 
 .DeformWater:
 		sub.w	d5,d6			; d6 = 224 - WaterLevel = Lines left for water
@@ -270,21 +247,24 @@ VSRAM_PlaneB:		equ	VSRAM_Buffer+2			; w
 		add.w	d2,a2			; load array from position of water line
 		add.w	d3,a3			;
 
-	.1:	move.b	(a3)+,d2
+	.loopUnderwater:
+		move.b	(a3)+,d2
 		ext.w	d2
 		add.w	d1,d2			; d2 = Plane A scrolling
 		move.w	d2,(a1)+
+
 		move.b	(a2)+,d2
 		ext.w	d2
 		add.w	d0,d2			; d2 = Plane B scrolling
 		move.w	d2,(a1)+
-		dbf	d6,.1
+
+		dbf	d6,.loopUnderwater
 		rts
 
 ; ===========================================================================
 
 Lz_Scroll_Data:
-	rept 8
+	rept 2
 		dc.b 1,1,2,2,3,3,3,3,2,2,1,1			; 12 lines shifted to right
 		dcb.b 116, 0					; 116 lines normal
 		dc.b -1,-1,-2,-2,-3,-3,-3,-3,-2,-2,-1,-1	; 12 lines shifted to left

@@ -15,7 +15,7 @@ Hel_Index:	dc.w Hel_Main-Hel_Index		; 0
 		dc.w Hel_Delete-Hel_Index	; 6 (never set)
 		dc.w Hel_ChildSpike-Hel_Index	; 8
 
-helix_children:	equ objofF_30		; $28 = helix length // $29-38 = indices for child object RAM addresses
+helix_children:	equ objoff_30		; $28 = helix length // $29-38 = indices for child object RAM addresses
 helix_frame:	equ objoff_29		; start frame (different for each spike)
 ; ===========================================================================
 
