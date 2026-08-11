@@ -49,17 +49,11 @@ ObjPosLoad_Init:
 OPLBack1:	move.l  d0,(a0)+
 		dbf     d1,OPLBack1
 
-		move.w	(v_zone).w,d0
-		lsl.b	#6,d0
-		lsr.w	#4,d0
-		lea	(ObjPos_Index).l,a0		; load the first pointer in the object layout list pointer index,
-		adda.w	(a0,d0.w),a0			; load the pointer to the current object layout
-
 		; initialize each object load address with the first object in the layout
-		move.l	a0,(v_opl_data).w
+		movea.l	(v_opl_data).w,a0		; set from LevelDataLoad
 		move.l	a0,(v_opl_data+4).w
-		lea	(Object_Respawn_Table).w,a3
 
+		lea	(Object_Respawn_Table).w,a3
 		move.w	(v_screenposx).w,d6
 		subi.w	#$80,d6				; look one chunk to the left
 		bcc.s	OPL1				; if the result was negative,

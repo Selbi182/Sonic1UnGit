@@ -17,6 +17,7 @@ Enable_Figure8Sprites:	= 1
 Enable_ExtendedCamera:	= 1
 Enable_InfiniteLives:	= 1
 Enable_AttractRings:	= 1
+Enable_6ButtonControl:	= 0
 
 LagOMeter: = 0
 
@@ -935,21 +936,23 @@ JoypadInit:
 ReadJoypads:
 		lea	(port_1_data).l,a1		; set to read first joypad port
 		lea	(v_jpadhold1).w,a0		; address where P1 joypad states are written to
-	;	bsr.s	.read_3btn			; read standard 3-button inputs for P1
-	;	tst.b	(a0)				; is P1 using a 6-button controller?
-	;	bpl.s	.readP2				; if not, branch
-	;	bsr.s	.read_6btn			; read additional 6-button inputs for P1
-	;
-	;.readP2:
-	;	lea	(port_2_data).l,a1		; set to read second joypad port
-	;	lea	(v_jpadhold_p2).w,a0		; address where P2 joypad states are written to
-	;	bsr.s	.read_3btn			; read standard 3-button inputs for P2
-	;	tst.b	(a0)				; is P2 using a 6-button controller?
-	;	bpl.s	.return				; if not, branch
-	;	bsr.s	.read_6btn			; read additional 6-button inputs for P2
-	;
-	;.return:
-	;	rts					; return
+	if Enable_6ButtonControl
+		bsr.s	.read_3btn			; read standard 3-button inputs for P1
+		tst.b	(a0)				; is P1 using a 6-button controller?
+		bpl.s	.readP2				; if not, branch
+		bsr.s	.read_6btn			; read additional 6-button inputs for P1
+	
+	.readP2:
+		lea	(port_2_data).l,a1		; set to read second joypad port
+		lea	(v_jpadhold_p2).w,a0		; address where P2 joypad states are written to
+		bsr.s	.read_3btn			; read standard 3-button inputs for P2
+		tst.b	(a0)				; is P2 using a 6-button controller?
+		bpl.s	.return				; if not, branch
+		bsr.s	.read_6btn			; read additional 6-button inputs for P2
+	
+	.return:
+		rts					; return
+	endif
 ; ---------------------------------------------------------------------------
 
 .read_3btn:
@@ -974,6 +977,7 @@ ReadJoypads:
 		rts					; return
 ; ---------------------------------------------------------------------------
 
+	if Enable_6ButtonControl
 .read_6btn:
 		; 6-button inputs (0000MXYZ)
 		PollTH	1				; 3rd TH poll (hi)
@@ -984,6 +988,7 @@ ReadJoypads:
 		moveq	#%00001111,d0			; clear all other inputs from the poll
 		and.b	(a1),d0				; write MODE, X, Y, Z input states to d0
 		bra.s	.toJpadRam			; write result to v_jpadhold_6btn/v_jpadpress_6btn
+	endif
 ; End of function ReadJoypads
 ; ---------------------------------------------------------------------------
 ; ===========================================================================
@@ -1739,6 +1744,7 @@ GM_Title:		; fading out from previous game mode
 		clr.b	(f_wtr_state).w				; clear water state
 		bsr.w	ClearScreen				; wipe the screen
 		clearRAM v_objspace				; clear object RAM
+		clearRAM v_lvllayout
 
 		moveq	#plcid_TitleSonicTeam,d0		; load patterns through PLC list
 		bsr.w	QuickPLC				; decompress PLC list now and return once done
@@ -1781,6 +1787,8 @@ Tit_LoadText:
 		move.l	#Blk16_Title,(v_rom_blocks).w		; set Blk16 pointer to use Title blocks
 		move.l	#Blk256_Title,(v_rom_chunks).w		; set Blk256 pointer to use Title blocks
 
+		lea	(Level_Titlebg).l,a1
+		lea	(v_lvllayout_bg).w,a3
 		bsr.w	LevelLayoutLoad				; load level layout for the background
 
 		moveq	#60-1,d0				; frames to manually wait on STP screen
@@ -2400,47 +2408,9 @@ LevelMenuText:
 ; Music playlist for the start of a level
 ; ---------------------------------------------------------------------------
 
-MusicList:
-		dc.b bgm_GHZ		; GHZ 1
-		dc.b bgm_GHZ		; GHZ 2
-		dc.b bgm_GHZ		; GHZ 3
-		dc.b bgm_GHZ		; GHZ 4 (unused)
-
-		dc.b bgm_LZ		; LZ 1
-		dc.b bgm_LZ		; LZ 2
-		dc.b bgm_LZ		; LZ 3
-		dc.b bgm_SBZ		; LZ 4 (SBZ act 3)
-
-		dc.b bgm_MZ		; MZ 1
-		dc.b bgm_MZ		; MZ 2
-		dc.b bgm_MZ		; MZ 3
-		dc.b bgm_MZ		; MZ 4 (unused)
-
-		dc.b bgm_SLZ		; SLZ 1
-		dc.b bgm_SLZ		; SLZ 2
-		dc.b bgm_SLZ		; SLZ 3
-		dc.b bgm_SLZ		; SLZ 4 (unused)
-
-		dc.b bgm_SYZ		; SYZ 1
-		dc.b bgm_SYZ		; SYZ 2
-		dc.b bgm_SYZ		; SYZ 3
-		dc.b bgm_SYZ		; SYZ 4 (unused)
-
-		dc.b bgm_SBZ		; SBZ 1
-		dc.b bgm_SBZ		; SBZ 2
-		dc.b bgm_FZ		; SBZ 3 (Final Zone)
-		dc.b bgm_SBZ		; SBZ 4 (unused)
-
-		even
-; ===========================================================================
-
 PlayCurrentActMusic:
-		moveq	#0,d0					; clear d0
-		move.b	(v_zone).w,d0				; get current zone ID
-		lsl.b	#2,d0					; times four entries per zone
-		add.b	(v_act).w,d0				; add current act number
-		move.b	MusicList(pc,d0.w),d0			; find music ID from MusicList
-		bra.w	QueueSound1				; play current level music
+		move.b	(v_levelmusic).w,d0
+		bra.w	QueueSound1
 ; End of function PlayCurrentActMusic
 
 
@@ -2461,13 +2431,7 @@ GM_Level:	; fading out from previous game mode
 		; load title cards, queue PLCs, setup screen, play music
 		jsr	(TitleCards_LoadArt).l			; load level title card graphics
 
-		jsr	(GetLevelHeader).l			; load level header for current zone/act into a2
-		moveq	#0,d0					; clear d0
-		move.b	$1C(a2),d0				; get PLC entry
-		beq.s	Level_MainPLC				; if it's null, branch (never the case)
-		bsr.w	AddPLC					; load level patterns for current Zone
 
-Level_MainPLC:
 		moveq	#plcid_Main,d0				; load standard patterns
 		bsr.w	AddPLC					; merged to have set 1 and 2
 
@@ -2476,6 +2440,7 @@ Level_ClrRam:
 		clearRAM v_misc_variables			; clear various miscellaneous RAM
 		clearRAM v_levelvariables			; clear level variables RAM (camera position, etc.)
 		clearRAM v_timingandscreenvariables		; clear various timing and screen RAM (for animated tiles, etc.)
+		clearRAM v_lvllayout
 
 		disable_ints					; disable interrupts
 		bsr.w	ClearScreen				; wipe the screen
@@ -2527,9 +2492,7 @@ Level_WaterPal:
 Level_GetBgm:
 		move.b	#id_VBlank_TitleCards,(v_vblank_routine).w ; set VBlank routine to $0C
 		bsr.w	WaitForVBlank				; transfer data up to this point
-		bsr.w	LoadZoneTiles				; load main zone art (S2 Art Loader)
-
-		bsr.w	PlayCurrentActMusic			; play music for current act
+		bsr.w	LevelDataLoad				; unified to contain EVERYTHING (LoadZoneTiles etc.)
 		move.l	#TitleCard,(v_titlecard+obID).w		; load title card object
 ; ---------------------------------------------------------------------------
 
@@ -2567,12 +2530,10 @@ Level_SkipTtlCard:
 
 		bsr.w	DeformLayers				; initialize background deformation
 		bset	#2,(v_fg_scroll_flags).w		; draw an extra column at the left side of the screen during level start
-		bsr.w	LevelDataLoad				; load block mappings and palettes
 		bsr.w	LoadTilesFromStart			; fully draw the foreground and background once before fade-in
 		bsr.w	LZWaterFeatures				; initialize water features if zone is LZ
 
 		move.l	#SonicPlayer,(v_player+obID).w		; load Sonic object
-
 		move.b	#-1,(v_draw_hud).w			; enable HUD drawing (but don't flash it yet)
 
 Level_ChkDebug:
@@ -2619,7 +2580,7 @@ Level_SkipClr:
 		move.b	#1,(f_timecount).w			; update time counter
 
 	if CheatsEnabled=2
-		move.b	#1,(f_debugmode).w			; disable debug mode (cheat remains active though)
+		move.b	#1,(f_debugmode).w			; enable debug mode automatically
 	endif
 
 Level_ChkWaterPal:
@@ -2635,7 +2596,6 @@ Level_WtrNotSbz:
 
 Level_Delay:
 		move.w	#$202F,(v_pfade_start).w		; set to fade in 2nd, 3rd & 4th palette lines
-	;	bsr.w	PalFadeIn_Alt				; fade-in main palette
 		bsr.w	PalFadeIn_Playable_Alt
 		move.b	#1,(v_draw_hud).w			; enable HUD drawing (and allow flashing)
 
@@ -3215,8 +3175,6 @@ End_LoadData:
 
 		moveq	#palid_Sonic,d0				; load Sonic's palette...
 		bsr.w	PalLoad_Fade				; ...to fade-in buffer
-		move.w	#bgm_Ending,d0				; play ending sequence music
-		bsr.w	QueueSound1				; play it
 
 		tst.b	(f_debugcheat).w			; has debug cheat been entered?
 		beq.s	End_LoadSonic				; if not, branch
@@ -3551,7 +3509,7 @@ TryAg_Exit:		; exit end screen and restart the gam
 ; >>> Level rendering, loading, and updating
 		include	"_inc/LevelSizeLoad & BgScrollSpeed.asm" ; merged with "LevelSizeLoad & BgScrollSpeed (JP1).asm"
 		include	"_inc/DeformLayers.asm"
-		include	"_inc/Level Drawing.asm"
+		include	"_inc/Level Drawing.asm" ; includes LevelHeaders.asm
 		include	"_inc/LevelLayoutLoad.asm" ; includes LevelDataLoad, LevelLayoutLoad, and LevelLayoutLoad2
 		include	"_inc/DynamicLevelEvents.asm"
 
@@ -3780,7 +3738,6 @@ Art_LivesNums:	binclude "artunc/Lives Counter Numbers.unc" ; 8x8 pixel numbers o
 
 ; ===========================================================================
 ; >>> Level definitions
-		include	"_inc/LevelHeaders.asm"
 		include	"_inc/Pattern Load Cues.asm"
 
 
@@ -4260,131 +4217,6 @@ Art_SbzSmoke:	binclude	"artunc/SBZ Background Smoke.unc"
 		even
 
 ; ---------------------------------------------------------------------------
-; Level layout index
-; Format: foreground, background, leftover/unused
-; ---------------------------------------------------------------------------
-Level_Index:
-		; GHZ
-		dc.w Level_GHZ1-Level_Index, Level_GHZbg-Level_Index, Level_GHZ1Unk-Level_Index
-		dc.w Level_GHZ2-Level_Index, Level_GHZbg-Level_Index, Level_GHZ2Unk-Level_Index
-		dc.w Level_GHZ3-Level_Index, Level_GHZbg-Level_Index, Level_GHZ3Unk-Level_Index
-		dc.w Level_GHZ4Unk-Level_Index, Level_GHZ4Unk-Level_Index, Level_GHZ4Unk-Level_Index
-		; LZ
-		dc.w Level_LZ1-Level_Index, Level_LZbg-Level_Index, Level_LZ1Unk-Level_Index
-		dc.w Level_LZ2-Level_Index, Level_LZbg-Level_Index, Level_LZ2Unk-Level_Index
-		dc.w Level_LZ3-Level_Index, Level_LZbg-Level_Index, Level_LZ3Unk-Level_Index
-		dc.w Level_SBZ3-Level_Index, Level_LZbg-Level_Index, Level_SBZ3Unk-Level_Index
-		; MZ
-		dc.w Level_MZ1-Level_Index, Level_MZ1bg-Level_Index, Level_MZ1-Level_Index
-		dc.w Level_MZ2-Level_Index, Level_MZ2bg-Level_Index, Level_MZ2Unk-Level_Index
-		dc.w Level_MZ3-Level_Index, Level_MZ3bg-Level_Index, Level_MZ3Unk-Level_Index
-		dc.w Level_MZ4Unk-Level_Index, Level_MZ4Unk-Level_Index, Level_MZ4Unk-Level_Index
-		; SLZ
-		dc.w Level_SLZ1-Level_Index, Level_SLZbg-Level_Index, Level_SLZ1Unk-Level_Index
-		dc.w Level_SLZ2-Level_Index, Level_SLZbg-Level_Index, Level_SLZ1Unk-Level_Index
-		dc.w Level_SLZ3-Level_Index, Level_SLZbg-Level_Index, Level_SLZ1Unk-Level_Index
-		dc.w Level_SLZ1Unk-Level_Index, Level_SLZ1Unk-Level_Index, Level_SLZ1Unk-Level_Index
-		; SYZ
-		dc.w Level_SYZ1-Level_Index, Level_SYZbg-Level_Index, Level_SYZ1Unk-Level_Index
-		dc.w Level_SYZ2-Level_Index, Level_SYZbg-Level_Index, Level_SYZ2Unk-Level_Index
-		dc.w Level_SYZ3-Level_Index, Level_SYZbg-Level_Index, Level_SYZ3Unk-Level_Index
-		dc.w Level_SYZ4Unk-Level_Index, Level_SYZ4Unk-Level_Index, Level_SYZ4Unk-Level_Index
-		; SBZ
-		dc.w Level_SBZ1-Level_Index, Level_SBZ1bg-Level_Index, Level_SBZ1bg-Level_Index
-		dc.w Level_SBZ2-Level_Index, Level_SBZ2bg-Level_Index, Level_SBZ2bg-Level_Index
-		dc.w Level_SBZ2-Level_Index, Level_SBZ2bg-Level_Index, Level_SBZ2Unk-Level_Index
-		dc.w Level_SBZ4Unk-Level_Index, Level_SBZ4Unk-Level_Index, Level_SBZ4Unk-Level_Index
-		; Ending
-		dc.w Level_End-Level_Index, Level_GHZbg-Level_Index, Level_EndUnk-Level_Index
-		dc.w Level_End-Level_Index, Level_GHZbg-Level_Index, Level_EndUnk-Level_Index
-		dc.w Level_EndUnk-Level_Index, Level_EndUnk-Level_Index, Level_EndUnk-Level_Index
-		dc.w Level_EndUnk-Level_Index, Level_Titlebg-Level_Index, Level_EndUnk-Level_Index ; title screen background
-
-Level_GHZ1:	binclude	"levels/ghz1.bin"
-		even
-Level_GHZ1Unk:	dc.l 0
-Level_GHZ2:	binclude	"levels/ghz2.bin"
-		even
-Level_GHZ2Unk:	dc.l 0
-Level_GHZ3:	binclude	"levels/ghz3.bin"
-		even
-Level_GHZbg:	binclude	"levels/ghzbg.bin"
-		even
-Level_GHZ3Unk:	dc.l 0
-Level_GHZ4Unk:	dc.l 0
-
-Level_LZ1:	binclude	"levels/lz1.bin"
-		even
-Level_LZbg:	binclude	"levels/lzbg.bin"
-		even
-Level_LZ1Unk:	dc.l 0
-Level_LZ2:	binclude	"levels/lz2.bin"
-		even
-Level_LZ2Unk:	dc.l 0
-Level_LZ3:	binclude	"levels/lz3.bin"
-		even
-Level_LZ3Unk:	dc.l 0
-Level_SBZ3:	binclude	"levels/sbz3.bin"
-		even
-Level_SBZ3Unk:	dc.l 0
-
-Level_MZ1:	binclude	"levels/mz1.bin"
-		even
-Level_MZ1bg:	binclude	"levels/mz1bg.bin"
-		even
-Level_MZ2:	binclude	"levels/mz2.bin"
-		even
-Level_MZ2bg:	binclude	"levels/mz2bg.bin"
-		even
-Level_MZ2Unk:	dc.l 0
-Level_MZ3:	binclude	"levels/mz3.bin"
-		even
-Level_MZ3bg:	binclude	"levels/mz3bg.bin"
-		even
-Level_MZ3Unk:	dc.l 0
-Level_MZ4Unk:	dc.l 0
-
-Level_SLZ1:	binclude	"levels/slz1.bin"
-		even
-Level_SLZbg:	binclude	"levels/slzbg.bin"
-		even
-Level_SLZ2:	binclude	"levels/slz2.bin"
-		even
-Level_SLZ3:	binclude	"levels/slz3.bin"
-		even
-Level_SLZ1Unk:	dc.l 0
-
-Level_SYZ1:	binclude	"levels/syz1.bin"
-		even
-Level_SYZbg:	binclude	"levels/syzbg.bin"
-		even
-Level_SYZ1Unk:	dc.l 0
-Level_SYZ2:	binclude	"levels/syz2.bin"
-		even
-Level_SYZ2Unk:	dc.l 0
-Level_SYZ3:	binclude	"levels/syz3.bin"
-		even
-Level_SYZ3Unk:	dc.l 0
-Level_SYZ4Unk:	dc.l 0
-
-Level_SBZ1:	binclude	"levels/sbz1.bin"
-		even
-Level_SBZ1bg:	binclude	"levels/sbz1bg.bin"
-		even
-Level_SBZ2:	binclude	"levels/sbz2.bin"
-		even
-Level_SBZ2bg:	binclude	"levels/sbz2bg.bin"
-		even
-Level_SBZ2Unk:	dc.l 0
-Level_SBZ4Unk:	dc.l 0
-Level_End:	binclude	"levels/ending.bin"
-		even
-Level_EndUnk:	dc.l 0
-
-Level_Titlebg:	binclude	"levels/titlebg.bin"
-		even
-
-; ---------------------------------------------------------------------------
 ; Uncompressed graphics - Giant Rings
 ; ---------------------------------------------------------------------------
 Art_BigRing:	binclude	"artunc/Giant Ring.unc"
@@ -4392,56 +4224,78 @@ Art_BigRing_size:	equ	*-Art_BigRing
 		even
 
 ; ---------------------------------------------------------------------------
+; Level layout index
+; ---------------------------------------------------------------------------
+Level_Null:	dc.w	$0000, $0000
+		even
+
+Level_GHZ1:	binclude	"levels/ghz1.bin"
+		even
+Level_GHZ2:	binclude	"levels/ghz2.bin"
+		even
+Level_GHZ3:	binclude	"levels/ghz3.bin"
+		even
+Level_GHZbg:	binclude	"levels/ghzbg.bin"
+		even
+
+Level_LZ1:	binclude	"levels/lz1.bin"
+		even
+Level_LZ2:	binclude	"levels/lz2.bin"
+		even
+Level_LZ3:	binclude	"levels/lz3.bin"
+		even
+Level_SBZ3:	binclude	"levels/sbz3.bin"
+		even
+Level_LZbg:	binclude	"levels/lzbg.bin"
+		even
+
+Level_MZ1:	binclude	"levels/mz1.bin"
+		even
+Level_MZ2:	binclude	"levels/mz2.bin"
+		even
+Level_MZ3:	binclude	"levels/mz3.bin"
+		even
+Level_MZbg:	binclude	"levels/mzbg.bin"
+		even
+
+Level_SLZ1:	binclude	"levels/slz1.bin"
+		even
+Level_SLZ2:	binclude	"levels/slz2.bin"
+		even
+Level_SLZ3:	binclude	"levels/slz3.bin"
+		even
+Level_SLZbg:	binclude	"levels/slzbg.bin"
+		even
+
+Level_SYZ1:	binclude	"levels/syz1.bin"
+		even
+Level_SYZ2:	binclude	"levels/syz2.bin"
+		even
+Level_SYZ3:	binclude	"levels/syz3.bin"
+		even
+Level_SYZbg:	binclude	"levels/syzbg.bin"
+		even
+
+Level_SBZ1:	binclude	"levels/sbz1.bin"
+		even
+Level_SBZ1bg:	binclude	"levels/sbz1bg.bin"
+		even
+Level_SBZ2_FZ:	binclude	"levels/sbz2.bin"
+		even
+Level_SBZ2bg:	binclude	"levels/sbz2bg.bin"
+		even
+
+Level_End:	binclude	"levels/ending.bin"
+		even
+
+Level_Titlebg:	binclude	"levels/titlebg.bin"
+		even
+
+; ---------------------------------------------------------------------------
 ; Sprite locations index
 ; ---------------------------------------------------------------------------
-ObjPos_Index:
-		; GHZ
-		dc.w ObjPos_GHZ1-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_GHZ2-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_GHZ3-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_GHZ1-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		; LZ
-		dc.w ObjPos_LZ1-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_LZ2-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_LZ3-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_SBZ3-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		; MZ
-		dc.w ObjPos_MZ1-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_MZ2-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_MZ3-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_MZ1-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		; SLZ
-		dc.w ObjPos_SLZ1-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_SLZ2-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_SLZ3-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_SLZ1-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		; SYZ
-		dc.w ObjPos_SYZ1-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_SYZ2-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_SYZ3-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_SYZ1-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		; SBZ
-		dc.w ObjPos_SBZ1-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_SBZ2-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_FZ-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_SBZ1-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		; Ending
-		dc.w ObjPos_End-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_End-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_End-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_End-ObjPos_Index, ObjPos_Null-ObjPos_Index
-		; --- Put extra object data here. ---
-ObjPosLZPlatform_Index:
-		dc.w ObjPos_LZ1pf1-ObjPos_Index, ObjPos_LZ1pf2-ObjPos_Index
-		dc.w ObjPos_LZ2pf1-ObjPos_Index, ObjPos_LZ2pf2-ObjPos_Index
-		dc.w ObjPos_LZ3pf1-ObjPos_Index, ObjPos_LZ3pf2-ObjPos_Index
-		dc.w ObjPos_LZ1pf1-ObjPos_Index, ObjPos_LZ1pf2-ObjPos_Index
-ObjPosSBZPlatform_Index:
-		dc.w ObjPos_SBZ1pf1-ObjPos_Index, ObjPos_SBZ1pf2-ObjPos_Index
-		dc.w ObjPos_SBZ1pf3-ObjPos_Index, ObjPos_SBZ1pf4-ObjPos_Index
-		dc.w ObjPos_SBZ1pf5-ObjPos_Index, ObjPos_SBZ1pf6-ObjPos_Index
-		dc.w ObjPos_SBZ1pf1-ObjPos_Index, ObjPos_SBZ1pf2-ObjPos_Index
-		dc.b $FF, $FF, 0, 0, 0,	0
+ObjPos_Null:	dc.w	$FFFF, $0000
+		even
 
 ObjPos_GHZ1:	binclude	"objpos/ghz1.bin"
 		even
@@ -4457,19 +4311,6 @@ ObjPos_LZ2:	binclude	"objpos/lz2.bin"
 ObjPos_LZ3:	binclude	"objpos/lz3.bin"
 		even
 ObjPos_SBZ3:	binclude	"objpos/sbz3.bin"
-		even
-
-ObjPos_LZ1pf1:	binclude	"objpos/platforms/lz1pf1.bin"
-		even
-ObjPos_LZ1pf2:	binclude	"objpos/platforms/lz1pf2.bin"
-		even
-ObjPos_LZ2pf1:	binclude	"objpos/platforms/lz2pf1.bin"
-		even
-ObjPos_LZ2pf2:	binclude	"objpos/platforms/lz2pf2.bin"
-		even
-ObjPos_LZ3pf1:	binclude	"objpos/platforms/lz3pf1.bin"
-		even
-ObjPos_LZ3pf2:	binclude	"objpos/platforms/lz3pf2.bin"
 		even
 
 ObjPos_MZ1:	binclude	"objpos/mz1.bin"
@@ -4499,85 +4340,58 @@ ObjPos_SBZ2:	binclude	"objpos/sbz2.bin"
 ObjPos_FZ:	binclude	"objpos/fz.bin"
 		even
 
-ObjPos_SBZ1pf1:	binclude	"objpos/platforms/sbz1pf1.bin"
-		even
-ObjPos_SBZ1pf2:	binclude	"objpos/platforms/sbz1pf2.bin"
-		even
-ObjPos_SBZ1pf3:	binclude	"objpos/platforms/sbz1pf3.bin"
-		even
-ObjPos_SBZ1pf4:	binclude	"objpos/platforms/sbz1pf4.bin"
-		even
-ObjPos_SBZ1pf5:	binclude	"objpos/platforms/sbz1pf5.bin"
-		even
-ObjPos_SBZ1pf6:	binclude	"objpos/platforms/sbz1pf6.bin"
-		even
-
 ObjPos_End:	binclude	"objpos/ending.bin"
 		even
-
-ObjPos_Null:	dc.b $FF, $FF, 0, 0, 0,	0
 
 ; ---------------------------------------------------------------------------
 ; Ring locations index for RingManager
 ; ---------------------------------------------------------------------------
-
-RingPos_Index:	;	Act 1		Act 2		Act 3		Act 4
-		dc.l	Rings_GHZ1,	Rings_GHZ2,	Rings_GHZ3,	Rings_Null	; GHZ
-		dc.l	Rings_LZ1,	Rings_LZ2,	Rings_LZ3,	Rings_SBZ3	; LZ (SBZ3 => LZ4)
-		dc.l	Rings_MZ1,	Rings_MZ2,	Rings_MZ3,	Rings_Null	; MZ
-		dc.l	Rings_SLZ1,	Rings_SLZ2,	Rings_SLZ3,	Rings_Null	; SLZ
-		dc.l	Rings_SYZ1,	Rings_SYZ2,	Rings_SYZ3,	Rings_Null	; SYZ
-		dc.l	Rings_SBZ1,	Rings_SBZ2,	Rings_FZ,	Rings_Null	; SBZ (FZ => SBZ3)
-		dc.l	Rings_Ending,	Rings_Ending,	Rings_Null,	Rings_Null	; Ending Sequence
-
-Rings_GHZ1:	binclude "objpos/Rings/ghz1.bin"
-		even
-Rings_GHZ2:	binclude "objpos/Rings/ghz2.bin"
-		even
-Rings_GHZ3:	binclude "objpos/Rings/ghz3.bin"
+Rings_Null:	dc.w	$FFFF, $0000
 		even
 
-Rings_LZ1:	binclude "objpos/Rings/lz1.bin"
+Rings_GHZ1:	binclude	"objpos/Rings/ghz1.bin"
 		even
-Rings_LZ2:	binclude "objpos/Rings/lz2.bin"
+Rings_GHZ2:	binclude	"objpos/Rings/ghz2.bin"
 		even
-Rings_LZ3:	binclude "objpos/Rings/lz3.bin"
-		even
-Rings_SBZ3:	binclude "objpos/Rings/sbz3.bin"
+Rings_GHZ3:	binclude	"objpos/Rings/ghz3.bin"
 		even
 
-Rings_MZ1:	binclude "objpos/Rings/mz1.bin"
+Rings_LZ1:	binclude	"objpos/Rings/lz1.bin"
 		even
-Rings_MZ2:	binclude "objpos/Rings/mz2.bin"
+Rings_LZ2:	binclude	"objpos/Rings/lz2.bin"
 		even
-Rings_MZ3:	binclude "objpos/Rings/mz3.bin"
+Rings_LZ3:	binclude	"objpos/Rings/lz3.bin"
 		even
-
-Rings_SLZ1:	binclude "objpos/Rings/slz1.bin"
-		even
-Rings_SLZ2:	binclude "objpos/Rings/slz2.bin"
-		even
-Rings_SLZ3:	binclude "objpos/Rings/slz3.bin"
+Rings_SBZ3:	binclude	"objpos/Rings/sbz3.bin"
 		even
 
-Rings_SYZ1:	binclude "objpos/Rings/syz1.bin"
+Rings_MZ1:	binclude	"objpos/Rings/mz1.bin"
 		even
-Rings_SYZ2:	binclude "objpos/Rings/syz2.bin"
+Rings_MZ2:	binclude	"objpos/Rings/mz2.bin"
 		even
-Rings_SYZ3:	binclude "objpos/Rings/syz3.bin"
-		even
-
-Rings_SBZ1:	binclude "objpos/Rings/sbz1.bin"
-		even
-Rings_SBZ2:	binclude "objpos/Rings/sbz2.bin"
-		even
-Rings_FZ:	binclude "objpos/Rings/fz.bin"
+Rings_MZ3:	binclude	"objpos/Rings/mz3.bin"
 		even
 
-Rings_Ending:	binclude "objpos/Rings/ending.bin"
+Rings_SLZ1:	binclude	"objpos/Rings/slz1.bin"
+		even
+Rings_SLZ2:	binclude	"objpos/Rings/slz2.bin"
+		even
+Rings_SLZ3:	binclude	"objpos/Rings/slz3.bin"
 		even
 
-Rings_Null:	dc.w $FFFF, $0000
+Rings_SYZ1:	binclude	"objpos/Rings/syz1.bin"
+		even
+Rings_SYZ2:	binclude	"objpos/Rings/syz2.bin"
+		even
+Rings_SYZ3:	binclude	"objpos/Rings/syz3.bin"
+		even
+
+Rings_SBZ1:	binclude	"objpos/Rings/sbz1.bin"
+		even
+Rings_SBZ2:	binclude	"objpos/Rings/sbz2.bin"
+		even
+Rings_FZ:	binclude	"objpos/Rings/fz.bin"
+		even
 
 ; ---------------------------------------------------------------------------
 

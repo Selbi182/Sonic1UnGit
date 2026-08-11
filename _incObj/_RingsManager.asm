@@ -29,12 +29,7 @@ RingsManager_Init:
 		clearRAM v_ringmanager,(v_ringmanager+v_ringmanager_size)
 
 		; load ring positions for this level
-		moveq	#0,d0					; clear d0
-		move.w	(v_zone_act).w,d0			; get current zone and act
-		ror.b	#2,d0					; shift act number to upper bits in lower byte
-		lsr.w	#4,d0					; shift zone and act for long-based indexing
-		lea	(RingPos_Index).l,a1			; load ring position data from ROM
-		movea.l	(a1,d0.w),a1				; get ring position data for current level
+		movea.l	(v_ringindex).w,a1
 		move.l	a1,(v_ringwindow_start).w		; set starting address in ROM
 ; ---------------------------------------------------------------------------
 

@@ -47,6 +47,7 @@ Camera_Y_Pos_Last:	ds.w	1				; camera Y position from previous frame (2 bytes)
 Camera_X_Coarse_Back:	ds.w	1				; camera X position - $80, rounded down to the nearest multiple of $80 (2 bytes)
 Camera_Y_Coarse_Back:	ds.w	1				; camera Y position - $80, rounded down to the nearest multiple of $80 (2 bytes)
 
+v_ringindex:		ds.l	1				; set outside ring manager
 v_ringmanager:
 v_ringstates:		ds.b	512				; collected rings status table, 1 byte per ring
 v_ringstates_pointer:	ds.w	1				; address within v_ringstates RAM of the first ring found within left screen boundary
@@ -497,7 +498,8 @@ v_title_ccount:		ds.w	1				; number of times C is pressed on title screen
 			ds.w	1				; unused
 			ds.w	1				; unused
 v_creditsnum:		ds.w	1				; credits index number
-			ds.b	2				; unused
+v_levelmusic:		ds.b	1				; stores the music ID for the current level music
+			ds.b	1				; unused
 v_megadrive:		ds.b	1				; Mega Drive machine type
 v_pal:			ds.b	1				; set if PAL console
 f_debugmode:		ds.w	1				; debug mode flag

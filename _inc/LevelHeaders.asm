@@ -2,61 +2,52 @@
 ; Level Headers
 ; ---------------------------------------------------------------------------
 
-GetLevelHeader:
-		moveq	#0,d0					; clear d0
-		move.b	(v_zone).w,d0				; get current zone ID
-		lsl.w	#6,d0					; multiply by $40 (4 acts per zone * $10 bytes per act)
-		move.w	d0,-(sp)				; backup d0 to stack
-		moveq	#0,d0					; clear d0
-		move.b	(v_act).w,d0				; get current act number
-		lsl.w	#4,d0					; multiply by $10 (bytes for one level header)
-		add.w	(sp)+,d0				; restore d0 from stack and add to get index
-		lea	LevelHeaders(pc,d0.w),a2		; load level header for current zone/act into a2
-		rts						; return
+lhead:	macro mus,pal,plc,lvlgfx,fglayout,bglayout,blocks,chunks,collision,objpos,ringpos
+	dc.l (mus<<24)+lvlgfx
+	dc.l (plc<<24)+fglayout
+	dc.l (pal<<24)+bglayout
+	dc.l blocks
+	dc.l chunks
+	dc.l collision
+	dc.l objpos
+	dc.l ringpos
+	endm
+
 ; ---------------------------------------------------------------------------
 
 LevelHeaders:
+	;	Music		Palette		PLC		level gfx	FG layout	BG layout	Blocks		Chunks		Collision	Objects		Rings	
+	lhead	bgm_GHZ,	palid_GHZ,	plcid_GHZ,	KosP_GHZ,	Level_GHZ1,	Level_GHZbg,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	ObjPos_GHZ1,	Rings_GHZ1	; Green Hill 1
+	lhead	bgm_GHZ,	palid_GHZ,	plcid_GHZ,	KosP_GHZ,	Level_GHZ2,	Level_GHZbg,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	ObjPos_GHZ2,	Rings_GHZ1	; Green Hill 2
+	lhead	bgm_GHZ,	palid_GHZ,	plcid_GHZ,	KosP_GHZ,	Level_GHZ3,	Level_GHZbg,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	ObjPos_GHZ3,	Rings_GHZ1	; Green Hill 3
+	lhead	bgm_GHZ,	palid_GHZ,	plcid_GHZ,	KosP_GHZ,	Level_Null,	Level_Null,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	ObjPos_Null,	Rings_Null	; Green Hill 4 (unused)
+																	
+	lhead	bgm_LZ,		palid_LZ,	plcid_LZ,	KosP_LZ,	Level_LZ1,	Level_LZbg,	Blk16_LZ,	Blk256_LZ,	Col_LZ,		ObjPos_LZ1,	Rings_LZ1	; Labyrinth 1
+	lhead	bgm_LZ,		palid_LZ,	plcid_LZ,	KosP_LZ,	Level_LZ2,	Level_LZbg,	Blk16_LZ,	Blk256_LZ,	Col_LZ,		ObjPos_LZ2,	Rings_LZ2	; Labyrinth 2
+	lhead	bgm_LZ,		palid_LZ,	plcid_LZ,	KosP_LZ,	Level_LZ3,	Level_LZbg,	Blk16_LZ,	Blk256_LZ,	Col_LZ,		ObjPos_LZ3,	Rings_LZ3	; Labyrinth 3
+	lhead	bgm_SBZ,	palid_SBZ3,	plcid_LZ,	KosP_LZ,	Level_SBZ3,	Level_LZbg,	Blk16_LZ,	Blk256_LZ,	Col_LZ,		ObjPos_SBZ3,	Rings_SBZ3	; Labyrinth 4 (Scrap Brain Zone 3)
+																	
+	lhead	bgm_MZ,		palid_MZ,	plcid_MZ,	KosP_MZ,	Level_MZ1,	Level_MZbg,	Blk16_MZ,	Blk256_MZ,	Col_MZ,		ObjPos_MZ1,	Rings_MZ1	; Marble 1
+	lhead	bgm_MZ,		palid_MZ,	plcid_MZ,	KosP_MZ,	Level_MZ2,	Level_MZbg,	Blk16_MZ,	Blk256_MZ,	Col_MZ,		ObjPos_MZ2,	Rings_MZ2	; Marble 2
+	lhead	bgm_MZ,		palid_MZ,	plcid_MZ,	KosP_MZ,	Level_MZ3,	Level_MZbg,	Blk16_MZ,	Blk256_MZ,	Col_MZ,		ObjPos_MZ3,	Rings_MZ3	; Marble 3
+	lhead	bgm_MZ,		palid_MZ,	plcid_MZ,	KosP_MZ,	Level_Null,	Level_Null,	Blk16_MZ,	Blk256_MZ,	Col_MZ,		ObjPos_Null,	Rings_Null	; Marble 4 (unused)
+																	
+	lhead	bgm_SLZ,	palid_SLZ,	plcid_SLZ,	KosP_SLZ,	Level_SLZ1,	Level_SLZbg,	Blk16_SLZ,	Blk256_SLZ,	Col_SLZ,	ObjPos_SLZ1,	Rings_SLZ1	; Star Light 1
+	lhead	bgm_SLZ,	palid_SLZ,	plcid_SLZ,	KosP_SLZ,	Level_SLZ2,	Level_SLZbg,	Blk16_SLZ,	Blk256_SLZ,	Col_SLZ,	ObjPos_SLZ2,	Rings_SLZ2	; Star Light 2
+	lhead	bgm_SLZ,	palid_SLZ,	plcid_SLZ,	KosP_SLZ,	Level_SLZ3,	Level_SLZbg,	Blk16_SLZ,	Blk256_SLZ,	Col_SLZ,	ObjPos_SLZ3,	Rings_SLZ3	; Star Light 3
+	lhead	bgm_SLZ,	palid_SLZ,	plcid_SLZ,	KosP_SLZ,	Level_Null,	Level_Null,	Blk16_SLZ,	Blk256_SLZ,	Col_SLZ,	ObjPos_Null,	Rings_Null	; Star Light 4 (unused)
+																	
+	lhead	bgm_SYZ,	palid_SYZ,	plcid_SYZ,	KosP_SYZ,	Level_SYZ1,	Level_SYZbg,	Blk16_SYZ,	Blk256_SYZ,	Col_SYZ,	ObjPos_SYZ1,	Rings_SYZ1	; Spring Yard 1
+	lhead	bgm_SYZ,	palid_SYZ,	plcid_SYZ,	KosP_SYZ,	Level_SYZ2,	Level_SYZbg,	Blk16_SYZ,	Blk256_SYZ,	Col_SYZ,	ObjPos_SYZ2,	Rings_SYZ2	; Spring Yard 2
+	lhead	bgm_SYZ,	palid_SYZ,	plcid_SYZ,	KosP_SYZ,	Level_SYZ3,	Level_SYZbg,	Blk16_SYZ,	Blk256_SYZ,	Col_SYZ,	ObjPos_SYZ3,	Rings_SYZ3	; Spring Yard 3
+	lhead	bgm_SYZ,	palid_SYZ,	plcid_SYZ,	KosP_SYZ,	Level_Null,	Level_Null,	Blk16_SYZ,	Blk256_SYZ,	Col_SYZ,	ObjPos_Null,	Rings_Null	; Spring Yard 4 (unused)
+																	
+	lhead	bgm_SBZ,	palid_SBZ1,	plcid_SBZ,	KosP_SBZ,	Level_SBZ1,	Level_SBZ1bg,	Blk16_SBZ,	Blk256_SBZ,	Col_SBZ,	ObjPos_SBZ1,	Rings_SBZ1	; Scrap Brain 1
+	lhead	bgm_SBZ,	palid_SBZ2,	plcid_SBZ,	KosP_SBZ,	Level_SBZ2_FZ,	Level_SBZ2bg,	Blk16_SBZ,	Blk256_SBZ,	Col_SBZ,	ObjPos_SBZ2,	Rings_SBZ1	; Scrap Brain 2
+	lhead	bgm_FZ,		palid_SBZ2,	plcid_SBZ,	KosP_SBZ,	Level_SBZ2_FZ,	Level_SBZ2bg,	Blk16_SBZ,	Blk256_SBZ,	Col_SBZ,	ObjPos_FZ,	Rings_Null	; Scrap Brain 3 (Final Zone)
+	lhead	bgm_SBZ,	palid_SBZ1,	plcid_SBZ,	KosP_SBZ,	Level_Null,	Level_Null,	Blk16_SBZ,	Blk256_SBZ,	Col_SBZ,	ObjPos_Null,	Rings_Null	; Scrap Brain 4 (unused)
+																	
+	lhead	bgm_Ending,	palid_Ending,	plcid_Ending,	KosP_GHZ,	Level_End,	Level_GHZbg,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	ObjPos_End,	Rings_Null	; Ending (good)
+	lhead	bgm_Ending,	palid_Ending,	plcid_Ending,	KosP_GHZ,	Level_End,	Level_GHZbg,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	ObjPos_End,	Rings_Null	; Ending (bad)
 
-; PLC, level gfx, 16x16 data, 256x256 data, collision, palette
-lhead:	macro plc,lvlgfx,sixteen,twofivesix,collision,pal
-		dc.l (plc<<24)+lvlgfx
-		dc.l sixteen
-		dc.l twofivesix
-		dc.l (collision<<8)+pal
-		endm
-
-		;	PLC		level gfx	16x16 data	256x256 data	collision	palette
-		lhead	plcid_GHZ,	KosP_GHZ,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	palid_GHZ	; Green Hill 1
-		lhead	plcid_GHZ,	KosP_GHZ,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	palid_GHZ	; Green Hill 2
-		lhead	plcid_GHZ,	KosP_GHZ,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	palid_GHZ	; Green Hill 3
-		lhead	plcid_GHZ,	KosP_GHZ,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	palid_GHZ	; Green Hill 4 (unused)
-		
-		lhead	plcid_LZ,	KosP_LZ,	Blk16_LZ,	Blk256_LZ,	Col_LZ,		palid_LZ	; Labyrinth 1
-		lhead	plcid_LZ,	KosP_LZ,	Blk16_LZ,	Blk256_LZ,	Col_LZ,		palid_LZ	; Labyrinth 2
-		lhead	plcid_LZ,	KosP_LZ,	Blk16_LZ,	Blk256_LZ,	Col_LZ,		palid_LZ	; Labyrinth 3
-		lhead	plcid_LZ,	KosP_LZ,	Blk16_LZ,	Blk256_LZ,	Col_LZ,		palid_SBZ3	; Labyrinth 4 (Scrap Brain Zone 3)
-		
-		lhead	plcid_MZ,	KosP_MZ,	Blk16_MZ,	Blk256_MZ,	Col_MZ,		palid_MZ	; Marble 1
-		lhead	plcid_MZ,	KosP_MZ,	Blk16_MZ,	Blk256_MZ,	Col_MZ,		palid_MZ	; Marble 2
-		lhead	plcid_MZ,	KosP_MZ,	Blk16_MZ,	Blk256_MZ,	Col_MZ,		palid_MZ	; Marble 3
-		lhead	plcid_MZ,	KosP_MZ,	Blk16_MZ,	Blk256_MZ,	Col_MZ,		palid_MZ	; Marble 4 (unused)
-		
-		lhead	plcid_SLZ,	KosP_SLZ,	Blk16_SLZ,	Blk256_SLZ,	Col_SLZ,	palid_SLZ	; Star Light 1
-		lhead	plcid_SLZ,	KosP_SLZ,	Blk16_SLZ,	Blk256_SLZ,	Col_SLZ,	palid_SLZ	; Star Light 2
-		lhead	plcid_SLZ,	KosP_SLZ,	Blk16_SLZ,	Blk256_SLZ,	Col_SLZ,	palid_SLZ	; Star Light 3
-		lhead	plcid_SLZ,	KosP_SLZ,	Blk16_SLZ,	Blk256_SLZ,	Col_SLZ,	palid_SLZ	; Star Light 4 (unused)
-		
-		lhead	plcid_SYZ,	KosP_SYZ,	Blk16_SYZ,	Blk256_SYZ,	Col_SYZ,	palid_SYZ	; Spring Yard 1
-		lhead	plcid_SYZ,	KosP_SYZ,	Blk16_SYZ,	Blk256_SYZ,	Col_SYZ,	palid_SYZ	; Spring Yard 2
-		lhead	plcid_SYZ,	KosP_SYZ,	Blk16_SYZ,	Blk256_SYZ,	Col_SYZ,	palid_SYZ	; Spring Yard 3
-		lhead	plcid_SYZ,	KosP_SYZ,	Blk16_SYZ,	Blk256_SYZ,	Col_SYZ,	palid_SYZ	; Spring Yard 4 (unused)
-		
-		lhead	plcid_SBZ,	KosP_SBZ,	Blk16_SBZ,	Blk256_SBZ,	Col_SBZ,	palid_SBZ1	; Scrap Brain 1
-		lhead	plcid_SBZ,	KosP_SBZ,	Blk16_SBZ,	Blk256_SBZ,	Col_SBZ,	palid_SBZ2	; Scrap Brain 2
-		lhead	plcid_SBZ,	KosP_SBZ,	Blk16_SBZ,	Blk256_SBZ,	Col_SBZ,	palid_SBZ2	; Scrap Brain 3 (Final Zone)
-		lhead	plcid_SBZ,	KosP_SBZ,	Blk16_SBZ,	Blk256_SBZ,	Col_SBZ,	palid_SBZ1	; Scrap Brain 4 (unused)
-
-		lhead	0,		KosP_GHZ,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	palid_Ending	; Ending (good)
-		lhead	0,		KosP_GHZ,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	palid_Ending	; Ending (bad)
-
-		even
+	even

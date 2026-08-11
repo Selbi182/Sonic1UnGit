@@ -99,11 +99,9 @@ SpinC_Main_Spawner:
 ; ---------------------------------------------------------------------------
 
 	.spawn:
-		; Same format as LZ conveyor platforms, see notes in LCon_Main_Spawner
 		add.w	d0,d0					; double group ID for word-based indexing
 		andi.w	#$1E,d0					; mask out upper digit
-		addi.w	#ObjPosSBZPlatform_Index-ObjPos_Index,d0 ; add start index for SBZ conveyor platform objpos data
-		lea	(ObjPos_Index).l,a2			; load base of level object definitions
+		lea	(ObjPosSBZPlatform_Index).l,a2		; load base of level object definitions
 		adda.w	(a2,d0.w),a2				; advance to conveyor platform objpos data for group ID
 		move.w	(a2)+,d1				; retrieve number of platforms in objpos data
 		movea.l	a0,a1					; write first platform to current RAM location
@@ -286,3 +284,26 @@ SpinC_Data:	dc.w .group0-SpinC_Data
 		dc.w .baseX_5+$6F, .baseY_5-$56
 		dc.w .baseX_5+$6F, .baseY_5-$18
 		dc.w .baseX_5-$6C, .baseY_5+$56
+
+; ===========================================================================
+
+ObjPosSBZPlatform_Index:
+		dc.w ObjPos_SBZ1pf1-ObjPosSBZPlatform_Index, ObjPos_SBZ1pf2-ObjPosSBZPlatform_Index
+		dc.w ObjPos_SBZ1pf3-ObjPosSBZPlatform_Index, ObjPos_SBZ1pf4-ObjPosSBZPlatform_Index
+		dc.w ObjPos_SBZ1pf5-ObjPosSBZPlatform_Index, ObjPos_SBZ1pf6-ObjPosSBZPlatform_Index
+		dc.w ObjPos_SBZ1pf1-ObjPosSBZPlatform_Index, ObjPos_SBZ1pf2-ObjPosSBZPlatform_Index
+
+ObjPos_SBZ1pf1:	binclude	"objpos/platforms/sbz1pf1.bin"
+		even
+ObjPos_SBZ1pf2:	binclude	"objpos/platforms/sbz1pf2.bin"
+		even
+
+ObjPos_SBZ1pf3:	binclude	"objpos/platforms/sbz1pf3.bin"
+		even
+ObjPos_SBZ1pf4:	binclude	"objpos/platforms/sbz1pf4.bin"
+		even
+
+ObjPos_SBZ1pf5:	binclude	"objpos/platforms/sbz1pf5.bin"
+		even
+ObjPos_SBZ1pf6:	binclude	"objpos/platforms/sbz1pf6.bin"
+		even

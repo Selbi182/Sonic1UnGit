@@ -129,19 +129,9 @@ LCon_Main_Spawner:
 ; ---------------------------------------------------------------------------
 
 .spawn:
-		; LZ conveyor belt platforms use a special variation of the standard level object positioning data,
-		; indexed at ObjPosLZPlatform_Index (see "objpos/platforms/" folder). The same format is also used
-		; for the conveyor platforms in SBZ, as that object is largely copy-pasted from this one.
-		; Format:
-		; 	number of entries minus 1
-		; 	X-pos, Y-pos, subtype
-		; 	entries...
-		; All fields are word-sized, even the subtype.
-
 		add.w	d0,d0					; double group ID for word-based indexing
 		andi.w	#$1E,d0					; mask out upper digit
-		addi.w	#ObjPosLZPlatform_Index-ObjPos_Index,d0	; add start index for LZ conveyor platform objpos data
-		lea	(ObjPos_Index).l,a2			; load base of level object definitions
+		lea	(ObjPosLZPlatform_Index).l,a2		; load base of level object definitions
 		adda.w	(a2,d0.w),a2				; advance to conveyor platform objpos data for group ID
 		move.w	(a2)+,d1				; retrieve number of platforms in objpos data
 		movea.l	a0,a1					; write first platform to current RAM location
@@ -395,6 +385,29 @@ LCon_Data:	dc.w .group0-LCon_Data
 		dc.w .baseX_5+$DE, .baseY_5-$5A
 		dc.w .baseX_5+$DE, .baseY_5+$5A
 		dc.w .baseX_5-$AE, .baseY_5+$5A
+
+; ===========================================================================
+
+ObjPosLZPlatform_Index:
+		dc.w ObjPos_LZ1pf1-ObjPosLZPlatform_Index, ObjPos_LZ1pf2-ObjPosLZPlatform_Index
+		dc.w ObjPos_LZ2pf1-ObjPosLZPlatform_Index, ObjPos_LZ2pf2-ObjPosLZPlatform_Index
+		dc.w ObjPos_LZ3pf1-ObjPosLZPlatform_Index, ObjPos_LZ3pf2-ObjPosLZPlatform_Index
+		dc.w ObjPos_LZ1pf1-ObjPosLZPlatform_Index, ObjPos_LZ1pf2-ObjPosLZPlatform_Index
+
+ObjPos_LZ1pf1:	binclude	"objpos/platforms/lz1pf1.bin"
+		even
+ObjPos_LZ1pf2:	binclude	"objpos/platforms/lz1pf2.bin"
+		even
+
+ObjPos_LZ2pf1:	binclude	"objpos/platforms/lz2pf1.bin"
+		even
+ObjPos_LZ2pf2:	binclude	"objpos/platforms/lz2pf2.bin"
+		even
+
+ObjPos_LZ3pf1:	binclude	"objpos/platforms/lz3pf1.bin"
+		even
+ObjPos_LZ3pf2:	binclude	"objpos/platforms/lz3pf2.bin"
+		even
 
 ; ===========================================================================
 
