@@ -623,17 +623,8 @@ BG_ScrollBlockMap_MZ:
 		dc.b 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2	; $40-$4F
 		dc.b 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2	; $50-$5F
 		dc.b 2,0				; $60-$61
-
 ; ===========================================================================
 
-
-; locj_6FE4:
-DrawBG_XPosCopy_Ptrs2:
-		dc.w v_bgscreenposx_dup		; 0
-		dc.w v_bgscreenposx_dup		; 2
-		dc.w v_bg2screenposx_dup	; 4
-		dc.w v_bg3screenposx_dup	; 6
-; ===========================================================================
 Draw_MZ:
 		moveq	#-16,d4					; draw 16px above top of screen
 		bclr	#0,(a2)					; clear flag for redraw top
@@ -651,7 +642,8 @@ Draw_MZ:
 		andi.w	#$7F0,d0				; limit to multiples of $10
 		lsr.w	#4,d0					; divide by 16
 		move.b	(a0,d0.w),d0				; retrieve offset value from input BG_ScrollBlockMap (0/2/4/6)
-		movea.w	DrawBG_XPosCopy_Ptrs2(pc,d0.w),a3	; use that value to retrieve relevant BG screen position data
+		lea	DrawBG_XPosCopy_Ptrs(pc),a3		; use that value to retrieve relevant BG screen position data
+		movea.w	(a3,d0.w),a3				; use that value to retrieve relevant BG screen position data
 		beq.s	.bgXPos0				; branch if 0
 		moveq	#-16,d5					; x coordinate - left of screen
 		movem.l	d4-d5,-(sp)				; store X and Y positions
