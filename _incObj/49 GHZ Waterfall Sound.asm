@@ -4,17 +4,7 @@
 ; ---------------------------------------------------------------------------
 
 WaterSound:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	WSnd_Index(pc,d0.w),d1
-		jmp	WSnd_Index(pc,d1.w)
-; ===========================================================================
-WSnd_Index:	dc.w WSnd_Main-WSnd_Index
-		dc.w WSnd_PlaySnd-WSnd_Index
-; ===========================================================================
-
-WSnd_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to WSnd_PlaySnd
+		move.l	#WSnd_PlaySnd,obID(a0)
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 ; ---------------------------------------------------------------------------
 

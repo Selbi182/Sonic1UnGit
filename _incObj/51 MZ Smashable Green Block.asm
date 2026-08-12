@@ -13,7 +13,6 @@ SmashBlock:
 ; ===========================================================================
 Smab_Index:	dc.w Smab_Main-Smab_Index
 		dc.w Smab_Solid-Smab_Index
-		dc.w Smab_Fragment-Smab_Index
 
 smab_sonani:	equ objoff_32		; backup of Sonic's current animation number
 smab_combo:	equ objoff_34		; number of blocks hit + previous stuff
@@ -67,11 +66,11 @@ Smab_Solid:	; Routine 2
 		move.b	#1,obFrame(a0)				; set to block frame with four sprite pieces for fragmentation
 		lea	(Smab_Speeds).l,a4			; load broken fragment speed data
 		moveq	#4-1,d1					; set number of fragments to load to 4
-		move.w	#gravity,d2				; set counter-gravity for edge case in SmashObject
-		bsr.w	SmashObject				; smash the block into four fragment objects (set to routine 4, Smab_Fragment)
+		move.l	#gravity<<8,d2				; set counter-gravity for edge case in SmashObject
+		bsr.w	SmashObject				; smash the block into four fragment objects
 
 		bsr.w	FindFreeObj				; find a free object slot for the points
-		bne.s	Smab_Fragment				; if object RAM is full, branch
+		bne.s	.moveParent				; if object RAM is full, branch
 		move.l	#Points,obID(a1)			; load floating points object
 		move.w	obX(a0),obX(a1)				; use block's X-position
 		move.w	obY(a0),obY(a1)				; use block's Y-position
@@ -93,19 +92,8 @@ Smab_Solid:	; Routine 2
 
 		lsr.w	#1,d2					; make item bonus multiples of 1 again for frame ID
 		move.b	d2,obFrame(a1)				; set frame ID for floating points object
-
-		; continue to Smab_Fragment (root object has been converted to first fragment)...
-; ---------------------------------------------------------------------------
-
-Smab_Fragment:	; Routine 4
-		bsr.w	SpeedToPos				; update fragment position based on speeds
-		addi.w	#gravity,obVelY(a0)			; make fragment fall
-
-		addq.l	#4,sp					; don't return to SmashBlock
-		tst.b	obRender(a0)				; has fragment gone offscreen?
-		bpl.w	DeleteObject				; if yes, delete it
-		DisplaySprite
-		rts				; otherwise, keep displaying fragment sprite
+	.moveParent:
+		bra.w	Particle_MovingFragment
 
 ; ===========================================================================
 Smab_Speeds:	;  x-speed, y-speed

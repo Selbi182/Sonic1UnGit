@@ -6,30 +6,11 @@
 SpikeBall:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		cmpi.b	#4,d0
-		bne.s	SBall_NotChild
-
-SBall_Child:
-		; Child objects are just displayed normally, rotation and deletion is handled by parent
-		move.w	#spr_prio4,d0
-		DisplaySprite_direct
-
-		cmpi.l	#SpikeBall,object_size(a0)
-		bne.s	.exit
-		dbf	d7,.shortcut
-	.exit:	rts
-
-	.shortcut:
-		lea	object_size(a0),a0
-		bra.s	SpikeBall
-
-SBall_NotChild:
 		move.w	SBall_Index(pc,d0.w),d1
 		jmp	SBall_Index(pc,d1.w)
 ; ===========================================================================
 SBall_Index:	dc.w SBall_Main-SBall_Index
 		dc.w SBall_Move-SBall_Index
-		dc.w SBall_Child-SBall_Index
 
 sball_children:	equ objoff_30		; number of child objects (1 byte)
 		; $30-$37		; object RAM numbers of children (1 byte each)
@@ -95,8 +76,7 @@ SBall_Main:	; Routine 0
 		andi.w	#$7F,d5					; limit to sane values
 		move.b	d5,(a2)+				; store RAM index for child object in parent for twirl and delete logic
 
-		move.b	#4,obRoutine(a1)			; set to SBall_Child
-		move.l	obID(a0),obID(a1)			; copy object ID from parent
+		move.l	#Particle_DisplayOnly,obID(a1)
 		move.l	obMap(a0),obMap(a1)			; copy mappings from parent
 		move.w	obGfx(a0),obGfx(a1)			; copy art tile from parent
 		move.b	obRender(a0),obRender(a1)		; copy render flags from parent

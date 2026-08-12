@@ -3,22 +3,13 @@
 ; Object 36 - Spikes
 ; ---------------------------------------------------------------------------
 
-Spikes:
-		moveq	#0,d0					; clear d0
-		move.b	obRoutine(a0),d0			; get current object routine
-		move.w	Spikes_Index(pc,d0.w),d1		; find entry in jump table
-		jmp	Spikes_Index(pc,d1.w)			; jump there
-; ===========================================================================
-Spikes_Index:	dc.w Spikes_Main-Spikes_Index			; 0 - init
-		dc.w Spikes_Solid-Spikes_Index			; 2 - main mode
-
 spikes_origX:		equ objoff_30	; initial X-position
 spikes_origY:		equ objoff_32	; initial Y-position
 spikes_move_pos:	equ objoff_34	; delta position for moving spikes (0px to 32px)
 spikes_move_direction:	equ objoff_36	; flag for last movement direction
 spikes_move_delay:	equ objoff_38	; delay between spike movement
-; ===========================================================================
 
+; ===========================================================================
 Spikes_Config:	; 	frame,	display and collision width/2
 		dc.b	0,  40/2	; subtype $0x: 3 spikes, upright
 		dc.b	1,  32/2	; subtype $1x: 3 spikes, sideways
@@ -29,8 +20,8 @@ Spikes_Config:	; 	frame,	display and collision width/2
 		; (More spike types could theoretically be added here...)
 ; ===========================================================================
 
-Spikes_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; set to Spikes_Solid
+Spikes:
+		move.l	#Spikes_Solid,obID(a0)
 		move.l	#Map_Spike,obMap(a0)			; load mappings
 		move.w	#ArtTile_Spikes,obGfx(a0)		; set art tile
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioning mode

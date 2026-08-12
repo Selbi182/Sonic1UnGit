@@ -12,7 +12,6 @@ Bomb:
 Bom_Index:	dc.w Bom_Main-Bom_Index		; 0
 		dc.w Bom_Action-Bom_Index	; 2
 		dc.w Bom_Fuse-Bom_Index		; 4
-		dc.w Bom_Shrapnel-Bom_Index	; 6
 
 bom_time:	equ objoff_30		; multi-purpose timer (walking, waiting, fuse)
 bom_origY:	equ objoff_34		; fuse's original y-axis position independent it moving
@@ -183,36 +182,36 @@ Bom_BurnFuseAndExplode:
 		bne.s	.nextShrapnel				; if object RAM is full, branch (should probably branch after the dbf...)
 
 	.firstShrapnel:
-		move.l	#Bomb,obID(a1)			; load shrapnel object
+		move.l	#Particle_MovingFragment_Animate,obID(a1)
 		move.w	obX(a0),obX(a1)				; copy X-position
 		move.w	obY(a0),obY(a1)				; copy Y-position
-		move.b	#6,obSubtype(a1)			; set shrapnel to use Bom_Shrapnel routine
 		move.b	#4,obAnim(a1)				; use shrapnel animation
-		move.w	(a2)+,obVelX(a1)			; get next X-velocity from speed data
-		move.w	(a2)+,obVelY(a1)			; get next Y-velocity from speed data
+
+		move.l	#Map_Bomb,obMap(a1)			; set mappings
+		move.w	#ArtTile_Bomb,obGfx(a1)			; set art tile
+		ori.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode
+		move.w	#spr_prio3,obPriority(a1)		; set sprite priority
+
+		move.w	(a2)+,d0
+		ext.l	d0
+		asl.l	#8,d0
+		move.l	d0,particle_velX(a1)			; get next X-velocity from speed data
+		move.w	(a2)+,d0
+		ext.l	d0
+		asl.l	#8,d0
+		move.l	d0,particle_velY(a1)			; get next Y-velocity from speed data
+
+		move.l	#Ani_Bomb,particle_animscript(a1)
+		move.l	#$18<<8,particle_fallspeed(a1)
+
 		move.b	#col_8x8|col_hurt,obColType(a1)		; set ReactToItem type (damaging)
 		bset	#sprite_rendered_bit,obRender(a1)	; make sure shrapnel doesn't get immediately deleted from "obRender bpl" check below
 
 	.nextShrapnel:
 		dbf	d1,.loopShrapnel			; repeat 3 more times
 
-		move.b	#6,obRoutine(a0)			; set root object (previously the fuse) to Bom_Shrapnel routine
-		; Continue straight to Bom_Shrapnel for first shrapnel...
-
+		bra.w	Particle_MovingFragment_Animate
 ; End of function Bom_BurnFuseAndExplode
-; ---------------------------------------------------------------------------
-
-Bom_Shrapnel:	; Routine 6
-		bsr.w	SpeedToPos				; update shrapnel's position
-		addi.w	#$18,obVelY(a0)				; make shrapnel fall faster
-
-		lea	(Ani_Bomb).l,a1				; load animation script
-		bsr.w	AnimateSprite				; animate shrapnel
-
-		tst.b	obRender(a0)				; has shrapnel gone offscreen?
-		bpl.w	DeleteObject				; if yes, delete it
-		DisplaySprite
-		rts				; otherwise, display shrapnel
 ; ===========================================================================
 
 Bom_ShrSpeed:	;    X-vel  Y-vel

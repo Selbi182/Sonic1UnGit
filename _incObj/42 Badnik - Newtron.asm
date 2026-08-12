@@ -165,11 +165,9 @@ Newt_Action_GreenNewtron:
 ; ===========================================================================
 
 Newt_GreenDelete: ; Routine 4 (Called by green Newtrons from animation script, which increases obRoutine once it finished)
-
-		; Note: This will delete green Newtrons once their animation has made them invisible again,
-		; but it will keep the "respawn block" flag set, making them not respawnable anymore.
-		; It's hard to tell if this was the intended effect or an oversight.
-		; To change this behavior and make them respawnable, branch to RememberState instead.
+		respawn_entry.s	.delete
+		bclr	#7,(a2)
+	.delete:
 		bra.w	DeleteObject				; delete green Newtron
 ; ===========================================================================
 

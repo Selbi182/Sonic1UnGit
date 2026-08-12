@@ -4,18 +4,7 @@
 ; ---------------------------------------------------------------------------
 
 Scenery:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Scen_Index(pc,d0.w),d1
-		jmp	Scen_Index(pc,d1.w)
-; ===========================================================================
-Scen_Index:	dc.w Scen_Main-Scen_Index
-		dc.w Scen_ChkDel-Scen_Index
-; ===========================================================================
-
-Scen_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Scen_ChkDel
-
+		move.l	#Scen_ChkDel,obID(a0)
 		moveq	#0,d0					; clear d0 for word-addressing
 		move.b	obSubtype(a0),d0			; get subtype of scenery object
 		mulu.w	#$A,d0					; multiply by $A (size per Scen_Values entry)

@@ -3,17 +3,14 @@
 ; ---------------------------------------------------------------------------
 
 AfterImage:
-		tst.b	obRoutine(a0)
-		bne.s	After_Main
-
-After_Init:
-		addq.b	#2,obRoutine(a0)		; Advance obRoutine to "After_Main"
+		move.l	#After_Main,obID(a0)
 		move.l	#Map_Sonic,obMap(a0)
 		move.w	#ArtTile_Sonic,obGfx(a0)
 		move.w	#spr_prio2,obPriority(a0)
 		move.b	#$18,obWidth(a0)
 		move.b	#$18,obHeight(a0)
 		move.b	#4,obRender(a0)
+; ---------------------------------------------------------------------------
 
 After_Main:
 		tst.b	(v_shoes).w			; Have Speed Shoes expired?

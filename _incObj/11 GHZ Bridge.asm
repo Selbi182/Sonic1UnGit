@@ -17,7 +17,6 @@ Bri_Index:	dc.w Bri_Main-Bri_Index		; 0
 		dc.w Bri_StoodOn-Bri_Index	; 4
 		dc.w Bri_Delete-Bri_Index	; 6
 		dc.w Bri_Delete-Bri_Index	; 8
-		dc.w Bri_ChildLog-Bri_Index	; A
 
 bridge_children:	equ objoff_30		; number of log objects, initially retrieved from subtype ($28)
 bridge_children_ram:	equ bridge_children+1	; RAM indices to log objects ($29-$39, usually read together with bridge_children)
@@ -72,8 +71,7 @@ Bri_Main:	; Routine 0
 		andi.w	#$7F,d5					; d5 = index of child in object RAM
 		move.b	d5,(a2)+				; store new child index at the end of bridge_children
 
-		move.b	#$A,obRoutine(a1)			; set child log to Bri_ChildLog (display only)
-		move.l	d4,obID(a1)				; copy object ID from parent
+		move.l	#Particle_DisplayOnly,obID(a1)
 		move.w	d2,obY(a1)				; copy Y-position from parent
 		move.w	d2,bridge_origY(a1)			; remember initial Y-position
 		move.w	d3,obX(a1)				; write current X-position set in d3
@@ -358,14 +356,6 @@ Bri_ChkDel:
 
 Bri_Delete:	; Routine 6/8 (unused?)
 		bra.w	DeleteObject				; delete object
-; ===========================================================================
-
-; Bri_Display:
-Bri_ChildLog:	; Routine $A
-		; Note: Child logs are updated and deleted through the parent object!
-		DisplaySprite				; just display child log sprite
-		rts						; return
-
 ; ===========================================================================
 
 Map_Bri:	include	"_maps/Bridge.asm"

@@ -15,8 +15,7 @@ Swing_Index:	dc.w Swing_Main-Swing_Index		; 0
 		dc.w Swing_StoodOn-Swing_Index		; 4
 		dc.w Swing_Delete-Swing_Index		; 6
 		dc.w Swing_Delete-Swing_Index		; 8
-		dc.w Swing_ChainLink-Swing_Index	; A
-		dc.w Swing_Swinging-Swing_Index		; C
+		dc.w Swing_Swinging-Swing_Index		; A
 
 swing_children:	equ objoff_30		; number of child link objects ($28 = child count, $29-$39 RAM indices to links)
 swing_origY:	equ objoff_1C		; original y-axis position
@@ -57,7 +56,7 @@ Swing_Main:	; Routine 0
 		move.b	#48/2,obActWid(a0)			; SBZ-specific width
 		move.b	#48/2,obHeight(a0)			; SBZ-specific height
 		move.b	#col_32x32|col_hurt,obColType(a0)	; make entire spikeball harmful on touch
-		move.b	#$C,obRoutine(a0)			; use Swing_Swinging routine (disable platform logic)
+		move.b	#$A,obRoutine(a0)			; use Swing_Swinging routine (disable platform logic)
 
 Swing_CreateLinks:
 		move.l	obID(a0),d4				; copy parent object ID to children
@@ -90,13 +89,12 @@ Swing_CreateLinks:
 		andi.w	#$7F,d5					; d5 = index of child in object RAM
 		move.b	d5,(a2)+				; store new child index at the end of swing_children
 
-		move.b	#$A,obRoutine(a1)			; use Swing_ChainLink routine (display only)
-		move.l	d4,obID(a1)				; copy object ID from parent
+		move.l	#Particle_DisplayOnly,obID(a1)		; copy object ID from parent
 		move.l	obMap(a0),obMap(a1)			; copy mappings from parent
 		move.w	obGfx(a0),obGfx(a1)			; copy art tile from parent
 		bclr	#6,obGfx(a1)				; force palette line 1 instead of line 3 (gray)
 		move.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode
-		move.w	#spr_prio4,obPriority(a1)			; set sprite priority (behind parent)
+		move.w	#spr_prio4,obPriority(a1)		; set sprite priority (behind parent)
 		move.b	#16/2,obActWid(a1)			; set sprite display width
 		move.b	#1,obFrame(a1)				; use "chain" frame
 
@@ -246,13 +244,6 @@ Swing_ChkDel:
 
 Swing_Delete:	; Routine 6/8 (unused?)
 		bra.w	DeleteObject				; delete object
-; ===========================================================================
-
-; Swing_Display:
-Swing_ChainLink: ; Routine $A
-		; Note: Chain links are updated and deleted through the parent object!
-		DisplaySprite
-		rts				; just display chain sprite
 
 ; ===========================================================================
 

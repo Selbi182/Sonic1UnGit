@@ -28,8 +28,8 @@ SmashObject:
 		addq.w	#5,a3					; advance to next sprite piece in mappings (each piece is 5 bytes)
 
 	.loadFirstFrag:
-		move.b	#4,obRoutine(a1)			; set routine to 4 (assumed to be a simple ObjectFall, display, delete)
-		move.l	d4,obID(a1)				; use same object ID as parent
+		move.l	#Particle_MovingFragment,obID(a1)
+
 		move.l	a3,obMap(a1)				; use same mappings as parent
 		move.b	d5,obRender(a1)				; use same render flags as parent (including "raw-mappings")
 		move.w	obX(a0),obX(a1)				; use same X-position as parent
@@ -38,8 +38,16 @@ SmashObject:
 		move.w	obPriority(a0),obPriority(a1)		; use same sprite priority as parent
 		move.b	obActWid(a0),obActWid(a1)		; use same display width as parent
 
-		move.w	(a4)+,obVelX(a1)			; load next X-speed from input array
-		move.w	(a4)+,obVelY(a1)			; load next Y-speed from input array
+		move.w	(a4)+,d0
+		ext.l	d0
+		asl.l	#8,d0
+		move.l	d0,particle_velX(a1)			; load next X-speed from input array
+		move.w	(a4)+,d0
+		ext.l	d0
+		asl.l	#8,d0
+		move.l	d0,particle_velY(a1)			; load next Y-speed from input array
+
+		move.l	d2,particle_fallspeed(a1)
 
 		dbf	d1,.loopFragments			; loop until all fragments have been spawned
 

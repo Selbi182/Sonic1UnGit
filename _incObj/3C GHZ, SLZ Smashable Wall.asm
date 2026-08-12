@@ -13,7 +13,7 @@ SmashWall:
 ; ===========================================================================
 Smash_Index:	dc.w Smash_Main-Smash_Index
 		dc.w Smash_Solid-Smash_Index
-		dc.w Smash_Fragment-Smash_Index
+	;	dc.w Smash_Fragment-Smash_Index
 
 smash_speed:	equ objoff_30		; backup of Sonic's horizontal speed before hitting the wall
 ; ===========================================================================
@@ -77,21 +77,9 @@ Smash_Solid:	; Routine 2
 		bclr	#5,obStatus(a1)				; clear Sonic's pushing flag
 
 		moveq	#8-1,d1					; set number of fragments to load to 8 (number of sprite pieces in wall)
-		move.w	#gravity*2,d2				; set counter-gravity for edge case in SmashObject
+		move.l	#(gravity*2)<<8,d2				; set counter-gravity for edge case in SmashObject
 		bsr.s	SmashObject				; smash the block into four fragment objects (set to routine 4, Smash_Fragment)
-		; continue to Smash_Fragment (root object has been converted to first fragment)...
-; ---------------------------------------------------------------------------
-
-Smash_Fragment:	; Routine 4
-		bsr.w	SpeedToPos				; update fragment position based on speeds
-		addi.w	#gravity*2,obVelY(a0)			; make fragment fall faster (double gravity)
-
-		addq.l	#4,sp					; don't return to SmashWall
-		tst.b	obRender(a0)				; has fragment gone offscreen?
-		bpl.w	DeleteObject				; if yes, delete it
-		DisplaySprite
-		rts				; otherwise, keep displaying fragment sprite
-
+		bra.w	Particle_MovingFragment
 
 ; ===========================================================================
 ; This subroutine is shared with most other smashable objects. This object likely

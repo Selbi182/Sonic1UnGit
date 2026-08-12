@@ -3528,7 +3528,6 @@ TryAg_Exit:		; exit end screen and restart the gam
 		include	"_incObj/1A, 53 Collapsing Ledges and Floors.asm" ; includes "SlopeObject_AssumeStoodOn" subroutine
 		include	"_incObj/1C GHZ, SYZ Scenery.asm"
 		include	"_incObj/2A SBZ Small Door.asm"
-		include	"_incObj/sub SolidWall.asm"
 
 
 ; ===========================================================================
@@ -3556,9 +3555,9 @@ TryAg_Exit:		; exit end screen and restart the gam
 ; >>> Title screen objects (includes AnimateSprite)
 		include	"_incObj/0E, 0F Title Screen - Sonic, Press Start, TM.asm"
 
-
 ; ===========================================================================
 ; >>> More Badniks and level objects
+		include	"_incObj/10 Particle.asm"
 		include	"_incObj/2B Badnik - Chopper.asm"
 		include	"_incObj/2C Badnik - Jaws.asm"
 		include	"_incObj/2D Badnik - Burrobot.asm"
@@ -3639,7 +3638,6 @@ Map_Over:	include	"_maps/Game Over.asm"
 		include	"_incObj/62 LZ Gargoyle.asm"
 		include	"_incObj/63 LZ Conveyor.asm"
 		include	"_incObj/64 LZ Air Bubbles.asm"
-		include	"_incObj/10 Bubble Particle.asm"
 		include	"_incObj/65 LZ Waterfalls.asm"
 
 

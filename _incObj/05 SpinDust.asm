@@ -4,15 +4,13 @@
 ; ---------------------------------------------------------------------------
 
 SpinDust:
-		tst.b	obRoutine(a0)				; has object already been initalized?
-		bne.s	SpinDust_Main				; if yes, skip over
-
-		addq.b	#2,obRoutine(a0)			; set dust as initalized
+		move.l	#SpinDust_Main,obID(a0)
 		move.l	#Map_SpinDust,obMap(a0)			; set sprite mapping location
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio1,obPriority(a0)			; set sprite priority to 1 (in front of Sonic)
+		move.w	#spr_prio1,obPriority(a0)		; set sprite priority to 1 (in front of Sonic)
 		move.b	#32/2,obActWid(a0)			; set sprite display width to 32px
 		move.w	#ArtTile_SpinDust,obGfx(a0)		; set VRAM location to $F400 (tile offset $7A0)
+; ---------------------------------------------------------------------------
 
 SpinDust_Main:
 		lea	(v_player).w,a2				; load Sonic object to a2

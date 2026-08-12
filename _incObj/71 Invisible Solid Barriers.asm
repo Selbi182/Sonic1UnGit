@@ -4,17 +4,7 @@
 ; ---------------------------------------------------------------------------
 
 Invisibarrier:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Invis_Index(pc,d0.w),d1
-		jmp	Invis_Index(pc,d1.w)
-; ===========================================================================
-Invis_Index:	dc.w Invis_Main-Invis_Index
-		dc.w Invis_Solid-Invis_Index
-; ===========================================================================
-
-Invis_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)		; advance to Invis_Solid
+		move.l	#Invis_Solid,obID(a0)
 		move.l	#Map_Invis,obMap(a0)		; set mappings (debug mode only)
 		move.w	#ArtTile_Monitor|Tile_Prio,obGfx(a0) ; set art tile and priority bit (debug mode only)
 		ori.b	#sprite_cam_field,obRender(a0)	; set to playfield-positioned mode
