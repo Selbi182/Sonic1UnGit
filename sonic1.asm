@@ -2487,13 +2487,6 @@ Level_LoadPal:
 		bsr.w	PalLoad					; ...directly to active palette (for title cards)
 		cmpi.b	#id_LZ,(v_zone).w			; is level LZ?
 		bne.s	Level_GetBgm				; if not, branch
-		moveq	#palid_LZSonWater,d0			; palette number $F (LZ)
-		cmpi.b	#act4,(v_act).w				; check if on act 4 (for SBZ3/LZ4)?
-		bne.s	Level_WaterPal				; if not, branch
-		moveq	#palid_SBZ3SonWat,d0			; palette number $10 (SBZ3)
-
-Level_WaterPal:
-		bsr.w	PalLoad_Fade_Water			; load underwater palette
 		tst.b	(v_lastlamp).w				; are we respawning from a checkpoint?
 		beq.s	Level_GetBgm				; if not, branch
 		move.b	(v_lamp_wtrstat).w,(f_wtr_state).w	; restore water state from checkpoint

@@ -52,14 +52,18 @@ LevelDataLoad:
 	; --- Palette ---
 		moveq	#0,d0					; clear d0
 		move.b	(a2)+,d0				; load palette ID
-		move.l	a2,-(sp)
+		move.l	a2,-(sp)				; backup a2 (PalLoad_Fade trashes it)
 		bsr.w	PalLoad_Fade				; load specified palette into fade-in buffer
-		move.l	(sp)+,a2
+		move.l	(sp)+,a2				; restore a2
 	
-	; --- (Unused) ---
-		move.b	(a2)+,d0
-		nop ; no idea what to do with this one yet
-		rts
+	; --- Underwater Sonic Palette ---
+		moveq	#0,d0					; clear d0
+		move.b	(a2)+,d0				; get Sonic's underwater palette
+		beq.s	.return					; if level doesn't have one, skip loading
+		bra.w	PalLoad_Fade_Water			; load Sonic's underwater palette into fade-in buffer
+
+	.return:
+		rts						; done
 ; End of function LevelDataLoad
 ; ===========================================================================
 

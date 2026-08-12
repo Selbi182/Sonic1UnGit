@@ -199,7 +199,6 @@ btnABC:			equ btnA|btnB|btnC			; ($70)
 sprite_xflip_bit:	equ 0					; flip sprite mappings horizontally (X-axis)
 sprite_yflip_bit:	equ 1					; flip sprite mappings vertically (Y-axis)
 sprite_cam_field_bit:	equ 2					; position with foreground coordinates (playfield-positioned mode)
-sprite_cam_bg_bit:	equ 3					; position with background coordinates (unused, see notes in BuildSpr_Cameras)
 sprite_customheight_bit:equ 4					; use obHeight instead of assuming 32px to determine display height
 sprite_rawmappings_bit:	equ 5					; obMap points to single, specific sprite piece rather than index of mappings
 sprite_subsprite_bit:	equ 6

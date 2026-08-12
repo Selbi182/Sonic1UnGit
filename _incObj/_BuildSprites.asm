@@ -30,7 +30,7 @@ spritelayer	macro	screenpospossible
 		
 		move.b	d0,d4
 	if narg=1
-		moveq	#sprite_cam_field|sprite_cam_bg,d0
+		moveq	#sprite_cam_field,d0
 		and.w	d4,d0	; get drawing coordinate system in render flags (bit 2-3)
 		beq.s	.screenCoords\@				; branch if 0 (on-screen positioning coordinate system)
 	endif
