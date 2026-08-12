@@ -2534,14 +2534,14 @@ Level_SkipTtlCard:
 		bsr.w	PalLoad_Fade				; (doesn't actually do anything, the PalFadeIn_Alt call below skips the first palette line)
 		bsr.w	LevelSizeLoad				; load level size and set default level boundaries
 
-		move.b	#id_VBlank_TitleCards,(v_vblank_routine).w ; set VBlank routine to $0C
-		bsr.w	WaitForVBlank				; wait until VBlank has finished
-
 		bsr.w	DeformLayers				; initialize background deformation
 		bset	#2,(v_fg_scroll_flags).w		; draw an extra column at the left side of the screen during level start
 		bsr.w	LoadTilesFromStart			; fully draw the foreground and background once before fade-in
 		bsr.w	LZWaterFeatures				; initialize water features if zone is LZ
 
+		move.b	#id_VBlank_Levels,(v_vblank_routine).w	; set VBlank routine to $08
+		bsr.w	WaitForVBlank				; wait until VBlank has finished
+		
 		move.l	#SonicPlayer,(v_player+obID).w		; load Sonic object
 		move.b	#-1,(v_draw_hud).w			; enable HUD drawing (but don't flash it yet)
 
