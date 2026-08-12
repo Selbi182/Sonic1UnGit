@@ -28,11 +28,11 @@ CheatsEnabled: = 2
 ;	| If 1, all in-game cheats (Level Select, Debug Mode, Slow-Motion, Japanese Credits)
 ;	|       will be enabled by default, without requiring any title screen button inputs
 ;	| If 2, same as 1 but debug mode doesn't need to have A held down to get activated
+
 ; ===========================================================================
 ; Simplifying macros and functions
 	include	"Macros.asm"
 	include "sound/MegaPCM.Macros.asm"
-
 
 ; ===========================================================================
 ; Equates section - Names for constants
@@ -1967,7 +1967,9 @@ Tit_ChkLevSel:
 		tst.b	(f_levselcheat).w			; check if level select code is on
 		beq.s	.nocheat
 		btst	#bitA,(v_jpadhold1).w			; check if A was held while pressing Start
-		bne.s	Tit_EnterLevelSelect
+		beq.s	.nocheat
+		tst.b	(v_pressstart+obFrame).w
+		beq.s	Tit_EnterLevelSelect
 	.nocheat:
 		jmp	(TitleMenu_SelectionMade).l
 
@@ -2034,6 +2036,10 @@ LevSel_NoCheat:
 ; ===========================================================================
 
 LevSel_Ending:
+		btst	#bitA,(v_jpadhold1).w
+		beq.s	.notA
+		move.b	#ss_emeralds_num,(v_emeralds).w
+	.notA:
 		move.b	#id_Ending,(v_gamemode).w 		; set screen mode to $18 (Ending)
 		move.w	#id_EndZ_good,(v_zone_act).w  		; set level to good Ending (will be bad Ending without 6 emeralds)
 		rts
@@ -2430,7 +2436,6 @@ GM_Level:	; fading out from previous game mode
 
 		; load title cards, queue PLCs, setup screen, play music
 		jsr	(TitleCards_LoadArt).l			; load level title card graphics
-
 
 		moveq	#plcid_Main,d0				; load standard patterns
 		bsr.w	AddPLC					; merged to have set 1 and 2

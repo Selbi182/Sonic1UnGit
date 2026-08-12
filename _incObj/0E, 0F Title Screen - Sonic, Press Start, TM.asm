@@ -181,8 +181,8 @@ TitleMenu_Entries:
 		dc.b	"LEVEL SELECT    "
 
 		; Selection 2
-		dc.l	End_GoToCredits
-		dc.b	"CREDITS         "
+		dc.l	LevSel_Ending
+		dc.b	"ENDING          "
 
 		; End of list marker
 		dc.b	-1

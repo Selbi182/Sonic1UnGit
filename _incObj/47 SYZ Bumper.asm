@@ -44,7 +44,7 @@ Bump_Hit:	; Routine 2
 
 		bset	#1,obStatus(a1)				; set Sonic to airborne
 		bclr	#5,obStatus(a1)				; clear pushing flag
-		clr.b	jumping(a1)				; clear jumping flag
+		move.b	#1,jumping(a1)
 		clr.b	doublejump(a1)
 
 		move.b	#1,obAnim(a0)				; use bumper "hit" animation

@@ -18,8 +18,8 @@ lhead:	macro mus,pal,plc,lvlgfx,fglayout,bglayout,blocks,chunks,collision,objpos
 LevelHeaders:
 	;	Music		Palette		PLC		level gfx	FG layout	BG layout	Blocks		Chunks		Collision	Objects		Rings	
 	lhead	bgm_GHZ,	palid_GHZ,	plcid_GHZ,	KosP_GHZ,	Level_GHZ1,	Level_GHZbg,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	ObjPos_GHZ1,	Rings_GHZ1	; Green Hill 1
-	lhead	bgm_GHZ,	palid_GHZ,	plcid_GHZ,	KosP_GHZ,	Level_GHZ2,	Level_GHZbg,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	ObjPos_GHZ2,	Rings_GHZ1	; Green Hill 2
-	lhead	bgm_GHZ,	palid_GHZ,	plcid_GHZ,	KosP_GHZ,	Level_GHZ3,	Level_GHZbg,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	ObjPos_GHZ3,	Rings_GHZ1	; Green Hill 3
+	lhead	bgm_GHZ,	palid_GHZ,	plcid_GHZ,	KosP_GHZ,	Level_GHZ2,	Level_GHZbg,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	ObjPos_GHZ2,	Rings_GHZ2	; Green Hill 2
+	lhead	bgm_GHZ,	palid_GHZ,	plcid_GHZ,	KosP_GHZ,	Level_GHZ3,	Level_GHZbg,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	ObjPos_GHZ3,	Rings_GHZ3	; Green Hill 3
 	lhead	bgm_GHZ,	palid_GHZ,	plcid_GHZ,	KosP_GHZ,	Level_Null,	Level_Null,	Blk16_GHZ,	Blk256_GHZ,	Col_GHZ,	ObjPos_Null,	Rings_Null	; Green Hill 4 (unused)
 																	
 	lhead	bgm_LZ,		palid_LZ,	plcid_LZ,	KosP_LZ,	Level_LZ1,	Level_LZbg,	Blk16_LZ,	Blk256_LZ,	Col_LZ,		ObjPos_LZ1,	Rings_LZ1	; Labyrinth 1
@@ -43,7 +43,7 @@ LevelHeaders:
 	lhead	bgm_SYZ,	palid_SYZ,	plcid_SYZ,	KosP_SYZ,	Level_Null,	Level_Null,	Blk16_SYZ,	Blk256_SYZ,	Col_SYZ,	ObjPos_Null,	Rings_Null	; Spring Yard 4 (unused)
 																	
 	lhead	bgm_SBZ,	palid_SBZ1,	plcid_SBZ,	KosP_SBZ,	Level_SBZ1,	Level_SBZ1bg,	Blk16_SBZ,	Blk256_SBZ,	Col_SBZ,	ObjPos_SBZ1,	Rings_SBZ1	; Scrap Brain 1
-	lhead	bgm_SBZ,	palid_SBZ2,	plcid_SBZ,	KosP_SBZ,	Level_SBZ2_FZ,	Level_SBZ2bg,	Blk16_SBZ,	Blk256_SBZ,	Col_SBZ,	ObjPos_SBZ2,	Rings_SBZ1	; Scrap Brain 2
+	lhead	bgm_SBZ,	palid_SBZ2,	plcid_SBZ,	KosP_SBZ,	Level_SBZ2_FZ,	Level_SBZ2bg,	Blk16_SBZ,	Blk256_SBZ,	Col_SBZ,	ObjPos_SBZ2,	Rings_SBZ2	; Scrap Brain 2
 	lhead	bgm_FZ,		palid_SBZ2,	plcid_SBZ,	KosP_SBZ,	Level_SBZ2_FZ,	Level_SBZ2bg,	Blk16_SBZ,	Blk256_SBZ,	Col_SBZ,	ObjPos_FZ,	Rings_Null	; Scrap Brain 3 (Final Zone)
 	lhead	bgm_SBZ,	palid_SBZ1,	plcid_SBZ,	KosP_SBZ,	Level_Null,	Level_Null,	Blk16_SBZ,	Blk256_SBZ,	Col_SBZ,	ObjPos_Null,	Rings_Null	; Scrap Brain 4 (unused)
 																	
