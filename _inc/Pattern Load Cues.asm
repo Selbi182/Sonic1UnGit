@@ -38,12 +38,6 @@ plcid_SBZ:		plcptr	PLC_SBZ
 plcid_Boss:		plcptr	PLC_Boss
 plcid_Signpost:		plcptr	PLC_Signpost
 plcid_SpecialStage:	plcptr	PLC_SpecialStage
-plcid_GHZAnimals:	plcptr	PLC_GHZAnimals
-plcid_LZAnimals:	plcptr	PLC_LZAnimals
-plcid_MZAnimals:	plcptr	PLC_MZAnimals
-plcid_SLZAnimals:	plcptr	PLC_SLZAnimals
-plcid_SYZAnimals:	plcptr	PLC_SYZAnimals
-plcid_SBZAnimals:	plcptr	PLC_SBZAnimals
 plcid_SSResult:		plcptr	PLC_SSResult
 plcid_Ending:		plcptr	PLC_Ending
 plcid_TryAgain:		plcptr	PLC_TryAgain
@@ -87,6 +81,7 @@ PLC_GameOver_end:
 ; Pattern load cues - Green Hill
 ; ---------------------------------------------------------------------------
 PLC_GHZ:	plcheader
+		plcm	KosPM_GHZ,		ArtTile_Level			; main level patterns
 		plcm	KosPM_Stalk,		ArtTile_GHZ_Flower_Stalk	; flower stalk
 		plcm	KosPM_PplRock,		ArtTile_GHZ_Purple_Rock		; purple rock
 		plcm	KosPM_Crabmeat,		ArtTile_Crabmeat		; crabmeat enemy
@@ -103,12 +98,15 @@ PLC_GHZ:	plcheader
 		plcm	KosPM_Ball,		ArtTile_GHZ_Giant_Ball		; giant ball
 		plcm	KosPM_GhzWall1,		ArtTile_GHZ_SLZ_Smashable_Wall	; breakable wall
 		plcm	KosPM_GhzWall2,		ArtTile_GHZ_Edge_Wall		; normal wall
+		plcm	KosPM_Rabbit,		ArtTile_Animal_1		; rabbit
+		plcm	KosPM_Flicky,		ArtTile_Animal_2		; flicky
 PLC_GHZ_end:
 
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - Labyrinth
 ; ---------------------------------------------------------------------------
 PLC_LZ:		plcheader
+		plcm	KosPM_LZ,		ArtTile_Level			; main level patterns
 		plcm	KosPM_LzBlock1,		ArtTile_LZ_Block_1		; block
 		plcm	KosPM_LzBlock2,		ArtTile_LZ_Block_2		; blocks
 		plcm	KosPM_Splash,		ArtTile_LZ_Splash		; waterfalls and splash
@@ -131,12 +129,15 @@ PLC_LZ:		plcheader
 		plcm	KosPM_Spikes,		ArtTile_Spikes			; spikes
 		plcm	KosPM_HSpring,		ArtTile_Spring_Horizontal	; horizontal spring
 		plcm	KosPM_VSpring,		ArtTile_Spring_Vertical		; vertical spring
+		plcm	KosPM_Penguin,		ArtTile_Animal_1		; penguin
+		plcm	KosPM_Seal,		ArtTile_Animal_2		; seal
 PLC_LZ_end:
 
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - Marble
 ; ---------------------------------------------------------------------------
 PLC_MZ:		plcheader
+		plcm	KosPM_MZ,		ArtTile_Level			; main level patterns
 		plcm	KosPM_MzMetal,		ArtTile_MZ_Spike_Stomper	; metal blocks
 		plcm	KosPM_MzFire,		ArtTile_MZ_Fireball		; fireballs
 		plcm	KosPM_Swing,		ArtTile_GHZ_MZ_Swing		; swinging platform
@@ -151,12 +152,15 @@ PLC_MZ:		plcheader
 		plcm	KosPM_HSpring,		ArtTile_Spring_Horizontal	; horizontal spring
 		plcm	KosPM_VSpring,		ArtTile_Spring_Vertical		; vertical spring
 		plcm	KosPM_MzBlock,		ArtTile_MZ_Block		; green stone block
+		plcm	KosPM_Squirrel,		ArtTile_Animal_1		; squirrel
+		plcm	KosPM_Seal,		ArtTile_Animal_2		; seal
 PLC_MZ_end:
 
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - Star Light
 ; ---------------------------------------------------------------------------
 PLC_SLZ:	plcheader
+		plcm	KosPM_SLZ,		ArtTile_Level			; main level patterns
 		plcm	KosPM_Bomb,		ArtTile_Bomb			; bomb enemy
 		plcm	KosPM_Orbinaut,		ArtTile_SLZ_Orbinaut		; orbinaut enemy
 		plcm	KosPM_MzFire,		ArtTile_SLZ_Fireball		; fireballs
@@ -171,12 +175,15 @@ PLC_SLZ:	plcheader
 		plcm	KosPM_SlzSwing,		ArtTile_SLZ_Swing		; swinging platform
 		plcm	KosPM_SlzCannon,	ArtTile_SLZ_Fireball_Launcher	; fireball launcher
 		plcm	KosPM_SlzSpike,		ArtTile_SLZ_Spikeball		; spikeball
+		plcm	KosPM_Pig,		ArtTile_Animal_1		; pig
+		plcm	KosPM_Flicky,		ArtTile_Animal_2		; flicky
 PLC_SLZ_end:
 
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - Spring Yard
 ; ---------------------------------------------------------------------------
 PLC_SYZ:	plcheader
+		plcm	KosPM_SYZ,		ArtTile_Level			; main level patterns
 		plcm	KosPM_Crabmeat,		ArtTile_Crabmeat		; crabmeat enemy
 		plcm	KosPM_Buzz,		ArtTile_Buzz_Bomber		; buzz bomber enemy
 		plcm	KosPM_Yadrin,		ArtTile_Yadrin			; yadrin enemy
@@ -188,12 +195,15 @@ PLC_SYZ:	plcheader
 		plcm	KosPM_Spikes,		ArtTile_Spikes			; spikes
 		plcm	KosPM_HSpring,		ArtTile_Spring_Horizontal	; horizontal spring
 		plcm	KosPM_VSpring,		ArtTile_Spring_Vertical		; vertical spring
+		plcm	KosPM_Pig,		ArtTile_Animal_1		; pig
+		plcm	KosPM_Chicken,		ArtTile_Animal_2		; chicken
 PLC_SYZ_end:
 
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - Scrap Brain
 ; ---------------------------------------------------------------------------
 PLC_SBZ:	plcheader
+		plcm	KosPM_SBZ,		ArtTile_Level			; main level patterns
 		plcm	KosPM_Stomper,		ArtTile_SBZ_Moving_Block_Short	; moving platform and stomper
 		plcm	KosPM_SbzDoor1,		ArtTile_SBZ_Door		; door
 		plcm	KosPM_Girder,		ArtTile_SBZ_Girder		; girder
@@ -218,6 +228,8 @@ PLC_SBZ:	plcheader
 		plcm	KosPM_Spikes,		ArtTile_Spikes			; spikes
 		plcm	KosPM_HSpring,		ArtTile_Spring_Horizontal	; horizontal spring
 		plcm	KosPM_VSpring,		ArtTile_Spring_Vertical		; vertical spring
+		plcm	KosPM_Rabbit,		ArtTile_Animal_1		; rabbit
+		plcm	KosPM_Chicken,		ArtTile_Animal_2		; chicken
 PLC_SBZ_end:
 
 ; ---------------------------------------------------------------------------
@@ -267,54 +279,6 @@ PLC_SpecialStage:	plcheader
 PLC_SpecialStage_end:
 
 ; ---------------------------------------------------------------------------
-; Pattern load cues - GHZ animals
-; ---------------------------------------------------------------------------
-PLC_GHZAnimals:	plcheader
-		plcm	KosPM_Rabbit,		ArtTile_Animal_1		; rabbit
-		plcm	KosPM_Flicky,		ArtTile_Animal_2		; flicky
-PLC_GHZAnimals_end:
-
-; ---------------------------------------------------------------------------
-; Pattern load cues - LZ animals
-; ---------------------------------------------------------------------------
-PLC_LZAnimals:	plcheader
-		plcm	KosPM_Penguin,		ArtTile_Animal_1		; penguin
-		plcm	KosPM_Seal,		ArtTile_Animal_2		; seal
-PLC_LZAnimals_end:
-
-; ---------------------------------------------------------------------------
-; Pattern load cues - MZ animals
-; ---------------------------------------------------------------------------
-PLC_MZAnimals:	plcheader
-		plcm	KosPM_Squirrel,		ArtTile_Animal_1		; squirrel
-		plcm	KosPM_Seal,		ArtTile_Animal_2		; seal
-PLC_MZAnimals_end:
-
-; ---------------------------------------------------------------------------
-; Pattern load cues - SLZ animals
-; ---------------------------------------------------------------------------
-PLC_SLZAnimals:	plcheader
-		plcm	KosPM_Pig,		ArtTile_Animal_1		; pig
-		plcm	KosPM_Flicky,		ArtTile_Animal_2		; flicky
-PLC_SLZAnimals_end:
-
-; ---------------------------------------------------------------------------
-; Pattern load cues - SYZ animals
-; ---------------------------------------------------------------------------
-PLC_SYZAnimals:	plcheader
-		plcm	KosPM_Pig,		ArtTile_Animal_1		; pig
-		plcm	KosPM_Chicken,		ArtTile_Animal_2		; chicken
-PLC_SYZAnimals_end:
-
-; ---------------------------------------------------------------------------
-; Pattern load cues - SBZ animals
-; ---------------------------------------------------------------------------
-PLC_SBZAnimals:	plcheader
-		plcm	KosPM_Rabbit,		ArtTile_Animal_1		; rabbit
-		plcm	KosPM_Chicken,		ArtTile_Animal_2		; chicken
-PLC_SBZAnimals_end:
-
-; ---------------------------------------------------------------------------
 ; Pattern load cues - special stage results screen
 ; ---------------------------------------------------------------------------
 PLC_SSResult:	plcheader
@@ -327,6 +291,7 @@ PLC_SSResult_end:
 ; Pattern load cues - ending sequence
 ; ---------------------------------------------------------------------------
 PLC_Ending:	plcheader
+		plcm	KosPM_GHZ,		ArtTile_Level			; main level patterns
 		plcm	KosPM_Stalk,		ArtTile_GHZ_Flower_Stalk	; flower stalk
 		plcm	KosPM_EndFlower,	ArtTile_Ending_Flowers		; flowers
 		plcm	KosPM_EndEm,		ArtTile_Ending_Emeralds		; emeralds

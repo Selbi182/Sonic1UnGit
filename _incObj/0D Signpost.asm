@@ -37,8 +37,8 @@ Sign_Touch:	; Routine 2
 		move.w	(v_player+obX).w,d0			; get Sonic's X-position
 		sub.w	obX(a0),d0				; subtract signpost's X-position
 		blo.s	.notouch				; if Sonic is to the left of signpost, branch
-		cmpi.w	#32,d0					; is Sonic within 32 pixels of the signpost?
-		bhs.s	.notouch				; if not, branch
+	;	cmpi.w	#32,d0					; is Sonic within 32 pixels of the signpost?
+	;	bhs.s	.notouch				; if not, branch
 
 		; Touched
 		move.w	#sfx_Signpost,d0			; set signpost sound
@@ -55,7 +55,7 @@ Sign_Spin:	; Routine 4
 		subq.w	#1,spintime(a0)				; subtract 1 from spin time
 		bpl.s	.chksparkle				; if time remains, branch
 
-		move.w	#60,spintime(a0)			; set spin cycle time to 1 second
+		move.w	#45,spintime(a0)
 		addq.b	#1,obAnim(a0)				; next spin cycle
 		cmpi.b	#3,obAnim(a0)				; have 3 spin cycles completed?
 		bne.s	.chksparkle				; if not, branch

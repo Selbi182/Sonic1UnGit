@@ -60,7 +60,11 @@ BGHZ_Done:
 		move.w	obX(a0),obBossX(a0) 			; copy to boss position using scratch RAM (objoff_30 and 38 respectively)
 		move.w	obY(a0),obBossY(a0)
 		move.b	#col_48x48|col_boss,obColType(a0) 	; set collision type: TTSS SSSS. T bits are for type, S is size of collision using table in sub ReactToItem.asm
+	if OneHitBosses
+		move.b	#1,obBossHits(a0)
+	else
 		move.b	#8,obBossHits(a0) 			; set number of hits to 8
+	endif
 
 BGHZ_ShipMain:	; Routine 2
 		moveq	#0,d0

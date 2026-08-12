@@ -11,7 +11,7 @@ SSResult:
 ; ===========================================================================
 SSR_Index:	dc.w SSR_ChkPLC-SSR_Index	; 0
 		dc.w SSR_Move-SSR_Index		; 2
-		dc.w SSR_Wait-SSR_Index		; 4
+		dc.w SSR_Wait_Skippable-SSR_Index ; 4
 		dc.w SSR_RingBonus-SSR_Index	; 6
 		dc.w SSR_Wait-SSR_Index		; 8
 		dc.w SSR_Exit-SSR_Index		; A
@@ -111,13 +111,19 @@ SSR_Move:	; Routine 2
 		move.l	#SSRChaos,(v_ssresemeralds+obID).w	; load collected chaos emeralds object
 ; ---------------------------------------------------------------------------
 
+SSR_Wait_Skippable:
+		moveq	#btnABC,d0		; is button A, B, or C...
+		and.b	(v_jpadhold1).w,d0	; ...held?
+		bne.s	SSR_Wait_skip
+
 SSR_Wait:	; Routine 4, 8, $C, $10
 		subq.w	#1,obTimeFrame(a0)			; subtract 1 from time delay
-		bne.s	.display				; if time remains, branch
+		bne.s	SSR_Wait_Display; if time remains, branch
+	SSR_Wait_skip:
+		clr.w	obTimeFrame(a0)
 		addq.b	#2,obRoutine(a0)			; advance to whatever the next routine is
 
-	; SSR_Display:
-	.display:
+	SSR_Wait_Display:
 		DisplaySprite
 		rts				; display card sprites
 ; ===========================================================================

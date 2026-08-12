@@ -34,7 +34,11 @@ BossLabyrinth_Main:	; Routine 0
 		move.w	obX(a0),obBossX(a0)			; copy position
 		move.w	obY(a0),obBossY(a0)
 		move.b	#col_48x48|col_boss,obColType(a0)	; set collision type
+	if OneHitBosses
+		move.b	#1,obBossHits(a0)
+	else
 		move.b	#8,obBossHits(a0) 			; set number of hits to 8
+	endif
 		move.w	#spr_prio4,obPriority(a0)			; set render priority
 		lea	BossLabyrinth_ObjData(pc),a2		; load objdata table
 		movea.l	a0,a1					; copy main boss object

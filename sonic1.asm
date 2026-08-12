@@ -11,6 +11,7 @@
 ; ===========================================================================
 ; ASSEMBLY OPTIONS:
 
+; Features:
 Enable_SpindashPeelout:	= 1
 Enable_HomingAttack:	= 1
 Enable_Figure8Sprites:	= 1
@@ -19,9 +20,12 @@ Enable_InfiniteLives:	= 1
 Enable_AttractRings:	= 1
 Enable_6ButtonControl:	= 0
 
+; Developer flags:
+OneHitBosses: = 1
+
 LagOMeter: = 0
 
-BootToLevel: = -1;
+BootToLevel: = -1
 ;	| -1 to disable
 
 CheatsEnabled: = 2
@@ -2497,7 +2501,7 @@ Level_WaterPal:
 Level_GetBgm:
 		move.b	#id_VBlank_TitleCards,(v_vblank_routine).w ; set VBlank routine to $0C
 		bsr.w	WaitForVBlank				; transfer data up to this point
-		bsr.w	LevelDataLoad				; unified to contain EVERYTHING (LoadZoneTiles etc.)
+		bsr.w	LevelDataLoad				; unified to contain EVERYTHING
 		move.l	#TitleCard,(v_titlecard+obID).w		; load title card object
 ; ---------------------------------------------------------------------------
 
@@ -3166,8 +3170,6 @@ GM_Ending:
 		move.w	#id_EndZ_bad,(v_zone_act).w		; otherwise, set to bad ending (level number 601, no extra flowers)
 
 End_LoadData:
-		bsr.w	LoadZoneTiles				; load main zone art (S2 Art Loader)
-
 		moveq	#plcid_Ending,d0			; load ending sequence patterns (GHZ art, animals, etc.)
 		bsr.w	QuickPLC				; execute PLCs immediately (no queue)
 		jsr	(Hud_Base).l				; load basic HUD graphics
@@ -3515,7 +3517,7 @@ TryAg_Exit:		; exit end screen and restart the gam
 		include	"_inc/LevelSizeLoad & BgScrollSpeed.asm" ; merged with "LevelSizeLoad & BgScrollSpeed (JP1).asm"
 		include	"_inc/DeformLayers.asm"
 		include	"_inc/Level Drawing.asm" ; includes LevelHeaders.asm
-		include	"_inc/LevelLayoutLoad.asm" ; includes LevelDataLoad, LevelLayoutLoad, and LevelLayoutLoad2
+		include	"_inc/LevelDataLoad.asm" ; includes LevelDataLoad, LevelLayoutLoad, LoadZoneTiles
 		include	"_inc/DynamicLevelEvents.asm"
 
 
@@ -4090,42 +4092,42 @@ Blk256_Title:	binclude	"map256/Title.unc"
 
 Blk16_GHZ:	binclude	"map16/GHZ.unc"
 		even
-KosP_GHZ:	binclude	"artkosp/8x8 - GHZ.kosp" ; GHZ primary patterns
+KosPM_GHZ:	binclude	"artkospm/8x8 - GHZ.kospm" ; GHZ primary patterns
 		even
 Blk256_GHZ:	binclude	"map256/GHZ.unc"
 		even
 
 Blk16_LZ:	binclude	"map16/LZ.unc"
 		even
-KosP_LZ:	binclude	"artkosp/8x8 - LZ.kosp" ; LZ primary patterns
+KosPM_LZ:	binclude	"artkospm/8x8 - LZ.kospm" ; LZ primary patterns
 		even
 Blk256_LZ:	binclude	"map256/LZ.unc"
 		even
 
 Blk16_MZ:	binclude	"map16/MZ.unc"
 		even
-KosP_MZ:	binclude	"artkosp/8x8 - MZ.kosp" ; MZ primary patterns
+KosPM_MZ:	binclude	"artkospm/8x8 - MZ.kospm" ; MZ primary patterns
 		even
 Blk256_MZ:	binclude	"map256/MZ.unc"
 		even
 
 Blk16_SLZ:	binclude	"map16/SLZ.unc"
 		even
-KosP_SLZ:	binclude	"artkosp/8x8 - SLZ.kosp" ; SLZ primary patterns
+KosPM_SLZ:	binclude	"artkospm/8x8 - SLZ.kospm" ; SLZ primary patterns
 		even
 Blk256_SLZ:	binclude	"map256/SLZ.unc"
 		even
 
 Blk16_SYZ:	binclude	"map16/SYZ.unc"
 		even
-KosP_SYZ:	binclude	"artkosp/8x8 - SYZ.kosp" ; SYZ primary patterns
+KosPM_SYZ:	binclude	"artkospm/8x8 - SYZ.kospm" ; SYZ primary patterns
 		even
 Blk256_SYZ:	binclude	"map256/SYZ.unc"
 		even
 
 Blk16_SBZ:	binclude	"map16/SBZ.unc"
 		even
-KosP_SBZ:	binclude	"artkosp/8x8 - SBZ.kosp" ; SBZ primary patterns
+KosPM_SBZ:	binclude	"artkospm/8x8 - SBZ.kospm" ; SBZ primary patterns
 		even
 Blk256_SBZ:	binclude	"map256/SBZ.unc"
 		even

@@ -311,7 +311,6 @@ Debug_ExitDebugMode:
 		move.b	#1,(f_scorecount).w			; update score counter
 		move.b	#1,(f_ringcount).w			; update rings counter
 		move.b	#1,(f_timecount).w			; update time counter
-		move.b	#1,(f_endactbonus).w			; update ring bonus counter
 		enable_ints
 		rts
 ; End of function Debug_Control

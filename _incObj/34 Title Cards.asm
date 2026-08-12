@@ -136,18 +136,10 @@ Card_MoveOut:
 ; ===========================================================================
 
 Card_ChangeArt:
-		; The title cards take up too much VRAM space to fit in with everything else,
-		; so space for the explosion and animals graphics is used up by them. Once
-		; the cards have moved out, this is where these graphics get loaded again.
 		cmpi.b	#4,obRoutine(a0)			; is this the level name title card object?
 		bne.s	Card_Delete				; if not, branch (art should only get loaded once)
-
 		moveq	#plcid_Explode,d0			; load explosion patterns
 		jsr	(AddPLC).l				; add to pattern load cues
-		moveq	#0,d0					; clear d0 (zone is a byte, we need words)
-		move.b	(v_zone).w,d0				; get current zone ID
-		addi.w	#plcid_GHZAnimals,d0			; add base animal PLC ID (entries are arranged in order)
-		jsr	(AddPLC).l				; load animal patterns for current zone
 
 	Card_Delete:
 		bra.w	DeleteObject				; delete title card object

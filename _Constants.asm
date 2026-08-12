@@ -555,9 +555,9 @@ ArtTile_Shield:			equ $541
 ArtTile_Invincibility:		equ ArtTile_Shield
 ArtTile_Game_Over:		equ $55E
 ArtTile_Title_Card:		equ $580
-ArtTile_Animal_1:		equ $580
-ArtTile_Animal_2:		equ $592
-ArtTile_Explosion:		equ $5A0
+ArtTile_Animal_1:		equ $55D
+ArtTile_Animal_2:		equ $56F
+ArtTile_Explosion:		equ $580
 ArtTile_Monitor:		equ $680
 ArtTile_HUD:			equ $6CA
 MapOff_HUDCentis:		equ -6

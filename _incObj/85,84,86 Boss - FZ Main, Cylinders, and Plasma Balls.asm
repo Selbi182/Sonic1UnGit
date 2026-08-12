@@ -122,7 +122,11 @@ BossFinal_Skip:
 ; loc_19E5A:
 .finalSetup:
 		move.w	#0,BossFinal_ParentObj(a0)		; set pointer to itself to 0 for later use
+	if OneHitBosses
+		move.b	#1,obBossHits(a0)
+	else
 		move.b	#8,obBossHits(a0) 			; set number of hits to 8
+	endif
 		move.w	#-1,BossFinal_AttackState(a0)		; set initial attack flag to -1
 
 BossFinal_Eggman:	; Routine 2

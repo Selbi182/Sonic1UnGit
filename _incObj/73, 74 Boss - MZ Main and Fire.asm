@@ -36,7 +36,11 @@ BossMarble_Main:	; Routine 0
 		move.w	obX(a0),obBossX(a0)			; copy to boss position using scratch RAM (objoff_30 and 38 respectively)
 		move.w	obY(a0),obBossY(a0)
 		move.b	#col_48x48|col_boss,obColType(a0)	; set collision type: TTSS SSSS. T bits are for type, S is size of collision using table in sub ReactToItem.asm
+	if OneHitBosses
+		move.b	#1,obBossHits(a0)
+	else
 		move.b	#8,obBossHits(a0) 			; set number of hits to 8
+	endif
 		lea	BossMarble_ObjData(pc),a2		; load routine data address into a2 (this does one less memory access than the GHZ boss, its faster and it seems the developers wanted to stick with PC-relative going forward)
 		movea.l	a0,a1					; copy boss object address into a1 so that LoadBoss on pass 1 uses the main boss object.
 		moveq	#3,d1					; 4 slots of ObjData, so to load properly we must loop 4 times
