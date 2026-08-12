@@ -258,11 +258,33 @@ LoadTilesAsYouMove:
 		lea	(v_lvllayout_fg).w,a4			; load foreground layout
 		move.w	#$4000,d2				; prepare VDP $C000 (FG plane) VRAM setting
 
+		; Quick foreground redraw, taken from Sonic 2
+		tst.b	(v_redrawfg).w				; has redraw flag been set?
+		beq.s	Draw_FG					; if not, do regular level drawing
+		clr.b	(v_redrawfg).w				; reset the redraw flag
+		moveq	#-16,d4
+		moveq	#((224+16+16)/16)-1,d6
+	.loopQuickRedrawFG:
+		movem.l	d4-d6,-(sp)
+		moveq	#-16,d5
+		move.w	d4,d1
+		;bsr.w	Calc_VRAM_Pos
+		Calc_VRAM_Pos
+		move.w	d1,d4
+		moveq	#-16,d5
+		bsr.w	DrawBlocks_LR
+		movem.l	(sp)+,d4-d6
+		addi.w	#16,d4
+		dbf	d6,.loopQuickRedrawFG
+		rts						; don't do normal level drawing this frame
+
+
 ; ---------------------------------------------------------------------------
 ; Drawing FG block strips
 ; (Note that 16 is the size of a block in pixels, this goes for all cases)
 ; ---------------------------------------------------------------------------
 
+Draw_FG:
 		tst.b	(a2)					; have any of the FG draw flags been set?
 		beq.w	.return					; if not, branch (no drawing is required)
 

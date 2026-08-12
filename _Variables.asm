@@ -227,7 +227,7 @@ v_limitleft3:		ds.w	1				; left level boundary, at the end of an act
 v_scrshiftx:		ds.w	1				; x-screen shift (new - last) * $100
 v_scrshifty:		ds.w	1				; y-screen shift (new - last) * $100
 v_lookshift:		ds.w	1				; screen shift when Sonic looks up/down
-			ds.b	1				; unused
+v_redrawfg:		ds.b	1				; flag to trigger a full foreground (plane A) redraw
 			ds.b	1				; unused
 v_dle_routine:		ds.b	1				; dynamic level event - routine counter
 			ds.b	1				; unused
