@@ -394,7 +394,7 @@ dbugheader:	macro	*
 		dbug	Map_Harp,	Harpoon,		0,	0,	ArtTile_LZ_Harpoon
 		dbug	Map_Harp,	Harpoon,		2,	3,	ArtTile_LZ_Harpoon
 		dbug	Map_Push,	PushBlock,		0,	0,	ArtTile_LZ_Push_Block|Tile_Pal3
-		dbug	Map_But,	Button,			0,	0,	ArtTile_Button_Main
+		dbug	Map_But,	Button,			0,	0,	ArtTile_Button
 		dbug	Map_Spike,	Spikes,			0,	0,	ArtTile_Spikes
 		dbug	Map_MBlockLZ,	MovingBlock,		4,	0,	ArtTile_LZ_Moving_Block|Tile_Pal3
 		dbug	Map_LBlock,	LabyrinthBlock,		1,	0,	ArtTile_LZ_Blocks|Tile_Pal3
@@ -474,7 +474,7 @@ dbugheader:	macro	*
 		dbug	Map_Yad,	Yadrin,			0,	0,	ArtTile_Yadrin|Tile_Pal2
 		dbug	Map_Plat_SYZ,	BasicPlatform,		0,	0,	ArtTile_Level|Tile_Pal3
 		dbug	Map_FBlock,	FloatingBlock,		0,	0,	ArtTile_Level|Tile_Pal3
-		dbug	Map_But,	Button,			0,	0,	ArtTile_Button_Main
+		dbug	Map_But,	Button,			0,	0,	ArtTile_Button
 		dbug	Map_Cat,	Caterkiller,		0,	0,	ArtTile_MZ_SYZ_Caterkiller|Tile_Pal2
 		dbug	Map_Lamp,	Lamppost,		1,	0,	ArtTile_Lamppost
 .SYZ_end:
@@ -490,7 +490,7 @@ dbugheader:	macro	*
 		dbug	Map_BBall,	SwingingPlatform,	7,	2,	ArtTile_SBZ_Swing|Tile_Pal3
 		dbug	Map_Disc,	RunningDisc,		$E0,	0,	ArtTile_SBZ_Disc|Tile_Pal3|Tile_Prio
 		dbug	Map_MBlock,	MovingBlock,		$28,	2,	ArtTile_SBZ_Moving_Block_Short|Tile_Pal2
-		dbug	Map_But,	Button,			0,	0,	ArtTile_Button_Main
+		dbug	Map_But,	Button,			0,	0,	ArtTile_Button
 		dbug	Map_Trap,	SpinPlatform,		3,	0,	ArtTile_SBZ_Trap_Door|Tile_Pal3
 		dbug	Map_Spin,	SpinPlatform,		$83,	0,	ArtTile_SBZ_Spinning_Platform
 		dbug	Map_Saw,	Saws,			2,	0,	ArtTile_SBZ_Saw|Tile_Pal3

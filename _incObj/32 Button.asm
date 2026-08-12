@@ -4,33 +4,23 @@
 ; ---------------------------------------------------------------------------
 
 Button:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	But_Index(pc,d0.w),d1
-		jmp	But_Index(pc,d1.w)
-; ===========================================================================
-But_Index:	dc.w But_Main-But_Index
-		dc.w But_Pressed-But_Index
-; ===========================================================================
-
-But_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to But_Pressed
+		move.l	#But_Action,obID(a0)
 		move.l	#Map_But,obMap(a0)			; set mappings
 
-		move.w	#ArtTile_Button_Main|Tile_Pal3,obGfx(a0); MZ specific code
+		move.w	#ArtTile_Button,obGfx(a0)		; set art tile
 		cmpi.b	#id_MZ,(v_zone).w			; is level Marble Zone?
-		beq.s	.continueSetup				; if yes, branch
-		move.w	#ArtTile_Button_Main,obGfx(a0)		; SYZ, LZ and SBZ specific code
+		bne.s	.continueSetup				; if not, branch
+		ori.w	#Tile_Pal3,obGfx(a0)			; use palette line 3 for MZ
 
 	; But_IsMZ:
 	.continueSetup:
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#32/2,obActWid(a0)			; set sprite display width
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 		addq.w	#3,obY(a0)				; adjust button a few pixels down
 ; ---------------------------------------------------------------------------
 
-But_Pressed:	; Routine 2
+But_Action:	; Routine 2
 		tst.b	obRender(a0)				; is button on screen?
 		bpl.w	.display				; if not, branch
 
@@ -40,7 +30,7 @@ But_Pressed:	; Routine 2
 		move.w	obX(a0),d4				; collision X-position (stood-on)
 		bsr.w	SolidObject				; make switch object solid
 
-		bclr	#0,obFrame(a0)				; use "unpressed" frame
+		move.b	#0,obFrame(a0)				; use "unpressed" frame
 
 		move.b	obSubtype(a0),d0			; get subtype of button
 		andi.w	#$F,d0					; only look at lower nybble
@@ -71,7 +61,7 @@ But_Pressed:	; Routine 2
 		tst.b	obSolid(a0)				; is Sonic standing on top of button?
 		bne.s	.pressed				; if yes, branch
 		bclr	d3,(a3)					; clear stored button pressed state
-		bra.s	.handleFlashing				; skip pressed logic
+		bra.s	.display				; skip pressed logic
 ; ===========================================================================
 
 ; loc_BDC8:
@@ -84,18 +74,7 @@ But_Pressed:	; Routine 2
 	; loc_BDD6:
 	.setPressedState:
 		bset	d3,(a3)					; set stored button pressed state
-		bset	#0,obFrame(a0)				; use "pressed" frame
-
-	; loc_BDDE:
-	.handleFlashing:
-		; This makes the switch flash between red and gray if bit 5 in subtype is set.
-		; It goes completely unused in the entire game and is partially broken in some zones.
-		btst	#5,obSubtype(a0)			; is "flashing" flag set? (unused)
-		beq.s	.display				; if not, branch
-		subq.b	#1,obTimeFrame(a0)			; decrement animation delay
-		bpl.s	.display				; if time remains, branch
-		move.b	#7,obTimeFrame(a0)			; reset animation delay
-		bchg	#1,obFrame(a0)				; alternate between frame 0 (gray) and 2 (red)
+		move.b	#1,obFrame(a0)				; use "pressed" frame
 
 ; But_Display:
 .display:

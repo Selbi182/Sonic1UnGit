@@ -546,8 +546,7 @@ ArtTile_Burrobot:		equ $4A6
 ArtTile_Basaran:		equ $4B8
 ArtTile_Roller:			equ $4B8
 ArtTile_Moto_Bug:		equ $4F0
-ArtTile_Button:			equ $50F
-ArtTile_Button_Main:		equ ArtTile_Button+4		; Skips over unused red tiles
+ArtTile_Button:			equ $513
 ArtTile_Spikes:			equ $51B
 ArtTile_Spring_Horizontal:	equ $523
 ArtTile_Spring_Vertical:	equ $533

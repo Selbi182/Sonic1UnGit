@@ -147,7 +147,7 @@ PLC_MZ:		plcheader
 		plcm	KosPM_Yadrin,		ArtTile_Yadrin			; yadrin enemy
 		plcm	KosPM_Basaran,		ArtTile_Basaran			; basaran enemy
 		plcm	KosPM_Cater,		ArtTile_MZ_SYZ_Caterkiller	; caterkiller enemy
-		plcm	KosPM_MzSwitch,		ArtTile_Button_Main		; switch
+		plcm	KosPM_MzSwitch,		ArtTile_Button			; switch
 		plcm	KosPM_Spikes,		ArtTile_Spikes			; spikes
 		plcm	KosPM_HSpring,		ArtTile_Spring_Horizontal	; horizontal spring
 		plcm	KosPM_VSpring,		ArtTile_Spring_Vertical		; vertical spring
