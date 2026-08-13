@@ -42,7 +42,6 @@ LevelDataLoad:
 
 	; --- Music ---
 		move.b	(a2)+,(v_levelmusic).w			; load BGM ID and store it for current level (protected RAM)
-		bsr.w	PlayCurrentActMusic			; start playing music immediately
 
 	; --- PLC ---
 		moveq	#0,d0					; clear d0

@@ -9,6 +9,12 @@
 ; Set your editor's tab width to 8 characters wide for viewing this file.
 
 ; ===========================================================================
+
+; ===========================================================================
+; Equates section - Names for constants. Needs to be included before flags.
+	include	"_Constants.asm"
+
+; ===========================================================================
 ; ASSEMBLY OPTIONS:
 
 ; Features:
@@ -22,25 +28,25 @@ Enable_6ButtonControl:	= 0
 
 ; Developer flags:
 OneHitBosses: = 1
+;	| If 1, all bosses will only take a single hit to defeat
 
 LagOMeter: = 0
+;	| If 1, displays a Lag-o-Meter at the top-right of the screen
 
 BootToLevel: = -1
-;	| -1 to disable
+;	| If set, will boot straight to a specified level (e.g. id_GHZ_act1)
+;	|         (set to -1 for booting to Sega Screen normally)
 
-CheatsEnabled: = 2
+CheatsEnabled: = 3
 ;	| If 1, all in-game cheats (Level Select, Debug Mode, Slow-Motion, Japanese Credits)
 ;	|       will be enabled by default, without requiring any title screen button inputs
 ;	| If 2, same as 1 but debug mode doesn't need to have A held down to get activated
+;	| If 3, same as 2 but debug mode will NOT prevent death when getting hit with no rings
 
 ; ===========================================================================
 ; Simplifying macros and functions
 	include	"Macros.asm"
 	include "sound/MegaPCM.Macros.asm"
-
-; ===========================================================================
-; Equates section - Names for constants
-	include	"_Constants.asm"
 
 ; ===========================================================================
 ; Equates section - Names for variables
@@ -2495,6 +2501,7 @@ Level_GetBgm:
 		move.b	#id_VBlank_TitleCards,(v_vblank_routine).w ; set VBlank routine to $0C
 		bsr.w	WaitForVBlank				; transfer data up to this point
 		bsr.w	LevelDataLoad				; unified to contain EVERYTHING
+		bsr.w	PlayCurrentActMusic			; start playing music immediately
 		move.l	#TitleCard,(v_titlecard+obID).w		; load title card object
 ; ---------------------------------------------------------------------------
 
@@ -2581,7 +2588,7 @@ Level_SkipClr:
 		move.b	#1,(f_ringcount).w			; update rings counter
 		move.b	#1,(f_timecount).w			; update time counter
 
-	if CheatsEnabled=2
+	if CheatsEnabled>=2
 		move.b	#1,(f_debugmode).w			; enable debug mode automatically
 	endif
 
@@ -3214,6 +3221,7 @@ End_LoadSonic:
 ; ---------------------------------------------------------------------------
 
 		; fade-in palette and enter main loop
+		bsr.w	PlayCurrentActMusic
 		enable_display					; enable screen output
 		bsr.w	PaletteFadeIn				; fade-in palette
 

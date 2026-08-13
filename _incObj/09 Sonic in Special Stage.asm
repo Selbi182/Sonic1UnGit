@@ -587,6 +587,7 @@ SonicSS_ChkRing:
 ; Obj09_GetCont:
 SonicSS_GetContinue:
 		jsr	(CollectRing).l				; add a ring
+	if Enable_InfiniteLives=0
 		cmpi.w	#ss_continue_rings,(v_rings).w		; check if you now have 50 rings
 		blo.s	SonicSS_NoContinue			; if not, branch
 		bset	#7,(v_lifecount).w			; remember that a continue has already been awarded
@@ -594,6 +595,7 @@ SonicSS_GetContinue:
 		addq.b	#1,(v_continues).w			; add 1 to number of continues
 		move.w	#sfx_Continue,d0			; set extra continue sound
 		jsr	(QueueSound1).l				; play it
+	endif
 
 ; Obj09_NoCont:
 SonicSS_NoContinue:

@@ -156,11 +156,7 @@ id_EndZ_bad:		equ (id_EndZ<<8)+act2			; $0601 (bad ending, not all emeralds)
 ; Special Stage
 ss_emeralds_num:	equ 6					; total number of Chaos Emeralds and Special Stages
 ss_giantring_rings:	equ 50					; number of rings required for giant rings to spawn
-    if Enable_InfiniteLives
-ss_continue_rings:	equ 9999
-    else
 ss_continue_rings:	equ 50					; number of rings required to earn an extra continue
-    endif
 ss_rotatespeed:		equ $40					; base special stage rotation speed
 ss_timeout:		equ 30					; delay after touching an UP/DOWN or R block
 ss_blocksize:		equ 24					; logical size of a single block

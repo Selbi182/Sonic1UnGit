@@ -264,7 +264,7 @@ ESth_Move:	; Routine 2
 
 ESth_Delay:
 		addq.b	#2,obRoutine(a0)			; advance to ESth_GotoCredits
-		move.w	#5*60,esth_time(a0)			; set duration for delay (5 seconds)
+		move.w	#4*60,esth_time(a0)			; set duration for delay (4 seconds)
 ; ---------------------------------------------------------------------------
 
 ESth_GotoCredits:
