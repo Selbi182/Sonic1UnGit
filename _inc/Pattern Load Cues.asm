@@ -322,7 +322,7 @@ PLC_TryAgain_end:
 PLC_EggmanSBZ2:	plcheader
 		plcm	KosPM_SbzBlock,		ArtTile_Eggman_Trap_Floor	; block
 		plcm	KosPM_Sbz2Eggman,	ArtTile_Eggman			; Eggman
-		plcm	KosPM_LzSwitch,		ArtTile_Eggman_Button-4		; switch
+		plcm	KosPM_LzSwitch,		ArtTile_Eggman_Button		; switch
 PLC_EggmanSBZ2_end:
 
 ; ---------------------------------------------------------------------------

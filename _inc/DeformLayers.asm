@@ -183,69 +183,94 @@ Deform_LZ:
 
 		move.w	(v_bgscreenposy).w,(v_bgscrposy_vdp).w
 
-; REV01 - additional water ripple effects
-
-		lea	(Lz_Scroll_Data).l,a3			; get foreground ripple data
-		lea	(Drown_WobbleData).l,a2			; get background ripple data (see Objects\LZ Drowning Numbers.asm)
-		move.b	(v_lz_deform).w,d2			; get high byte of y pos. of ripple effect
-		move.b	d2,d3
-		addi.w	#$80,(v_lz_deform).w			; add $80 to low byte (i.e. high byte increments every other frame)
-
-		add.w	(v_bgscreenposy).w,d2
-		andi.w	#$FF,d2					; d2 = low byte of bg y pos
-		add.w	(v_screenposy).w,d3
-		andi.w	#$FF,d3					; d3 = low byte of camera y pos
-
+		; Setup scroll value
 		lea	(v_hscrolltablebuffer).w,a1
-		move.w	#224-1,d1
 		move.w	(v_screenposx).w,d0
-		neg.w	d0
-		move.w	d0,d6
+		neg.w	d0			; d0 = Plane A scrolling
+		move.w	d0,d1			; d1 = Plane A scrolling (backup)
 		swap	d0
 		move.w	(v_bgscreenposx).w,d0
-		neg.w	d0
+		neg.w	d0			; d0 = Plane B scrolling
 
-; REV01 - additional water ripple effects
+		; Calculate water line and decide where to start
+		moveq	#0,d2
+		move.b	(v_lz_deform).w,d2
+		move.w	d2,d3
+		addi.w	#$80,(v_lz_deform).w	; WaveValue += 0.5    
+		add.b	(v_screenposy+1).w,d3	; d3 = (WaveValue + Cam_Y) & $FF
+		add.b	(v_bgscreenposy+1).w,d2	; d2 = (WaveValue + Cam_Y) & $FF
+		move.w	#224,d6			; d6 = Number of lines
+		move.w	(v_waterpos1).w,d4	; d4 = WaterLevel
+		addq.w	#7,d4
+		sub.w	(v_screenposy).w,d4	; d4 = WaterLevel - Cam_Y
+		beq.s	.DeformWater_2
+		bmi.s	.DeformWater_2		; if water line is above screen,branch
+		cmp.w	d6,d4			; d4 > Lines on screen?
+		blt.s	.DeformDry_Partial	; if not,branch
 
-		move.w	(v_waterpos1).w,d4
-		move.w	(v_screenposy).w,d5
-
-		; write normal scroll before meeting water position
-	.normalLoop:
-		cmp.w	d4,d5					; is current scanline at or below actual water y pos?
-		bge.s	.underwaterLoop				; if yes, branch
-		move.l	d0,(a1)+				; write to v_hscrolltablebuffer without ripple effect
-		addq.w	#1,d5					; next scanline
-		addq.b	#1,d2
-		addq.b	#1,d3
-		dbf	d1,.normalLoop
-		rts
 ; ---------------------------------------------------------------------------
+; Works,if full screen is dry
 
-		; apply ripple effects when underwater
-	.underwaterLoop:
-		move.b	(a3,d3.w),d4				; get fg ripple value from Lz_Scroll_Data
-		ext.w	d4
-		add.w	d6,d4
-		move.w	d4,(a1)+				; write to v_hscrolltablebuffer
-		move.b	(a2,d2.w),d4				; get bg ripple value from Drown_WobbleData
-		ext.w	d4
-		add.w	d0,d4
-		move.w	d4,(a1)+				; write to v_hscrolltablebuffer
-		addq.b	#1,d2
-		addq.b	#1,d3
-		dbf	d1,.underwaterLoop
+		subq.w	#1,d6
+
+.DeformDry_Full:
+		move.l	d0,(a1)+
+		dbf	d6,.DeformDry_Full
 		rts
+
+; ---------------------------------------------------------------------------
+; Works,if only part of screen is dry
+
+.DeformDry_Partial:
+		move.w	d4,d5			; d5 = WaterLevel
+		subq.w	#1,d4
+
+	.loopDry:
+		move.l	d0,(a1)+
+		dbf	d4,.loopDry
+
+; ---------------------------------------------------------------------------
+; Works if screen is full of water,or water at least takes place
+
+.DeformWater:
+		sub.w	d5,d6			; d6 = 224 - WaterLevel = Lines left for water
+		add.b	d5,d2			;
+		add.b	d5,d3			;
+
+.DeformWater_2:
+		subq.w	#1,d6
+		lea	(Drown_WobbleData).l,a2	; a2 = Water Deformation Data for Plane B
+		lea	Lz_Scroll_Data(pc),a3	; a3 = Water Deformation Data for Plane A
+		add.w	d2,a2			; load array from position of water line
+		add.w	d3,a3			;
+
+	.loopUnderwater:
+		move.b	(a3)+,d2
+		ext.w	d2
+		add.w	d1,d2			; d2 = Plane A scrolling
+		move.w	d2,(a1)+
+
+		move.b	(a2)+,d2
+		ext.w	d2
+		add.w	d0,d2			; d2 = Plane B scrolling
+		move.w	d2,(a1)+
+
+		dbf	d6,.loopUnderwater
+		rts
+
 ; ===========================================================================
 
 Lz_Scroll_Data:
+	rept 2
 		dc.b 1,1,2,2,3,3,3,3,2,2,1,1			; 12 lines shifted to right
 		dcb.b 116, 0					; 116 lines normal
 		dc.b -1,-1,-2,-2,-3,-3,-3,-3,-2,-2,-1,-1	; 12 lines shifted to left
 		dcb.b 20, 0					; 20 lines normal
 		dc.b 1,1,2,2,3,3,3,3,2,2,1,1			; 12 lines shifted to right
 		dcb.b 84, 0					; 84 lines normal (total 256 lines)
+	endr
 ; End of function Deform_LZ
+
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

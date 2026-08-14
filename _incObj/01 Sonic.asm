@@ -1048,6 +1048,8 @@ Sonic_LevelBound:
 		move.w	d0,obX(a0)				; prevent Sonic from leaving the side boundary
 		move.w	#0,obSubpixelX(a0)			; clear subpixel portion
 		move.w	#0,obVelX(a0)				; clear X-velocity
+		tst.b	spindash_flag(a0)			; is a Peelout active?
+		bne.s	.chkbottom				; if yes, don't clear inertia
 		move.w	#0,obInertia(a0)			; clear ground speed
 		bra.s	.chkbottom				; check for bottom boundary collision as well
 ; ===========================================================================
