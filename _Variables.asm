@@ -10,7 +10,16 @@
 v_ram_start_def:
 v_ram_start:		equ	v_ram_start_def&$FFFFFF		; 24-bit addressing
 
-			ds.b	chunk_size*$52			; unused (previously 256x256 tile mappings ($52 chunks))
+v_decompression_buffer:	ds.b	$1000				; reserved space for data decompression
+
+			ds.b	$7000				; unused
+
+Draw_Buffer_Slots:	equ	$100				; in testing, $5A seemed to be the maximum, but just in case
+Draw_Buffer:		ds.b	(4+4)*Draw_Buffer_Slots		; one long per VDP control and VDP data port
+v_drawbuffer_ptr:	ds.l	1				; pointer to the next free slot in Draw_Buffer as it gets filled
+v_drawbuffer_count:	ds.w	1				; number of current entries in Draw_Buffer
+
+v_256x256_end:		ds.b	(chunk_size*$52)-(*-v_ram_start_def) ; unused (chunks have been converted to uncompressed)
 
 v_lvllayout:		ds.b	layout_row*8			; level layouts (FG/BG rows interlaced, 8 rows and $400 total)
 v_lvllayout_fg:		equ	v_lvllayout			; start address of foreground's first row
@@ -462,18 +471,7 @@ v_limitbtmdb:		ds.w	1				; level bottom boundary, buffered for debug mode
 v_timingvariables_end:
 			ds.w	1				; unused (v_chunk0collision in normal disassemblies)
 			ds.b	$E				; unused
-v_screenposx_dup:	ds.l	1				; screen position x (duplicate)
-v_screenposy_dup:	ds.l	1				; screen position y (duplicate)
-v_bgscreenposx_dup:	ds.l	1				; background screen position x (duplicate)
-v_bgscreenposy_dup:	ds.l	1				; background screen position y (duplicate)
-v_bg2screenposx_dup:	ds.l	1
-v_bg2screenposy_dup:	ds.l	1
-v_bg3screenposx_dup:	ds.l	1
-v_bg3screenposy_dup:	ds.l	1
-v_fg_scroll_flags_dup:	ds.w	1
-v_bg1_scroll_flags_dup:	ds.w	1
-v_bg2_scroll_flags_dup:	ds.w	1
-v_bg3_scroll_flags_dup:	ds.w	1
+			ds.b	$28				; unused
 			ds.b	$48				; unused
 v_timingandscreenvariables_end:
 

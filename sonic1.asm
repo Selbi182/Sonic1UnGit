@@ -360,6 +360,7 @@ GameInit:
 .clearRAM:	move.l	d7,(a6)+				; clear RAM
 		dbf	d6,.clearRAM				; loop until done
 
+		jsr	(ResetDrawBuffer).l
 		jsr	(InitDMAQueue).l
 		bsr.w	VDPSetupGame				; initialize (proper) VDP registers
 		bsr.w	JoypadInit				; initialize controller ports
@@ -445,6 +446,7 @@ id_VBlank_PaletteFade:	equ $12					; Palette Fade
 id_VBlank_SegaPCM:	equ $14					; Sega Screen PCM
 id_VBlank_Continue:	equ $16					; Continue Screen
 id_VBlank_Ending:	equ $18					; Ending Sequence
+id_VBlank_MusicOnly:	equ -1					; marker to only run Sound Driver updates
 ; ---------------------------------------------------------------------------
 
 ; loc_B10: VBla:
@@ -453,6 +455,7 @@ VBlank:
 
 		tst.b	(v_vblank_routine).w			; was a VBlank routine set?
 		beq.s	VBlank_Lag				; if not, this is a lag frame, branch
+		bmi.s	VBlank_Music				; if marked as id_VBlank_MusicOnly, only run Sound Driver updates
 
 		move.w	(vdp_control_port).l,d0			; clear write-pending flag in VDP (prevents issues if 68k was reset while writing a command to VDP)
 		move.l	#$40000010,(vdp_control_port).l		; set VDP to VSRAM write mode
@@ -572,7 +575,7 @@ VBlank_SegaPCM:
 ; loc_C44: VBla_04:
 VBlank_Title:
 		bsr.w	VBlank_StandardTransfers		; do standard screen transfers
-		bsr.w	LoadTilesAsYouMove_BGOnly		; update background tiles as title screen scrolls
+		bsr.w	TransferLevelDrawRequests		; update background tiles as title screen scrolls
 
 		tst.w	(v_generictimer).w			; is generic timer set?
 		beq.w	.end					; if not, branch
@@ -620,42 +623,20 @@ VBlank_Levels:
 		writeVRAM	v_spritetablebuffer,vram_sprites  ; transfer sprite buffer table to actual sprites VRAM
 		jsr	ProcessDMAQueue(pc)
 
-		movem.l	(v_screenposx).w,d0-d7			; copy everything from v_screenposx to v_bg3screenposy...
-		movem.l	d0-d7,(v_screenposx_dup).w		; ...to backup RAM (used in LoadTilesAsYouMove)
-		movem.l	(v_fg_scroll_flags).w,d0-d1		; copy FG and BG scroll flags...
-		movem.l	d0-d1,(v_fg_scroll_flags_dup).w		; ...to backup RAM
-
 		move.w	(v_hblank_hreg).w,d0	; get HBlank interrupt counter
 		move.b	d0,(v_waterline).w	; copy target scan line ($xx)
 		move.w	d0,(a5)			; write to VDP register ($8Axx)
 
-		; The following code handles an awkward visual glitch for the LZ water surface.
-		; If the surface is near the top of the screen (within 96 pixels), the VDP would not have
-		; enough time to do all the transfers in VBlank_UpdateScreen before the palette needs to get
-		; changed for the water. Without this special check, the water surface would violently flicker
-		; whenever it's near the top of the screen. It's a rather dirty workaround, but it works.
-		cmpi.b	#96,(v_hblank_line).w			; is LZ water surface within 96 pixels of the top of the screen?
-		bhs.s	VBlank_UpdateScreen			; if not, do screen updates now
-		move.b	#1,(f_doupdatesinhblank).w		; otherwise, we don't have enough time to do them now before HBlank hits, defer updates to then
-		addq.l	#4,sp					; skip return address (i.e. postpone updating the sound driver as well)
-		bra.w	VBlank_Exit				; go straight back to to the VBlank exit
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Subroutine to update various screen elements during interrupts.
-; Also deducts the generic timer that controls the length of a Demo.
-; ---------------------------------------------------------------------------
-
-; Demo_Time: VBla_UpdateScreen:
-VBlank_UpdateScreen:
-		bsr.w	LoadTilesAsYouMove			; update level tiles while screen is moving
+		bsr.w	TransferLevelDrawRequests		; update level tiles while screen is moving
 		jsr	(AnimateLevelGfx).l			; updated animated tiles
 		jsr	(HUD_Update).l				; update HUD data
 
-		tst.w	(v_generictimer).w			; is generic timer set?
-		beq.w	.end					; if not, branch
-		subq.w	#1,(v_generictimer).w			; decrement generic timer
-	.end:
+		cmpi.b	#96,(v_hblank_line).w			; is LZ water surface within 96 pixels of the top of the screen?
+		bhs.s	.exit					; if not, do sound driver updates now
+		move.b	#1,(f_doupdatesinhblank).w		; otherwise, we don't have enough time to do them now before HBlank hits, defer updates to then
+		addq.l	#4,sp					; postpone updating the sound driver
+		bra.w	VBlank_Exit				; go straight back to to the VBlank exit
+	.exit:
 		rts						; return
 ; End of function VBlank_UpdateScreen
 
@@ -708,12 +689,7 @@ VBlank_Ending:
 		writeVRAM	v_spritetablebuffer,vram_sprites  ; transfer sprite buffer table to actual sprites VRAM
 		jsr	ProcessDMAQueue(pc)
 
-		movem.l	(v_screenposx).w,d0-d7			; copy everything from v_screenposx to v_bg3screenposy...
-		movem.l	d0-d7,(v_screenposx_dup).w		; ...to backup RAM (used in LoadTilesAsYouMove)
-		movem.l	(v_fg_scroll_flags).w,d0-d1		; copy FG and BG scroll flags...
-		movem.l	d0-d1,(v_fg_scroll_flags_dup).w		; ...to backup RAM
-
-		bsr.w	LoadTilesAsYouMove			; update rendered
+		bsr.w	TransferLevelDrawRequests		; update level tiles while screen is moving
 		jsr	(AnimateLevelGfx).l			; animate uncompressed level graphics (e.g. MZ lava)
 		jmp	(HUD_Update).l				; update HUD numbers
 
@@ -851,7 +827,6 @@ HBlank:
 .delayed_transfer:
 		clr.b	(f_doupdatesinhblank).w			; clear delayed updates flag
 		movem.l	d0-a6,-(sp)				; backup all registers except stack pointer (a7)
-		bsr.w	VBlank_UpdateScreen			; do all the screen updates that were skipped during VBlank now
 		jsr	(UpdateMusic).l				; update the sound driver
 		movem.l	(sp)+,d0-a6				; restore registers
 		rte						; return from horizontal interrupt and resume normal operation
@@ -1880,6 +1855,7 @@ Tit_MainLoop:
 		bsr.w	WaitForVBlank				; wait for VBlank to finish
 		jsr	(ExecuteObjects).l			; execute title screen objects
 		bsr.w	DeformLayers				; run background deformation
+		bsr.w	LoadTilesAsYouMove_BGOnly		; update background tiles as title screen scrolls
 		jsr	(BuildSprites).l			; display sprites
 
 		lea	(v_spritetablebuffer+4).w,a1		; fetch sprite table buffer, starting from tile IDs
@@ -2535,13 +2511,17 @@ Level_SkipTtlCard:
 		bsr.w	LevelSizeLoad				; load level size and set default level boundaries
 
 		bsr.w	DeformLayers				; initialize background deformation
+
+		move.b	#id_VBlank_MusicOnly,(v_vblank_routine).w ; only run sound driver updates during screen init
 		bset	#2,(v_fg_scroll_flags).w		; draw an extra column at the left side of the screen during level start
 		bsr.w	LoadTilesFromStart			; fully draw the foreground and background once before fade-in
+		clr.b	(v_vblank_routine).w			; allow normal VInt processing again
+
 		bsr.w	LZWaterFeatures				; initialize water features if zone is LZ
 
 		move.b	#id_VBlank_Levels,(v_vblank_routine).w	; set VBlank routine to $08
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
-		
+
 		move.l	#SonicPlayer,(v_player+obID).w		; load Sonic object
 		move.b	#-1,(v_draw_hud).w			; enable HUD drawing (but don't flash it yet)
 
@@ -2605,7 +2585,8 @@ Level_WtrNotSbz:
 
 Level_Delay:
 		move.w	#$202F,(v_pfade_start).w		; set to fade in 2nd, 3rd & 4th palette lines
-		bsr.w	PalFadeIn_Playable_Alt
+	;	bsr.w	PalFadeIn_Playable_Alt	; broken at the moment
+		bsr.w	PalFadeIn_Alt
 		move.b	#1,(v_draw_hud).w			; enable HUD drawing (and allow flashing)
 
 ; ---------------------------------------------------------------------------
@@ -2636,6 +2617,7 @@ Level_MainLoop:
 		tst.w	(f_restart).w				; is the level set to restart?
 		bne.s	Level_CheckRestart			; if yes, branch to check restart condition
 		bsr.w	DeformLayers				; scroll planes and do background deformation
+		bsr.w	LoadTilesAsYouMove			; update level tiles while screen is moving
 		jsr	(BuildSprites).l			; build sprite table
 		jsr	(ObjPosLoad).l				; run the object manager to load level objects
 		jsr	(RingsManager).l			; execute S3K Rings Manager
@@ -3175,8 +3157,8 @@ End_LoadData:
 		jsr	(Hud_Base).l				; load basic HUD graphics
 		bsr.w	LevelSizeLoad				; load level size and set default level boundaries
 		bsr.w	DeformLayers				; initialize background deformation
-		bset	#2,(v_fg_scroll_flags).w		; draw an extra column at the left side of the screen during level start
 		bsr.w	LevelDataLoad				; load block mappings and palettes
+		bset	#2,(v_fg_scroll_flags).w		; draw an extra column at the left side of the screen during level start
 		bsr.w	LoadTilesFromStart			; fully draw the foreground and background once before fade-in
 		enable_ints					; enable interrupts
 
@@ -3239,6 +3221,7 @@ End_MainLoop:
 
 		jsr	(ExecuteObjects).l			; execute all objects in object RAM
 		bsr.w	DeformLayers				; scroll planes and do background deformation
+		bsr.w	LoadTilesAsYouMove			; update level tiles while screen is moving
 		jsr	(BuildSprites).l			; build sprite table
 		jsr	(ObjPosLoad).l				; run the object manager to load level objects
 		bsr.w	PaletteCycle				; run palette cycles

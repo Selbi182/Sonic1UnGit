@@ -1,3 +1,32 @@
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; (Called from VBlank) Transfer all stored VDP instructions from Draw_Buffer
+; ---------------------------------------------------------------------------
+
+TransferLevelDrawRequests:
+		move.w	(v_drawbuffer_count).w,d1		; is draw buffer empty?
+		ble.w	ResetDrawBuffer				; if yes, nothing to do
+		lea	(vdp_control_port).l,a5			; load VDP control port
+		lea	(vdp_data_port).l,a6			; load VDP data port
+		movea.l	#Draw_Buffer,a1				; begin transfer from beginning of Draw_Buffer
+
+		lsl.w	#2,d1					; multiply draw buffer entry count by 4 (ROM size for the two move.l instructions in the rept)
+		move.w	#Draw_Buffer_Slots*4,d0			; set maximum slot count (also times 4 for the same reason)
+		sub.w	d1,d0					; calculate how much we need to jump ahead for the entry count
+		jmp	.transfer(pc,d0.w)			; jump ahead for number of required transfers (no-dbf optimization)
+
+.transfer:
+	rept Draw_Buffer_Slots
+		move.l	(a1)+,(a5)				; transfer stored VDP control instruction (VRAM write with address)
+		move.l	(a1)+,(a6)				; transfer stored VDP data instruction (dumping two tiles)
+	endr
+; ---------------------------------------------------------------------------
+
+ResetDrawBuffer:
+		move.l	#Draw_Buffer,(v_drawbuffer_ptr).w	; reset draw buffer pointer
+		clr.w	(v_drawbuffer_count).w			; reset draw buffer entry count
+		rts						; done
+; End of function TransferLevelDrawRequests
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -47,13 +76,13 @@ Calc_VRAM_Pos macro is2
 ; 	d0.l = VDP control port address of plane position (words swapped for convenience)
 ; 	d2.w = VRAM address of plane to use (usually $C000 or $E000)
 ; 	a0.l = Address of block to draw
-; 	a5.l = VDP control port
-; 	a6.l = VDP data port
 ; 	d7.l = plane row advance rate (usually $800000 ($80 per row))
 ; ---------------------------------------------------------------------------
 
 ; DrawTiles:
 DrawBlock macro
+		movea.l	(v_drawbuffer_ptr).w,a5			; load pointer to next free slot in Draw_Buffer
+
 		or.w	d2,d0					; save VRAM plane address to VDP control port plane position
 		swap	d0					; align correctly for VDP
 		btst	#4,(a0)					; is the block flipped vertically (+$1000)?
@@ -66,30 +95,34 @@ DrawBlock macro
 
 	; --- Normal block ---
 
-		move.l	d0,(a5)					; set VDP to VRAM write mode with plane address
-		move.l	(a1)+,(a6)				; dump top two tiles
+		move.l	d0,(a5)+				; set VDP to VRAM write mode with plane address
+		move.l	(a1)+,(a5)+				; dump top two tiles
+
 		add.l	d7,d0					; advance to next row
-		move.l	d0,(a5)					; set VDP to VRAM write mode with plane address
-		move.l	(a1)+,(a6)				; dump bottom two tiles
-		bra.s	.skip
+		move.l	d0,(a5)+				; set VDP to VRAM write mode with plane address
+		move.l	(a1)+,(a5)+				; dump bottom two tiles
+
+		bra.w	.drawDone
 ; ---------------------------------------------------------------------------
 
 .drawFlipX:
 
 	; --- Mirrored block ---
 
-		move.l	d0,(a5)					; set VDP to VRAM write mode with plane address
+		move.l	d0,(a5)+				; set VDP to VRAM write mode with plane address
 		move.l	(a1)+,d4				; load top two tiles
 		eori.l	#$8000800,d4				; mirror the tiles
 		swap	d4					; swap them over
-		move.l	d4,(a6)					; dump top two tiles (reversed)
+		move.l	d4,(a5)+				; dump top two tiles (reversed)
+
 		add.l	d7,d0					; advance to next row
-		move.l	d0,(a5)					; set VDP to VRAM write mode with plane address
+		move.l	d0,(a5)+				; set VDP to VRAM write mode with plane address
 		move.l	(a1)+,d4				; load bottom two tiles
 		eori.l	#$8000800,d4				; mirror the tiles
 		swap	d4					; swap them over
-		move.l	d4,(a6)					; dump bottom two tiles (reversed)
-		bra.s	.skip
+		move.l	d4,(a5)+				; dump bottom two tiles (reversed)
+
+		bra.w	.drawDone
 ; ---------------------------------------------------------------------------
 
 .drawFlipY:
@@ -98,35 +131,49 @@ DrawBlock macro
 
 	; --- Flipped block ---
 
-		move.l	d0,(a5)					; set VDP to VRAM write mode with plane address
+		move.l	d0,(a5)+				; set VDP to VRAM write mode with plane address
 		move.l	(a1)+,d5				; load top two tiles
 		move.l	(a1)+,d4				; load bottom two tiles
 		eori.l	#$10001000,d4				; flip bottom two tiles
-		move.l	d4,(a6)					; dump bottom two tiles first so they draw at top
+		move.l	d4,(a5)+				; dump bottom two tiles first so they draw at top
+
 		add.l	d7,d0					; advance to next row
-		move.l	d0,(a5)					; set VDP to VRAM write mode with plane address
+		move.l	d0,(a5)+				; set VDP to VRAM write mode with plane address
 		eori.l	#$10001000,d5				; flip top two tiles
-		move.l	d5,(a6)					; dump top two tiles last so they draw at bottom
-		bra.s	.skip
+		move.l	d5,(a5)+				; dump top two tiles last so they draw at bottom
+
+		bra.s	.drawDone
 ; ---------------------------------------------------------------------------
 
 .drawFlipXY:
 
 	; --- Flipped & Mirrored block ---
 
-		move.l	d0,(a5)					; set VDP to VRAM write mode with plane address
+		move.l	d0,(a5)+				; set VDP to VRAM write mode with plane address
 		move.l	(a1)+,d5				; load top two tiles
 		move.l	(a1)+,d4				; load bottom two tiles
 		eori.l	#$18001800,d4				; flip and mirror the bottom two tiles
 		swap	d4					; swap them over
-		move.l	d4,(a6)					; dump bottom two tiles first so they draw at top
+		move.l	d4,(a5)+				; dump bottom two tiles first so they draw at top
+
 		add.l	d7,d0					; advance to next row
-		move.l	d0,(a5)					; set VDP to VRAM write mode with plane address
+		move.l	d0,(a5)+				; set VDP to VRAM write mode with plane address
 		eori.l	#$18001800,d5				; flip and mirror the top two tiles
 		swap	d5					; swap them over
-		move.l	d5,(a6)					; dump top two tiles last so they draw at bottom
+		move.l	d5,(a5)+				; dump top two tiles last so they draw at bottom
+		; continue to .drawDone
+; ---------------------------------------------------------------------------
 
-.skip:
+.drawDone:
+		move.l	a5,(v_drawbuffer_ptr).w			; remember current draw buffer pointer
+		addq.w	#2,(v_drawbuffer_count).w		; mark 2 new entries for transfer
+
+	if def(__DEBUG__)
+		cmpi.w	#Draw_Buffer_Slots,(v_drawbuffer_count).w
+		bls.s	.ok
+		RaiseError "Draw Buffer requests overflow"
+	.ok:
+	endif
 		endm
 ; End of function DrawBlocks
 
@@ -211,9 +258,6 @@ GetBlockData	macro	is2
 
 ; sub_6886: DrawLevel_Strips_BG: DrawTilesWhenMoving_BGOnly:
 LoadTilesAsYouMove_BGOnly:
-		lea	(vdp_control_port).l,a5			; load VDP control port
-		lea	(vdp_data_port).l,a6			; load VDP data port
-
 		lea	(v_bg1_scroll_flags).w,a2		; load background draw flags
 		lea	(v_bgscreenposx).w,a3			; load background position data
 		lea	(v_lvllayout_bg).w,a4			; load background layout
@@ -234,31 +278,29 @@ LoadTilesAsYouMove_BGOnly:
 
 ; DrawLevel_Strips: DrawTilesWhenMoving:
 LoadTilesAsYouMove:
-		lea	(vdp_control_port).l,a5			; load VDP control port
-		lea	(vdp_data_port).l,a6			; load VDP data port
-
 		; First, update the background
-		lea	(v_bg1_scroll_flags_dup).w,a2		; load background draw flags
-		lea	(v_bgscreenposx_dup).w,a3		; load background position data
+		lea	(v_bg1_scroll_flags).w,a2		; load background draw flags
+		lea	(v_bgscreenposx).w,a3			; load background position data
 		lea	(v_lvllayout_bg).w,a4			; load background layout
 		move.w	#$6000,d2				; prepare VDP $E000 (BG plane) VRAM setting
 		bsr.w	DrawBG_Top				; draw the top section of the BG
 
-		lea	(v_bg2_scroll_flags_dup).w,a2		; load background draw flags
-		lea	(v_bg2screenposx_dup).w,a3		; load background position data
+		lea	(v_bg2_scroll_flags).w,a2		; load background draw flags
+		lea	(v_bg2screenposx).w,a3			; load background position data
 		bsr.w	DrawBG_Bottom				; draw the bottom section of the BG
 
-		lea	(v_bg3_scroll_flags_dup).w,a2		; load background block 3 draw flags
-		lea	(v_bg3screenposx_dup).w,a3		; load background block 3 position data
+		lea	(v_bg3_scroll_flags).w,a2		; load background block 3 draw flags
+		lea	(v_bg3screenposx).w,a3			; load background block 3 position data
 		bsr.w	DrawBG_Block3				; draw the third block of the BG
 
 		; Then, update the foreground
-		lea	(v_fg_scroll_flags_dup).w,a2		; load foreground draw flags
-		lea	(v_screenposx_dup).w,a3			; load foreground position data
+		lea	(v_fg_scroll_flags).w,a2		; load foreground draw flags
+		lea	(v_screenposx).w,a3			; load foreground position data
 		lea	(v_lvllayout_fg).w,a4			; load foreground layout
 		move.w	#$4000,d2				; prepare VDP $C000 (FG plane) VRAM setting
 
 		; Quick foreground redraw, taken from Sonic 2
+		; TODO: TEST THIS WITH THE NEW REDRAW BUFFER SYSTEM!!!
 		tst.b	(v_redrawfg).w				; has redraw flag been set?
 		beq.s	Draw_FG					; if not, do regular level drawing
 		clr.b	(v_redrawfg).w				; reset the redraw flag
@@ -343,11 +385,11 @@ Draw_FG:
 
 		; Draw new tiles on the right
 		moveq	#-16,d4					; set X and Y positions to top right of screen
-		move.w	#320+16,d5					; ''
+		move.w	#320,d5					; ''
 		;bsr.w	Calc_VRAM_Pos				; get the plane position
 		Calc_VRAM_Pos
 		moveq	#-16,d4					; set X and Y positions to top right of screen
-		move.w	#320+16,d5					; ''
+		move.w	#320,d5					; ''
 		bsr.w	DrawBlocks_TB				; draw a vertical line of blocks to the right of the screen
 
 ; locret_6952:
@@ -421,11 +463,11 @@ DrawBG_Top:
 
 		; Draw new tiles on the right
 		moveq	#-16,d4					; set X and Y positions to top right of screen
-		move.w	#320+16,d5					; ''
+		move.w	#320,d5					; ''
 		;bsr.w	Calc_VRAM_Pos				; get the plane position
 		Calc_VRAM_Pos
 		moveq	#-16,d4					; set X and Y positions to top right of screen
-		move.w	#320+16,d5					; ''
+		move.w	#320,d5					; ''
 		bsr.w	DrawBlocks_TB				; draw a vertical line of blocks to the right of the screen
 
 	; locj_6D70:
@@ -497,11 +539,11 @@ DrawBG_Bottom:
 
 		; Draw new tiles on the right
 		move.w	#224/2,d4				; draw the bottom half of the screen
-		move.w	#320+16,d5					; x coordinate - right of screen
+		move.w	#320,d5					; x coordinate - right of screen
 		;bsr.w	Calc_VRAM_Pos				; get the plane position
 		Calc_VRAM_Pos
 		move.w	#224/2,d4				; draw the bottom half of the screen
-		move.w	#320+16,d5					; x coordinate - right of screen
+		move.w	#320,d5					; x coordinate - right of screen
 		moveq	#3-1,d6					; draw three Blocks
 		bsr.w	DrawBlocks_TB_2				; draw three blocks vertically to the right of the screen
 
@@ -577,7 +619,7 @@ Draw_SBZ:
 		beq.s	.doMore					; if none are set, branch
 		lsr.b	#1,d0					; shift into bits 6, 4 and 2 respectively
 		move.b	d0,(a2)					; set as new draw flag bits
-		move.w	#320+16,d5					; x coordinate - right of screen
+		move.w	#320,d5					; x coordinate - right of screen
 
 	; locj_6E8C:
 	.doMore:
@@ -586,7 +628,7 @@ Draw_SBZ:
 		andi.w	#$1F0,d0				; round down to nearest 16
 		lsr.w	#4,d0					; divide by 16
 		lea	(a0,d0.w),a0				; advance pointer inside scroll map data for current BG Y position
-		bra.w	DrawBG_ColumnForBGIndex		; draw column
+		bra.w	DrawBG_ColumnForBGIndex			; draw column
 ; ===========================================================================
 
 ; locj_6EA4: DrawBGScrollBlock3:
@@ -617,11 +659,11 @@ DrawBG_Block3:
 
 		; Draw new tiles on the right
 		move.w	#64,d4					; y coordinate - fourth line from top of screen
-		move.w	#320+16,d5					; x coordinate - right of screen
+		move.w	#320,d5					; x coordinate - right of screen
 		;bsr.w	Calc_VRAM_Pos				; get the plane position
 		Calc_VRAM_Pos
 		move.w	#64,d4					; y coordinate - fourth line from top of screen
-		move.w	#320+16,d5					; x coordinate - right of screen
+		move.w	#320,d5					; x coordinate - right of screen
 		moveq	#3-1,d6					; draw three blocks
 		bsr.w	DrawBlocks_TB_2				; draw three blocks vertically to the right of the screen
 
@@ -701,7 +743,7 @@ Draw_MZ:
 		beq.s	.doMore					; if none are set, branch
 		lsr.b	#1,d0					; shift into bits 6, 4 and 2 respectively
 		move.b	d0,(a2)					; set as new draw flag bits
-		move.w	#320+16,d5					; x coordinate - right of screen
+		move.w	#320,d5						; x coordinate - right of screen
 
 	; locj_6FC8:
 	.doMore:
@@ -711,7 +753,7 @@ Draw_MZ:
 		andi.w	#$7F0,d0				; limit to multiples of $10
 		lsr.w	#4,d0					; divide by 16
 		lea	(a0,d0.w),a0				; advance pointer inside scroll map data for current BG Y position
-		bra.w	DrawBG_ColumnForBGIndex		; draw column
+		bra.w	DrawBG_ColumnForBGIndex			; draw column
 ; End of function Draw_MZ
 
 
@@ -728,10 +770,10 @@ Draw_MZ:
 
 ; locj_6FE4:
 DrawBG_XPosCopy_Ptrs:
-		dc.w v_bgscreenposx_dup		; 0
-		dc.w v_bgscreenposx_dup		; 2
-		dc.w v_bg2screenposx_dup	; 4
-		dc.w v_bg3screenposx_dup	; 6
+		dc.w v_bgscreenposx	; 0
+		dc.w v_bgscreenposx	; 2
+		dc.w v_bg2screenposx	; 4
+		dc.w v_bg3screenposx	; 6
 ; ===========================================================================
 
 ; locj_6FEC:
@@ -778,8 +820,6 @@ DrawBG_ColumnForBGIndex:
 ; 	d6.w = Blocks to draw (DrawBlocks_LR_2 only)
 ; 	a3.l = Screen position data
 ; 	a4.l = Layout address
-; 	a5.l = VDP control port
-; 	a6.l = VDP data port
 ; ---------------------------------------------------------------------------
 
 ; Don't be fooled by the name: this function's for drawing from left to right
@@ -787,7 +827,7 @@ DrawBG_ColumnForBGIndex:
 
 ; DrawBlocks_X: DrawRow:
 DrawBlocks_LR:
-		moveq	#((320+16+16+16)/16)-1,d6		; Draw the entire width of the screen + THREE extra columns
+		moveq	#((320+16+16)/16)-1,d6			; Draw the entire width of the screen + two extra columns
 
 ; DrawBlocks_X_Alt: DrawRow_Partial:
 DrawBlocks_LR_2:
@@ -848,8 +888,6 @@ DrawBlocks_LR_3:
 ; 	d6.w = Blocks to draw (DrawBlocks_TB_2 only)
 ; 	a3.l = Screen position data
 ; 	a4.l = Layout address
-; 	a5.l = VDP control port
-; 	a6.l = VDP data port
 ; ---------------------------------------------------------------------------
 
 ; Don't be fooled by the name: this function's for drawing from top to bottom
@@ -890,8 +928,6 @@ DrawBlocks_TB_2:
 
 ; DrawLevel_Full: DrawTilesAtStart:
 LoadTilesFromStart:
-		lea	(vdp_control_port).l,a5			; load VDP control port address
-		lea	(vdp_data_port).l,a6			; load VDP data port address
 
 	; --- Foreground ---
 
@@ -941,6 +977,9 @@ DrawChunks:
 		bsr.w	DrawBlocks_LR_2				; draw the horizontal strip
 		movem.l	(sp)+,d4-d6				; restore X position and "strip counter" data
 		addi.w	#16,d4					; advance down to next row
+
+		bsr.w	TransferLevelDrawRequests		; flush draw request buffer after each row (otherwise we would need a $4000 bytes buffer for level init...)
+
 		dbf	d6,.nextRow				; repeat for all horizontal row strips
 		rts						; return
 ; End of function DrawChunks
@@ -965,6 +1004,9 @@ Draw_GHZ_BG:
 		bsr.w	DrawBG_RowForBGIndex			; draw row for BG index from scroll block data
 		movem.l	(sp)+,d4-d6				; restore X position and "strip counter" data
 		addi.w	#16,d4					; advance down to next row
+
+		bsr.w	TransferLevelDrawRequests		; flush draw request buffer after each row (otherwise we would need a $4000 bytes buffer for level init...)
+
 		dbf	d6,.nextRow				; repeat for all horizontal row strips
 		rts						; return
 ; ===========================================================================
@@ -997,6 +1039,9 @@ Draw_MZ_BG:
 		bsr.w	DrawBG_RowForBGIndex			; draw row for BG index from scroll block data
 		movem.l	(sp)+,d4-d6				; restore X position and "strip counter" data
 		addi.w	#16,d4					; advance down to next row
+
+		bsr.w	TransferLevelDrawRequests		; flush draw request buffer after each row (otherwise we would need a $4000 bytes buffer for level init...)
+
 		dbf	d6,.nextRow				; repeat for all horizontal row strips
 		rts						; return
 ; End of function Draw_MZ_BG
@@ -1021,6 +1066,9 @@ Draw_SBZ_act1_BG:
 		bsr.w	DrawBG_RowForBGIndex			; draw row for BG index from scroll block data
 		movem.l	(sp)+,d4-d6				; restore X position and "strip counter" data
 		addi.w	#16,d4					; advance down to next row
+
+		bsr.w	TransferLevelDrawRequests		; flush draw request buffer after each row (otherwise we would need a $4000 bytes buffer for level init...)
+
 		dbf	d6,.nextRow				; repeat for all horizontal row strips
 		rts						; return
 ; End of function Draw_SBZ_act1_BG
