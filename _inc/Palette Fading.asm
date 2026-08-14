@@ -8,15 +8,17 @@ PalFadeIn_Playable_Alt:				; start position and size are already set
 		adda.w	d0,a0
 		moveq	#cBlack,d1
 		move.b	(v_pfade_size).w,d0
-
-.fill:
-		move.w	d1,(a0)+
+	.fill:	move.w	d1,(a0)+
 		dbf	d0,.fill 	; fill palette with black
 
 		moveq	#$0F-1,d4				; MJ: prepare maximum colour check
 		moveq	#$00,d6					; MJ: clear d6
 
 .mainloop:
+		move.b	#id_VBlank_PaletteFade,(v_vblank_routine).w	; set VBlank routine to $08
+		bsr.w	WaitForVBlank				; wait until VBlank has finished
+		addq.w	#1,(v_framecount).w			; add 1 to level timer
+
 		movem.l	d4/d6,-(sp)
 		bsr.w	LZWaterFeatures				; apply water features if in Labyrinth Zone
 		jsr	(ExecuteObjects).l			; execute all objects in object RAM
@@ -24,23 +26,16 @@ PalFadeIn_Playable_Alt:				; start position and size are already set
 		jsr	(BuildSprites).l			; build sprite table
 		jsr	(ObjPosLoad).l				; run the object manager to load level objects
 		jsr	(RingsManager).l			; execute S3K Rings Manager
-	;	bsr.w	PaletteCycle				; run palette cycles
 		bsr.w	OscillateNumDo				; advance oscillation values
 		bsr.w	SynchroAnimate				; advance animation timers
 		movem.l	(sp)+,d4/d6
 
-		move.b	#id_VBlank_Levels,(v_vblank_routine).w	; set VBlank routine to $08
-		bsr.w	WaitForVBlank				; wait until VBlank has finished
-		addq.w	#1,(v_framecount).w			; add 1 to level timer
-
-		addq.w	#1,(v_framecount).w			; add 1 to level timer
-		move.w	(v_framecount).w,d0			; add 1 to level timer
 		bchg	#$00,d6					; MJ: change delay counter
 		beq.s	.mainloop				; MJ: if null, delay a frame
 		bsr.s	FadeIn_FromBlack
 		subq.b	#$02,d4					; MJ: decrease colour check
 		bne.s	.mainloop				; MJ: if it has not reached null, branch
-		move.b	#id_VBlank_Levels,(v_vblank_routine).w	; MJ: wait for V-blank again (so colours transfer)
+		move.b	#id_VBlank_PaletteFade,(v_vblank_routine).w ; MJ: wait for V-blank again (so colours transfer)
 		bra.w	WaitForVBlank				; MJ: ''
 ; End of function PaletteFadeIn_Playable
 

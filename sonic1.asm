@@ -2511,15 +2511,15 @@ Level_SkipTtlCard:
 		bsr.w	LevelSizeLoad				; load level size and set default level boundaries
 
 		bsr.w	DeformLayers				; initialize background deformation
-
 		move.b	#id_VBlank_MusicOnly,(v_vblank_routine).w ; only run sound driver updates during screen init
-		bset	#2,(v_fg_scroll_flags).w		; draw an extra column at the left side of the screen during level start
 		bsr.w	LoadTilesFromStart			; fully draw the foreground and background once before fade-in
+		bset	#2,(v_fg_scroll_flags).w		; draw an extra column at the left side of the screen during level start
+		bsr.w	LoadTilesAsYouMove			; draw that left column now
 		clr.b	(v_vblank_routine).w			; allow normal VInt processing again
 
 		bsr.w	LZWaterFeatures				; initialize water features if zone is LZ
 
-		move.b	#id_VBlank_Levels,(v_vblank_routine).w	; set VBlank routine to $08
+		move.b	#id_VBlank_TitleCards,(v_vblank_routine).w
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
 
 		move.l	#SonicPlayer,(v_player+obID).w		; load Sonic object
@@ -2527,14 +2527,10 @@ Level_SkipTtlCard:
 
 Level_ChkDebug:
 		tst.b	(f_debugcheat).w			; has debug cheat been entered?
-		beq.s	Level_ChkWater				; if not, branch
+		beq.s	Level_LoadObj				; if not, branch
 		btst	#bitA,(v_jpadhold1).w			; is A button held?
-		beq.s	Level_ChkWater				; if not, branch
+		beq.s	Level_LoadObj				; if not, branch
 		move.b	#1,(f_debugmode).w			; enable debug mode
-
-Level_ChkWater:
-		move.w	#0,(v_jpadhold2).w			; clear button input states for Sonic player object
-		move.w	#0,(v_jpadhold1).w			; clear actual button input states for controller 1
 
 Level_LoadObj:
 		cmpi.b	#id_SLZ,(v_zone).w			; are we in SLZ?
@@ -2585,8 +2581,7 @@ Level_WtrNotSbz:
 
 Level_Delay:
 		move.w	#$202F,(v_pfade_start).w		; set to fade in 2nd, 3rd & 4th palette lines
-	;	bsr.w	PalFadeIn_Playable_Alt	; broken at the moment
-		bsr.w	PalFadeIn_Alt
+		bsr.w	PalFadeIn_Playable_Alt
 		move.b	#1,(v_draw_hud).w			; enable HUD drawing (and allow flashing)
 
 ; ---------------------------------------------------------------------------
@@ -3152,18 +3147,29 @@ GM_Ending:
 		move.w	#id_EndZ_bad,(v_zone_act).w		; otherwise, set to bad ending (level number 601, no extra flowers)
 
 End_LoadData:
+		bsr.w	InitRingFrame
 		moveq	#plcid_Ending,d0			; load ending sequence patterns (GHZ art, animals, etc.)
 		bsr.w	QuickPLC				; execute PLCs immediately (no queue)
 		jsr	(Hud_Base).l				; load basic HUD graphics
-		bsr.w	LevelSizeLoad				; load level size and set default level boundaries
-		bsr.w	DeformLayers				; initialize background deformation
-		bsr.w	LevelDataLoad				; load block mappings and palettes
-		bset	#2,(v_fg_scroll_flags).w		; draw an extra column at the left side of the screen during level start
-		bsr.w	LoadTilesFromStart			; fully draw the foreground and background once before fade-in
 		enable_ints					; enable interrupts
 
 		moveq	#palid_Sonic,d0				; load Sonic's palette...
 		bsr.w	PalLoad_Fade				; ...to fade-in buffer
+
+		bsr.w	LevelSizeLoad				; load level size and set default level boundaries
+		bsr.w	LevelDataLoad				; load block mappings and palettes
+
+		bsr.w	DeformLayers				; initialize background deformation
+		move.b	#id_VBlank_MusicOnly,(v_vblank_routine).w ; only run sound driver updates during screen init
+		bsr.w	LoadTilesFromStart			; fully draw the foreground and background once before fade-in
+		bset	#2,(v_fg_scroll_flags).w		; draw an extra column at the left side of the screen during level start
+		bsr.w	LoadTilesAsYouMove			; draw that left column now
+		clr.b	(v_vblank_routine).w			; allow normal VInt processing again
+
+		bsr.w	LZWaterFeatures				; initialize water features if zone is LZ
+
+		move.b	#id_VBlank_Levels,(v_vblank_routine).w	; set VBlank routine to $08
+		bsr.w	WaitForVBlank				; wait until VBlank has finished
 
 		tst.b	(f_debugcheat).w			; has debug cheat been entered?
 		beq.s	End_LoadSonic				; if not, branch
