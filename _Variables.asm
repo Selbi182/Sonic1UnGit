@@ -16,7 +16,6 @@ v_decompression_buffer:	ds.b	$1000				; reserved space for data decompression
 
 Draw_Buffer_Slots:	equ	$100				; in testing, $5A seemed to be the maximum, but just in case
 Draw_Buffer:		ds.b	(4+4)*Draw_Buffer_Slots		; one long per VDP control and VDP data port
-v_drawbuffer_ptr:	ds.l	1				; pointer to the next free slot in Draw_Buffer as it gets filled
 v_drawbuffer_count:	ds.w	1				; number of current entries in Draw_Buffer
 
 v_256x256_end:		ds.b	(chunk_size*$52)-(*-v_ram_start_def) ; unused (chunks have been converted to uncompressed)

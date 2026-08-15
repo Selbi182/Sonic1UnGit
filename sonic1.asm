@@ -360,7 +360,6 @@ GameInit:
 .clearRAM:	move.l	d7,(a6)+				; clear RAM
 		dbf	d6,.clearRAM				; loop until done
 
-		jsr	(ResetDrawBuffer).l
 		jsr	(InitDMAQueue).l
 		bsr.w	VDPSetupGame				; initialize (proper) VDP registers
 		bsr.w	JoypadInit				; initialize controller ports
@@ -1792,12 +1791,7 @@ Tit_LoadText:
 		disable_ints					; disable interrupts again after the fade-out
 		bsr.w	ClearScreen				; wipe screen
 
-		lea	(vdp_control_port).l,a5			; set VDP control port
-		lea	(vdp_data_port).l,a6			; set VDP data port
-		lea	(v_bgscreenposx).w,a3			; get current background X position
-		lea	(v_lvllayout_bg).w,a4			; get location in level layout RAM where background is stored
-		move.w	#$4000+(vram_bg-vram_fg),d2		; =$6000 (VRAM write command $4000 + nametable start address relative to vram_fg)
-		bsr.w	DrawChunks				; draw initial background layer
+		bsr.w	LoadTilesFromStart_BGOnly		; initialize background layer
 
 		lea	(v_ram_start+$6000).l,a1		; set middle of RAM to be used as decompression buffer (this overwrites unused chunk RAM)
 		lea	(Eni_Title).l,a0			; load title screen emblem mappings
@@ -2022,10 +2016,10 @@ LevSel_NoCheat:
 ; ===========================================================================
 
 LevSel_Ending:
-		btst	#bitA,(v_jpadhold1).w
-		beq.s	.notA
+		btst	#bitB,(v_jpadhold1).w
+		beq.s	.notB
 		move.b	#ss_emeralds_num,(v_emeralds).w
-	.notA:
+	.notB:
 		move.b	#id_Ending,(v_gamemode).w 		; set screen mode to $18 (Ending)
 		move.w	#id_EndZ_good,(v_zone_act).w  		; set level to good Ending (will be bad Ending without 6 emeralds)
 		rts
@@ -3286,12 +3280,8 @@ End_SlowFade:
 		clr.w	(f_restart).w				; clear level restart flag
 		move.w	#$2E2F,(v_lvllayout_fg+layout_row).w	; swap chunks in level layout to the variants with flowers (chunks $2E / $2F) (row 1 / column 0)
 
-		lea	(vdp_control_port).l,a5			; set VDP control port
-		lea	(vdp_data_port).l,a6			; set VDP data port
-		lea	(v_screenposx).w,a3			; get current foreground X position
-		lea	(v_lvllayout_fg).w,a4			; get location in level layout RAM where foreground is stored
-		move.w	#$4000,d2				; set VRAM write command to vram_fg nametable start address
-		bsr.w	DrawChunks				; update drawn chunks to show the new flowers
+		st.b	(v_redrawfg).w				; update drawn chunks to show the new flowers
+		bsr.w	LoadTilesAsYouMove			; do update now
 
 		moveq	#palid_Ending,d0			; reload ending palette...
 		bsr.w	PalLoad_Fade				; ...to fade-in buffer
