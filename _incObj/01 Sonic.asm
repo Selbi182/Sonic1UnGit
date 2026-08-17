@@ -43,13 +43,14 @@ Sonic_Main:	; Routine 0
 		move.b	#sonic_width,obWidth(a0)		; set default width
 		move.l	#Map_Sonic,obMap(a0)			; set mappings
 		move.w	#ArtTile_Sonic,obGfx(a0)		; set VRAM location
-		move.w	#spr_prio2,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio2,obPriority(a0)		; set sprite priority
 		move.b	#48/2,obActWid(a0)			; set render width
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.w	#son_maxspeed,(v_sonspeedmax).w		; set Sonic's top speed
 		move.w	#son_acceleration,(v_sonspeedacc).w	; set Sonic's acceleration
 		move.w	#son_deceleration,(v_sonspeeddec).w	; set Sonic's deceleration
 		move.l	#SpinDust,(v_dustobj+obID).w		; prepare Spin Dash dust object
+		clr.w	(v_registeredcollision).w		; reset number of collision response entries to 0
 ; ---------------------------------------------------------------------------
 
 ; Obj01_Control:
@@ -104,6 +105,7 @@ Sonic_Control:	; Routine 2
 		tst.b	(f_playerctrl).w			; is object interactions ignore flag set?
 		bmi.s	.ignoreobjcoll				; if yes, branch
 		jsr	(ReactToItem).l				; handle object interaction with Sonic
+		clr.w	(v_registeredcollision).w		; reset number of collision response entries to 0
 
 ; loc_12CB6:
 .ignoreobjcoll:

@@ -41,6 +41,7 @@ SonicSS_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)			; set to SonicSS_Control
 		move.b	#sonic_roll_height,obHeight(a0)		; set rolling height
 		move.b	#sonic_roll_width,obWidth(a0)		; set rolling width
+		move.b	#sonic_roll_width,obActWid(a0)		; set sprite display width
 		move.l	#Map_Sonic,obMap(a0)			; set mappings
 		move.w	#ArtTile_Sonic,obGfx(a0)		; set VRAM location
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode

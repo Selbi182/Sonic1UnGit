@@ -298,7 +298,7 @@ BuildRings:
 		sub.l	a0,d0					; is start = end?
 		beq.s	.return					; if yes, nothing to do (no rings on-screen)
 
-		movea.w	(v_ringstates_pointer).w,a4		; load ring status start address
+		movea.w	(v_ringstates_pointer).w,a1		; load ring status start address
 		lea	(v_screenposx).w,a3			; load camera X-position
 
 	.loop:
@@ -307,7 +307,7 @@ BuildRings:
 		tst.b	d7
 		beq.s	.return
 
-		move.b	(a4)+,d1				; has this ring been collected and finished sparkling?
+		move.b	(a1)+,d1				; has this ring been collected and finished sparkling?
 		bmi.w	.next					; if yes, check next ring
 		move.w	(a0),d3					; get ring X-position
 		sub.w	(a3),d3					; subtract camera X-position
@@ -366,8 +366,8 @@ Map_RingsCompact:
 ; ===========================================================================
 
 BuildRings_Loss:
-		lea	(v_registeredcollision_rings).w,a5
-		move.w	(a5)+,d0
+		lea	(v_registeredcollision_rings).w,a3
+		move.w	(a3)+,d0
 		beq.w	.return
 		lsr.w	#1,d0
 		subq.w	#1,d0
@@ -377,25 +377,23 @@ BuildRings_Loss:
 
 		move.w	#$0500,d1
 
-		lea	(v_screenposx).w,a3			; load camera X-position
-
 	.loop:
 		tst.b	d7
 		beq.s	.return
 
-		movea.w	(a5)+,a4
+		movea.w	(a3)+,a1
 
 		move.w	d6,d3
-		add.w	obX(a4),d3				; get ring X-position
-		sub.w	(a3),d3					; subtract camera X-position
+		add.w	obX(a1),d3				; get ring X-position
+		sub.w	(a5),d3					; subtract camera X-position
 		addi.w	#8,d3
 		cmpi.w	#320+16+$80,d3
 		bhs.s	.next
 		subi.w	#16,d3
 
 		move.w	d6,d2
-		add.w	obY(a4),d2				; get ring Y-position
-		sub.w	4(a3),d2				; subtract camera Y-position (4(a3) = v_screenposy)
+		add.w	obY(a1),d2				; get ring Y-position
+		sub.w	4(a5),d2				; subtract camera Y-position (4(a5) = v_screenposy)
 		addi.w	#8,d2					; add half of ring height (16/2 = 8px)
 		cmpi.w	#224+16+$80,d2				; is ring below visible screen?
 		bhs.s	.next					; if yes, don't render
@@ -415,7 +413,7 @@ BuildRings_Loss:
 		move.l	d3,(a2)+
 
 	.next:
-		lea	object_size(a4),a4
+		lea	object_size(a1),a1
 		dbf	d0,.loop					; if we've got more rings to render, loop
 
 	.return:

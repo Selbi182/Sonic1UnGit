@@ -954,6 +954,7 @@ BossPlasma_Main:	; Routine 0
 		move.b	#0,obAnim(a0)				; set initial animation frame
 		move.w	#spr_prio3,obPriority(a0)			; set priority, width, and height
 		move.b	#16/2,obWidth(a0)
+		move.b	#16/2,obActWid(a0)
 		move.b	#16/2,obHeight(a0)
 		move.b	#sprite_cam_field,obRender(a0)		; set render bits
 		bset	#sprite_rendered_bit,obRender(a0)
@@ -1027,6 +1028,7 @@ BossPlasma_MakeBalls:; Routine 4
 		move.l	#Map_Plasma,obMap(a1)
 		move.b	#24/2,obHeight(a1)			; copy height and collisions
 		move.b	#24/2,obWidth(a1)
+		move.b	#24/2,obActWid(a1)
 		move.b	#col_none,obColType(a1)
 		move.w	#spr_prio3,obPriority(a1)			; set priority
 		move.w	#62,obSubtype(a1)			; set timer and also zero out ChildCmd

@@ -281,6 +281,7 @@ FragmentatePlatform:
 		bset	#sprite_rawmappings_bit,obRender(a0)	; set "raw-mappings" flag
 		move.l	obID(a0),d4				; copy object ID to fragments
 		move.b	obRender(a0),d5				; copy render flags to fragments
+		bclr	#sprite_customheight_bit,d5
 		movea.l	a0,a1					; overwrite main platform with first fragment object
 		bra.s	.firstFragment				; skip loop for first fragment
 ; ===========================================================================

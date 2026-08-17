@@ -210,7 +210,7 @@ Bom_BurnFuseAndExplode:
 	.nextShrapnel:
 		dbf	d1,.loopShrapnel			; repeat 3 more times
 
-		bra.w	Particle_MovingFragment_Animate
+		jmp	(Particle_MovingFragment_Animate).l
 ; End of function Bom_BurnFuseAndExplode
 ; ===========================================================================
 

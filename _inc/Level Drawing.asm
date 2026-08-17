@@ -5,13 +5,13 @@
 
 TransferLevelDrawRequests:
 		move.w	(v_drawbuffer_count).w,d1		; is draw buffer empty?
-		clr.w	(v_drawbuffer_count).w			; reset draw buffer entry count
-		tst.w	d1					; were there any entries?
 		bne.s	.doTransfer				; if yes, do transfer now
 		rts						; otherwise, nothing to do
 ; ---------------------------------------------------------------------------
 
 .doTransfer:
+		clr.w	(v_drawbuffer_count).w			; reset draw buffer entry count
+
 		add.w	d1,d1					; multiply draw buffer entry count by 4...
 		add.w	d1,d1					; ...for the ROM size of the two "move.l" instructions in the rept
 		move.w	#Draw_Buffer_Slots*4,d0			; set maximum slot count (also times 4 for the same reason)

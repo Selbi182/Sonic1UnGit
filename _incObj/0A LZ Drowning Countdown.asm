@@ -225,7 +225,7 @@ Drown_Countdown:; Routine $A
 
 .reduceAir:
 		subq.w	#1,(v_air).w				; subtract 1 second from air remaining
-		bhs.w	.gotoSpawnExtraBubbles			; if air is above 0, branch (and always spawn a bubble)
+		bpl.w	.gotoSpawnExtraBubbles			; if air is above 0, branch (and always spawn a bubble)
 
 		; Sonic drowns here
 		bsr.w	ResumeMusic				; restart level music
@@ -253,6 +253,13 @@ Drown_Countdown:; Routine $A
 ; ===========================================================================
 
 .sonicIsDrowning:
+		; Allow escaping drowning through debug mode
+		tst.b	(v_debuguse).w
+		beq.s	.noDebug
+		clr.w	drown_restarttime(a0)
+		bra.w	Drown_Countdown
+
+	.noDebug:	
 		subq.w	#1,drown_restarttime(a0)		; decrement timer before triggering actual death
 		bne.s	.sinking				; if time remains, branch
 		move.b	#6,(v_player+obRoutine).w		; set Sonic to Sonic_Death to deduct life and restart level

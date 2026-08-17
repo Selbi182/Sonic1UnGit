@@ -340,6 +340,7 @@ RLoss_SpawnRings:
 		move.l	(a3)+,rloss_velX(a1)
 		move.l	(a3)+,rloss_velY(a1)
 
+		move.b	#16/2,obActWid(a1)			; set sprite display width
 		move.l	#Map_Ring,obMap(a1)			; set mappings
 		move.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode
 		bset	#sprite_rendered_bit,obRender(a1)

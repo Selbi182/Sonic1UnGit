@@ -10,16 +10,6 @@
 ExecuteObjects:
 		moveq	#(v_objspace_end-v_objspace)/object_size-1,d7 ; $80 objects - 1
 		lea	(v_objspace).w,a0			; set address for object RAM
-		moveq	#0,d0					; clear d0
-		move.l	obID(a0),d0					; load first object ID from RAM (v_player)
-		beq.s	.noSonicObject				; if ID is 0, Sonic object isn't loader
-		move.l	d0,a1
-		jsr	(a1)
-	.noSonicObject:
-		clr.w	(v_registeredcollision).w		; reset number of collision response entries to 0
-
-		subq.w	#1,d7
-		lea	object_size(a0),a0			; increase a0 to go to next object entry ($40 bytes)
 
 ; loc_D348:
 .run_object:
