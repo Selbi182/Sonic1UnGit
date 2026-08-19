@@ -219,7 +219,7 @@ Pow_Main:	; Routine 0
 		movea.l	#Map_Monitor,a1				; load monitor mappings
 		add.b	d0,d0					; double frame ID for word-based indexing
 		adda.w	(a1,d0.w),a1				; go to relevant mapping for monitor type
-		addq.w	#1,a1					; skip over the sprite header
+		addq.w	#2,a1					; skip over the sprite header
 		move.l	a1,obMap(a0)				; use first sprite piece of mapping for raw mappings pointer
 
 Pow_Move:	; Routine 2

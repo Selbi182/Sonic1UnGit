@@ -2,16 +2,6 @@
 ; ---------------------------------------------------------------------------
 ; Object 57 - spiked balls twirling on a chain (SYZ, LZ)
 ; ---------------------------------------------------------------------------
-
-SpikeBall:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	SBall_Index(pc,d0.w),d1
-		jmp	SBall_Index(pc,d1.w)
-; ===========================================================================
-SBall_Index:	dc.w SBall_Main-SBall_Index
-		dc.w SBall_Move-SBall_Index
-
 sball_children:	equ objoff_30		; number of child objects (1 byte)
 		; $30-$37		; object RAM numbers of children (1 byte each)
 sball_origY:	equ objoff_1C		; centre y-axis position (2 bytes)
@@ -19,14 +9,14 @@ sball_origX:	equ objoff_1E		; centre x-axis position (2 bytes)
 sball_radius:	equ objoff_1B		; radius (1 byte)
 sball_speed:	equ objoff_0E		; rate of spin (2 bytes)
 sball_angle:	equ objoff_12
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-SBall_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to SBall_Move
+SpikeBall:
+		move.l	#SBall_Move,obID(a0)
 		move.l	#Map_SBall,obMap(a0)			; set mappings
 		move.w	#ArtTile_SYZ_Spikeball_Chain,obGfx(a0)	; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 		move.b	#16/2,obActWid(a0)			; set sprite display width
 		move.w	obX(a0),sball_origX(a0)			; remember initial X-position
 		move.w	obY(a0),sball_origY(a0)			; remember initial Y-position
@@ -111,9 +101,9 @@ SBall_Main:	; Routine 0
 
 SBall_Move:	; Routine 2
 		move.w	sball_speed(a0),d0			; get twirl speed for chain (can be positive or negative)
-		add.w	d0,sball_angle(a0)				; add it to current twirling angle
+		add.w	d0,sball_angle(a0)			; add it to current twirling angle
 
-		move.b	sball_angle(a0),d0				; get new angle
+		move.b	sball_angle(a0),d0			; get new angle
 		jsr	(CalcSine).l				; calculate sine and cosine for current angle
 		move.w	sball_origY(a0),d2			; get initial Y-position
 		move.w	sball_origX(a0),d3			; get initial X-position
@@ -145,10 +135,9 @@ SBall_Move:	; Routine 2
 SBall_ChkDel:
 		out_of_range_with_y_check.w	.delete,sball_origX(a0),sball_origY(a0)	; has object gone offscreen? if yes, branch
 		DisplaySprite
-		rts				; display parent object
-; ---------------------------------------------------------------------------
+		rts
 
-	.delete:
+.delete:
 		moveq	#0,d2					; clear d2
 		lea	sball_children(a0),a2			; load child RAM index array
 		move.b	(a2)+,d2				; get number of loaded child objects

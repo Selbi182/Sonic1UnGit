@@ -1100,6 +1100,7 @@ ClearScreen:
 		clr.l	(v_scrposy_vdp).w			; clear single vertical scroll buffer
 		clr.l	(v_scrposx_vdp).w			; clear single horizontal scroll buffer
 
+		clearRAM v_spritequeue
 		clearRAM v_spritetablebuffer,v_spritetablebuffer_end ; clear sprite table buffer
 		clearRAM v_hscrolltablebuffer,v_hscrolltablebuffer_end_padded ; clear H-Scroll table buffer
 
@@ -3704,7 +3705,6 @@ Map_SS_Chaos:	include	"_maps/SS Chaos Emeralds.asm"
 
 ; ===========================================================================
 ; >>> HUD objects
-Map_HUD:	include	"_maps/HUD.asm"
 		include	"_incObj/sub AddPoints.asm"
 		include	"_inc/HUD Update.asm" ; includes "ContScrCounter" subroutine
 

@@ -368,7 +368,7 @@ dbugheader:	macro	*
 .GHZ:		dbugheader
 		;	mappings	object			subtype	frame	VRAM setting
 		dbug 	Map_Ring,	Rings,			0,	0,	ArtTile_Ring|Tile_Pal2
-		dbug	Map_Monitor,	Monitor,		0,	0,	ArtTile_Monitor
+		dbug	Map_Monitor,	Monitor,		6,	8,	ArtTile_Monitor
 		dbug	Map_Crab,	Crabmeat,		0,	0,	ArtTile_Crabmeat
 		dbug	Map_Buzz,	BuzzBomber,		0,	0,	ArtTile_Buzz_Bomber
 		dbug	Map_Chop,	Chopper,		0,	0,	ArtTile_Chopper
@@ -379,6 +379,7 @@ dbugheader:	macro	*
 		dbug	Map_Spring,	Springs,		0,	0,	ArtTile_Spring_Horizontal
 		dbug	Map_Newt,	Newtron,		0,	0,	ArtTile_Newtron|Tile_Pal2
 		dbug	Map_Edge,	EdgeWalls,		0,	0,	ArtTile_GHZ_Edge_Wall|Tile_Pal3
+		dbug	Map_Ledge,	CollapseLedge,		0,	0,	ArtTile_Level|Tile_Pal3
 		dbug	Map_Lamp,	Lamppost,		1,	0,	ArtTile_Lamppost
 .GHZ_end:
 
@@ -387,7 +388,7 @@ dbugheader:	macro	*
 .LZ:		dbugheader
 		;	mappings	object			subtype	frame	VRAM setting
 		dbug 	Map_Ring,	Rings,			0,	0,	ArtTile_Ring|Tile_Pal2
-		dbug	Map_Monitor,	Monitor,		0,	0,	ArtTile_Monitor
+		dbug	Map_Monitor,	Monitor,		6,	8,	ArtTile_Monitor
 		dbug	Map_Spring,	Springs,		0,	0,	ArtTile_Spring_Horizontal
 		dbug	Map_Jaws,	Jaws,			8,	0,	ArtTile_Jaws|Tile_Pal2
 		dbug	Map_Burro,	Burrobot,		0,	2,	ArtTile_Burrobot|Tile_Prio
@@ -418,7 +419,7 @@ dbugheader:	macro	*
 .MZ:		dbugheader
 		;	mappings	object			subtype	frame	VRAM setting
 		dbug 	Map_Ring,	Rings,			0,	0,	ArtTile_Ring|Tile_Pal2
-		dbug	Map_Monitor,	Monitor,		0,	0,	ArtTile_Monitor
+		dbug	Map_Monitor,	Monitor,		6,	8,	ArtTile_Monitor
 		dbug	Map_Buzz,	BuzzBomber,		0,	0,	ArtTile_Buzz_Bomber
 		dbug	Map_Spike,	Spikes,			0,	0,	ArtTile_Spikes
 		dbug	Map_Spring,	Springs,		0,	0,	ArtTile_Spring_Horizontal
@@ -442,7 +443,7 @@ dbugheader:	macro	*
 .SLZ:		dbugheader
 		;	mappings	object			subtype	frame	VRAM setting
 		dbug 	Map_Ring,	Rings,			0,	0,	ArtTile_Ring|Tile_Pal2
-		dbug	Map_Monitor,	Monitor,		0,	0,	ArtTile_Monitor
+		dbug	Map_Monitor,	Monitor,		6,	8,	ArtTile_Monitor
 		dbug	Map_Elev,	Elevator,		0,	0,	ArtTile_Level|Tile_Pal3
 		dbug	Map_CFlo,	CollapseFloor,		0,	2,	ArtTile_SLZ_Collapsing_Floor|Tile_Pal3
 		dbug	Map_Plat_SLZ,	BasicPlatform,		0,	0,	ArtTile_Level|Tile_Pal3
@@ -463,7 +464,7 @@ dbugheader:	macro	*
 .SYZ:		dbugheader
 		;	mappings	object			subtype	frame	VRAM setting
 		dbug 	Map_Ring,	Rings,			0,	0,	ArtTile_Ring|Tile_Pal2
-		dbug	Map_Monitor,	Monitor,		0,	0,	ArtTile_Monitor
+		dbug	Map_Monitor,	Monitor,		6,	8,	ArtTile_Monitor
 		dbug	Map_Spike,	Spikes,			0,	0,	ArtTile_Spikes
 		dbug	Map_Spring,	Springs,		0,	0,	ArtTile_Spring_Horizontal
 		dbug	Map_Roll,	Roller,			0,	0,	ArtTile_Roller
@@ -483,7 +484,7 @@ dbugheader:	macro	*
 .SBZ:		dbugheader
 		;	mappings	object			subtype	frame	VRAM setting
 		dbug 	Map_Ring,	Rings,			0,	0,	ArtTile_Ring|Tile_Pal2
-		dbug	Map_Monitor,	Monitor,		0,	0,	ArtTile_Monitor
+		dbug	Map_Monitor,	Monitor,		6,	8,	ArtTile_Monitor
 		dbug	Map_Bomb,	Bomb,			0,	0,	ArtTile_Bomb
 		dbug	Map_Orb,	Orbinaut,		0,	0,	ArtTile_SBZ_Orbinaut
 		dbug	Map_Cat,	Caterkiller,		0,	0,	ArtTile_SBZ_Caterkiller|Tile_Pal2

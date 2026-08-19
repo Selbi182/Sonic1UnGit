@@ -4,14 +4,17 @@
 ; ---------------------------------------------------------------------------
 
 Springs:
-		tst.b	obRender(a0)
-		bpl.s	.skip
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
+		beq.s	.action			; if spring wasn't yet initialized, branch to ensure setup
+		tst.b	obRender(a0)		; is spring visible?
+		bpl.s	.checkOffscreen		; if not, skip logic (optimization)
+
+	.action:
 		move.w	Spring_Index(pc,d0.w),d1
 		jsr	Spring_Index(pc,d1.w)
 
-	.skip:
+	.checkOffscreen:
 		out_of_range_with_y_check.w	DeleteObject,obX(a0),obY(a0)
 		DisplaySprite
 		rts

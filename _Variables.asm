@@ -30,6 +30,7 @@ v_ngfx_buffer:		ds.b	$200				; Nemesis graphics decompression buffer
 v_ngfx_buffer_end:
 
 v_spritequeue:		ds.b	spritelayer_num*spritelayer_size ; sprite display queue, in order of priority (8*$80=$400 bytes)
+v_spritequeue_end:
 
 ; ---------------------------------------------------------------------------
 ; Previously v_16x16 block mappings

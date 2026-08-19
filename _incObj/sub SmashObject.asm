@@ -14,7 +14,7 @@ SmashObject:
 		add.w	d0,d0					; double it for word-based indexing
 		movea.l	obMap(a0),a3				; get object mappings set
 		adda.w	(a3,d0.w),a3				; find mappings for current frame
-		addq.w	#1,a3					; skip over sprite piece count
+		addq.w	#2,a3					; skip over sprite piece count
 		bset	#sprite_rawmappings_bit,obRender(a0)	; set "raw-mappings" flag
 		move.l	obID(a0),d4				; copy object ID
 		move.b	obRender(a0),d5				; copy render flags
@@ -25,7 +25,7 @@ SmashObject:
 .loopFragments:
 		bsr.w	FindNextFreeObj				; find a free object slot after the previous one
 		bne.s	.playSmashSound				; if object RAM is full, abort process
-		addq.w	#5,a3					; advance to next sprite piece in mappings (each piece is 5 bytes)
+		addq.w	#8,a3					; advance to next sprite piece in mappings (each piece is 5 bytes)
 
 	.loadFirstFrag:
 		move.l	#Particle_MovingFragment,obID(a1)

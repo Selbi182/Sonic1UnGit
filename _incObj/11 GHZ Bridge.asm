@@ -49,7 +49,7 @@ Bri_Main:	; Routine 0
 		bcs.s	Bri_Action				; branch on underflow (bridge only has only 1 log)
 
 .loopBuildBridge:
-		bsr.w	FindNextFreeObj				; find next free object RAM slot
+		jsr	(FindNextFreeObj).l			; find next free object RAM slot
 		bne.s	Bri_Action				; if object RAM is full, abort
 		addq.b	#1,bridge_children(a0)			; increment number of loaded child objects
 

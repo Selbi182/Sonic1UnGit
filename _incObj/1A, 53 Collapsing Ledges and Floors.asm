@@ -277,7 +277,7 @@ FragmentatePlatform:
 		add.w	d0,d0					; double it for word-based indexing
 		movea.l	obMap(a0),a3				; get object mappings pointer
 		adda.w	(a3,d0.w),a3				; find sprite mapping for current frame ID
-		addq.w	#1,a3					; skip over piece count header
+		addq.w	#2,a3					; skip over piece count header
 		bset	#sprite_rawmappings_bit,obRender(a0)	; set "raw-mappings" flag
 		move.l	obID(a0),d4				; copy object ID to fragments
 		move.b	obRender(a0),d5				; copy render flags to fragments
@@ -314,7 +314,7 @@ FragmentatePlatform:
 
 
 
-		addq.w	#5,a3					; advance to next sprite piece in mappings
+		addq.w	#8,a3					; advance to next sprite piece in mappings
 	.firstFragment:
 		move.b	#6,obRoutine(a1)			; set fragment routine to "..._FragmentPiece"
 		move.l	d4,obID(a1)				; copy object ID

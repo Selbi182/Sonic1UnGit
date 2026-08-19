@@ -288,7 +288,7 @@ maketitlecard:	macro *,textline,hideAct,specialTileOffset
 				; retry with small spaces
 			endif
 		endw
-		dc.b len-spaces
+		dc.w len-spaces
 
 		; special tile offset for zone text
 		if specialTileOffset>0
@@ -329,7 +329,9 @@ maketitlecard:	macro *,textline,hideAct,specialTileOffset
 				elseif ("\char"='g')
 					yOffset: = 2
 				endif
-				dc.b ($F8+yOffset)&$FF, $05, $00, tile, x
+
+				dc.w $FFF8+yOffset, $0500, tile, x
+
 				tile: = tile+4
 				if ("\char">='a')&("\char"<='z')
 					if ("\char"='i')|("\char"='j')|("\char"='l')
@@ -343,7 +345,7 @@ maketitlecard:	macro *,textline,hideAct,specialTileOffset
 			else
 				inform 2, "illegal char \char"
 			endif
-			x: = (x+addX)&$FF
+			x: = x+addX
 		endw
 		even
 

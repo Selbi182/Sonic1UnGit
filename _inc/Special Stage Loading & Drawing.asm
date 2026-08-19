@@ -117,9 +117,8 @@ SS_ShowLayout:
 		add.w	d1,d1					; double for word-based indexing
 		adda.w	(a1,d1.w),a1				; get mappings for current frame
 		movea.w	(a5)+,a3				; get art tile / VRAM settings
-		moveq	#1-1,d1					; write 1 sprite piece by default
-		move.b	(a1)+,d1				; get number of sprite pieces in frame
-		subq.b	#1,d1					; subtract 1 for dbf
+		move.w	(a1)+,d1				; get number of sprite pieces in frame
+		subq.w	#1,d1					; subtract 1 for dbf
 		bmi.s	.nextBlock				; if result underflowed, this is was blank frame mapping, branch
 		jsr	(BuildSpr_Normal).l			; write data from sprite pieces to buffer (never flipped)
 

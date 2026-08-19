@@ -174,7 +174,7 @@ DLE_GHZ3_Boss:
 	.dont_return:
 		cmpi.w	#boss_ghz_x,(v_screenposx).w
 		blo.s	.exit					; branch if camera is left of $2960
-		bsr.w	FindFreeObj				; find free OST slot
+		jsr	(FindFreeObj).l				; find free OST slot
 		bne.s	.fail					; branch if not found
 		move.l	#BossGreenHill,obID(a1)		; load GHZ boss object
 		move.w	#boss_ghz_x+$100,obX(a1)
@@ -241,7 +241,7 @@ DLE_LZ3:
 		cmpi.w	#boss_lz_y+$540,(v_screenposy).w
 		bhs.s	.skip_boss2				; branch if camera is below $600
 
-		bsr.w	FindFreeObj				; find free OST slot
+		jsr	(FindFreeObj).l				; find free OST slot
 		bne.s	.fail					; branch if not found
 		move.l	#BossLabyrinth,obID(a1)		; load LZ boss object
 
@@ -443,7 +443,7 @@ DLE_MZ3_Boss:
 		cmpi.w	#boss_mz_x-$10,(v_screenposx).w
 		blo.s	.exit					; branch if camera is left of $17F0
 
-		bsr.w	FindFreeObj				; find free OST slot
+		jsr	(FindFreeObj).l				; find free OST slot
 		bne.s	.fail					; branch if not found
 		move.l	#BossMarble,obID(a1)			; load MZ boss object
 		move.w	#boss_mz_x+$1F0,obX(a1)
@@ -517,7 +517,7 @@ DLE_SLZ3_Boss:
 		cmpi.w	#boss_slz_x,(v_screenposx).w
 		blo.s	.exit					; branch if camera is left of $2000
 
-		bsr.w	FindFreeObj				; find free OST slot
+		jsr	(FindFreeObj).l				; find free OST slot
 		bne.s	.fail					; branch if not found
 		move.l	#BossStarLight,obID(a1)		; load SLZ boss object
 
@@ -595,7 +595,7 @@ DLE_SYZ3_Main:
 		cmpi.w	#boss_syz_x-$140,(v_screenposx).w
 		blo.s	.exit					; branch if camera is left of $2AC0
 
-		bsr.w	FindFreeObj				; find free OST slot
+		jsr	(FindFreeObj).l				; find free OST slot
 		bne.s	.exit					; branch if not found
 		move.l	#BossBlock,obID(a1)			; load blocks that boss picks up
 		addq.b	#2,(v_dle_routine).w			; goto DLE_SYZ3_Boss next
@@ -609,7 +609,7 @@ DLE_SYZ3_Boss:
 		blo.s	.exit					; branch if camera is left of $2C00
 
 		move.w	#boss_syz_y,(v_limitbtm1).w
-		bsr.w	FindFreeObj				; find free OST slot
+		jsr	(FindFreeObj).l				; find free OST slot
 		bne.s	.fail					; branch if not found
 		move.l	#BossSpringYard,obID(a1)		; load SYZ boss object
 		addq.b	#2,(v_dle_routine).w			; goto DLE_SYZ3_End next
@@ -697,7 +697,7 @@ DLE_SBZ2_Blocks:
 		cmpi.w	#boss_sbz2_x-$1A0,(v_screenposx).w
 		blo.s	.exit					; branch if camera is left of $1EB0
 
-		bsr.w	FindFreeObj				; find free OST slot
+		jsr	(FindFreeObj).l				; find free OST slot
 		bne.s	.exit					; branch if not found
 		move.l	#FalseFloor,obID(a1)			; load collapsing block object
 		addq.b	#2,(v_dle_routine).w			; goto DLE_SBZ2_Eggman next
@@ -713,7 +713,7 @@ DLE_SBZ2_Eggman:
 		cmpi.w	#boss_sbz2_x-$F0,(v_screenposx).w
 		blo.s	.set_boundary				; branch if camera is left of $1F60
 
-		bsr.w	FindFreeObj				; find free OST slot
+		jsr	(FindFreeObj).l				; find free OST slot
 		bne.s	.fail					; branch if not found
 		move.l	#ScrapEggman,obID(a1)		; load SBZ2 Eggman object
 		addq.b	#2,(v_dle_routine).w			; goto DLE_SBZ2_End next
@@ -767,7 +767,7 @@ DLE_FZ_Boss:
 		cmpi.w	#boss_fz_x-$150,(v_screenposx).w
 		blo.s	.set_boundary				; branch if camera is left of $2300
 
-		bsr.w	FindFreeObj				; find free OST slot
+		jsr	(FindFreeObj).l				; find free OST slot
 		bne.s	.set_boundary				; branch if not found
 		move.l	#BossFinal,obID(a1)			; load FZ boss object
 		addq.b	#2,(v_dle_routine).w			; goto DLE_FZ_Arena next
