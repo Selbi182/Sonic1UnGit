@@ -274,10 +274,16 @@ HUD_DirectMaps:		; Y-position			Size+Link	VRAM settings			X-position
 		dc.w	($FFA0+HUD_BaseY)&$FFFF,	$0D07,		($8008+ArtTile_HUD)&$FFFF,	$0000+HUD_BaseX	; "RING"
 		dc.w	($FFA0+HUD_BaseY)&$FFFF,	$0108,		($8000+ArtTile_HUD)&$FFFF,	$0020+HUD_BaseX	; "S"
 		dc.w	($FFA0+HUD_BaseY)&$FFFF,	$0909,		($8030+ArtTile_HUD)&$FFFF,	$0030+HUD_BaseX	; rings counter
+
 	if Enable_InfiniteLives=0	
 		dc.w	($0040+HUD_BaseY)&$FFFF,	$050A,		($810A+ArtTile_HUD)&$FFFF,	$0000+HUD_BaseX	; lives counter (Sonic icon)
 		dc.w	($0040+HUD_BaseY)&$FFFF,	$0D0B,		($810E+ArtTile_HUD)&$FFFF,	$0010+HUD_BaseX	; lives counter ("SONIC x N" text)
 		dc.w	($0040+HUD_BaseY)&$FFFF,	$0D0C,		($810E+ArtTile_HUD)&$FFFF,	$0010+HUD_BaseX	; lives counter ("SONIC x N" text)
+	endif
+
+	if LagFrameCounter
+		.lagframelink: equ $0D-(3*Enable_InfiniteLives)
+		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0400+.lagframelink,	($8000+$7FE)&$FFFF,	$0118+HUD_BaseX	; lag frame counter
 	endif
 HUD_DirectMaps_End:
 

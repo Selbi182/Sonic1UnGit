@@ -33,6 +33,9 @@ OneHitBosses: = 1
 LagOMeter: = 0
 ;	| If 1, displays a Lag-o-Meter at the top-right of the screen
 
+LagFrameCounter: = 1
+;	| If 1, adds a counter at the top right HUD that counts lag frames
+
 BootToLevel: = -1
 ;	| If set, will boot straight to a specified level (e.g. id_GHZ_act1)
 ;	|         (set to -1 for booting to Sega Screen normally)
@@ -510,11 +513,17 @@ VBlank_Index:	dc.w VBlank_Lag-VBlank_Index			; $00 - (lag frame)
 ; loc_B88: VBla_00:
 VBlank_Lag:
 		cmpi.b	#$80+id_Level,(v_gamemode).w		; is pre level sequence active?
-		beq.s	.isLevel				; if not, just update sound driver and resume operation
+		beq.s	.prelevel				; if not, just update sound driver and resume operation
 		cmpi.b	#id_Level,(v_gamemode).w		; is game on a level?
 		bne.w	VBlank_Music				; if not, just update sound driver and resume operation
 
 .isLevel:
+	if LagFrameCounter
+		addq.b	#1,(v_lagframes).w
+		bset	#7,(v_lagframes).w
+	endif
+
+.prelevel:
 		cmpi.b	#id_LZ,(v_zone).w			; is level LZ?
 		bne.w	VBlank_Music				; if not, just update sound driver and resume operation
 
@@ -2558,6 +2567,9 @@ Level_SkipClr:
 		move.b	#1,(f_scorecount).w			; update score counter
 		move.b	#1,(f_ringcount).w			; update rings counter
 		move.b	#1,(f_timecount).w			; update time counter
+	if LagFrameCounter
+		bset	#7,(v_lagframes).w
+	endif
 
 	if CheatsEnabled>=2
 		move.b	#1,(f_debugmode).w			; enable debug mode automatically

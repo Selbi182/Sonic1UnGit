@@ -4,8 +4,30 @@
 ; ---------------------------------------------------------------------------
 
 HUD_Update:
+	if LagFrameCounter
+		tst.b	(v_lagframes).w				; does the lag frame counter need updating?
+		bpl.s	.lagdone				; if not, branch
+		bclr	#7,(v_lagframes).w			; clear update flag
+
+		locVRAM	$7FE*tile_size,d0
+		moveq	#0,d1
+		move.b	(v_lagframes).w,d1
+		lsr.b	#4,d1
+		lea	(Hud_1).l,a2
+		moveq	#1-1,d6
+		bsr.w	Hud_Write_8x8Digits_WithLeading
+
+		locVRAM	$7FF*tile_size,d0
+		moveq	#0,d1
+		move.b	(v_lagframes).w,d1
+		lea	(Hud_1).l,a2
+		moveq	#1-1,d6
+		bsr.w	Hud_Write_8x8Digits_WithLeading
+.lagdone:
+	endif
+
 		;tst.w	(f_debugmode).w				; is debug mode on?
-		tst.w	(v_debuguse).w
+		tst.w	(v_debuguse).w				; is debug mode IN USE?
 		bne.w	HudDebug				; if yes, branch to alternate HUD logic
 ; ---------------------------------------------------------------------------
 

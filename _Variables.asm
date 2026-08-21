@@ -405,7 +405,7 @@ v_airbyte:		equ	v_air+1				; low byte for air
 v_lastspecial:		ds.b	1				; last special stage number
 			ds.b	1				; unused
 v_continues:		ds.b	1				; number of continues
-			ds.b	1				; unused
+v_lagframes:		ds.b	1
 f_timeover:		ds.b	1				; time over flag
 v_lifecount:		ds.b	1				; lives counter value (for actual number, see "v_lives")
 f_lifecount:		ds.b	1				; lives counter update flag
