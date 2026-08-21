@@ -4,12 +4,13 @@
 ; ---------------------------------------------------------------------------
 
 SS_ShowLayout:
+		movem.w	d5/d7,-(sp)				; backup sprites already rendered in BuildSprites (which was called before SS_ShowLayout)
+
 		bsr.w	SS_AnimateBlocks			; animate walls, rings, and other blocks
 		bsr.w	SS_ExecuteAnimationQueue		; animate queued events for touched blocks
 ; ---------------------------------------------------------------------------
 
 	; --- Calculate the rotated position of the layout grid ---
-		move.w	d5,-(sp)				; backup sprites rendered in BuildSprites (which is called before SS_ShowLayout)
 
 		lea	(v_ss_rotationmatrix).w,a1		; set start of rotation buffer (each entry is two words per cell, X/Y axis)
 		move.b	(v_ssangle).w,d0			; get current angle of the special stage rotation
@@ -67,7 +68,7 @@ SS_ShowLayout:
 		addi.w	#ss_blocksize,d3			; increase base Y-position by block height
 		dbf	d7,.rotateRows				; loop until all rows have been calculated
 
-		move.w	(sp)+,d5				; restore number of rendered sprites in BuildSprites
+		movem.w	(sp)+,d5/d7				; restore number of rendered sprites in BuildSprites
 
 	; --- Insert block types into rotated grid and render them as sprites ---
 		lea	(v_sslayout_base).l,a0			; get base pointer for stage layout
@@ -120,7 +121,7 @@ SS_ShowLayout:
 		move.w	(a1)+,d1				; get number of sprite pieces in frame
 		subq.w	#1,d1					; subtract 1 for dbf
 		bmi.s	.nextBlock				; if result underflowed, this is was blank frame mapping, branch
-		jsr	(BuildSpr_Normal).l			; write data from sprite pieces to buffer (never flipped)
+		bsr.s	DrawSprite_SS				; write data from sprite pieces to buffer (never flipped)
 
 	.nextBlock:
 		addq.w	#4,a4					; advance to next entry in rotation matrix
@@ -129,10 +130,10 @@ SS_ShowLayout:
 		swap	d6
 		dbf	d6,.loopAllRows				; loop until all rows were rendered
 
+BuildSprites_SS_Finalize:
 		move.b	d5,(v_spritecount).w			; write total number of rendered sprites to debug value
 
-		tst.b	d7
-		;cmpi.b	#sprites_max,d5				; check if sprite limit was exhausted
+		tst.b	d7					; check if sprite limit was exhausted
 		beq.s	.spriteLimit				; if yes, branch
 
 		move.l	#0,(a2)					; unlink last sprite
@@ -143,6 +144,44 @@ SS_ShowLayout:
 		move.b	#0,-5(a2)				; unlink penultimate sprite
 		rts						; return
 ; End of function SS_ShowLayout
+
+
+; ---------------------------------------------------------------------------
+; Subroutine to draw a single Special Stage layout sprite
+; (Modified copy of BuildSpr_Normal)
+; ---------------------------------------------------------------------------
+
+DrawSprite_SS:
+		subq.b	#1,d7					; check sprite limit
+		ble.s	.abort					; if all sprite slots are taken up, abort process
+
+		move.w	(a1)+,d0				; get relative Y-offset
+		add.w	d2,d0					; add base Y-position
+		swap	d0					; write together with next (optimization)
+
+		move.w	(a1)+,d0				; get dimensions of sprite piece (WWHH) (preshifted <<8)
+		addq.b	#1,d5					; increase total sprites counter
+		move.b	d5,d0					; set sprite link number
+		move.l	d0,(a2)+				; write Y-position, dimension, and link number to sprite buffer
+
+		move.w	(a1)+,d0				; get base VRAM settings
+		add.w	a3,d0					; add base art tile offset of object
+		swap	d0					; write together with next (optimization)
+
+		move.w	(a1)+,d0				; get relative X-offset
+		add.w	d3,d0					; add X-position
+		bne.s	.x					; if non-zero, branch
+		addq.w	#1,d0					; force zero X-position to non-zero (avoid unwanted sprite masking)
+	.x:	move.l	d0,(a2)+				; write VRAM settings and X-position to sprite buffer
+
+		dbf	d1,DrawSprite_SS			; loop for all pieces in mapping
+		rts						; done
+	
+.abort:
+		addq.b	#1,d5					; sprite limit exhausted
+		addq.w	#4,sp					; don't return to sprite render loop
+		bra.s	BuildSprites_SS_Finalize		; skip straight to finalization
+; End of function DrawSprite_SS
 
 
 ; ===========================================================================

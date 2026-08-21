@@ -144,20 +144,18 @@ buildsprite:	macro xflip,yflip
 			sub.w	d4,d0				; d0 = flipped X-position
 		endif
 		add.w	d3,d0					; add X-position
-		bne.s	.x					; if non-zero, branch
+		bne.s	.x\@					; if non-zero, branch
 		addq.w	#1,d0					; force zero X-position to non-zero (avoid unwanted sprite masking)
-	.x:	move.l	d0,(a2)+
+	.x\@:	move.l	d0,(a2)+
 
 	; --- Loop for all pieces in mapping ---
-		dbf	d1,.loopSpritePieces
-
-	.return:
-		rts
+		dbf	d1,.loopSpritePieces			; loop for all pieces in mapping
+		rts						; done
 	
 	.abort\@:
-		addq.b	#1,d5
-		addq.w	#4,sp
-		bra	BuildSprites_Finalize
+		addq.b	#1,d5					; sprite limit exhausted
+		addq.w	#4,sp					; don't return to sprite render loop
+		bra	BuildSprites_Finalize			; skip straight to finalization
 	endm
 
 

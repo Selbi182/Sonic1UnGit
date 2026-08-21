@@ -2901,8 +2901,8 @@ SS_MainLoop:
 
 		jsr	(ExecuteObjects).l			; execute Special Stage object
 		jsr	(BuildSprites).l			; build sprites
-		bsr.w	LoadRingFrame_SS
 		jsr	(SS_ShowLayout).l			; render Special Stage layout
+		bsr.w	LoadRingFrame_SS
 		bsr.w	SS_BGAnimate				; animate Special Stage background
 
 SS_ChkEnd:
