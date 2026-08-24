@@ -2853,25 +2853,6 @@ GM_Special:		; white fade-out from previous game mode
 		moveq	#palid_Special,d0			; load special stage palette...
 		bsr.w	PalLoad_Fade				; ...into the palette fade-in buffer
 
-		moveq	#0,d0					; clear d0	
-		move.b	(v_lastspecial).w,d0			; get ID of special stage we've just entered
-		move.b	SS_Music(pc,d0.w),d0			; find music ID from SS_Music list
-		bsr.w	QueueSound1				; play correct special stage BG music
-		bra.s	SS_ContinueSetup			; skip over music list
-
-; ===========================================================================
-SS_Music:
-		dc.b bgm_SS	; stage 1
-		dc.b bgm_SS	; stage 2
-		dc.b bgm_SS	; stage 3
-		dc.b bgm_SS	; stage 4
-		dc.b bgm_SS	; stage 5
-		dc.b bgm_SS	; stage 6
-		;dc.b bgm_SS	; stage 7 (if you ever decide to add it...)
-		even
-; ===========================================================================
-
-SS_ContinueSetup:
 		jsr	(SS_Load).l				; load SS layout data (based on last stage entered and collected emeralds)
 
 		move.w	#$2B0,(v_limittop2).w			; set top boundary

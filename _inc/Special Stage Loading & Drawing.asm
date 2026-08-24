@@ -617,6 +617,8 @@ SS_FindUnbeatenStage:
 
 ; d0 = special stage to load (0-5)
 SS_LoadData:
+		move.w	d0,-(sp)				; temporarily back up SS stage ID
+
 	; --- Load start positions for Sonic ---
 		lsl.w	#2,d0					; multiply by 4 for long-based indexing
 		lea	SS_StartLoc(pc,d0.w),a1			; load Sonic's start location for this stage
@@ -666,5 +668,18 @@ SS_LoadData:
 		clr.l	(a1)+					; clear four bytes
 		dbf	d1,.clearAnimationQueue			; loop until queue has been cleared
 
-		rts						; return
+		move.w	(sp)+,d0				; restore SS stage ID
+		move.b	SS_Music(pc,d0.w),d0			; find music ID from SS_Music list
+		jmp	(QueueSound1).l				; play correct special stage BG music
 ; End of function SS_Load
+
+; ===========================================================================
+SS_Music:	dc.b bgm_GHZ	; stage 1
+		dc.b bgm_MZ	; stage 2
+		dc.b bgm_SS	; stage 3
+		dc.b bgm_SS	; stage 4
+		dc.b bgm_SS	; stage 5
+		dc.b bgm_SYZ	; stage 6
+		;dc.b bgm_SS	; stage 7 (if you ever decide to add it...)
+		even
+; ===========================================================================

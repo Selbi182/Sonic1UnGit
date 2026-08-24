@@ -120,6 +120,13 @@ Shi_Stars:	; Routine 4
 		beq.s	.display				; if yes, branch
 		move.b	(v_starsobj1+obFrame).w,obFrame(a0)	; borrow frame from first invincibility object
 .display:
+		move.w	(v_player+invtime).w,d0
+		cmpi.w	#120,d0
+		bhs.s	.show
+		btst	#0,d0
+		bne.s	.show
+		rts
+	.show:
 		DisplaySprite
 		rts			; keep displaying stars
 ; ===========================================================================

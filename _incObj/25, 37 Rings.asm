@@ -203,7 +203,13 @@ RLoss_Bounce:	; Routine 0
 	.nocol:
 		move.b	d1,obColType(a0)
 
-
+		
+		move.b	obDelayAni(a0),d0
+		cmpi.b	#80,d0
+		bhi.s	.show
+		btst	#0,obDelayAni(a0)
+		bne.s	.Full
+	.show:
 		lea	(v_registeredcollision_rings).w,a1	; get target sprite queue
 		move.w	(a1),d0			; get sprite queue's entry count
 		addq.b	#2,d0			; increase count by another entry (word)
