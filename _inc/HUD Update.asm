@@ -64,12 +64,10 @@ HUD_Update:
 		;   0M (v_timemin)  = minutes (can't ever go above 9 due to time overs, so high nibble is unused)
 		;   00              = unused (although it could be used for a hypothetical "hours" counter)
 
-		lea	(v_time).w,a1				; load current time as pointer
-		cmpi.l	#(9*$10000)+(59*$100)+59,(a1)+		; is the time 9:59:59? (and advance pointer by 4)
-		beq.w	TimeOver				; if yes, kill Sonic from a time over
-
 		tst.b	(v_gamemode).w				; is level still fading in?
 		bmi.w	.updatetime				; if yes, don't yet update time
+
+		lea	(v_time+4).w,a1				; load current time as pointer (+4 because it's read backwards)
 
 		addq.b	#1,-(a1)				; increment 1/60s counter (v_timecent)
 		cmpi.b	#60,(a1)				; check if passed 60
@@ -83,8 +81,7 @@ HUD_Update:
 
 		addq.b	#1,-(a1)				; increment minutes counter (v_timemin)
 		cmpi.b	#9,(a1)					; check if passed 9
-		blo.s	.updatetime				; if not, branch
-		move.b	#9,(a1)					; force minutes to never exceed 9
+		bhi.s	TimeOver				; if yes, kill Sonic from a time over
 
 	.updatetime:
 		locVRAM	(ArtTile_HUDTimeMins)*tile_size,d0	; set VRAM address
@@ -99,7 +96,6 @@ HUD_Update:
 
 	.updatetimeCenti:
 		bsr.w	Hud_Centis
-
 
 ; ---------------------------------------------------------------------------
 
@@ -136,14 +132,12 @@ HUD_Update:
 ; ---------------------------------------------------------------------------
 
 TimeOver:
+		move.b	#1,(f_timeover).w			; set flag to load time over objects
 		clr.b	(f_timecount).w				; stop time counter
 
 		lea	(v_player).w,a0				; load Sonic object
 		movea.l	a0,a2					; avoid dangling pointer
-		jsr	(KillSonic).l				; force kill Sonic
-
-		move.b	#1,(f_timeover).w			; set flag to load time over objects
-		rts						; return
+		jmp	(KillSonic).l				; force kill Sonic
 ; End of function TimeOver
 
 ; ===========================================================================
