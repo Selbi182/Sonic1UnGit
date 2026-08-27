@@ -144,7 +144,9 @@ Deform_GHZ:
 
 		; water
 		move.w	(v_bg2screenposx).w,d0
+		andi.w	#$FFF,d0
 		move.w	(v_screenposx).w,d2
+		andi.w	#$FFF,d2
 		sub.w	d0,d2
 		ext.l	d2
 		asl.l	#8,d2
