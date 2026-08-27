@@ -558,17 +558,21 @@ React_LZPole:
 ; ===========================================================================
 
 ResetHomingAttack:
-		tst.b	doublejump(a0)			; was the homing attack flag set?
+		tst.b	doublejump(a0)				; was the homing attack flag set?
 		beq.s	.return					; if not, nothing to do
-	;	clr.w	obVelX(a0)				; clear Sonic's X-speed
-		asr.w	obVelX(a0)
-		asr.w	obVelX(a0)
-		clr.b	doublejump(a0)			; reset homing attack flag so we can do another one
-		move.b	#1,jumping(a0)
+		bmi.s	.reset					; was it set to -1? if yes, skip rebound
+
+		asr.w	obVelX(a0)				; halve X-speed...
+		asr.w	obVelX(a0)				; ...twice
 		move.w	#-$500,obVelY(a0)			; bounce Sonic upwards a little from the impact
 		btst	#6,obStatus(a0)				; is Sonic underwater?
-		beq.s	.return					; if not, branch
-		asr.w	obVelY(a0)
+		beq.s	.reset					; if not, branch
+		asr.w	obVelY(a0)				; halve rebound speed
+
+	.reset:
+		clr.b	doublejump(a0)				; reset homing attack flag so we can do another one
+		move.b	#1,jumping(a0)				; force jumping flag to allow variable jump height from rebound
 
 	.return:
-		rts
+		rts						; return
+; End of function ResetHomingAttack

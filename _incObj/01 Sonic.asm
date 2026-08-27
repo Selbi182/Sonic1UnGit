@@ -1905,8 +1905,7 @@ Sonic_Loops:
 ; loc_13926:
 .isstarlight:
 		move.w	obY(a0),d0				; get Sonic's current Y-position
-		lsr.w	#1,d0					; halve it (level layouts have FG and BG interlaced)
-		andi.w	#$380,d0				; mask out irrelevant bits for Y-position
+		andi.w	#$700,d0				; mask out irrelevant bits for Y-position
 		move.b	obX(a0),d1				; get Sonic's current X-position
 		andi.w	#$7F,d1					; mask out irrelevant bits for X-position
 		add.w	d1,d0					; combine the two (this is now the index to get the current 256x256 chunk in the level)
@@ -2310,47 +2309,54 @@ Sonic_PanCamera:
 
 Sonic_HomingAttack:
 		tst.b	doublejump(a0)		; was the homing attack flag already set?
-		bne.s	.done		; if yes, branch
-		tst.b	jumping(a0)
-		beq.s	.done
+		bne.s	.done			; if yes, branch
+		tst.b	jumping(a0)		; is Sonic in air specifically from jumping?
+		beq.s	.done			; if not, branch
 		moveq	#btnABC,d0		; is any of the buttons ABC...
 		and.b	(v_jpadpress2).w,d0	; ...pressed?
-		beq.s	.done		; if not, branch
-		move.b	#1,doublejump(a0)		; set the homing attack flag
+		beq.s	.done			; if not, branch
 
-		bsr.s	.getspeed
-		btst	#6,obStatus(a0)				; is Sonic underwater?
-		beq.s	.done				; if not, continue
-		asr.w	obVelX(a0)
-		asr.w	obVelY(a0)
-.done:		rts
+		bsr.s	Sonic_HomingAttack_Action
+		btst	#6,obStatus(a0)		; is Sonic underwater?
+		beq.s	.done			; if not, continue
+		asr.w	obVelX(a0)		; halve new target X-speed
+		asr.w	obVelY(a0)		; halve new target Y-speed
+.done:
+		rts				; return
+; ---------------------------------------------------------------------------
 
-.getspeed:
-		btst	#bitB,(v_jpadpress2).w	; ...pressed?
-		bne.s	.doubleJump
-		
-		btst	#bitUp,(v_jpadhold2).w
-		beq.s	.noDoubleJump
+Sonic_HomingAttack_Action:
+		; check for double jump
+		btst	#bitB,(v_jpadpress2).w	; was specifically B pressed?
+		bne.s	.doubleJump		; if yes, do a double jump instead
+		btst	#bitUp,(v_jpadhold2).w	; was Up held?
+		beq.s	.chkDownDash		; if not, branch
+
 	.doubleJump:
-		move.w	#-$580,obVelY(a0)			; set initial jump force
-		clr.b	jumping(a0)				; set jump flag
-		move.w	#sfx_Jump,d0				; set jump sound
-		jmp	(QueueSound2).l				; play jumping sound
+		move.b	#-1,doublejump(a0)	; set homing flag (no rebound)
+		move.w	#-$580,obVelY(a0)	; set double jump force
+		clr.b	jumping(a0)		; clear jump flag
+		move.w	#sfx_Jump,d0		; set jump sound
+		jmp	(QueueSound2).l		; play jumping sound
+; ---------------------------------------------------------------------------
 
-.noDoubleJump:
-		
-		move.w	#sfx_Teleport,d0	; play dash sound as a test
-		jsr	(QueueSound2).l		; (PlaySound_Special in older disassemblies)
-		bset	#7,doublejump(a0)
+.chkDownDash:
+		btst	#bitDn,(v_jpadhold2).w	; was Down held?
+		beq.s	.jumpdashOrHoming	; if not, branch
 
-		btst	#bitDn,(v_jpadhold2).w
-		beq.s	.noDownDash
-		move.w	#$680,obVelY(a0)
-		clr.b	jumping(a0)				; set jump flag
-		rts
-		
-.noDownDash:
+		move.w	#$680,obVelY(a0)	; set down-dash speed
+		clr.b	jumping(a0)		; clear jump flag
+		move.b	#-1,doublejump(a0)	; set homing flag (no rebound)
 
+		move.w	#sfx_Teleport,d0	; play dash sound
+		jmp	(QueueSound2).l
+
+; ---------------------------------------------------------------------------
+
+.jumpdashOrHoming:
+		move.b	#1,doublejump(a0)	; set the homing attack flag
+		move.w	#sfx_Teleport,d0	; play dash sound
+		jsr	(QueueSound2).l
 
 		bsr.s	FindHomingTarget	; check if any homing targets are in range
 		beq.s	RegularJumpdash		; if not, do a regular jumpdash instead

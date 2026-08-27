@@ -77,7 +77,7 @@ Smash_Solid:	; Routine 2
 		bclr	#5,obStatus(a1)				; clear Sonic's pushing flag
 
 		moveq	#8-1,d1					; set number of fragments to load to 8 (number of sprite pieces in wall)
-		move.l	#(gravity*2)<<8,d2				; set counter-gravity for edge case in SmashObject
+		move.l	#(gravity*2)<<8,d2			; set counter-gravity
 		bsr.s	SmashObject				; smash the block into four fragment objects (set to routine 4, Smash_Fragment)
 		bra.w	Particle_MovingFragment
 

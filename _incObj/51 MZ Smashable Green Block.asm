@@ -66,7 +66,7 @@ Smab_Solid:	; Routine 2
 		move.b	#1,obFrame(a0)				; set to block frame with four sprite pieces for fragmentation
 		lea	(Smab_Speeds).l,a4			; load broken fragment speed data
 		moveq	#4-1,d1					; set number of fragments to load to 4
-		move.l	#gravity<<8,d2				; set counter-gravity for edge case in SmashObject
+		move.l	#gravity<<8,d2				; set counter-gravity
 		bsr.w	SmashObject				; smash the block into four fragment objects
 
 		bsr.w	FindFreeObj				; find a free object slot for the points

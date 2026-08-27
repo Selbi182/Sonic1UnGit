@@ -4,7 +4,7 @@
 ; 
 ; inputs:
 ; 	d1 = number of fragments to spawn - 1
-;	d2 = base gravity (only needed for edge cases)
+;	d2 = base gravity
 ;	a4 = array of X/Y velocities for each fragment (2 words each)
 ; ---------------------------------------------------------------------------
 
