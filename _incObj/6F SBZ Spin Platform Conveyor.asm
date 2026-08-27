@@ -293,17 +293,17 @@ ObjPosSBZPlatform_Index:
 		dc.w ObjPos_SBZ1pf5-ObjPosSBZPlatform_Index, ObjPos_SBZ1pf6-ObjPosSBZPlatform_Index
 		dc.w ObjPos_SBZ1pf1-ObjPosSBZPlatform_Index, ObjPos_SBZ1pf2-ObjPosSBZPlatform_Index
 
-ObjPos_SBZ1pf1:	binclude	"objpos/platforms/sbz1pf1.bin"
+ObjPos_SBZ1pf1:	binclude	"LevelData/objpos/platforms/sbz1pf1.bin"
 		even
-ObjPos_SBZ1pf2:	binclude	"objpos/platforms/sbz1pf2.bin"
-		even
-
-ObjPos_SBZ1pf3:	binclude	"objpos/platforms/sbz1pf3.bin"
-		even
-ObjPos_SBZ1pf4:	binclude	"objpos/platforms/sbz1pf4.bin"
+ObjPos_SBZ1pf2:	binclude	"LevelData/objpos/platforms/sbz1pf2.bin"
 		even
 
-ObjPos_SBZ1pf5:	binclude	"objpos/platforms/sbz1pf5.bin"
+ObjPos_SBZ1pf3:	binclude	"LevelData/objpos/platforms/sbz1pf3.bin"
 		even
-ObjPos_SBZ1pf6:	binclude	"objpos/platforms/sbz1pf6.bin"
+ObjPos_SBZ1pf4:	binclude	"LevelData/objpos/platforms/sbz1pf4.bin"
+		even
+
+ObjPos_SBZ1pf5:	binclude	"LevelData/objpos/platforms/sbz1pf5.bin"
+		even
+ObjPos_SBZ1pf6:	binclude	"LevelData/objpos/platforms/sbz1pf6.bin"
 		even

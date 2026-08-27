@@ -1,6 +1,6 @@
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Object 68 - conveyor belts (SBZ)
+; Object 68 - invisible treadmills belts (SBZ)
 ; 
 ; Note: This is just the invisible object that moves Sonic horizontally.
 ; The conveyor belt graphics themselves are part of the level chunks.

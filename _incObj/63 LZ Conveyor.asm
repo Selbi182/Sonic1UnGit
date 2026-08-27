@@ -394,19 +394,19 @@ ObjPosLZPlatform_Index:
 		dc.w ObjPos_LZ3pf1-ObjPosLZPlatform_Index, ObjPos_LZ3pf2-ObjPosLZPlatform_Index
 		dc.w ObjPos_LZ1pf1-ObjPosLZPlatform_Index, ObjPos_LZ1pf2-ObjPosLZPlatform_Index
 
-ObjPos_LZ1pf1:	binclude	"objpos/platforms/lz1pf1.bin"
+ObjPos_LZ1pf1:	binclude	"LevelData/objpos/platforms/lz1pf1.bin"
 		even
-ObjPos_LZ1pf2:	binclude	"objpos/platforms/lz1pf2.bin"
-		even
-
-ObjPos_LZ2pf1:	binclude	"objpos/platforms/lz2pf1.bin"
-		even
-ObjPos_LZ2pf2:	binclude	"objpos/platforms/lz2pf2.bin"
+ObjPos_LZ1pf2:	binclude	"LevelData/objpos/platforms/lz1pf2.bin"
 		even
 
-ObjPos_LZ3pf1:	binclude	"objpos/platforms/lz3pf1.bin"
+ObjPos_LZ2pf1:	binclude	"LevelData/objpos/platforms/lz2pf1.bin"
 		even
-ObjPos_LZ3pf2:	binclude	"objpos/platforms/lz3pf2.bin"
+ObjPos_LZ2pf2:	binclude	"LevelData/objpos/platforms/lz2pf2.bin"
+		even
+
+ObjPos_LZ3pf1:	binclude	"LevelData/objpos/platforms/lz3pf1.bin"
+		even
+ObjPos_LZ3pf2:	binclude	"LevelData/objpos/platforms/lz3pf2.bin"
 		even
 
 ; ===========================================================================

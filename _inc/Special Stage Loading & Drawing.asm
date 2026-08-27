@@ -570,12 +570,12 @@ SS_LayoutIndex:
 ; ---------------------------------------------------------------------------
 
 SS_StartLoc:
-		binclude	"startpos/Special Stages/ss1.bin"
-		binclude	"startpos/Special Stages/ss2.bin"
-		binclude	"startpos/Special Stages/ss3.bin"
-		binclude	"startpos/Special Stages/ss4.bin"
-		binclude	"startpos/Special Stages/ss5.bin"
-		binclude	"startpos/Special Stages/ss6.bin"
+		binclude	"sslayout/startpos/ss1.bin"
+		binclude	"sslayout/startpos/ss2.bin"
+		binclude	"sslayout/startpos/ss3.bin"
+		binclude	"sslayout/startpos/ss4.bin"
+		binclude	"sslayout/startpos/ss5.bin"
+		binclude	"sslayout/startpos/ss6.bin"
 
 	if ((*-SS_StartLoc)/4<>ss_emeralds_num)
 		warning "SS_StartLoc does not match expected emerald count!"

@@ -3643,7 +3643,7 @@ Map_Over:	include	"_maps/Game Over.asm"
 ; >>> SBZ level objects
 		include	"_incObj/66 SBZ Rotating Junction.asm"
 		include	"_incObj/67 SBZ Running Disc.asm"
-		include	"_incObj/68 SBZ Conveyor Belt.asm"
+		include	"_incObj/68 SBZ Treadmill.asm"
 		include	"_incObj/69 SBZ Spinning Platforms and Trapdoors.asm"
 		include	"_incObj/6A SBZ Saws and Pizza Cutters.asm"
 		include	"_incObj/6B SBZ Stomper and Sliding Door.asm"
@@ -4056,53 +4056,53 @@ KosPM_Squirrel:	binclude	"artkospm/Animal Squirrel.kospm"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - primary patterns and block mappings
 ; ---------------------------------------------------------------------------
-Blk16_Title:	binclude	"map16/Title.unc"
+Blk16_Title:	binclude	"LevelData/map16/Title.unc"
 		even
 KosPM_Title:	binclude	"artkospm/8x8 - Title.kospm" ; Title primary patterns
 		even
-Blk256_Title:	binclude	"map256/Title.unc"
+Blk256_Title:	binclude	"LevelData/map256/Title.unc"
 		even
 
-Blk16_GHZ:	binclude	"map16/GHZ.unc"
+Blk16_GHZ:	binclude	"LevelData/map16/GHZ.unc"
 		even
 KosPM_GHZ:	binclude	"artkospm/8x8 - GHZ.kospm" ; GHZ primary patterns
 		even
-Blk256_GHZ:	binclude	"map256/GHZ.unc"
+Blk256_GHZ:	binclude	"LevelData/map256/GHZ.unc"
 		even
 
-Blk16_LZ:	binclude	"map16/LZ.unc"
+Blk16_LZ:	binclude	"LevelData/map16/LZ.unc"
 		even
 KosPM_LZ:	binclude	"artkospm/8x8 - LZ.kospm" ; LZ primary patterns
 		even
-Blk256_LZ:	binclude	"map256/LZ.unc"
+Blk256_LZ:	binclude	"LevelData/map256/LZ.unc"
 		even
 
-Blk16_MZ:	binclude	"map16/MZ.unc"
+Blk16_MZ:	binclude	"LevelData/map16/MZ.unc"
 		even
 KosPM_MZ:	binclude	"artkospm/8x8 - MZ.kospm" ; MZ primary patterns
 		even
-Blk256_MZ:	binclude	"map256/MZ.unc"
+Blk256_MZ:	binclude	"LevelData/map256/MZ.unc"
 		even
 
-Blk16_SLZ:	binclude	"map16/SLZ.unc"
+Blk16_SLZ:	binclude	"LevelData/map16/SLZ.unc"
 		even
 KosPM_SLZ:	binclude	"artkospm/8x8 - SLZ.kospm" ; SLZ primary patterns
 		even
-Blk256_SLZ:	binclude	"map256/SLZ.unc"
+Blk256_SLZ:	binclude	"LevelData/map256/SLZ.unc"
 		even
 
-Blk16_SYZ:	binclude	"map16/SYZ.unc"
+Blk16_SYZ:	binclude	"LevelData/map16/SYZ.unc"
 		even
 KosPM_SYZ:	binclude	"artkospm/8x8 - SYZ.kospm" ; SYZ primary patterns
 		even
-Blk256_SYZ:	binclude	"map256/SYZ.unc"
+Blk256_SYZ:	binclude	"LevelData/map256/SYZ.unc"
 		even
 
-Blk16_SBZ:	binclude	"map16/SBZ.unc"
+Blk16_SBZ:	binclude	"LevelData/map16/SBZ.unc"
 		even
 KosPM_SBZ:	binclude	"artkospm/8x8 - SBZ.kospm" ; SBZ primary patterns
 		even
-Blk256_SBZ:	binclude	"map256/SBZ.unc"
+Blk256_SBZ:	binclude	"LevelData/map256/SBZ.unc"
 		even
 
 ; ---------------------------------------------------------------------------
@@ -4141,23 +4141,23 @@ KosPM_EndStH:	binclude	"artkospm/Ending - StH Logo.kospm"
 ; ---------------------------------------------------------------------------
 ; Collision data
 ; ---------------------------------------------------------------------------
-AngleMap:	binclude	"collide/Angle Map.bin"
+AngleMap:	binclude	"LevelData/collide/Angle Map.bin"
 		even
-CollArray1:	binclude	"collide/Collision Array (Normal).bin"
+CollArray1:	binclude	"LevelData/collide/Collision Array (Normal).bin"
 		even
-CollArray2:	binclude	"collide/Collision Array (Rotated).bin"
+CollArray2:	binclude	"LevelData/collide/Collision Array (Rotated).bin"
 		even
-Col_GHZ:	binclude	"collide/GHZ.bin" ; GHZ index
+Col_GHZ:	binclude	"LevelData/collide/GHZ.bin" ; GHZ index
 		even
-Col_LZ:		binclude	"collide/LZ.bin" ; LZ index
+Col_LZ:		binclude	"LevelData/collide/LZ.bin" ; LZ index
 		even
-Col_MZ:		binclude	"collide/MZ.bin" ; MZ index
+Col_MZ:		binclude	"LevelData/collide/MZ.bin" ; MZ index
 		even
-Col_SLZ:	binclude	"collide/SLZ.bin" ; SLZ index
+Col_SLZ:	binclude	"LevelData/collide/SLZ.bin" ; SLZ index
 		even
-Col_SYZ:	binclude	"collide/SYZ.bin" ; SYZ index
+Col_SYZ:	binclude	"LevelData/collide/SYZ.bin" ; SYZ index
 		even
-Col_SBZ:	binclude	"collide/SBZ.bin" ; SBZ index
+Col_SBZ:	binclude	"LevelData/collide/SBZ.bin" ; SBZ index
 		even
 
 ; ---------------------------------------------------------------------------
@@ -4207,66 +4207,66 @@ Art_BigRing_size:	equ	*-Art_BigRing
 Level_Null:	dc.w	$0000, $0000, $000
 		even
 
-Level_GHZ1:	binclude	"levels/ghz1.bin"
+Level_GHZ1:	binclude	"LevelData/levels/ghz1.bin"
 		even
-Level_GHZ2:	binclude	"levels/ghz2.bin"
+Level_GHZ2:	binclude	"LevelData/levels/ghz2.bin"
 		even
-Level_GHZ3:	binclude	"levels/ghz3.bin"
+Level_GHZ3:	binclude	"LevelData/levels/ghz3.bin"
 		even
-Level_GHZbg:	binclude	"levels/ghzbg.bin"
-		even
-
-Level_LZ1:	binclude	"levels/lz1.bin"
-		even
-Level_LZ2:	binclude	"levels/lz2.bin"
-		even
-Level_LZ3:	binclude	"levels/lz3.bin"
-		even
-Level_SBZ3:	binclude	"levels/sbz3.bin"
-		even
-Level_LZbg:	binclude	"levels/lzbg.bin"
+Level_GHZbg:	binclude	"LevelData/levels/ghzbg.bin"
 		even
 
-Level_MZ1:	binclude	"levels/mz1.bin"
+Level_LZ1:	binclude	"LevelData/levels/lz1.bin"
 		even
-Level_MZ2:	binclude	"levels/mz2.bin"
+Level_LZ2:	binclude	"LevelData/levels/lz2.bin"
 		even
-Level_MZ3:	binclude	"levels/mz3.bin"
+Level_LZ3:	binclude	"LevelData/levels/lz3.bin"
 		even
-Level_MZbg:	binclude	"levels/mzbg.bin"
+Level_SBZ3:	binclude	"LevelData/levels/sbz3.bin"
 		even
-
-Level_SLZ1:	binclude	"levels/slz1.bin"
-		even
-Level_SLZ2:	binclude	"levels/slz2.bin"
-		even
-Level_SLZ3:	binclude	"levels/slz3.bin"
-		even
-Level_SLZbg:	binclude	"levels/slzbg.bin"
+Level_LZbg:	binclude	"LevelData/levels/lzbg.bin"
 		even
 
-Level_SYZ1:	binclude	"levels/syz1.bin"
+Level_MZ1:	binclude	"LevelData/levels/mz1.bin"
 		even
-Level_SYZ2:	binclude	"levels/syz2.bin"
+Level_MZ2:	binclude	"LevelData/levels/mz2.bin"
 		even
-Level_SYZ3:	binclude	"levels/syz3.bin"
+Level_MZ3:	binclude	"LevelData/levels/mz3.bin"
 		even
-Level_SYZbg:	binclude	"levels/syzbg.bin"
-		even
-
-Level_SBZ1:	binclude	"levels/sbz1.bin"
-		even
-Level_SBZ1bg:	binclude	"levels/sbz1bg.bin"
-		even
-Level_SBZ2_FZ:	binclude	"levels/sbz2.bin"
-		even
-Level_SBZ2bg:	binclude	"levels/sbz2bg.bin"
+Level_MZbg:	binclude	"LevelData/levels/mzbg.bin"
 		even
 
-Level_End:	binclude	"levels/ending.bin"
+Level_SLZ1:	binclude	"LevelData/levels/slz1.bin"
+		even
+Level_SLZ2:	binclude	"LevelData/levels/slz2.bin"
+		even
+Level_SLZ3:	binclude	"LevelData/levels/slz3.bin"
+		even
+Level_SLZbg:	binclude	"LevelData/levels/slzbg.bin"
 		even
 
-Level_Titlebg:	binclude	"levels/titlebg.bin"
+Level_SYZ1:	binclude	"LevelData/levels/syz1.bin"
+		even
+Level_SYZ2:	binclude	"LevelData/levels/syz2.bin"
+		even
+Level_SYZ3:	binclude	"LevelData/levels/syz3.bin"
+		even
+Level_SYZbg:	binclude	"LevelData/levels/syzbg.bin"
+		even
+
+Level_SBZ1:	binclude	"LevelData/levels/sbz1.bin"
+		even
+Level_SBZ1bg:	binclude	"LevelData/levels/sbz1bg.bin"
+		even
+Level_SBZ2_FZ:	binclude	"LevelData/levels/sbz2.bin"
+		even
+Level_SBZ2bg:	binclude	"LevelData/levels/sbz2bg.bin"
+		even
+
+Level_End:	binclude	"LevelData/levels/ending.bin"
+		even
+
+Level_Titlebg:	binclude	"LevelData/levels/titlebg.bin"
 		even
 
 ; ---------------------------------------------------------------------------
@@ -4275,50 +4275,50 @@ Level_Titlebg:	binclude	"levels/titlebg.bin"
 ObjPos_Null:	dc.w	$FFFF, $0000, $0000
 		even
 
-ObjPos_GHZ1:	binclude	"objpos/ghz1.bin"
+ObjPos_GHZ1:	binclude	"LevelData/objpos/ghz1.bin"
 		even
-ObjPos_GHZ2:	binclude	"objpos/ghz2.bin"
+ObjPos_GHZ2:	binclude	"LevelData/objpos/ghz2.bin"
 		even
-ObjPos_GHZ3:	binclude	"objpos/ghz3.bin"
-		even
-
-ObjPos_LZ1:	binclude	"objpos/lz1.bin"
-		even
-ObjPos_LZ2:	binclude	"objpos/lz2.bin"
-		even
-ObjPos_LZ3:	binclude	"objpos/lz3.bin"
-		even
-ObjPos_SBZ3:	binclude	"objpos/sbz3.bin"
+ObjPos_GHZ3:	binclude	"LevelData/objpos/ghz3.bin"
 		even
 
-ObjPos_MZ1:	binclude	"objpos/mz1.bin"
+ObjPos_LZ1:	binclude	"LevelData/objpos/lz1.bin"
 		even
-ObjPos_MZ2:	binclude	"objpos/mz2.bin"
+ObjPos_LZ2:	binclude	"LevelData/objpos/lz2.bin"
 		even
-ObjPos_MZ3:	binclude	"objpos/mz3.bin"
+ObjPos_LZ3:	binclude	"LevelData/objpos/lz3.bin"
 		even
-
-ObjPos_SLZ1:	binclude	"objpos/slz1.bin"
-		even
-ObjPos_SLZ2:	binclude	"objpos/slz2.bin"
-		even
-ObjPos_SLZ3:	binclude	"objpos/slz3.bin"
-		even
-ObjPos_SYZ1:	binclude	"objpos/syz1.bin"
-		even
-ObjPos_SYZ2:	binclude	"objpos/syz2.bin"
-		even
-ObjPos_SYZ3:	binclude	"objpos/syz3.bin"
+ObjPos_SBZ3:	binclude	"LevelData/objpos/sbz3.bin"
 		even
 
-ObjPos_SBZ1:	binclude	"objpos/sbz1.bin"
+ObjPos_MZ1:	binclude	"LevelData/objpos/mz1.bin"
 		even
-ObjPos_SBZ2:	binclude	"objpos/sbz2.bin"
+ObjPos_MZ2:	binclude	"LevelData/objpos/mz2.bin"
 		even
-ObjPos_FZ:	binclude	"objpos/fz.bin"
+ObjPos_MZ3:	binclude	"LevelData/objpos/mz3.bin"
 		even
 
-ObjPos_End:	binclude	"objpos/ending.bin"
+ObjPos_SLZ1:	binclude	"LevelData/objpos/slz1.bin"
+		even
+ObjPos_SLZ2:	binclude	"LevelData/objpos/slz2.bin"
+		even
+ObjPos_SLZ3:	binclude	"LevelData/objpos/slz3.bin"
+		even
+ObjPos_SYZ1:	binclude	"LevelData/objpos/syz1.bin"
+		even
+ObjPos_SYZ2:	binclude	"LevelData/objpos/syz2.bin"
+		even
+ObjPos_SYZ3:	binclude	"LevelData/objpos/syz3.bin"
+		even
+
+ObjPos_SBZ1:	binclude	"LevelData/objpos/sbz1.bin"
+		even
+ObjPos_SBZ2:	binclude	"LevelData/objpos/sbz2.bin"
+		even
+ObjPos_FZ:	binclude	"LevelData/objpos/fz.bin"
+		even
+
+ObjPos_End:	binclude	"LevelData/objpos/ending.bin"
 		even
 
 ; ---------------------------------------------------------------------------
@@ -4327,48 +4327,48 @@ ObjPos_End:	binclude	"objpos/ending.bin"
 Rings_Null:	dc.w	$FFFF, $0000, $0000
 		even
 
-Rings_GHZ1:	binclude	"objpos/Rings/ghz1.bin"
+Rings_GHZ1:	binclude	"LevelData/objpos/Rings/ghz1.bin"
 		even
-Rings_GHZ2:	binclude	"objpos/Rings/ghz2.bin"
+Rings_GHZ2:	binclude	"LevelData/objpos/Rings/ghz2.bin"
 		even
-Rings_GHZ3:	binclude	"objpos/Rings/ghz3.bin"
-		even
-
-Rings_LZ1:	binclude	"objpos/Rings/lz1.bin"
-		even
-Rings_LZ2:	binclude	"objpos/Rings/lz2.bin"
-		even
-Rings_LZ3:	binclude	"objpos/Rings/lz3.bin"
-		even
-Rings_SBZ3:	binclude	"objpos/Rings/sbz3.bin"
+Rings_GHZ3:	binclude	"LevelData/objpos/Rings/ghz3.bin"
 		even
 
-Rings_MZ1:	binclude	"objpos/Rings/mz1.bin"
+Rings_LZ1:	binclude	"LevelData/objpos/Rings/lz1.bin"
 		even
-Rings_MZ2:	binclude	"objpos/Rings/mz2.bin"
+Rings_LZ2:	binclude	"LevelData/objpos/Rings/lz2.bin"
 		even
-Rings_MZ3:	binclude	"objpos/Rings/mz3.bin"
+Rings_LZ3:	binclude	"LevelData/objpos/Rings/lz3.bin"
 		even
-
-Rings_SLZ1:	binclude	"objpos/Rings/slz1.bin"
-		even
-Rings_SLZ2:	binclude	"objpos/Rings/slz2.bin"
-		even
-Rings_SLZ3:	binclude	"objpos/Rings/slz3.bin"
+Rings_SBZ3:	binclude	"LevelData/objpos/Rings/sbz3.bin"
 		even
 
-Rings_SYZ1:	binclude	"objpos/Rings/syz1.bin"
+Rings_MZ1:	binclude	"LevelData/objpos/Rings/mz1.bin"
 		even
-Rings_SYZ2:	binclude	"objpos/Rings/syz2.bin"
+Rings_MZ2:	binclude	"LevelData/objpos/Rings/mz2.bin"
 		even
-Rings_SYZ3:	binclude	"objpos/Rings/syz3.bin"
+Rings_MZ3:	binclude	"LevelData/objpos/Rings/mz3.bin"
 		even
 
-Rings_SBZ1:	binclude	"objpos/Rings/sbz1.bin"
+Rings_SLZ1:	binclude	"LevelData/objpos/Rings/slz1.bin"
 		even
-Rings_SBZ2:	binclude	"objpos/Rings/sbz2.bin"
+Rings_SLZ2:	binclude	"LevelData/objpos/Rings/slz2.bin"
 		even
-Rings_FZ:	binclude	"objpos/Rings/fz.bin"
+Rings_SLZ3:	binclude	"LevelData/objpos/Rings/slz3.bin"
+		even
+
+Rings_SYZ1:	binclude	"LevelData/objpos/Rings/syz1.bin"
+		even
+Rings_SYZ2:	binclude	"LevelData/objpos/Rings/syz2.bin"
+		even
+Rings_SYZ3:	binclude	"LevelData/objpos/Rings/syz3.bin"
+		even
+
+Rings_SBZ1:	binclude	"LevelData/objpos/Rings/sbz1.bin"
+		even
+Rings_SBZ2:	binclude	"LevelData/objpos/Rings/sbz2.bin"
+		even
+Rings_FZ:	binclude	"LevelData/objpos/Rings/fz.bin"
 		even
 
 ; ---------------------------------------------------------------------------

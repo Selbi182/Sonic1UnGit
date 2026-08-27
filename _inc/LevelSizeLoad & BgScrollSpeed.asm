@@ -142,38 +142,38 @@ unused_startloc: macro
 		endm
 ; ---------------------------------------------------------------------------
 
-StartLocArray:	binclude	"startpos/ghz1.bin"
-		binclude	"startpos/ghz2.bin"
-		binclude	"startpos/ghz3.bin"
+StartLocArray:	binclude	"LevelData/startpos/ghz1.bin"
+		binclude	"LevelData/startpos/ghz2.bin"
+		binclude	"LevelData/startpos/ghz3.bin"
 		unused_startloc
 
-		binclude	"startpos/lz1.bin"
-		binclude	"startpos/lz2.bin"
-		binclude	"startpos/lz3.bin"
-		binclude	"startpos/sbz3.bin"	; SBZ3 is LZ4 internally
+		binclude	"LevelData/startpos/lz1.bin"
+		binclude	"LevelData/startpos/lz2.bin"
+		binclude	"LevelData/startpos/lz3.bin"
+		binclude	"LevelData/startpos/sbz3.bin"	; SBZ3 is LZ4 internally
 
-		binclude	"startpos/mz1.bin"
-		binclude	"startpos/mz2.bin"
-		binclude	"startpos/mz3.bin"
+		binclude	"LevelData/startpos/mz1.bin"
+		binclude	"LevelData/startpos/mz2.bin"
+		binclude	"LevelData/startpos/mz3.bin"
 		unused_startloc
 
-		binclude	"startpos/slz1.bin"
-		binclude	"startpos/slz2.bin"
-		binclude	"startpos/slz3.bin"
+		binclude	"LevelData/startpos/slz1.bin"
+		binclude	"LevelData/startpos/slz2.bin"
+		binclude	"LevelData/startpos/slz3.bin"
 		unused_startloc
 
-		binclude	"startpos/syz1.bin"
-		binclude	"startpos/syz2.bin"
-		binclude	"startpos/syz3.bin"
+		binclude	"LevelData/startpos/syz1.bin"
+		binclude	"LevelData/startpos/syz2.bin"
+		binclude	"LevelData/startpos/syz3.bin"
 		unused_startloc
 
-		binclude	"startpos/sbz1.bin"
-		binclude	"startpos/sbz2.bin"
-		binclude	"startpos/fz.bin"	; FZ is SBZ3 internally
+		binclude	"LevelData/startpos/sbz1.bin"
+		binclude	"LevelData/startpos/sbz2.bin"
+		binclude	"LevelData/startpos/fz.bin"	; FZ is SBZ3 internally
 		unused_startloc
 
-		binclude	"startpos/end1.bin"
-		binclude	"startpos/end2.bin"
+		binclude	"LevelData/startpos/end1.bin"
+		binclude	"LevelData/startpos/end2.bin"
 		unused_startloc
 		unused_startloc
 
