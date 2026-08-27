@@ -7,13 +7,13 @@ SS_BGLoad:
 	; --- Load mappings for the birds and fish ---
 		ssbg_animalsize:	equ 8
 
-		lea	(v_ram_start).l,a1			; buffer
+		lea	(v_enidec_buffer).l,a1			; buffer
 		lea	(Eni_SSBg1).l,a0			; load mappings for the birds and fish
 		move.w	#ArtTile_SS_Background_Fish|Tile_Pal3,d0 ; add this to each tile
 		bsr.w	EniDec					; decompress fish/bird mappings to RAM
 
 		locVRAM	ArtTile_SS_Plane_1*tile_size+$1000,d3	; d3 = VDP address for $5000 in VRAM
-		lea	(v_ram_start+(ssbg_animalsize*ssbg_animalsize*2)).l,a2
+		lea	(v_enidec_buffer+(ssbg_animalsize*ssbg_animalsize*2)).l,a2
 		moveq	#7-1,d7					; number of canvases for frames of bird/fish and in-between
 
 ; Each frame of bird/fish animation is stored as a canvas in VRAM. The game switches between them by changing the BG nametable register.
@@ -34,7 +34,7 @@ SS_BGLoad:
 		bne.s	.is_birdfish				; branch if set to bird/fish
 		cmpi.w	#7-1,d7
 		bne.s	.skip_birdfish				; branch if not first frame
-		lea	(v_ram_start).l,a1			; use tilemap for checkerboard pattern
+		lea	(v_enidec_buffer).l,a1			; use tilemap for checkerboard pattern
 
 	.is_birdfish:
 		movem.l	d0-d4,-(sp)
@@ -62,13 +62,13 @@ SS_BGLoad:
 		dbf	d7,.loop_canvas				; repeat for all canvases
 
 	; --- Load mappings for the bubbles and clouds ---
-		lea	(v_ram_start).l,a1
+		lea	(v_enidec_buffer).l,a1
 		lea	(Eni_SSBg2).l,a0			; load mappings for clouds/bubbles
 		move.w	#ArtTile_SS_Background_Clouds|Tile_Pal3,d0
 		bsr.w	EniDec					; decompress to buffer in RAM
 
-		copyTilemap	v_ram_start,ArtTile_SS_Plane_5*tile_size,64,32		; copy tilemap for bubbles to VRAM
-		copyTilemap	v_ram_start,ArtTile_SS_Plane_5*tile_size+$1000,64,64	; copy tilemap for clouds to VRAM
+		copyTilemap	v_enidec_buffer,ArtTile_SS_Plane_5*tile_size,64,32		; copy tilemap for bubbles to VRAM
+		copyTilemap	v_enidec_buffer,ArtTile_SS_Plane_5*tile_size+$1000,64,64	; copy tilemap for clouds to VRAM
 
 		rts
 

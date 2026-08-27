@@ -625,22 +625,23 @@ SS_LoadData:
 		move.w	(a1)+,(v_player+obX).w			; set start X-position
 		move.w	(a1)+,(v_player+obY).w			; set start Y-position
 
-	; --- Decompress Enigma-compressed special stage layout to a temporary buffer ---
-		movea.l	SS_LayoutIndex(pc,d0.w),a0		; load compressed special stage layout
-		lea	(v_sslayout_decompress).l,a1		; set decompression buffer for layout
-		move.w	#0,d0					; no added art tile settings
-		jsr	(EniDec).l				; decompress special stage layout to buffer
-
-	; --- Fully clear target layout buffer ---
+	; --- Fully clear target layout buffer and animation processing queue ---
 		lea	(v_sslayout_base).l,a1			; set start address of layout RAM
-		move.w	#(v_sslayout_decompress-v_sslayout_base)/4-1,d0 ; clear the entire layout buffer
+		move.w	#(v_ss_animations_end-v_sslayout_base)/4-1,d1 ; clear the entire layout buffer
 	.clearLayoutBuffer:
 		clr.l	(a1)+					; clear four bytes
-		dbf	d0,.clearLayoutBuffer			; loop until buffer has been cleared
+		dbf	d1,.clearLayoutBuffer			; loop until buffer has been cleared
+
+	; --- Decompress Enigma-compressed special stage layout to a temporary buffer ---
+		lea	SS_LayoutIndex(pc),a0			; load compressed special stage layout
+		movea.l	(a0,d0.w),a0				; load compressed special stage layout
+		lea	(v_enidec_buffer).l,a1			; set decompression buffer for layout
+		moveq	#0,d0					; no added art tile settings
+		jsr	(EniDec).l				; decompress special stage layout to buffer
 
 	; --- Copy decompressed layout to the final buffer, inserting $40 bytes of padding per row ---
 		lea	(v_sslayout_actual).l,a1		; set target layout destination after padding
-		lea	(v_sslayout_decompress).l,a0		; load decompressed layout data
+		lea	(v_enidec_buffer).l,a0		; load decompressed layout data
 		moveq	#(v_sslayout_end-v_sslayout_actual)/ss_layout_rowlength-1,d1 ; transfer the full layout
 	.copyAllRows:
 		moveq	#(ss_layout_rowlength/2)-1,d2		; set to transfer one row ($40 bytes of actual data)
@@ -661,25 +662,18 @@ SS_LoadData:
 		move.w	(a0)+,(a1)+				; load VRAM settings (palette and art tile)
 		dbf	d1,.loadSpriteSettings			; loop until all sprite settings have been loaded
 
-	; --- Fully clear animations processing queue ---
-		lea	(v_ss_animations).l,a1			; set start address of animations queue
-		move.w	#(v_ss_animations_end-v_ss_animations)/4-1,d1 ; clear the entire queue
-	.clearAnimationQueue:
-		clr.l	(a1)+					; clear four bytes
-		dbf	d1,.clearAnimationQueue			; loop until queue has been cleared
-
 		move.w	(sp)+,d0				; restore SS stage ID
 		move.b	SS_Music(pc,d0.w),d0			; find music ID from SS_Music list
 		jmp	(QueueSound1).l				; play correct special stage BG music
 ; End of function SS_Load
 
 ; ===========================================================================
-SS_Music:	dc.b bgm_GHZ	; stage 1
-		dc.b bgm_MZ	; stage 2
+SS_Music:	dc.b bgm_SS	; stage 1
+		dc.b bgm_SS	; stage 2
 		dc.b bgm_SS	; stage 3
 		dc.b bgm_SS	; stage 4
 		dc.b bgm_SS	; stage 5
-		dc.b bgm_SYZ	; stage 6
+		dc.b bgm_SS	; stage 6
 		;dc.b bgm_SS	; stage 7 (if you ever decide to add it...)
 		even
 ; ===========================================================================

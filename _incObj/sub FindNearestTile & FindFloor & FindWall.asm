@@ -13,11 +13,10 @@
 
 FindNearestTile:
 		move.w	d2,d0					; get Y-position of bottom edge of object
-		lsr.w	#1,d0					; divide Y-position by 2 (because layout alternates between level and bg lines)
-		andi.w	#$380,d0				; read only high byte of Y-position (because each level chunk is 256px tall)
+		andi.w	#$700,d0				; read only high byte of Y-position (because each level chunk is 256px tall)
 		move.w	d3,d1					; get X-position of object
 		lsr.w	#8,d1
-		andi.w	#$7F,d1					; read only high byte of X-position
+		andi.w	#$FF,d1					; read only high byte of X-position
 		add.w	d1,d0					; combine for position within layout
 		moveq	#0,d1					; changed from -1 to 0
 		lea	(v_lvllayout_fg).w,a1

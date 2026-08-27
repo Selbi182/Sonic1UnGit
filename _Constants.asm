@@ -103,8 +103,7 @@ tile_size:		equ 8*8/2				; size of a single 8x8 tile
 chunk_size:		equ $200				; size of a single 256x256 chunk
 plane_size_64x32:	equ 64*32*2				; size of plane in 512x256 mode
 
-layout_row_interlaced:	equ $40					; size of a single level layout row (FG/BG alternating)
-layout_row:		equ layout_row_interlaced*2		; size of a single level layout row (skipping over other plane)
+layout_row:		equ $100				; single layout row (4 times larger than vanilla S1, which was $40)
 
 ; Levels (zones)
 ; (Note: id_SS is only used by the level select)

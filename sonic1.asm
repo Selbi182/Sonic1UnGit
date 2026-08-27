@@ -1657,16 +1657,16 @@ GM_Sega:
 		moveq	#plcid_Sega,d0				; load patterns through PLC list
 		bsr.w	QuickPLC				; decompress PLC list now and return once done
 
-		lea	(v_ram_start).l,a1			; set start of RAM to be used as decompression buffer
+		lea	(v_enidec_buffer).l,a1			; set start of RAM to be used as decompression buffer
 		lea	(Eni_SegaLogo).l,a0			; load Sega logo mappings
 		move.w	#ArtTile_Sega_Tiles,d0			; set art tile for Sega screen mappings
 		bsr.w	EniDec					; decompress Enigma-compressed mappings to RAM buffer
-		copyTilemap v_ram_start,vram_bg+$510,24,8	; transfer decompressed patterns to VRAM (BG plane, light scanning effect)
-		copyTilemap v_ram_start+24*8*2,vram_fg,40,28	; transfer decompressed patterns to VRAM (FG plane, Sega logo cutout)
+		copyTilemap v_enidec_buffer,vram_bg+$510,24,8	; transfer decompressed patterns to VRAM (BG plane, light scanning effect)
+		copyTilemap v_enidec_buffer+24*8*2,vram_fg,40,28	; transfer decompressed patterns to VRAM (FG plane, Sega logo cutout)
 
 		tst.b	(v_megadrive).w				; is console Japanese?
 		bmi.s	.loadpal				; if not, branch
-		copyTilemap v_ram_start+$A40,vram_fg+$53A,3,2	; hide "TM" with a white rectangle
+		copyTilemap v_enidec_buffer+$A40,vram_fg+$53A,3,2	; hide "TM" with a white rectangle
 .loadpal:
 
 		moveq	#palid_SegaBG,d0			; load Sega screen palette...
@@ -1743,11 +1743,11 @@ GM_Title:		; fading out from previous game mode
 		moveq	#plcid_TitleSonicTeam,d0		; load patterns through PLC list
 		bsr.w	QuickPLC				; decompress PLC list now and return once done
 
-		lea	(v_ram_start).l,a1			; set start of RAM to be used as decompression buffer
+		lea	(v_enidec_buffer).l,a1			; set start of RAM to be used as decompression buffer
 		lea	(Eni_JapNames).l,a0			; load mappings for hidden Japanese credits
 		move.w	#ArtTile_Title_Japanese_Text|Tile_Pal3,d0 ; set art tile for hidden Japanese credits (cyan)
 		bsr.w	EniDec					; decompress Enigma-compressed mappings to RAM buffer
-		copyTilemap v_ram_start,vram_fg,40,28		; transfer decompressed patterns from RAM buffer to VRAM
+		copyTilemap v_enidec_buffer,vram_fg,40,28		; transfer decompressed patterns from RAM buffer to VRAM
 
 		clearRAM v_palette_fading			; set palette fade-in buffer to all-black
 		moveq	#palid_Sonic,d0				; load Sonic's palette...
@@ -1803,11 +1803,11 @@ Tit_LoadText:
 
 		bsr.w	LoadTilesFromStart_BGOnly		; initialize background layer
 
-		lea	(v_ram_start+$6000).l,a1		; set middle of RAM to be used as decompression buffer (this overwrites unused chunk RAM)
+		lea	(v_enidec_buffer).l,a1			; set decompression buffer location
 		lea	(Eni_Title).l,a0			; load title screen emblem mappings
 		move.w	#ArtTile_Title_Foreground,d0		; set foreground emblem art tile (dynamically set)
 		bsr.w	EniDec					; decompress Enigma-compressed emblem mappings to buffer
-		copyTilemap	v_ram_start+$6000,vram_fg,40,28	; transfer decompressed patterns from RAM buffer to VRAM (full plane)
+		copyTilemap	v_enidec_buffer,vram_fg,40,28	; transfer decompressed patterns from RAM buffer to VRAM (full plane)
 
 		moveq	#plcid_TitleBackground,d0		; load patterns through PLC list
 		bsr.w	QuickPLC				; decompress PLC list now and return once done
@@ -2846,7 +2846,7 @@ GM_Special:		; white fade-out from previous game mode
 		clearRAM v_objspace				; clear object RAM space
 		clearRAM v_levelvariables			; clear various level variables
 		clearRAM v_timingvariables			; clear various timing variables
-		clearRAM v_ngfx_buffer				; clear Nemesis decompression buffer
+		clearRAM v_ss_scroll				; clear SS BG scroll buffer
 
 		clr.b	(f_wtr_state).w				; clear water state
 		clr.w	(f_restart).w				; clear level restart flag

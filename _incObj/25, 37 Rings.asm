@@ -238,8 +238,7 @@ ChkHitFloor_Rings:
 		add.w	obY(a0),d2				; get object's Y-position
 
 		move.w	d2,d0					; get Y-position of bottom edge of object
-		lsr.w	#1,d0					; divide Y-position by 2 (because layout alternates between level and bg lines)
-		andi.w	#$380,d0				; read only high byte of Y-position (because each level chunk is 256px tall)
+		andi.w	#$700,d0				; read only high byte of Y-position (because each level chunk is 256px tall)
 		move.w	d3,d1					; get X-position of object
 		lsr.w	#8,d1
 		andi.w	#$7F,d1					; read only high byte of X-position

@@ -206,14 +206,13 @@ GetBlockData	macro	is2
 
 		; Turn Y coordinate into index into level layout
 		move.w	d4,d3					; copy X position to d3
-		lsr.w	#1,d3					; divide by 2
-		andi.w	#$380,d3				; keep in range of layout's Y size ($400 per plane) in multiples of 1 row ($80 per row, $40 per plane)
+		andi.w	#$700,d3				; keep in range of layout's Y size ($400 per plane) in multiples of 1 row ($80 per row, $40 per plane)
 
 		; Turn X coordinate into index into level layout
 		lsr.w	#3,d5					; divide X by 8
 		move.w	d5,d0					; copy to d0
 		lsr.w	#5,d0					; divide by $20 (/$100)
-		andi.w	#$7F,d0					; keep in range of layout's X size ($80 per row, $40 per plane)
+		andi.w	#$FF,d0					; keep in range of layout's X size ($80 per row, $40 per plane)
 
 		; Get chunk from level layout
 		add.w	d3,d0					; fuse Y and X together (d0 = layout position of chunk)

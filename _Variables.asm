@@ -1,41 +1,24 @@
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; RAM Variables
+; 
+; v = Variables // f = Flags
 ; ---------------------------------------------------------------------------
 
 	include "sound/s1.sounddriver.ram.asm"
 
-; v = Variables // f = Flags
-	obj $FFFF0000 ;"obj" is the ASM68K equivalent of "phase"
+; ---------------------------------------------------------------------------
+
+	obj $FFFF0000	; requires 24-bit long-addressing
 v_ram_start_def:
 v_ram_start:		equ	v_ram_start_def&$FFFFFF		; 24-bit addressing
+v_enidec_buffer:	ds.b	$2000				; reserved space for Enigma data decompression
 
-v_decompression_buffer:	ds.b	$1000				; reserved space for data decompression
 
-			ds.b	$7000				; unused
-
+	obj $FFFF8000	; can use 32-bit word-addressing
 Draw_Buffer_Slots:	equ	$100				; in testing, $5A seemed to be the maximum, but just in case
 Draw_Buffer:		ds.b	(4+4)*Draw_Buffer_Slots		; one long per VDP control and VDP data port
 v_drawbuffer_count:	ds.w	1				; number of current entries in Draw_Buffer
-
-v_256x256_end:		ds.b	(chunk_size*$52)-(*-v_ram_start_def) ; unused (chunks have been converted to uncompressed)
-
-v_lvllayout:		ds.b	layout_row*8			; level layouts (FG/BG rows interlaced, 8 rows and $400 total)
-v_lvllayout_fg:		equ	v_lvllayout			; start address of foreground's first row
-v_lvllayout_bg:		equ	v_lvllayout+layout_row_interlaced ; start address of background's first row
-v_lvllayout_end:
-
-v_bgscroll_buffer:	ds.b	$200				; background scroll buffer
-v_ngfx_buffer:		ds.b	$200				; Nemesis graphics decompression buffer
-v_ngfx_buffer_end:
-
-v_spritequeue:		ds.b	spritelayer_num*spritelayer_size ; sprite display queue, in order of priority (8*$80=$400 bytes)
-v_spritequeue_end:
-
-; ---------------------------------------------------------------------------
-; Previously v_16x16 block mappings
-
-v_16x16_start:
 
 plc_slot_size:		equ	4+2				; size of a single PLC slot: 6 bytes = 4 bytes (data address) + 2 bytes (VRAM target address)
 v_plc_buffer:		ds.b	plc_slot_size*41		; pattern load cues buffer (maximum 30 PLCs)
@@ -49,6 +32,14 @@ v_plc_buffer_end:
 
 Art_Buffer:		ds.b	$1000				; art decompression buffer used for PLCs
 Art_Buffer_End:							; end of decompression buffer
+
+v_lvllayout:		equ	*				; level layout (deinterlaced from vanilla S1)
+v_lvllayout_fg:		ds.b	layout_row*8			; foreground level layout
+v_lvllayout_bg:		ds.b	layout_row*8			; background level layout
+v_lvllayout_end:
+
+v_spritequeue:		ds.b	spritelayer_num*spritelayer_size ; sprite display queue, in order of priority (8*$80=$400 bytes)
+v_spritequeue_end:
 
 Object_Respawn_Table: 	ds.b	$300				; S3K Object Manager respawn table ($300 bytes)
 Camera_X_Pos_Last:	ds.w	1				; camera X position from previous frame (2 bytes)
@@ -69,13 +60,12 @@ v_ringmanager_size:	equ	*-v_ringmanager			; size of all RAM occupied by rings ma
 v_registeredcollision:	ds.b	$80				; collision response queue for ReactToItem
 v_registeredcollision_rings:	ds.b	$80			; sprite render queue for lost rings
 
-v_16x16_end:		ds.b	$1800-(v_16x16_end-v_16x16_start) ; unused
-; ---------------------------------------------------------------------------
 
+	obj $FFFFC800	; mostly original S1 RAM definitions starting from here on out
 VDP_Command_Buffer:	ds.w	7*$12				; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
 VDP_Command_Buffer_Slot:ds.l	1				; stores the address of the next open slot for a queued VDP command
-			ds.b	$200				; unused ($200 were freed up by the new DMA Queue)
 
+v_bgscroll_buffer:	ds.b	$200				; background scroll buffer
 v_tracksonic:		ds.b	$100				; position tracking data for Sonic
 v_hscrolltablebuffer:	ds.b	$380				; scrolling table data
 v_hscrolltablebuffer_end:
@@ -525,16 +515,18 @@ v_sslayout_actual:	ds.b	ss_layout_rowlength*ss_layout_rows ; actual SS layout, a
 v_sslayout_end:							; end of SS layout buffer
 			ds.b	$FE0				; unused in SS
 v_ss_spritesettings:	ds.b	8*$4F				; sprite mappings/VRAM settings loaded from SS_MapIndex (total $278 bytes)
-v_sslayout_decompress:	equ	v_ss_spritesettings		; temporary buffer when decompressing the Enigma-compressed SS layout ($1000 bytes)
+
 			ds.b	$188				; unused in SS
 v_ss_animations:	ds.b	8*$20				; animation update queue (8 bytes per entry, $20 entries total)
 v_ss_animations_end:						; end of animation update queue
 	obj	$FFFF8000					; (need 32-bit addressing starting at FFFF8000)
 v_ss_rotationmatrix:	ds.b	2*2*ss_matrixsize*ss_matrixsize	; rotated X/Y sprite coordinates (words) per visible cell (2*2*$10*$10 = $400 bytes)
-			ds.b	$2600				; unused in SS
+
+v_ss_scroll:		equ	*
 v_ss_scroll_bubbles:	ds.b	$28				; buffer to store scroll positions for SS background bubbles
 			ds.b	$D8				; unused in SS
 v_ss_scroll_clouds:	ds.b	$1C				; buffer to store scroll positions for SS background clouds
+v_ss_scroll_end:	equ	*
 	objend
 
 	org 0

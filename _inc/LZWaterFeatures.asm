@@ -441,10 +441,9 @@ LZWaterSlides:
 		bne.s	.exitWaterSlide				; if yes, ignore water slides
 
 		move.w	obY(a1),d0				; get Sonic's Y-position
-		lsr.w	#1,d0					; divide by 2 (for layout alignment)
-		andi.w	#$380,d0				; keep in range of $800 pixels ($400 bytes in multiples of $80)
+		andi.w	#$700,d0				; keep in range of $800 pixels ($400 bytes in multiples of $80)
 		move.b	obX(a1),d1				; load Sonic's X-position as upper byte (divide by $100, i.e. 256 pixels per chunk)
-		andi.w	#$7F,d1					; keep in range of $80 chunks horizontally
+		andi.w	#$FF,d1					; keep in range of $80 chunks horizontally
 		add.w	d1,d0					; fuse with layout Y-position
 		lea	(v_lvllayout_fg).w,a2			; load FG layout address
 		move.b	(a2,d0.w),d0				; d0 = chunk ID Sonic is located in
