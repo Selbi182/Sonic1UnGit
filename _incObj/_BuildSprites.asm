@@ -33,29 +33,29 @@ spritelayer:	macro
 		beq.s	.checkY\@				; if not, assume height as 32px
 		move.b	obHeight(a0),d0				; use custom height
 	.checkY\@:
-		move.w	#224,d1
+		move.w	#224,d1					; 224 = SCREEN_HEIGHT
 		add.w	d0,d1					; d1 = SCREEN_HEIGHT + obHeight(a0)
 		add.w	d0,d1					; d1 = SCREEN_HEIGHT + 2*obHeight(a0)
 		add.w	d2,d0					; d0 = Y + obHeight(a0)
-		cmp.w	d1,d0
-		bhs.s	.setNotVisible\@
+		andi.w	#$7FF,d0				; wrap Y-position to level height
+		cmp.w	d1,d0					; is sprite vertically on screen?
+		bcc.s	.setNotVisible\@			; if not, don't render sprite
 
 	; --- Screen bounds check for X-position ---
 		sub.w	(a5),d3					; subtract camera X-position from object X-position
 		moveq	#0,d0
-		move.b	obActWid(a0),d0
-		move.w	#320,d1
+		move.b	obActWid(a0),d0				; get sprite display width (Note: there is no such thing as "assumed width"!)
+		move.w	#320,d1					; 320 = SCREEN_WIDTH
 		add.w	d0,d1					; d1 = SCREEN_WIDTH + obActWid(a0)
 		add.w	d0,d1					; d1 = SCREEN_WIDTH + 2*obActWid(a0)
 		add.w	d3,d0					; d0 = X + obActWid(a0)
-		cmp.w	d1,d0
-		bhs.s	.setNotVisible\@
+		cmp.w	d1,d0					; is sprite horizontally on screen?
+		bcc.s	.setNotVisible\@			; if not, don't render sprite
 
 	; --- Load sprite mappings ---
 	.drawObject\@:
 		addi.w	#$80,d3					; add VDP sprite start to X-position
 		addi.w	#$80,d2					; add VDP sprite start to Y-position
-		andi.w	#$7FF,d2				; wrap Y-position to level height
 
 	.drawObject_direct\@:
 		move.l	obMap(a0),d1				; get object mappings
@@ -308,12 +308,12 @@ BuildHUD:
 		bmi.s	.return					; if yes, don't blink HUD yet
 		cmpi.b	#9,(v_timemin).w			; have 9 minutes elapsed?
 		blo.s	.chkRings				; if not, branch
-		addi.w	#$2000,(v_spritetablebuffer+$1C).w	; make TIME HUD blink red
+		ori.w	#Tile_Pal2,(v_spritetablebuffer+$1C).w	; make TIME HUD blink red
 	.chkRings:
 		tst.w	(v_rings).w				; do you have any rings?
 		bne.s	.return					; if so, branch		
-		addi.w	#$2000,(v_spritetablebuffer+$34).w	; make RING HUD blink red
-		addi.w	#$2000,(v_spritetablebuffer+$3C).w	; same for the "S"
+		ori.w	#Tile_Pal2,(v_spritetablebuffer+$34).w	; make RING HUD blink red
+		ori.w	#Tile_Pal2,(v_spritetablebuffer+$3C).w	; same for the "S"
 	
 	.return:
 		rts
