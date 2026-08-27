@@ -3,7 +3,7 @@
 ; ---------------------------------------------------------------------------
 
 AfterImage:
-		move.l	#After_Main,obID(a0)
+		move.l	#After_CheckVisible,obID(a0)
 		move.l	#Map_Sonic,obMap(a0)
 		move.w	#ArtTile_Sonic,obGfx(a0)
 		move.w	#spr_prio2,obPriority(a0)
@@ -12,14 +12,22 @@ AfterImage:
 		move.b	#4,obRender(a0)
 ; ---------------------------------------------------------------------------
 
-After_Main:
-		tst.b	(v_shoes).w			; Have Speed Shoes expired?
-		jeq	DeleteObject			; If so, branch and delete
-		cmpi.b	#2,(v_player+obRoutine).w
-		beq.s	.show
-		rts
+After_CheckVisible:
+		tst.b	(v_shoes).w
+		bne.s	.show				; shoes active: always show
+		tst.b	obDelayAni(a0)
+		beq.s	After_Delete			; no shoes + no delay: delete
+		subq.b	#1,obDelayAni(a0)
+		beq.s	After_Delete			; delay expired: delete
 
 	.show:
+		cmpi.b	#2,(v_player+obRoutine).w	; is Sonic in "Sonic_Control" routine?
+		beq.s	After_Show
+
+	.hide:
+		rts
+
+After_Show:
 		moveq	#$C,d1				; This will be subtracted from v_trackpos, giving the object an older entry
 		btst	#0,(v_framecount+1).w		; Even frame? (Think of it as 'every other number' logic)
 		beq.s	.evenframe			; If so, branch
@@ -38,3 +46,6 @@ After_Main:
 		move.w	(v_player+obPriority).w,obPriority(a0)	; Use player's current obPriority
 		DisplaySprite
 		rts
+
+After_Delete:
+		jmp	(DeleteObject).l

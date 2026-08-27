@@ -2317,6 +2317,10 @@ Sonic_HomingAttack:
 		beq.s	.done			; if not, branch
 
 		bsr.s	Sonic_HomingAttack_Action
+
+		move.l	#AfterImage,(v_afterimage+obID).w
+		move.b	#13,(v_afterimage+obDelayAni).w
+
 		btst	#6,obStatus(a0)		; is Sonic underwater?
 		beq.s	.done			; if not, continue
 		asr.w	obVelX(a0)		; halve new target X-speed
@@ -2531,6 +2535,9 @@ Sonic_ReleaseSpindash:
 		asr.l	#8,d0					; divide by $100
 		move.w	d0,obVelY(a0)				; set new Y velocity
 
+		move.l	#AfterImage,(v_afterimage+obID).w
+		move.b	#13,(v_afterimage+obDelayAni).w
+
 		bra.s	Sonic_Spindash_ResetScr			; skip
 ; ===========================================================================
 
@@ -2635,6 +2642,10 @@ Sonic_Peelout:
 		neg.w	obInertia(a0)				; negate final speed
 .notleft:
 		bclr	#1,spindash_flag(a0)			; reset Peel-Out flag
+
+		move.l	#AfterImage,(v_afterimage+obID).w
+		move.b	#13,(v_afterimage+obDelayAni).w
+
 		move.w	#sfx_PeelRelease,d0			; play Peel-Out release sound
 		jmp	(QueueSound2).l				; play it
 ; End of function Sonic_Peelout
