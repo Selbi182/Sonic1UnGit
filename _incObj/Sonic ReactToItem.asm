@@ -406,7 +406,7 @@ HurtSonic:
 
 ; .norings:
 .hitWithoutRings:
-	if CheatsEnabled<3
+	if DebugSurviveNoRings=1
 		tst.w	(f_debugmode).w				; is debug mode cheat on?
 		bne.w	.bounceSonicAway			; if yes, survive dying from no rings
 	endif

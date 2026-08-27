@@ -80,7 +80,7 @@ Debug_Init:	; Routine 0
 		bne.s	.isLevel				; if not, branch
 		move.w	#0,(v_ssrotate).w			; stop Special Stage rotating
 		move.w	#0,(v_ssangle).w			; make Special Stage "upright"
-		moveq	#id_EndZ,d0				; use 6th debug item list (which is actually the ending sequence)
+		moveq	#id_SS,d0				; use 7th debug item list
 		bra.s	.loadDebugList				; ignore actual Zone ID
 ; ===========================================================================
 
@@ -349,7 +349,8 @@ DebugList:
 		dc.w .SLZ-DebugList
 		dc.w .SYZ-DebugList
 		dc.w .SBZ-DebugList
-		dc.w .EndingSS-DebugList
+		dc.w .Ending-DebugList
+		dc.w .SpecialStage-DebugList
 
 dbug:		macro	map,object,subtype,frame,vram
 		dc.l	object
@@ -513,14 +514,18 @@ dbugheader:	macro	*
 		dbug	Map_Hog,	BallHog,		4,	0,	ArtTile_Ball_Hog|Tile_Pal2
 		dbug	Map_Lamp,	Lamppost,		1,	0,	ArtTile_Lamppost
 .SBZ_end:
-
 ; ---------------------------------------------------------------------------
 
-; This list is used by both the Ending Sequence and the Special Stages
-.EndingSS:	dbugheader
+.Ending:	dbugheader
 		;	mappings	object			subtype	frame	VRAM setting
 		dbug 	Map_Ring,	Rings,			0,	0,	ArtTile_Ring|Tile_Pal2
-.EndingSS_end:
+.Ending_end:
+; ---------------------------------------------------------------------------
+
+.SpecialStage:	dbugheader
+		;	mappings	object			subtype	frame	VRAM setting
+		dbug 	Map_Ring,	Rings,			0,	0,	ArtTile_SS_Ring|Tile_Pal2
+.SpecialStage_end:
 
 ; ---------------------------------------------------------------------------
 

@@ -40,11 +40,13 @@ BootToLevel: = -1
 ;	| If set, will boot straight to a specified level (e.g. id_GHZ_act1)
 ;	|         (set to -1 for booting to Sega Screen normally)
 
-CheatsEnabled: = 3
+CheatsEnabled: = 2
 ;	| If 1, all in-game cheats (Level Select, Debug Mode, Slow-Motion, Japanese Credits)
 ;	|       will be enabled by default, without requiring any title screen button inputs
 ;	| If 2, same as 1 but debug mode doesn't need to have A held down to get activated
-;	| If 3, same as 2 but debug mode will NOT prevent death when getting hit with no rings
+
+DebugSurviveNoRings: = 1
+;	| If 1, getting hurt without rings while Debug Mode is on will NOT kill Sonic (default behavior)
 
 ; ===========================================================================
 ; Simplifying macros and functions
@@ -2872,13 +2874,18 @@ GM_Special:		; white fade-out from previous game mode
 		clr.b	(v_lifecount).w				; clear extra lives flags when getting 100/200 rings
 
 		move.w	#0,(v_debuguse).w			; exit debug mode if necessary
-		tst.b	(f_debugcheat).w			; has debug cheat been entered?
-		beq.s	SS_NoDebug				; if not, branch
-		btst	#bitA,(v_jpadhold1).w			; is A button held?
-		beq.s	SS_NoDebug				; if not, branch
-		move.b	#1,(f_debugmode).w			; enable debug mode
 
-SS_NoDebug:
+	if CheatsEnabled>=2
+		move.b	#1,(f_debugmode).w			; enable debug mode automatically
+	else
+		tst.b	(f_debugcheat).w			; has debug cheat been entered?
+		beq.s	.noDebug				; if not, branch
+		btst	#bitA,(v_jpadhold1).w			; is A button held?
+		beq.s	.noDebug				; if not, branch
+		move.b	#1,(f_debugmode).w			; enable debug mode
+	.noDebug:
+	endif
+
 		enable_display					; enable screen out-put
 		bsr.w	PaletteWhiteIn				; fade-in from white
 
@@ -3159,11 +3166,15 @@ End_LoadData:
 		move.b	#id_VBlank_Levels,(v_vblank_routine).w	; set VBlank routine to $08
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
 
+	if CheatsEnabled>=2
+		move.b	#1,(f_debugmode).w			; enable debug mode automatically
+	else
 		tst.b	(f_debugcheat).w			; has debug cheat been entered?
 		beq.s	End_LoadSonic				; if not, branch
 		btst	#bitA,(v_jpadhold1).w			; was button A held while entering ending sequence?
 		beq.s	End_LoadSonic				; if not, branch
 		move.b	#1,(f_debugmode).w			; enable debug mode
+	endif
 
 End_LoadSonic:
 		move.l	#SonicPlayer,(v_player+obID).w		; load Sonic object
