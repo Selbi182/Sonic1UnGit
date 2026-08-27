@@ -5,24 +5,21 @@
 
 HUD_Update:
 	if LagFrameCounter
-		tst.b	(v_lagframes).w				; does the lag frame counter need updating?
+		tst.w	(v_lagframes).w				; does the lag frame counter need updating?
 		bpl.s	.lagdone				; if not, branch
 		bclr	#7,(v_lagframes).w			; clear update flag
 
-		locVRAM	$7FE*tile_size,d0
+		locVRAM	$7FC*tile_size,d0
 		moveq	#0,d1
-		move.b	(v_lagframes).w,d1
-		lsr.b	#4,d1
-		lea	(Hud_1).l,a2
-		moveq	#1-1,d6
-		bsr.w	Hud_Write_8x8Digits_WithLeading
+		move.w	(v_lagframes).w,d1
+		cmpi.w	#9999,d1
+		bls.s	.ok
+		moveq	#0,d1
+		move.w	d1,(v_lagframes).w
+	.ok:	lea	(Hud_1000).l,a2
+		moveq	#4-1,d6
+		bsr.w	Hud_Write_8x8Digits_WithLeading_Alt
 
-		locVRAM	$7FF*tile_size,d0
-		moveq	#0,d1
-		move.b	(v_lagframes).w,d1
-		lea	(Hud_1).l,a2
-		moveq	#1-1,d6
-		bsr.w	Hud_Write_8x8Digits_WithLeading
 .lagdone:
 	endif
 
@@ -634,6 +631,50 @@ Hud_Write_8x8Digits_WithLeading:
 		dbf	d5,.clearloop				; loop until two tiles have been transferred
 		bra.s	.nextdigit				; continue to main digit loop
 ; End of function Hud_Lives
+
+
+
+
+
+
+; Leading zeroes and do not skip tiles
+Hud_Write_8x8Digits_WithLeading_Alt:
+		lea	Art_LivesNums(pc),a1			; load uncompressed 8x8 lives counter number graphics
+
+.loopdigits:
+		move.l	d0,4(a6)				; set VRAM address to next digit
+
+		moveq	#0,d2					; clear d2
+		move.l	(a2)+,d3				; get digit to write to this loop
+
+	.finddigit:
+		sub.l	d3,d1					; decrement affected digit in input value
+		bcs.s	.digitfound				; if carry was set, d2 now points to the correct digit, branch
+		addq.w	#1,d2					; increment target digit
+		bra.s	.finddigit				; loop until correct digit has been found
+; ---------------------------------------------------------------------------
+
+	.digitfound:
+		add.l	d3,d1					; undo last decrement
+		lsl.w	#5,d2					; multiply by $20 (tile_size)
+		lea	(a1,d2.w),a3				; set start in Art_LivesNums to relevant digit
+	rept 8
+		move.l	(a3)+,(a6)				; write digit graphics to VRAM
+	endr
+
+	.nextdigit:
+		addi.l	#$200000,d0				; advance VRAM pointer to next digit
+		dbf	d6,.loopdigits				; repeat for all digits
+		rts						; return
+; End of function Hud_Write_8x8Digits_WithLeading_Alt
+
+
+
+
+
+
+
+
 
 Hud_Centis:
 		moveq	#0,d1					; clear d1

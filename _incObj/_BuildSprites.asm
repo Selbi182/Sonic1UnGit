@@ -283,7 +283,7 @@ HUD_DirectMaps:		; Y-position			Size+Link	VRAM settings			X-position
 
 	if LagFrameCounter
 		.lagframelink: equ $0D-(3*Enable_InfiniteLives)
-		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0400+.lagframelink,	($8000+$7FE)&$FFFF,	$0118+HUD_BaseX	; lag frame counter
+		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0C00+.lagframelink,	($8000+$7FC)&$FFFF,	$0108+HUD_BaseX	; lag frame counter
 	endif
 HUD_DirectMaps_End:
 

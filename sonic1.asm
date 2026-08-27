@@ -519,7 +519,7 @@ VBlank_Lag:
 
 .isLevel:
 	if LagFrameCounter
-		addq.b	#1,(v_lagframes).w
+		addq.w	#1,(v_lagframes).w
 		bset	#7,(v_lagframes).w
 	endif
 
@@ -2568,7 +2568,7 @@ Level_SkipClr:
 		move.b	#1,(f_ringcount).w			; update rings counter
 		move.b	#1,(f_timecount).w			; update time counter
 	if LagFrameCounter
-		bset	#7,(v_lagframes).w
+		move.w	#$8000,(v_lagframes).w
 	endif
 
 	if CheatsEnabled>=2
