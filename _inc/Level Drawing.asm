@@ -201,6 +201,12 @@ GetBlockData	macro	is2
 	endif
 
 ; GetBlockData_2:
+		; Infinitely X-wrap background position
+		cmpa.w	#v_screenposx,a3	; is this the FG camera?
+		beq.s	.noWrap\@		; if yes, don't wrap
+		andi.w	#$0FFF,d5		; wrap X-position every $1000 units
+	.noWrap\@:
+
 		add.w	4(a3),d4				; add Screen Y position
 		movea.l	(v_rom_blocks).w,a1			; load ROM Blk16 pointer
 

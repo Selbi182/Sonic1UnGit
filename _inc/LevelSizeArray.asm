@@ -4,6 +4,9 @@
 ; ---------------------------------------------------------------------------
 
 lvlsize macro left,right,top,bottom
+	if (right>$7DFF)
+	    inform 1, "Right boundary cannot exceed $7DFF due to engine limitations"
+	endif
 	dc.w left, right, top, bottom
 	endm
 
