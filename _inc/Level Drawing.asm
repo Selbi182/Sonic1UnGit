@@ -796,6 +796,7 @@ DrawBG_ColumnForBGIndex:
 		move.b	(a0)+,d0				; retrieve next offset value from input BG_ScrollBlockMap (0/2/4/6)
 		btst	d0,(a2)					; is matching redraw flag set?
 		beq.w	.skipDraw				; if not, branch
+		andi.w	#6,d0					; prevent odd addressing in stupid edge cases for Y-wrapping
 		movea.w	DrawBG_XPosCopy_Ptrs(pc,d0.w),a3	; use that value to retrieve relevant BG screen position data
 		movem.l	d4-d5/a0,-(sp)				; store X and Y positions, and BG_ScrollBlockMap pointer
 		movem.l	d4-d5,-(sp)				; store X and Y positions
@@ -1113,6 +1114,7 @@ DrawBG_XPos_Ptrs:
 DrawBG_RowForBGIndex:
 		lsr.w	#4,d0					; divide input camera Y position by 16
 		move.b	(a0,d0.w),d0				; retrieve offset value from input BG_ScrollBlockMap (0/2/4/6)
+		andi.w	#6,d0					; prevent odd addressing in stupid edge cases for Y-wrapping
 		movea.w	DrawBG_XPos_Ptrs(pc,d0.w),a3		; use that value to retrieve relevant BG screen position data
 		beq.s	.bgXPos0				; branch if 0
 		moveq	#-16,d5					; x coordinate - left of screen
