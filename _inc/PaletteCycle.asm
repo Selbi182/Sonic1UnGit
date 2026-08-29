@@ -94,21 +94,19 @@ PalCycle_LZ:
 ; ---------------------------------------------------------------------------
 
 .conveyorBelts:
+		cmpi.b	#act4,(v_act).w				; SBZ3?
+		beq.s	.return					; if yes, no conveyors exist
+
 		; Conveyor belts
-		move.w	(v_framecount).w,d0			; get current level frame counter
-		andi.w	#7,d0					; limit to 0-7
-		move.b	.lzConveyorSequence(pc,d0.w),d0		; get byte from palette sequence (0 or 1)
-		bne.s	.doConveyors				; if byte is non-0,update palette
-		rts
+		moveq	#7,d0					; limit to 0-7
+		and.w	(v_framecount).w,d0			; get current level frame counter
+		beq.s	.doConveyors				; cycle on 0, 3, and 6
+		subq.w	#3,d0
+		beq.s	.doConveyors
+		subq.w	#3,d0
+		bne.s	.return
 
-; ---------------------------------------------------------------------------
-.lzConveyorSequence:
-		; 0 = skip cycle this frame // 1 = advance cycle this frame
-		dc.b 1,	0, 0, 1, 0, 0, 1, 0
-		even
-; ---------------------------------------------------------------------------
-
-.doConveyors:
+	.doConveyors:
 		tst.b	(f_conveyrev).w				; have conveyor belts been reversed?
 		bne.s	.forwards				; if yes, branch (don't mind the confusing labels)
 		PaletteRotation (v_palette_line_4+($B*2)), 3, TRUE
@@ -122,9 +120,6 @@ PalCycle_LZ:
 	.return:
 		rts						; return
 ; End of function PalCycle_LZ
-
-
-; ---------------------------------------------------------------------------
 
 
 ; ===========================================================================
@@ -186,13 +181,11 @@ PalCycle_SYZ:
 		addq.w	#1,(v_pcyc_num).w			; increment cycle number
 		andi.w	#3,d0					; if cycle > 3, reset to 0
 		lsl.w	#2,d0					; multiply by 4
-		move.w	d0,d1					; two colors for red/white
-		add.w	d0,d0					; four colors for black/yellow
 
 		lea	(Pal_SYZCyc_RedWhite).l,a0		; pulsating red/white
 		lea	(v_palette_line_4+($B*2)).w,a1		; target palette line 4, colors B-C
-		move.w	(a0,d1.w),(a1)				; write 1 color
-		move.w	2(a0,d1.w),4(a1)			; write 1 color
+		move.w	(a0,d0.w),(a1)				; write 1 color
+		move.w	2(a0,d0.w),4(a1)			; write 1 color
 
 		; Yellow/black stuff
 		PaletteRotation	(v_palette_line_4+(7*2)), 4, TRUE

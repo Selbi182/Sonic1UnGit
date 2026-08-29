@@ -83,16 +83,17 @@ Sto_Main:	; Routine 0
 		move.b	(a3)+,d0				; get max move distance
 		move.w	d0,sto_offset_max(a0)			; store it
 
+		cmpi.b	#5,(a3)					; is this the ancient lift in SBZ3?
+		bne.s	.noCustomHeight				; if not, branch
+		bset	#sprite_customheight_bit,obRender(a0)	; set custom sprite render height flag
+
+	.noCustomHeight:
 		moveq	#0,d0					; clear d0
 		move.b	obSubtype(a0),d0			; get object subtype
 		bpl.s	Sto_Action				; is subtype $80 or above (extending sliding platform)? if not, branch
 		andi.b	#$F,d0					; read only lower digit
 		move.b	d0,sto_switch(a0)			; store switch ID that will trigger platform behavior
 		move.b	(a3),obSubtype(a0)			; set action type number
-
-		cmpi.b	#5,(a3)					; is this the ancient lift in SBZ3?
-		bne.s	.chkgone				; if not, branch
-		bset	#sprite_customheight_bit,obRender(a0)	; set custom sprite render height flag
 
 	.chkgone:
 		respawn_entry.s	Sto_Action
