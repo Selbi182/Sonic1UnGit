@@ -552,15 +552,32 @@ ArtTile_Animal_1:		equ $55D
 ArtTile_Animal_2:		equ $56F
 ArtTile_Explosion:		equ $580
 ArtTile_Monitor:		equ $680
-ArtTile_HUD:			equ $6CA
-MapOff_HUDCentis:		equ -6
-ArtTile_HUDCentis:		equ ArtTile_HUD+MapOff_HUDCentis
-ArtTile_HUDScore:		equ ArtTile_HUD+$1A
-ArtTile_HUDScore_E:		equ ArtTile_HUDScore-2
-ArtTile_HUDTimeMins:		equ ArtTile_HUD+$28
-ArtTile_HUDTimeSecs:		equ ArtTile_HUD+$2C
-ArtTile_HUDRings:		equ ArtTile_HUD+$30
 
+; HUD
+ArtTile_HUD:			equ $6C0
+ArtTile_HUD_Digits:		equ ArtTile_HUDTime_TIME+8
+
+ArtTile_HUDScore_SCOR:		equ ArtTile_HUD
+ArtTile_HUDRings_RING:		equ ArtTile_HUDScore_SCOR+8
+ArtTile_HUDTime_TIME:		equ ArtTile_HUDRings_RING+8
+
+ArtTile_HUDScore:		equ ArtTile_HUD_Digits
+ArtTile_HUDScore_E:		equ ArtTile_HUDScore-2
+ArtTile_HUDScore_E_2:		equ ArtTile_HUDScore_E+8
+
+ArtTile_HUDRings:		equ ArtTile_HUDScore_E_2+8
+
+ArtTile_HUDTimeMins:		equ ArtTile_HUDRings+6
+ArtTile_HUDTimeSecs:		equ ArtTile_HUDTimeMins+4
+ArtTile_HUDTimeCentis:		equ ArtTile_HUDTimeSecs+4
+
+ArtTile_Lives_Counter:		equ $7D4
+ArtTile_Lives_Counter_2:	equ ArtTile_Lives_Counter+4
+ArtTile_Lives_Counter_Num:	equ ArtTile_Lives_Counter_2+5
+
+ArtTile_HUDLagFrame:		equ $7FC
+
+; Generic
 ArtTile_Sonic:			equ $780
 ArtTile_Points:			equ $79E
 ArtTile_Lamppost:		equ $553
@@ -568,8 +585,6 @@ ArtTile_SpinDust:		equ $F400/tile_size		; = $7A0
 ArtTile_Ring:			equ $7B2
 ArtTile_Ring_Loss:		equ ArtTile_Ring+4
 ArtTile_Sparkles:		equ ArtTile_Ring+$A
-ArtTile_Lives_Counter:		equ $7D4
-ArtTile_Lives_Counter_Num:	equ ArtTile_Lives_Counter+9
 
 ; Eggman
 ArtTile_Eggman:			equ $400

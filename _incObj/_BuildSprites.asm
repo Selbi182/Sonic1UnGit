@@ -263,27 +263,25 @@ HUD_BaseX: equ $80+$10
 HUD_BaseY: equ $80+$88
 
 HUD_DirectMaps:		; Y-position			Size+Link	VRAM settings			X-position
-		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0D01,		($8000+ArtTile_HUD)&$FFFF,	$0000+HUD_BaseX	; "SCOR"
-		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0D02,		($8018+ArtTile_HUD)&$FFFF,	$0020+HUD_BaseX	; "E" and first three score digits
-		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0D03,		($8020+ArtTile_HUD)&$FFFF,	$0040+HUD_BaseX	; last four score digits
-	
-		dc.w	($FF90+HUD_BaseY)&$FFFF,	$0D04,		($8010+ArtTile_HUD)&$FFFF,	$0000+HUD_BaseX	; "TIME"
-		dc.w	($FF90+HUD_BaseY)&$FFFF,	$0D05,		($8028+ArtTile_HUD)&$FFFF,	$0028+HUD_BaseX	; time counter
-		dc.w	($FF90+HUD_BaseY)&$FFFF,	$0906,		($7FFA+ArtTile_HUD)&$FFFF,	$0048+HUD_BaseX	; centiseconds
-	
-		dc.w	($FFA0+HUD_BaseY)&$FFFF,	$0D07,		($8008+ArtTile_HUD)&$FFFF,	$0000+HUD_BaseX	; "RING"
-		dc.w	($FFA0+HUD_BaseY)&$FFFF,	$0108,		($8000+ArtTile_HUD)&$FFFF,	$0020+HUD_BaseX	; "S"
-		dc.w	($FFA0+HUD_BaseY)&$FFFF,	$0909,		($8030+ArtTile_HUD)&$FFFF,	$0030+HUD_BaseX	; rings counter
-
-	if Enable_InfiniteLives=0	
-		dc.w	($0040+HUD_BaseY)&$FFFF,	$050A,		($810A+ArtTile_HUD)&$FFFF,	$0000+HUD_BaseX	; lives counter (Sonic icon)
-		dc.w	($0040+HUD_BaseY)&$FFFF,	$0D0B,		($810E+ArtTile_HUD)&$FFFF,	$0010+HUD_BaseX	; lives counter ("SONIC x N" text)
-		dc.w	($0040+HUD_BaseY)&$FFFF,	$0D0C,		($810E+ArtTile_HUD)&$FFFF,	$0010+HUD_BaseX	; lives counter ("SONIC x N" text)
+		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0D01,		$8000+ArtTile_HUDScore_SCOR,	$0000+HUD_BaseX	; "SCOR"
+		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0D02,		$8000+ArtTile_HUDScore_E,	$0020+HUD_BaseX	; "E" and first three score digits
+		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0D03,		$8000+ArtTile_HUDScore_E_2,	$0040+HUD_BaseX	; last four score digits
+								
+		dc.w	($FF90+HUD_BaseY)&$FFFF,	$0D04,		$8000+ArtTile_HUDTime_TIME,	$0000+HUD_BaseX	; "TIME"
+		dc.w	($FF90+HUD_BaseY)&$FFFF,	$0D05,		$8000+ArtTile_HUDTimeMins,	$0028+HUD_BaseX	; minutes and seconds
+		dc.w	($FF90+HUD_BaseY)&$FFFF,	$0906,		$8000+ArtTile_HUDTimeCentis,	$0048+HUD_BaseX	; centiseconds
+								
+		dc.w	($FFA0+HUD_BaseY)&$FFFF,	$0D07,		$8000+ArtTile_HUDRings_RING,	$0000+HUD_BaseX	; "RING"
+		dc.w	($FFA0+HUD_BaseY)&$FFFF,	$0108,		$8000+ArtTile_HUDScore_SCOR,	$0020+HUD_BaseX	; "S" (stolen from Score)
+		dc.w	($FFA0+HUD_BaseY)&$FFFF,	$0909,		$8000+ArtTile_HUDRings,		$0030+HUD_BaseX	; rings counter
+								
+	if Enable_InfiniteLives=0	                       	
+		dc.w	($0040+HUD_BaseY)&$FFFF,	$050A,		$8000+ArtTile_Lives_Counter,	$0000+HUD_BaseX	; lives counter (Sonic icon)
+		dc.w	($0040+HUD_BaseY)&$FFFF,	$0D0B,		$8000+ArtTile_Lives_Counter_2,	$0010+HUD_BaseX	; lives counter ("SONIC x N" text)
 	endif
 
 	if LagFrameCounter
-		.lagframelink: equ $0D-(3*Enable_InfiniteLives)
-		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0C00+.lagframelink,	($8000+$7FC)&$FFFF,	$0108+HUD_BaseX	; lag frame counter
+		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0C0C-(2*Enable_InfiniteLives),	$8000+ArtTile_HUDLagFrame,	$0108+HUD_BaseX	; lag frame counter
 	endif
 HUD_DirectMaps_End:
 

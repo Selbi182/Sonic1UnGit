@@ -9,7 +9,7 @@ HUD_Update:
 		bpl.s	.lagdone				; if not, branch
 		bclr	#7,(v_lagframes).w			; clear update flag
 
-		locVRAM	$7FC*tile_size,d0
+		locVRAM	ArtTile_HUDLagFrame*tile_size,d0
 		moveq	#0,d1
 		move.w	(v_lagframes).w,d1
 		cmpi.w	#9999,d1
@@ -214,11 +214,6 @@ Hud_Base:
 		bsr.w	Hud_Lives				; write lives counter to VRAM
 	endif
 
-		locVRAM	ArtTile_HUDCentis*tile_size		; write to centiseconds VRAM location
-		lea	Hud_Base_Centi(pc),a2			; load tile information array
-		moveq	#3-1,d2					; do 3 characters (minus 1 for loop)
-		bsr.s	Hud_Init_8x16Digits			; write to VRAM, then return for the remaining HUD
-
 		locVRAM	(ArtTile_HUDScore_E)*tile_size		; set VRAM address to the "E" in score
 		lea	Hud_Base_Score(pc),a2			; load HUD digits initialization data
 		move.w	#(Hud_Base_End-Hud_Base_Score)-1,d2	; write all digits for score, time, rings
@@ -260,17 +255,17 @@ Hud_Init_8x16Digits:
 ; ===========================================================================
 ; Initialization tiles for the HUD. Each byte represents an instruction:
 ;    -1 = write blank tiles
-;     0 = write a literal "0" digit
-;   $16 = write letter "E" (for score text)
-;   $14 = write colon ":" (for time counter)
+;     0 = write a literal 0 digit
+;   $16 = write letter E (for score text)
+;   $14 = write colon : (for time counter)
+;   $18 = write single quote ' (for time counter)
+;   $1A = write double quote " (for time counter)
 ; The last two are tile offsets in Art_Hud.
 
 Hud_Base_Score:	dc.b $16,  -1,  -1,  -1,  -1,  -1,  -1,	  0	; score (E______0)
-Hud_Base_Time:	dc.b   0, $18,   0,   0				; time  (0'00)
 Hud_Base_Rings:	dc.b  -1,  -1,   0				; rings (__0)
+Hud_Base_Time:	dc.b   0, $18,   0,   0, $1A,   0,   0		; time  (0'00"00)
 Hud_Base_End:
-		even
-Hud_Base_Centi:	dc.b $1A, 0, 0					; centiseconds ("00)
 		even
 
 ; ===========================================================================
@@ -627,11 +622,11 @@ Hud_Write_8x8Digits_WithLeading:
 ; End of function Hud_Lives
 
 
-
-
-
-
+; ===========================================================================
+; ---------------------------------------------------------------------------
 ; Leading zeroes and do not skip tiles
+; ---------------------------------------------------------------------------
+
 Hud_Write_8x8Digits_WithLeading_Alt:
 		lea	Art_LivesNums(pc),a1			; load uncompressed 8x8 lives counter number graphics
 
@@ -663,22 +658,23 @@ Hud_Write_8x8Digits_WithLeading_Alt:
 ; End of function Hud_Write_8x8Digits_WithLeading_Alt
 
 
-
-
-
-
-
-
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Subroutine to load centiseconds time numbers patterns
+; ---------------------------------------------------------------------------
 
 Hud_Centis:
 		moveq	#0,d1					; clear d1
 		move.b	(v_timecent).w,d1			; load centiseconds
 		add.w	d1,d1
 		lea	Frame60To100(pc,d1.w),a2		; convert 60-based values to 100-based ones
-		locVRAM	(ArtTile_HUDCentis+2)*tile_size,d0	; set VRAM location (+2 to skip the separator)
+		locVRAM	(ArtTile_HUDTimeCentis+2)*tile_size,d0	; set VRAM location (+2 to skip the separator)
 
 		lea	Art_Hud(pc),a1				; load uncompressed 8x16 HUD number graphics
-		
+
+		; Basically, in order to cut down on resource usage, the individual digits
+		; are only updated every other frame, rather than both at once every time.
+
 		moveq	#0,d1
 		move.b	(a2)+,d1
 		btst	#0,(v_vblank_byte).w
@@ -690,6 +686,7 @@ Hud_Centis:
 		move.l	(a3)+,(a6)				; write digit graphics to VRAM
 	endr
 		rts
+; ---------------------------------------------------------------------------
 
 	.alt:
 		addi.l	#$400000,d0				; advance VRAM pointer to next digit
@@ -710,9 +707,7 @@ Frame60To100:
     rept 60
         dc.b (((*-Frame60To100)/2*99/59)/10), (((*-Frame60To100)/2*99/59)%10)
     endr
-
-; ---------------------------------------------------------------------------
-
+; End of function Hud_Centis
 
 
 ; ===========================================================================
