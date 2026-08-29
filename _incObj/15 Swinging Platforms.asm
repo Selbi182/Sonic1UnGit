@@ -163,11 +163,6 @@ Swing_StoodOn:	; Routine 4
 		bsr.w	MvSonicOnPtfm				; move Sonic with platform as it swings
 
 		bra.w	Swing_ChkDel				; delete platform and links if out of range
-; ===========================================================================
-
-	; Move Sonic with platform, shared by almost all other platform objects.
-	; This is likely sandwiched in between here for being the first one.
-	include "_incObj/sub MvSonicOnPtfm.asm"
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

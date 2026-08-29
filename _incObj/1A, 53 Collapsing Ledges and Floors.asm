@@ -356,48 +356,6 @@ CollapseData_8x2_Shuffle: ; 8 fragments, shuffled order
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Alternate version of SlopeObject subroutine that assumes Sonic is already
-; standing on the platform (skipping the relevant checks).
-; 
-; input:
-;	d1.w = platform half width
-;	d2.w = X-position of platform
-;	a2 = address of heightmap data
-; ---------------------------------------------------------------------------
-
-; SlopeObject2:
-SlopeObject_AssumeStoodOn:
-		lea	(v_player).w,a1				; get Sonic object
-		btst	#3,obStatus(a1)				; is Sonic standing on a platform object?
-		beq.s	.return					; if not, branch
-
-		move.w	obX(a1),d0
-		sub.w	obX(a0),d0
-		add.w	d1,d0
-		lsr.w	#1,d0
-		btst	#sprite_xflip_bit,obRender(a0)		; is ledge mirrored?
-		beq.s	.alignSonic				; if not, branch
-		not.w	d0
-		add.w	d1,d0
-
-	.alignSonic:
-		moveq	#0,d1
-		move.b	(a2,d0.w),d1				; get relevant byte from Ledge_SlopeData
-		move.w	obY(a0),d0
-		sub.w	d1,d0
-		moveq	#0,d1
-		move.b	obHeight(a1),d1
-		sub.w	d1,d0
-		move.w	d0,obY(a1)				; align Sonic to slope (Y-axis)
-		sub.w	obX(a0),d2
-		sub.w	d2,obX(a1)				; align Sonic to slope (X-axis)
-
-	.return:
-		rts
-; End of function SlopeObject_AssumeStoodOn
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
 ; Collision data for GHZ collapsing ledge (not to scale):
 ;
 ;            $2F > /---------- < $30

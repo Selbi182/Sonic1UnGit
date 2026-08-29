@@ -120,14 +120,8 @@ Bri_CheckOnBridge:
 		cmp.w	d2,d0					; is Sonic within right edge of the bridge?
 		bhs.w	Plat_Exit				; if not, branch
 
-		bra.s	Plat_NoXCheck				; continue with regular platform check, assume height is 8px
+		bra.w	Plat_NoXCheck				; continue with regular platform check, assume height is 8px
 ; End of function Bri_CheckOnBridge
-
-; ===========================================================================
-
-	; Allow Sonic stepping on platforms. This is sandwiched in here,
-	; likely for being the first platform object created for the game.
-	include	"_incObj/sub PlatformObject & SlopeObject.asm"
 
 ; ===========================================================================
 
@@ -148,7 +142,7 @@ Bri_WalkOff:
 		lsl.w	#3,d1					; multiply by 8
 		move.w	d1,d2					; d2 = half-width for right-side check
 		addq.w	#8,d1					; d1 = half-width for left-side check
-		bsr.s	ExitPlatform2				; allow Sonic exiting the bridge
+		bsr.w	ExitPlatform2				; allow Sonic exiting the bridge
 		bcc.s	.return					; has Sonic exited bridge? if yes, branch
 
 		lsr.w	#4,d0					; divide Sonic's distance from left edge by $10 (i.e. 16px per log)
@@ -166,11 +160,6 @@ Bri_WalkOff:
 	.return:
 		rts						; return
 ; End of function Bri_WalkOff
-; ===========================================================================
-
-	; Allow Sonic exiting platforms. This is sandwiched in here,
-	; likely for being the first platform object created.
-	include	"_incObj/sub ExitPlatform.asm"
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

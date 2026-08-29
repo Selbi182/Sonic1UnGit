@@ -1,3 +1,77 @@
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Subroutine calculate a sine and cosine
+; 
+; input:
+;	d0 = angle
+; 
+; output:
+;	d0 = sine
+;	d1 = cosine
+; ---------------------------------------------------------------------------
+
+CalcSine:
+		andi.w	#$FF,d0					; clear upper input byte
+		add.w	d0,d0					; multiply input for word-sized addressing
+		addi.w	#$80,d0					; advance to cosine value index
+		move.w	Sine_Data(pc,d0.w),d1			; get cosine value
+		subi.w	#$80,d0					; go back sine value index
+		move.w	Sine_Data(pc,d0.w),d0			; get sine value
+		rts						; return
+; End of function CalcSine
+
+; ===========================================================================
+; Precalculated Sinewave data. Do note that because two entries are $100,
+; only reading a byte for the retrieved return value can result in those
+; being interpreted as $00. It would be safer to change those values to $FF.
+
+Sine_Data:
+		dc.w    $0,  $6,  $C, $12, $19, $1F, $25, $2B	;          -=--
+		dc.w   $31, $38, $3E, $44, $4A, $50, $56, $5C	;            -=--
+		dc.w   $61, $67, $6D, $73, $78, $7E, $83, $88	;              -=-
+		dc.w   $8E, $93, $98, $9D, $A2, $A7, $AB, $B0	;                -=
+		dc.w   $B5, $B9, $BD, $C1, $C5, $C9, $CD, $D1	;                 -=
+		dc.w   $D4, $D8, $DB, $DE, $E1, $E4, $E7, $EA	;                  =-
+		dc.w   $EC, $EE, $F1, $F3, $F4, $F6, $F8, $F9	;                  -=
+		dc.w   $FB, $FC, $FD, $FE, $FE, $FF, $FF, $FF	;                   =
+		dc.w  $100, $FF, $FF, $FF, $FE, $FE, $FD, $FC	;                   =
+		dc.w   $FB, $F9, $F8, $F6, $F4, $F3, $F1, $EE	;                  -=
+		dc.w   $EC, $EA, $E7, $E4, $E1, $DE, $DB, $D8	;                  =-
+		dc.w   $D4, $D1, $CD, $C9, $C5, $C1, $BD, $B9	;                 -=
+		dc.w   $B5, $B0, $AB, $A7, $A2, $9D, $98, $93	;                -=
+		dc.w   $8E, $88, $83, $7E, $78, $73, $6D, $67	;              -=-
+		dc.w   $61, $5C, $56, $50, $4A, $44, $3E, $38	;            -=--
+		dc.w   $31, $2B, $25, $1F, $19, $12,  $C,  $6	;          -=--
+		dc.w    $0, -$6, -$C,-$12,-$19,-$1F,-$25,-$2B	;       --=-
+		dc.w  -$31,-$38,-$3E,-$44,-$4A,-$50,-$56,-$5C	;     --=-
+		dc.w  -$61,-$67,-$6D,-$75,-$78,-$7E,-$83,-$88	;    -=-
+		dc.w  -$8E,-$93,-$98,-$9D,-$A2,-$A7,-$AB,-$B0	;   =-
+		dc.w  -$B5,-$B9,-$BD,-$C1,-$C5,-$C9,-$CD,-$D1	;  =-
+		dc.w  -$D4,-$D8,-$DB,-$DE,-$E1,-$E4,-$E7,-$EA	; -=
+		dc.w  -$EC,-$EE,-$F1,-$F3,-$F4,-$F6,-$F8,-$F9	; =-
+		dc.w  -$FB,-$FC,-$FD,-$FE,-$FE,-$FF,-$FF,-$FF	; =
+		dc.w -$100,-$FF,-$FF,-$FF,-$FE,-$FE,-$FD,-$FC	; =
+		dc.w  -$FB,-$F9,-$F8,-$F6,-$F4,-$F3,-$F1,-$EE	; =-
+		dc.w  -$EC,-$EA,-$E7,-$E4,-$E1,-$DE,-$DB,-$D8	; -=
+		dc.w  -$D4,-$D1,-$CD,-$C9,-$C5,-$C1,-$BD,-$B9	;  =-
+		dc.w  -$B5,-$B0,-$AB,-$A7,-$A2,-$9D,-$98,-$93	;   =-
+		dc.w  -$8E,-$88,-$83,-$7E,-$78,-$75,-$6D,-$67	;    -=-
+		dc.w  -$61,-$5C,-$56,-$50,-$4A,-$44,-$3E,-$38	;     --=-
+		dc.w  -$31,-$2B,-$25,-$1F,-$19,-$12, -$C, -$6	;       --=-
+
+		; Repeat of the first 64 values in case of overflow
+		dc.w    $0,  $6,  $C, $12, $19, $1F, $25, $2B	;          -=--
+		dc.w   $31, $38, $3E, $44, $4A, $50, $56, $5C	;            -=--
+		dc.w   $61, $67, $6D, $73, $78, $7E, $83, $88	;              -=-
+		dc.w   $8E, $93, $98, $9D, $A2, $A7, $AB, $B0	;                -=
+		dc.w   $B5, $B9, $BD, $C1, $C5, $C9, $CD, $D1	;                 -=
+		dc.w   $D4, $D8, $DB, $DE, $E1, $E4, $E7, $EA	;                  =-
+		dc.w   $EC, $EE, $F1, $F3, $F4, $F6, $F8, $F9	;                  -=
+		dc.w   $FB, $FC, $FD, $FE, $FE, $FF, $FF, $FF	;                   =
+		even
+
+
+; ===========================================================================
 ; -------------------------------------------------------------------------
 ; 2-argument arctangent (angle between (0,0) and (x,y))
 ; Based on http://codebase64.org/doku.php?id=base:8bit_atan2_8-bit_angle
@@ -132,3 +206,29 @@ Atan2Table:
 		dc.b	$13, $13, $13, $14, $14, $14, $15, $15, $16, $16, $16, $17, $17, $17, $18, $18
 		dc.b	$19, $19, $1A, $1A, $1A, $1B, $1B, $1C, $1C, $1C, $1D, $1D, $1E, $1E, $1F, $1F
 		even
+
+
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Subroutine to generate a pseudo-random number in d0
+; ---------------------------------------------------------------------------
+
+RandomNumber:
+		move.l	(v_random).w,d1				; load current pseudo random number
+		bne.s	.scramble				; if it's not 0, branch
+		move.l	#$2A6D365A,d1				; set initial/starting seed
+
+.scramble:
+		move.l	d1,d0					; copy to d0
+		asl.l	#2,d1					; shift left two bits
+		add.l	d0,d1					; add original to shifted
+		asl.l	#3,d1					; shift left three more bits
+		add.l	d0,d1					; add original again
+		move.w	d1,d0					; load lower word of shifted to original
+		swap	d1					; get upper word
+		add.w	d1,d0					; add upper to lower
+		move.w	d0,d1					; save back to d1
+		swap	d1					; swap upper and lower back
+		move.l	d1,(v_random).w				; save result for next time
+		rts						; return (d0 contains pseudo-random number)
+; End of function RandomNumber

@@ -674,9 +674,7 @@ Hud_Centis:
 		moveq	#0,d1					; clear d1
 		move.b	(v_timecent).w,d1			; load centiseconds
 		add.w	d1,d1
-		lea	Frame60To100(pc,d1.w),a2
-		;move.b	Frame60To100(pc,d1.w),d1		; convert 60-based values to 100-based ones
-		;move.b	Frame60To100+1(pc,d1.w),d2		; convert 60-based values to 100-based ones
+		lea	Frame60To100(pc,d1.w),a2		; convert 60-based values to 100-based ones
 		locVRAM	(ArtTile_HUDCentis+2)*tile_size,d0	; set VRAM location (+2 to skip the separator)
 
 		lea	Art_Hud(pc),a1				; load uncompressed 8x16 HUD number graphics
@@ -706,12 +704,44 @@ Hud_Centis:
 	endr
 
 		rts
-
-;Frame60To100:	rept 60
-;		dc.b (*-Frame60To100)*99/59
-;		endr
+; ---------------------------------------------------------------------------
 
 Frame60To100:
     rept 60
         dc.b (((*-Frame60To100)/2*99/59)/10), (((*-Frame60To100)/2*99/59)%10)
     endr
+
+; ---------------------------------------------------------------------------
+
+
+
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Subroutine to add points to the score counter.
+; 
+; Input:
+;	d0 = points to add / 10 (rightmost digit in HUD is a fake 0)
+; ---------------------------------------------------------------------------
+
+AddPoints:
+		move.b	#1,(f_scorecount).w			; set score counter to update
+
+		lea	(v_score).w,a3				; load current score count
+		add.l	d0,(a3)					; add d0*10 to the score
+		move.l	#999999,d1				; set maximum score count to 9999990
+		cmp.l	(a3),d1					; has score exceeded the maximum?
+		bhi.s	.belowmax				; if not, branch
+		move.l	d1,(a3)					; cap score to 9999990
+
+.belowmax:
+		move.l	(a3),d0					; get new score count
+		cmp.l	(v_scorelife).w,d0			; is new score count exceeding the next multiple of 50000?
+		blo.s	.return					; if not, branch
+
+		addi.l	#5000,(v_scorelife).w			; increase requirement for next score extra life by 50000
+		jmp	(ExtraLife).l				; add 1 to number of lives
+
+.return:
+		rts						; return
+; End of function AddPoints
+; ===========================================================================

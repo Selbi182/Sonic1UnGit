@@ -59,7 +59,7 @@ DebugSurviveNoRings: = 1
 
 ; ===========================================================================
 ; MD Debugger and Error Handler macros
-	include	"_inc/Debugger.asm"
+	include	"_inc/Debugger.Def.asm"
 
 ;__DEBUG__: equ "DEB"
 ; 	| Comment this in to enable extra debugging tools ("KDebug" and "assert").
@@ -1121,18 +1121,113 @@ ClearScreen:
 		rts						; return
 ; End of function ClearScreen
 
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Subroutine to queue a sound into buffer 1, often used for BGM
+; 
+; input:
+;	d0 = track to play
+; ---------------------------------------------------------------------------
+
+; PlaySound:
+QueueSound1:
+		move.b	d0,(v_snddriver_ram.v_soundqueue0).w
+		rts
+; End of function QueueSound1
+
+; ---------------------------------------------------------------------------
+; Subroutine to queue a sound into buffer 2, often used for SFX
+; 
+; input:
+;	d0 = track to play
+; ---------------------------------------------------------------------------
+
+; PlaySound_Special:
+QueueSound2:
+		move.b	d0,(v_snddriver_ram.v_soundqueue1).w
+		rts
+; End of function QueueSound2
+
+; ---------------------------------------------------------------------------
+; Subroutine to	queue a sound into buffer 3.
+; 
+; input:
+;	d0 = track to play
+; ---------------------------------------------------------------------------
+
+; PlaySound_Unused:
+QueueSound3:
+		move.b	d0,(v_snddriver_ram.v_soundqueue2).w
+		rts
+; End of function QueueSound3
 
 ; ===========================================================================
-; >>> Subroutines to queue sound commands to be executed by the sound driver during VBlank
-	; includes QueueSound1, QueueSound2, QueueSound3
-	; (formerly called PlaySound, PlaySound_Special, PlaySound_Unknown)
-	include	"_inc/Queue Sound Routines.asm"
+; ---------------------------------------------------------------------------
+; Subroutine to pause the game
+; ---------------------------------------------------------------------------
 
+PauseGame:
+	if Enable_InfiniteLives=0
+		tst.b	(v_lives).w				; do you have any lives left?
+		beq.s	.unpauseGame				; if not, branch (prevents pausing during a game over)
+	endif
+		tst.w	(f_pause).w				; is game already paused?
+		bne.s	.startPause				; if yes, branch
+		btst	#bitStart,(v_jpadpress1).w		; has Start button been pressed?
+		beq.s	.return					; if not, branch
 
+	; Pause_StopGame:
+	.startPause:
+		move.w	#1,(f_pause).w				; pause the game
+		move.b	#1,(v_snddriver_ram.f_pausemusic).w	; pause music
+; ---------------------------------------------------------------------------
+
+; Pause_Loop:
+.pauseLoop:
+		move.b	#id_VBlank_Paused,(v_vblank_routine).w	; run routine $10 in VBlank
+		bsr.w	WaitForVBlank				; wait until VBlank has finished
+
+		tst.b	(f_slomocheat).w			; is slow-motion cheat on?
+		beq.s	.checkUnpausing				; if not, branch
+		btst	#bitA,(v_jpadpress1).w			; is button A pressed?
+		beq.s	.checkSlowMotion			; if not, branch
+		move.b	#id_Title,(v_gamemode).w		; return to title screen
+		addq.w	#4,sp					; don't return to Level_MainLoop
+		bra.s	.unpauseMusic				; unpause music
+; ---------------------------------------------------------------------------
+
+	; Pause_ChkBC:
+	.checkSlowMotion:
+		btst	#bitB,(v_jpadhold1).w			; is button B held down?
+		bne.s	.slowMotion				; if yes, do continuous slow-motion
+		btst	#bitC,(v_jpadpress1).w			; is button C pressed?
+		bne.s	.slowMotion				; if yes, advance one frame
+
+	; Pause_ChkStart:
+	.checkUnpausing:
+		btst	#bitStart,(v_jpadpress1).w		; is Start button pressed?
+		beq.s	.pauseLoop				; if not, keep game paused
+; ---------------------------------------------------------------------------
+
+	; Pause_EndMusic:
+	.unpauseMusic:
+		move.b	#$80,(v_snddriver_ram.f_pausemusic).w	; unpause the music
+
+	; Unpause:
+	.unpauseGame:
+		move.w	#0,(f_pause).w				; unpause the game
+
+	; Pause_DoNothing:
+	.return:
+		rts						; return to main level loop
 ; ===========================================================================
-; >>> Subroutine to allow pausing the game
-	include	"_inc/PauseGame.asm"
 
+; Pause_SlowMo:
+.slowMotion:
+		move.w	#1,(f_pause).w				; keep flag set so pause is triggered on next frame again
+		move.b	#$80,(v_snddriver_ram.f_pausemusic).w	; unpause the music
+		rts						; return to main level loop
+; End of function PauseGame
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -1624,9 +1719,7 @@ WaitForVBlank:
 
 ; ===========================================================================
 ; >>> Subroutines for generic calculations
-	include	"_incObj/sub RandomNumber.asm"
-	include	"_incObj/sub CalcSine.asm"
-	include	"_incObj/sub CalcAngle.asm"
+	include	"_incObj/sub CalcSine & CalcAngle & RandomNumber.asm"
 
 
 ; ===========================================================================
@@ -3509,7 +3602,8 @@ TryAg_Exit:		; exit end screen and restart the gam
 ; ===========================================================================
 ; >>> Various level objects
 		include	"_incObj/11 GHZ Bridge.asm"
-		include	"_incObj/15 Swinging Platforms.asm" ; includes "MvSonicOnPtfm" subroutine
+		include	"_incObj/sub Platforms.asm"
+		include	"_incObj/15 Swinging Platforms.asm"
 		include	"_incObj/17 GHZ Spiked Pole Helix.asm"
 		include	"_incObj/18 Platforms.asm"
 		include	"_incObj/1A, 53 Collapsing Ledges and Floors.asm" ; includes "SlopeObject_AssumeStoodOn" subroutine
@@ -3578,11 +3672,8 @@ Map_Over:	include	"_maps/Game Over.asm"
 		include	"_incObj/_ExecuteObjects.asm"
 		include	"_incObj/_ObjectPointers.asm"
 		include	"_incObj/sub ObjectFall & SpeedToPos.asm"
-		include	"_incObj/sub DeleteObject.asm"
 		include	"_incObj/_BuildSprites.asm"
-		include	"_incObj/sub ChkObjectVisible.asm"
 		include	"_incObj/_ObjPosLoad.asm"
-		include	"_incObj/sub FindFreeObj.asm"
 
 
 ; ===========================================================================
@@ -3632,22 +3723,22 @@ Map_Over:	include	"_maps/Game Over.asm"
 ; >>> Main Sonic player object
 		include	"_incObj/01 Sonic.asm"
 		include	"_incObj/Sonic ReactToItem.asm"
+		include	"_incObj/Sonic Collision & AnglePos.asm"
+
 		include	"_incObj/05 SpinDust.asm"
 		include	"_incObj/06 AfterImage.asm"
 
 
 ; ===========================================================================
 ; >>> Various unique objects
-		include	"_incObj/0A LZ Drowning Countdown.asm" ; includes ResumeMusic
+		include	"_incObj/0A LZ Drowning Countdown.asm"
 		include	"_incObj/38 Shield and Invincibility.asm"
 		include	"_incObj/08 LZ Water Splash.asm"
 
 
 ; ===========================================================================
 ; >>> Collision subroutines for Sonic and other objects
-		include	"_incObj/Sonic AnglePos.asm"
 		include	"_incObj/sub FindNearestTile & FindFloor & FindWall.asm"
-		include	"_incObj/Sonic Collision.asm"
 
 
 ; ===========================================================================
@@ -3709,7 +3800,6 @@ Map_SS_Chaos:	include	"_maps/SS Chaos Emeralds.asm"
 
 ; ===========================================================================
 ; >>> HUD objects
-		include	"_incObj/sub AddPoints.asm"
 		include	"_inc/HUD Update.asm" ; includes "ContScrCounter" subroutine
 
 Art_Hud:	binclude "artunc/HUD Numbers.unc" ; 8x16 pixel numbers on HUD
@@ -4399,7 +4489,7 @@ SoundDriver:	include "sound/s1.sounddriver.asm"
 ; Debugging modules
 ; --------------------------------------------------------------
 
-	include	"_inc/ErrorHandler.asm"
+	include	"_inc/Debugger.ErrorHandler.asm"
 
 ; --------------------------------------------------------------
 ; WARNING!
