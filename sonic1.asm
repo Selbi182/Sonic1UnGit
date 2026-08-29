@@ -1875,7 +1875,7 @@ Tit_MainLoop:
 	.next:	addq.w	#8,a1					; go to next sprite
 		dbf	d6,.maskLoop				; loop
 
-		bsr.w	PalCycle_Title				; run title screen palette cycle
+		bsr.w	PalCycle_GHZ				; run GHZ/title palette cycle
 
 		move.w	(v_player+obX).w,d0			; get current title screen position (big Sonic object)
 		addq.w	#2,d0					; move it 2px to the right

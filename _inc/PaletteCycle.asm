@@ -1,5 +1,46 @@
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
+; In-place palette rotation macro
+; ---------------------------------------------------------------------------
+; a0 = palette base index
+; d0 = number of colors to cycle (minus 1)
+; ---------------------------------------------------------------------------
+
+PaletteRotation	macro	palindex, count, reversed
+	lea	(\palindex).w,a0
+	moveq	#\count-1,d0
+
+	if (\reversed<>TRUE)
+	; Forwards
+		move.w	d0,d1		; backup number of colors to cycle
+		add.w	d1,d1		; double 0-based color count
+		adda.w	d1,a0		; advance palette index to rightmost color
+
+		move.w	(a0),d1		; remember color that's about to be pushed out to the right
+
+	.cycleLoop\@:
+		move.w	-2(a0),(a0)	; move next lefthand color to the right
+		subq.w	#2,a0		; advance to previous palette index
+		dbf	d0,.cycleLoop\@	; cycle for number of colors
+
+		move.w	d1,2(a0)	; put previously rightmost color at the leftmost end (+2 to undo last subq)
+	
+	else
+	; Reversed
+		move.w	(a0),d1		; remember color that's about to be pushed out to the left
+
+	.cycleLoop\@:
+		move.w	2(a0),(a0)	; move next righthand color to the left
+		addq.w	#2,a0		; advance to next palette index
+		dbf	d0,.cycleLoop\@	; cycle for number of colors
+
+		move.w	d1,-2(a0)	; put previously leftmost color at the rightmost end (-2 to undo last addq)
+	endif
+	endm
+; End of function PaletteRotation
+
+; ===========================================================================
+; ---------------------------------------------------------------------------
 ; Palette cycling routine execution subroutine
 ; ---------------------------------------------------------------------------
 
@@ -32,31 +73,16 @@ PalCycle_Index:	dc.w PalCycle_GHZ-PalCycle_Index		; Green Hill Zone
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Palette cycling routine - Green Hill Zone & Title Screen
+; Palette cycling routine - Green Hill Zone
 ; ---------------------------------------------------------------------------
 
-PalCycle_Title:
-		lea	(Pal_TitleCyc_Water).l,a0		; use special palette cycle for the title screen
-		bra.s	PCycGHZ_Go
-; ===========================================================================
-
 PalCycle_GHZ:
-		lea	(Pal_GHZCyc_Water).l,a0			; use regular GHZ palette cycle data
-
-	PCycGHZ_Go:
 		; Waterfalls and background water reflections
 		subq.w	#1,(v_pcyc_time).w			; decrement timer
 		bpl.s	.return					; if time remains, branch
-
 		move.w	#6-1,(v_pcyc_time).w			; reset timer
-		move.w	(v_pcyc_num).w,d0			; get cycle number
-		addq.w	#1,(v_pcyc_num).w			; increment cycle number
-		andi.w	#3,d0					; if cycle > 3, reset to 0
-		lsl.w	#3,d0					; data is arranged in blocks of 8 bytes each
 
-		lea	(v_palette_line_3+(8*2)).w,a1		; target palette line 3, colors 8-B
-		move.l	(a0,d0.w),(a1)+				; write 2 colors
-		move.l	4(a0,d0.w),(a1)				; write 2 colors
+		PaletteRotation (v_palette_line_3+(8*2)), 4, FALSE
 
 	.return:
 		rts						; return
@@ -72,26 +98,10 @@ PalCycle_LZ:
 		; Waterfalls
 		subq.w	#1,(v_pcyc_time).w			; decrement timer for waterfalls
 		bpl.s	.conveyorBelts				; if time remains, branch
-
 		move.w	#3-1,(v_pcyc_time).w			; reset timer
-		move.w	(v_pcyc_num).w,d0			; get cycle number
-		addq.w	#1,(v_pcyc_num).w			; increment cycle number
-		andi.w	#3,d0					; if cycle > 3, reset to 0
-		lsl.w	#3,d0					; data is arranged in blocks of 8 bytes each
 
-		lea	(Pal_LZCyc_Waterfall).l,a0		; load LZ palette cycle data
-		cmpi.b	#act4,(v_act).w				; check if on act 4 (SBZ3)
-		bne.s	.cycleWaterfalls			; if not, branch
-		lea	(Pal_SBZ3Cyc_Waterfall).l,a0		; load SBZ3 palette cycle data instead
-
-	.cycleWaterfalls:
-		lea	(v_palette_line_3+($B*2)).w,a1		; target palette line 3, colors B-E
-		move.l	(a0,d0.w),(a1)+				; write 2 colors
-		move.l	4(a0,d0.w),(a1)				; write 2 colors
-
-		lea	(v_palette_water_line_3+($B*2)).w,a1	; target underwater palette line 3, colors B-E
-		move.l	(a0,d0.w),(a1)+				; write 2 colors
-		move.l	4(a0,d0.w),(a1)				; write 2 colors
+		PaletteRotation (v_palette_line_3+($B*2)), 4, TRUE
+		PaletteRotation (v_palette_water_line_3+($B*2)), 4, TRUE
 ; ---------------------------------------------------------------------------
 
 .conveyorBelts:
@@ -101,42 +111,20 @@ PalCycle_LZ:
 		move.b	PCycLZ_ConveyorSequence(pc,d0.w),d0	; get byte from palette sequence (0 or 1)
 		beq.s	.return					; if byte is 0, don't update palette
 
-		moveq	#1,d1					; cycle conveyor palette forwards
 		tst.b	(f_conveyrev).w				; have conveyor belts been reversed?
-		beq.s	.cycleConveyors				; if not, branch
-		neg.w	d1					; cycle conveyor palette backwards
-	.cycleConveyors:
-		move.w	(v_pal_buffer).w,d0			; get current conveyor palette offset
-		andi.w	#3,d0					; if cycle > 3, reset to 0
-		add.w	d1,d0					; add cycle direction (+1 or -1)
-		cmpi.w	#3,d0					; is new palette index > 2? (unsigned)
-		blo.s	.writeConveyors				; if not, branch
-		move.w	d0,d1					; backup cycle direction
-		moveq	#0,d0					; if cycle > 2, reset to 0
-		tst.w	d1					; are conveyors going backwards?
-		bpl.s	.writeConveyors				; if not, branch
-		moveq	#2,d0					; if cycle < 0, reset to 2
-	.writeConveyors:
-		move.w	d0,(v_pal_buffer).w			; write new conveyor palette offset
+		bne.s	.forwards				; if yes, branch (don't mind the confusing labels)
+		PaletteRotation (v_palette_line_4+($B*2)), 3, TRUE
+		PaletteRotation (v_palette_water_line_4+($B*2)), 3, TRUE
+		rts
 
-		add.w	d0,d0					; double offset
-		move.w	d0,d1					; copy doubled offset
-		add.w	d0,d0					; double offset again
-		add.w	d1,d0					; d0 = offset multiplied by 6
-
-		lea	(Pal_LZCyc_Conveyor).l,a0		; dry conveyor belt colors
-		lea	(v_palette_line_4+($B*2)).w,a1		; target palette line 4, colors B-D
-		move.l	(a0,d0.w),(a1)+				; write 2 colors
-		move.w	4(a0,d0.w),(a1)				; write 1 color
-
-		lea	(Pal_LZCyc_ConveyorUW).l,a0		; underwater conveyor belt colors
-		lea	(v_palette_water_line_4+($B*2)).w,a1	; target underwater palette line 3, colors B-D
-		move.l	(a0,d0.w),(a1)+				; write 2 colors
-		move.w	4(a0,d0.w),(a1)				; write 1 color
+	.forwards:
+		PaletteRotation (v_palette_line_4+($B*2)), 3, FALSE
+		PaletteRotation (v_palette_water_line_4+($B*2)), 3, FALSE
 
 	.return:
 		rts						; return
 ; End of function PalCycle_LZ
+
 
 ; ---------------------------------------------------------------------------
 PCycLZ_ConveyorSequence:
@@ -208,15 +196,13 @@ PalCycle_SYZ:
 		move.w	d0,d1					; two colors for red/white
 		add.w	d0,d0					; four colors for black/yellow
 
-		lea	(Pal_SYZCyc_BlackYellow).l,a0		; rotating black/yellow
-		lea	(v_palette_line_4+(7*2)).w,a1		; target palette line 4, colors 7-A
-		move.l	(a0,d0.w),(a1)+				; write 2 colors
-		move.l	4(a0,d0.w),(a1)				; write 2 colors
-
 		lea	(Pal_SYZCyc_RedWhite).l,a0		; pulsating red/white
 		lea	(v_palette_line_4+($B*2)).w,a1		; target palette line 4, colors B-C
 		move.w	(a0,d1.w),(a1)				; write 1 color
 		move.w	2(a0,d1.w),4(a1)			; write 1 color
+
+		; Yellow/black stuff
+		PaletteRotation	(v_palette_line_4+(7*2)), 4, TRUE
 
 	.return:
 		rts						; return
@@ -265,60 +251,30 @@ PalCycle_SBZ:
 		dbf	d1,.sbzLoop				; loop for all palette cycle scripts
 ; ---------------------------------------------------------------------------
 
+		; Pink stuff
+		subq.b	#1,(v_pcyc_time).w			; decrement timer
+		bpl.s	.conveyors				; if time remains, branch
+		move.b	#4-1,(v_pcyc_time).w
+
+		PaletteRotation	(v_palette_line_4+($C*2)), 3, TRUE
+
+.conveyors:
 		; Conveyor belts (spinning platforms and floor), act 2 gear wheels, electrocutor stems
-		subq.w	#1,(v_pcyc_time).w			; decrement timer
+		subq.b	#1,(v_pcyc_time+1).w			; decrement timer
 		bpl.s	.return					; if time remains, branch
 
-		lea	(Pal_SBZCyc_ConveyAct1).l,a0		; use SBZ1 palette cycle data
-		move.w	#2-1,(v_pcyc_time).w			; reset timer
+		moveq	#2-1,d0					; reset timer
 		tst.b	(v_act).w				; are we in SBZ act 1?
-		beq.s	.conveyorDirection			; if yes, branch
-		lea	(Pal_SBZCyc_ConveyAct2).l,a0		; use SBZ2/FZ palette cycle data
-		move.w	#1-1,(v_pcyc_time).w			; shorter timer
-	.conveyorDirection:
-		moveq	#-1,d1					; cycle conveyor palette backwards
-		tst.b	(f_conveyrev).w				; have conveyor belts been reversed?
-		beq.s	.cycleConveyors				; if not, branch
-		neg.w	d1					; cycle conveyor palette forwards
-	.cycleConveyors:
-		move.w	(v_pcyc_num).w,d0			; get current conveyor palette offset
-		andi.w	#3,d0					; if cycle > 3, reset to 0
-		add.w	d1,d0					; add cycle direction (+1 or -1)
-		cmpi.w	#3,d0					; is new palette index > 2? (unsigned)
-		blo.s	.writeConveyors				; if not, branch
-		move.w	d0,d1					; backup cycle direction
-		moveq	#0,d0					; if cycle > 2, reset to 0
-		tst.w	d1					; are conveyors going forwards?
-		bpl.s	.writeConveyors				; if not, branch
-		moveq	#2,d0					; if cycle < 0, reset to 2
-	.writeConveyors:
-		move.w	d0,(v_pcyc_num).w			; write new conveyor palette offset
-		add.w	d0,d0					; double offset for word-based color sizes
+		beq.s	.doConveyors				; if yes, branch
+		moveq	#1-1,d0					; shorter timer
+	.doConveyors:
+		move.b	d0,(v_pcyc_time+1).w
 
-		lea	(v_palette_line_3+($C*2)).w,a1		; target palette line 3, colors C-E
-		move.l	(a0,d0.w),(a1)+				; write 2 colors
-		move.w	4(a0,d0.w),(a1)				; write 1 color
+		PaletteRotation	(v_palette_line_3+($C*2)), 3, FALSE
 
 	.return:
 		rts						; return
 ; End of function PalCycle_SBZ
-
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Palette cycle data bincludes
-; ---------------------------------------------------------------------------
-
-Pal_TitleCyc_Water:	binclude	"palette/Cycle - Title Screen Water.bin"
-Pal_GHZCyc_Water:	binclude	"palette/Cycle - GHZ.bin"
-Pal_LZCyc_Waterfall:	binclude	"palette/Cycle - LZ Waterfall.bin"
-Pal_LZCyc_Conveyor:	binclude	"palette/Cycle - LZ Conveyor Belt.bin"
-Pal_LZCyc_ConveyorUW:	binclude	"palette/Cycle - LZ Conveyor Belt Underwater.bin"
-Pal_SBZ3Cyc_Waterfall:	binclude	"palette/Cycle - SBZ3 Waterfall.bin"
-Pal_SLZCyc_Lights:	binclude	"palette/Cycle - SLZ.bin"
-Pal_SYZCyc_BlackYellow:	binclude	"palette/Cycle - SYZ1.bin"
-Pal_SYZCyc_RedWhite:	binclude	"palette/Cycle - SYZ2.bin"
-
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -344,9 +300,6 @@ Pal_SBZCycList_Act1: mSBZh
 		mSBZp	12,  8, Pal_SBZCyc5,   v_palette_line_4+(8*2)	; BG slow red pulse
 		mSBZp	 8,  8, Pal_SBZCyc6,   v_palette_line_4+(9*2)	; BG slow teal pulse
 		mSBZp	29, 16, Pal_SBZCyc7,   v_palette_line_4+($F*2)	; BG very slow yellow/cyan pulse
-		mSBZp	 4,  3, Pal_SBZCyc8,   v_palette_line_4+($C*2)	; electrocutor pink/purple 1
-		mSBZp	 4,  3, Pal_SBZCyc8+2, v_palette_line_4+($D*2)	; electrocutor pink/purple 2
-		mSBZp	 4,  3, Pal_SBZCyc8+4, v_palette_line_4+($E*2)	; electrocutor pink/purple 3
 Pal_SBZCycList_Act1_end:
 		even
 
@@ -355,23 +308,22 @@ Pal_SBZCycList_Act2FZ: mSBZh
 		mSBZp	14,  8, Pal_SBZCyc2,   v_palette_line_3+(9*2)	; FG slow red/yellow pulse
 		mSBZp	10,  8, Pal_SBZCyc9,   v_palette_line_4+(8*2)	; BG multi-colored small blinking lights
 		mSBZp	 8,  8, Pal_SBZCyc6,   v_palette_line_4+(9*2)	; BG slow teal pulse
-		mSBZp	 4,  3, Pal_SBZCyc8,   v_palette_line_4+($C*2)	; electrocutor pink/purple & BG pink square 1
-		mSBZp	 4,  3, Pal_SBZCyc8+2, v_palette_line_4+($D*2)	; electrocutor pink/purple & BG pink square 2
-		mSBZp	 4,  3, Pal_SBZCyc8+4, v_palette_line_4+($E*2)	; electrocutor pink/purple & BG pink square 3
 Pal_SBZCycList_Act2FZ_end:
 		even
 
 ; ---------------------------------------------------------------------------
-; SBZ palette cycle data bincludes
+; Palette cycle data bincludes
 ; ---------------------------------------------------------------------------
 
 Pal_SBZCyc1:		binclude	"palette/Cycle - SBZ 1.bin"	; FG multi-colored small blinking lights
 Pal_SBZCyc2:		binclude	"palette/Cycle - SBZ 2.bin"	; FG slow red/yellow pulse
 Pal_SBZCyc3:		binclude	"palette/Cycle - SBZ 3.bin"	; BG very slow red pulse
-Pal_SBZCyc_ConveyAct1:	binclude	"palette/Cycle - SBZ 4.bin"	; conveyor belts in act 1
 Pal_SBZCyc5:		binclude	"palette/Cycle - SBZ 5.bin"	; BG slow red pulse
 Pal_SBZCyc6:		binclude	"palette/Cycle - SBZ 6.bin"	; BG slow teal pulse
 Pal_SBZCyc7:		binclude	"palette/Cycle - SBZ 7.bin"	; BG very slow yellow/cyan pulse
-Pal_SBZCyc8:		binclude	"palette/Cycle - SBZ 8.bin"	; electrocutor pink/purple & act 2 BG pink square
 Pal_SBZCyc9:		binclude	"palette/Cycle - SBZ 9.bin"	; BG multi-colored small blinking lights (act 2 only)
-Pal_SBZCyc_ConveyAct2:	binclude	"palette/Cycle - SBZ 10.bin"	; conveyor belts in act 2 / FZ
+
+; ---------------------------------------------------------------------------
+
+Pal_SLZCyc_Lights:	binclude	"palette/Cycle - SLZ.bin"
+Pal_SYZCyc_RedWhite:	binclude	"palette/Cycle - SYZ2.bin
