@@ -195,18 +195,20 @@ DrawBlock macro
 ; ---------------------------------------------------------------------------
 
 ; DrawBlocks:
-GetBlockData	macro	is2
+GetBlockData	macro	nowrap,skipxadd
 	if (narg=0)
 		add.w	(a3),d5					; add Screen X position
+		andi.w	#$0FFF,d5				; wrap X-position every $1000 units (FG only)
+	else
+	    if (\skipxadd<>1)
+		add.w	(a3),d5					; add Screen X position
+	    endif
+	    if (\nowrap<>1)
+		andi.w	#$0FFF,d5				; wrap X-position every $1000 units (FG only)
+	    endif
 	endif
 
 ; GetBlockData_2:
-		; Infinitely X-wrap background position
-		cmpa.w	#v_screenposx,a3	; is this the FG camera?
-		beq.s	.noWrap\@		; if yes, don't wrap
-		andi.w	#$0FFF,d5		; wrap X-position every $1000 units
-	.noWrap\@:
-
 		add.w	4(a3),d4				; add Screen Y position
 		movea.l	(v_rom_blocks).w,a1			; load ROM Blk16 pointer
 
@@ -332,7 +334,7 @@ Draw_FG:
 		Calc_VRAM_Pos
 		moveq	#-16,d4					; set X and Y positions to top left of screen
 		moveq	#-16,d5					; ''
-		bsr.w	DrawBlocks_LR				; draw a horizontal line of blocks above the screen
+		bsr.w	DrawBlocks_LR_FG			; draw a horizontal line of blocks above the screen
 
 	; --- FG Bottom ---
 
@@ -347,7 +349,7 @@ Draw_FG:
 		Calc_VRAM_Pos
 		move.w	#224,d4					; set X and Y positions to bottom left of screen
 		moveq	#-16,d5					; ''
-		bsr.w	DrawBlocks_LR				; draw a horizontal line of blocks below the screen
+		bsr.w	DrawBlocks_LR_FG			; draw a horizontal line of blocks below the screen
 
 	; --- FG Left ---
 
@@ -362,7 +364,7 @@ Draw_FG:
 		Calc_VRAM_Pos
 		moveq	#-16,d4					; set X and Y positions to top left of screen
 		moveq	#-16,d5					; ''
-		bsr.w	DrawBlocks_TB				; draw a vertical line of blocks to the left of the screen
+		bsr.w	DrawBlocks_TB_FG			; draw a vertical line of blocks to the left of the screen
 
 	; --- FG Right ---
 
@@ -377,7 +379,7 @@ Draw_FG:
 		Calc_VRAM_Pos
 		moveq	#-16,d4					; set X and Y positions to top right of screen
 		move.w	#320,d5					; ''
-		bsr.w	DrawBlocks_TB				; draw a vertical line of blocks to the right of the screen
+		bsr.w	DrawBlocks_TB_FG			; draw a vertical line of blocks to the right of the screen
 
 ; locret_6952:
 .return:
@@ -867,7 +869,7 @@ DrawBlocks_LR_3:
 
 	.nextBlock:
 		movem.l	d4-d5,-(sp)				; store X and Y positions
-		GetBlockData 2
+		GetBlockData 0,1	; skipxadd = true
 		move.l	d1,d0					; load VDP plane address
 		DrawBlock
 		addq.b	#4,d1					; increase VDP plane address to the right by 2 tiles (1 block)
@@ -920,6 +922,52 @@ DrawBlocks_TB_2:
 
 
 ; ===========================================================================
+; Variations for FG (with nowrap set in GetBlockData)
+
+DrawBlocks_LR_FG:
+		moveq	#((320+16+16)/16)-1,d6			; Draw the entire width of the screen + two extra columns
+
+DrawBlocks_LR_2_FG:
+		move.l	#$800000,d7				; prepare plane row advance rate ($80 bytes per row for *512 plane width)
+		move.l	d0,d1					; store VDP plane address
+
+	.nextBlock:
+		movem.l	d4-d5,-(sp)				; store X and Y positions
+		GetBlockData 1,0	; nowrap = true
+		move.l	d1,d0					; load VDP plane address
+		DrawBlock
+		addq.b	#4,d1					; increase VDP plane address to the right by 2 tiles (1 block)
+		andi.b	#$7F,d1					; wrap if necessary
+		movem.l	(sp)+,d4-d5				; restore X and Y positions
+		addi.w	#16,d5					; advance X position right by 1 block
+		dbf	d6,.nextBlock				; repeat for number of blocks in the strip
+		rts						; return
+; End of function DrawBlocks_LR_FG
+
+; ---------------------------------------------------------------------------
+
+
+DrawBlocks_TB_FG:
+		moveq	#((224+16+16)/16)-1,d6			; prepare number of blocks (entire height of the screen + two extra rows)
+
+		move.l	#$800000,d7				; prepare plane row advance rate ($80 bytes per row for * 512 plane width)
+		move.l	d0,d1					; store VDP plane address
+
+	.nextBlock:
+		movem.l	d4-d5,-(sp)				; store X and Y positions
+		GetBlockData 1,0	; nowrap = true
+		move.l	d1,d0					; load VDP plane address
+		DrawBlock
+		addi.w	#$100,d1				; increase VDP plane address down by 2 rows (1 block)
+		andi.w	#$FFF,d1				; wrap if necessary
+		movem.l	(sp)+,d4-d5				; restore X and Y positions
+		addi.w	#16,d4					; advance Y position down by 1 block
+		dbf	d6,.nextBlock				; repeat for number of blocks in the strip
+		rts						; return
+; End of function DrawBlocks_TB
+
+
+; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Subroutine to	pre-draw the full background. Used by the title screen.
 ; ---------------------------------------------------------------------------
@@ -948,7 +996,7 @@ LoadTilesFromStart:
 		lea	(v_screenposx).w,a3			; load foreground position data
 		lea	(v_lvllayout_fg).w,a4			; load foreground layout
 		move.w	#$4000,d2				; prepare VDP $C000 (FG plane) VRAM setting
-		bsr.s	DrawChunks				; draw level data to FG plane ($C000)
+		bsr.s	DrawChunks_FG				; draw level data to FG plane ($C000)
 
 	; --- Background ---
 
@@ -997,6 +1045,32 @@ DrawChunks:
 		dbf	d6,.nextRow				; repeat for all horizontal row strips
 		rts						; return
 ; End of function DrawChunks
+
+; ---------------------------------------------------------------------------
+
+; Variation using nowrap
+DrawChunks_FG:
+		moveq	#-16,d4					; start Y position at -16 (outside of screen)
+		moveq	#((224+16+16)/16)-1,d6			; prepare number of blocks (entire height of the screen + two extra rows)
+
+	.nextRow:
+		movem.l	d4-d6,-(sp)				; store X position and "strip counter" data
+		moveq	#0,d5					; clear X position (start at very left of screen)
+		move.w	d4,d1					; store Y position in d1
+		Calc_VRAM_Pos
+		move.w	d1,d4					; reload Y position back to d4
+		moveq	#0,d5					; reclear X position (start at very left of screen)
+		moveq	#(512/16)-1,d6				; set number of blocks to draw horizontally (entire plane's width)
+		bsr.w	DrawBlocks_LR_2_FG	; nowrap = true
+		movem.l	(sp)+,d4-d6				; restore X position and "strip counter" data
+		addi.w	#16,d4					; advance down to next row
+
+		bsr.w	TransferLevelDrawRequests		; flush draw request buffer after each row (otherwise we would need a $4000 bytes buffer for level init...)
+		lea	(Draw_Buffer).w,a5			; reset draw buffer index
+
+		dbf	d6,.nextRow				; repeat for all horizontal row strips
+		rts						; return
+; End of function DrawChunks_FG
 
 
 ; ===========================================================================
