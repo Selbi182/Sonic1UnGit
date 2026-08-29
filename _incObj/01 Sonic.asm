@@ -1140,12 +1140,12 @@ Sonic_Jump:
 		andi.b	#btnABC,d0				; is A, B or C pressed?
 		beq.w	.return					; if not, branch
 
-		moveq	#0,d0					; clear d0
-		move.b	obAngle(a0),d0				; get Sonic's current angle
-		addi.b	#$80,d0					; rotate 180 degrees for ceiling collision check
-		bsr.w	Sonic_CalcHeadroom			; calculate pixels above Sonic's head
-		cmpi.w	#6,d1					; are there less than 6px between Sonic and the ceiling?
-		blt.w	.return					; if yes, prevent jumping
+	;	moveq	#0,d0					; clear d0
+	;	move.b	obAngle(a0),d0				; get Sonic's current angle
+	;	addi.b	#$80,d0					; rotate 180 degrees for ceiling collision check
+	;	bsr.w	Sonic_CalcHeadroom			; calculate pixels above Sonic's head
+	;	cmpi.w	#6,d1					; are there less than 6px between Sonic and the ceiling?
+	;	blt.w	.return					; if yes, prevent jumping
 
 		move.w	#son_jumpspeed,d2			; set initial jump force
 		btst	#6,obStatus(a0)				; is Sonic underwater?
