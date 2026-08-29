@@ -7,34 +7,23 @@
 ; ---------------------------------------------------------------------------
 
 PaletteRotation	macro	palindex, count, reversed
-	lea	(\palindex).w,a0
-	moveq	#\count-1,d0
-
 	if (\reversed<>TRUE)
-	; Forwards
-		move.w	d0,d1		; backup number of colors to cycle
-		add.w	d1,d1		; double 0-based color count
-		adda.w	d1,a0		; advance palette index to rightmost color
-
-		move.w	(a0),d1		; remember color that's about to be pushed out to the right
-
-	.cycleLoop\@:
-		move.w	-2(a0),(a0)	; move next lefthand color to the right
-		subq.w	#2,a0		; advance to previous palette index
-		dbf	d0,.cycleLoop\@	; cycle for number of colors
-
-		move.w	d1,2(a0)	; put previously rightmost color at the leftmost end (+2 to undo last subq)
-	
+		; Forwards
+		lea	(\palindex+((\count-1)*2)).w,a0
+		move.w	(a0),d1			; remember color that's about to be pushed out to the right
+	    rept \count-1
+		move.w	-2(a0),(a0)		; move next lefthand color to the right
+		subq.w	#2,a0			; advance to previous palette index
+	    endr
+		move.w	d1,(a0)			; put previously rightmost color at the leftmost end
 	else
-	; Reversed
-		move.w	(a0),d1		; remember color that's about to be pushed out to the left
-
-	.cycleLoop\@:
-		move.w	2(a0),(a0)	; move next righthand color to the left
-		addq.w	#2,a0		; advance to next palette index
-		dbf	d0,.cycleLoop\@	; cycle for number of colors
-
-		move.w	d1,-2(a0)	; put previously leftmost color at the rightmost end (-2 to undo last addq)
+		; Reversed
+		lea	(\palindex).w,a0
+		move.w	(a0),d1			; remember color that's about to be pushed out to the left
+	    rept count-1
+		move.w	2(a0),(a0)+		; move next righthand color to the left
+	    endr
+		move.w	d1,(a0)			; put previously leftmost color at the rightmost end
 	endif
 	endm
 ; End of function PaletteRotation
@@ -108,9 +97,18 @@ PalCycle_LZ:
 		; Conveyor belts
 		move.w	(v_framecount).w,d0			; get current level frame counter
 		andi.w	#7,d0					; limit to 0-7
-		move.b	PCycLZ_ConveyorSequence(pc,d0.w),d0	; get byte from palette sequence (0 or 1)
-		beq.s	.return					; if byte is 0, don't update palette
+		move.b	.lzConveyorSequence(pc,d0.w),d0		; get byte from palette sequence (0 or 1)
+		bne.s	.doConveyors				; if byte is non-0,update palette
+		rts
 
+; ---------------------------------------------------------------------------
+.lzConveyorSequence:
+		; 0 = skip cycle this frame // 1 = advance cycle this frame
+		dc.b 1,	0, 0, 1, 0, 0, 1, 0
+		even
+; ---------------------------------------------------------------------------
+
+.doConveyors:
 		tst.b	(f_conveyrev).w				; have conveyor belts been reversed?
 		bne.s	.forwards				; if yes, branch (don't mind the confusing labels)
 		PaletteRotation (v_palette_line_4+($B*2)), 3, TRUE
@@ -126,11 +124,6 @@ PalCycle_LZ:
 ; End of function PalCycle_LZ
 
 
-; ---------------------------------------------------------------------------
-PCycLZ_ConveyorSequence:
-		; 0 = skip cycle this frame // 1 = advance cycle this frame
-		dc.b 1,	0, 0, 1, 0, 0, 1, 0
-		even
 ; ---------------------------------------------------------------------------
 
 
@@ -326,4 +319,4 @@ Pal_SBZCyc9:		binclude	"palette/Cycle - SBZ 9.bin"	; BG multi-colored small blin
 ; ---------------------------------------------------------------------------
 
 Pal_SLZCyc_Lights:	binclude	"palette/Cycle - SLZ.bin"
-Pal_SYZCyc_RedWhite:	binclude	"palette/Cycle - SYZ2.bin
+Pal_SYZCyc_RedWhite:	binclude	"palette/Cycle - SYZ2.bin"
