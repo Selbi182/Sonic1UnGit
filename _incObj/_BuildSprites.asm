@@ -161,6 +161,7 @@ buildsprite:	macro xflip,yflip
 		cmpi.w	#$80+320+32,d0
 		bhs.s	.xCull\@
 
+	.finish\@:
 		; Piece is horizontally on screen
 		move.l	d0,(a2)+
 
@@ -177,6 +178,11 @@ buildsprite:	macro xflip,yflip
 		rts						; done
 
 	.xCull\@:
+	    if (xflip|yflip)=0					; intentional masks can only happen if they aren't flipped (optimization)
+		tst.w	-4(a1)					; is this an intentional masking sprite? (obGfx=0, title screen mask)
+		beq.s	.finish\@				; if yes, don't cull sprite after all
+	    endif
+
 		; sprite piece (a1) has already fully advanced, no change required
 		subq.w	#4,a2					; undo first write to sprite buffer
 		subq.w	#1,d5					; undo sprite link increase
