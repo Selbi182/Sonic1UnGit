@@ -556,6 +556,7 @@ ArtTile_Monitor:		equ $680
 ; HUD
 ArtTile_HUD:			equ $6C0
 ArtTile_HUD_Digits:		equ ArtTile_HUDTime_TIME+8
+ArtTile_FakeZero:		equ ArtTile_HUDScore_E_2+6
 
 ArtTile_HUDScore_SCOR:		equ ArtTile_HUD
 ArtTile_HUDRings_RING:		equ ArtTile_HUDScore_SCOR+8

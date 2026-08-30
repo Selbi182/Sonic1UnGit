@@ -153,13 +153,13 @@ SpecStagResults_LoadArt:
 		bsr.w	TTL_SetBaseAndLoadOval
 
 		; header text, depending on emerald count
-		lea	TTLCard_SSR_SpeStage_Array(pc),a2 ; 0 emeralds
+		lea	TTLCard_SSR_SpeStage_Array(pc),a2 ; no emeralds
 		tst.b	(v_emeralds).w
 		beq.s	.loadSSR
-		lea	TTLCard_SSR_Chaos_Array(pc),a2	  ; 1-5 emeralds
-		cmpi.b	#6,(v_emeralds).w
+		lea	TTLCard_SSR_Chaos_Array(pc),a2	  ; some but not all emeralds
+		cmpi.b	#ss_emeralds_num,(v_emeralds).w
 		blo.s	.loadSSR
-		lea	TTLCard_SSR_GotAll_Array(pc),a2	  ; 6 emeralds
+		lea	TTLCard_SSR_GotAll_Array(pc),a2	  ; all emeralds
 .loadSSR:
 		bsr.s	TTL_WriteLetters
 
@@ -531,32 +531,32 @@ TTLCard_Got_SonicHas:	maketitlecard "\TitleCard_SonicHas",1,1
 TTLCard_Got_Passed:	maketitlecard "\TitleCard_Passed",1,2
 
 TTLCard_Got_Score:	spriteHeader		; SCORE
-	spritePiece	-$50, -8, 4, 2, $14A, 0, 0, 0, 0	; "SCOR"
-	spritePiece	-$30, -8, 1, 2, $160, 0, 0, 0, 0	; "E"
+	spritePiece	-$50, -8, 4, 2, ArtTile_HUDScore_SCOR-ArtTile_Title_Card, 0, 0, 0, 0	; "SCOR"
+	spritePiece	-$30, -8, 1, 2, ArtTile_HUDScore_E-ArtTile_Title_Card, 0, 0, 0, 0	; "E"
 	spritePiece	-$33, -9, 2, 1, TTL_SmOval, 0, 0, 0, 0	; Small oval (upper half)
 	spritePiece	-$34, -1, 2, 1, TTL_SmOval, 1, 1, 0, 0	; Small oval (lower half)
-	spritePiece	 $18, -8, 3, 2, $164, 0, 0, 0, 0	; Tally (first four digits)
-	spritePiece	 $30, -8, 4, 2, $16A, 0, 0, 0, 0	; Tally (last four digits)
+	spritePiece	 $18, -8, 3, 2, ArtTile_HUDScore-ArtTile_Title_Card, 0, 0, 0, 0		; Tally (first three digits)
+	spritePiece	 $30, -8, 4, 2, ArtTile_HUDScore_E_2-ArtTile_Title_Card, 0, 0, 0, 0	; Tally (last four digits)
 TTLCard_Got_Score_End
 
 TTLCard_Got_TBonus:	spriteHeader		; TIME BONUS
-	spritePiece	-$50, -8, 4, 2, $15A, 0, 0, 0, 0	; "TIME"
+	spritePiece	-$50, -8, 4, 2, ArtTile_HUDTime_TIME-ArtTile_Title_Card, 0, 0, 0, 0	; "TIME"
 	spritePiece	-$27, -7, 4, 2, TTL_BONU, 0, 0, 0, 0	; "BONU"
-	spritePiece	-$07, -8, 1, 2, $14A, 0, 0, 0, 0	; "S"
+	spritePiece	-$07, -8, 1, 2, ArtTile_HUDScore_SCOR-ArtTile_Title_Card, 0, 0, 0, 0	; "S"
 	spritePiece	-$0A, -9, 2, 1, TTL_SmOval, 0, 0, 0, 0	; Small oval (upper half)
 	spritePiece	-$0B, -1, 2, 1, TTL_SmOval, 1, 1, 0, 0	; Small oval (lower half)
 	spritePiece	 $28, -$8, 4, 2, -$10, 0, 0, 0, 0	; Tally (first four digits)
-	spritePiece	 $48, -8, 1, 2, $170, 0, 0, 0, 0	; Tally (last four digits)
+	spritePiece	 $48, -8, 1, 2, ArtTile_FakeZero-ArtTile_Title_Card, 0, 0, 0, 0	; Tally (last digit, fake zero)
 TTLCard_Got_TBonus_End
 
 TTLCard_Got_RBonus:	spriteHeader		; RING BONUS
-	spritePiece	-$50, -8, 4, 2, $152, 0, 0, 0, 0	; "RING"
+	spritePiece	-$50, -8, 4, 2, ArtTile_HUDRings_RING-ArtTile_Title_Card, 0, 0, 0, 0	; "RING"
 	spritePiece	-$27, -7, 4, 2, TTL_BONU, 0, 0, 0, 0	; "BONU"
-	spritePiece	-$07, -8, 1, 2, $14A, 0, 0, 0, 0	; "S"
+	spritePiece	-$07, -8, 1, 2, ArtTile_HUDScore_SCOR-ArtTile_Title_Card, 0, 0, 0, 0	; "S"
 	spritePiece	-$0A, -9, 2, 1, TTL_SmOval, 0, 0, 0, 0	; Small oval (upper half)
 	spritePiece	-$0B, -1, 2, 1, TTL_SmOval, 1, 1, 0, 0	; Small oval (lower half)
 	spritePiece	 $28, -$8, 4, 2, -8, 0, 0, 0, 0		; Tally (first four digits)
-	spritePiece	 $48, -8, 1, 2, $170, 0, 0, 0, 0	; Tally (last four digits)
+	spritePiece	 $48, -8, 1, 2, ArtTile_FakeZero-ArtTile_Title_Card, 0, 0, 0, 0	; Tally (last digit, fake zero)
 TTLCard_Got_RBonus_End
 	even
 
@@ -582,22 +582,22 @@ TTLCard_SSR_SpeStage:	maketitlecard "\TitleCard_SpecialStage",1,3
 TTLCard_SSR_GotAll:	maketitlecard "\TitleCard_GotThemAll",1,3
 
 TTLCard_SSR_Score:	spriteHeader	; Score tally
-	spritePiece	-$50, -8, 4, 2, $14A, 0, 0, 0, 0	; "SCOR"
-	spritePiece	-$30, -8, 1, 2, $162, 0, 0, 0, 0	; "E"
+	spritePiece	-$50, -8, 4, 2, ArtTile_HUDScore_SCOR-ArtTile_Title_Card, 0, 0, 0, 0	; "SCOR"
+	spritePiece	-$30, -8, 1, 2, ArtTile_HUDScore_E-ArtTile_Title_Card, 0, 0, 0, 0	; "E"
 	spritePiece	-$33, -9, 2, 1, TTL_SmOvalSSR, 0, 0, 0, 0	; Small oval (upper half)
 	spritePiece	-$34, -1, 2, 1, TTL_SmOvalSSR, 1, 1, 0, 0	; Small oval (lower half)
-	spritePiece	 $18, -8, 3, 2, $164, 0, 0, 0, 0	; Tally (first four digits)
-	spritePiece	 $30, -8, 4, 2, $16A, 0, 0, 0, 0	; Tally (last four digits)
+	spritePiece	 $18, -8, 3, 2, ArtTile_HUDScore-ArtTile_Title_Card, 0, 0, 0, 0		; Tally (first three digits)
+	spritePiece	 $30, -8, 4, 2, ArtTile_HUDScore_E_2-ArtTile_Title_Card, 0, 0, 0, 0	; Tally (last four digits)
 TTLCard_SSR_Score_End
 
 TTLCard_SSR_Ring:	spriteHeader	; Ring Bonus tally
-	spritePiece	-$50, -8, 4, 2, $152, 0, 0, 0, 0	; "RING"
+	spritePiece	-$50, -8, 4, 2, ArtTile_HUDRings_RING-ArtTile_Title_Card, 0, 0, 0, 0	; "RING"
 	spritePiece	-$27, -7, 4, 2, TTL_SmOvalSSR-TTL_BonuTiles, 0, 0, 0, 0 ; "BONU"
-	spritePiece	-$07, -8, 1, 2, $14A, 0, 0, 0, 0	; "S"
+	spritePiece	-$07, -8, 1, 2, ArtTile_HUDScore_SCOR-ArtTile_Title_Card, 0, 0, 0, 0	; "S"
 	spritePiece	-$0A, -9, 2, 1, TTL_SmOvalSSR, 0, 0, 0, 0 ; Small oval (upper half)
 	spritePiece	-$0B, -1, 2, 1, TTL_SmOvalSSR, 1, 1, 0, 0 ; Small oval (lower half)
 	spritePiece	 $28, -8, 4, 2, -8, 0, 0, 0, 0		; Tally (first four digits)
-	spritePiece	 $48, -8, 1, 2, $170, 0, 0, 0, 0	; Tally (last four digits)
+	spritePiece	 $48, -8, 1, 2, ArtTile_FakeZero-ArtTile_Title_Card, 0, 0, 0, 0	; Tally (last digit, fake zero)
 TTLCard_SSR_Ring_End
 
 TTLCard_SSR_ContSon1:	spriteHeader	; Continue tally with mini Sonic (foot down)

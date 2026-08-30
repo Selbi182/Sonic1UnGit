@@ -2601,9 +2601,8 @@ Level_TtlCardLoop: ; move in title cards, stay on them until PLCs have finished
 		; PLCs have finished, load/initialize remaining data
 		move.b	#id_VBlank_TitleCards,(v_vblank_routine).w ; set VBlank routine to $0C
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
-		jsr	(Hud_Base).l				; load basic HUD graphics
 
-Level_SkipTtlCard:
+; Level_SkipTtlCard:
 		bsr.w	InitRingFrame
 		moveq	#palid_Sonic,d0				; load Sonic's palette to fade-in buffer
 		bsr.w	PalLoad_Fade				; (doesn't actually do anything, the PalFadeIn_Alt call below skips the first palette line)
@@ -2659,9 +2658,15 @@ Level_SkipClr:
 		move.w	d0,(f_restart).w			; clear level restart flag
 		move.w	d0,(v_framecount).w			; reset frames since level start to 0
 		bsr.w	OscillateNumInit			; initialize oscillation values
+
 		move.b	#1,(f_scorecount).w			; update score counter
 		move.b	#1,(f_ringcount).w			; update rings counter
-		move.b	#1,(f_timecount).w			; update time counter
+		move.b	#1,(f_timecount).w			; update time counter		
+		jsr	(Hud_Base).l				; load basic HUD graphics
+
+		move.b	#id_VBlank_TitleCards,(v_vblank_routine).w ; set VBlank routine to $0C
+		bsr.w	WaitForVBlank				; wait until VBlank has finished
+
 	if LagFrameCounter
 		move.w	#$8000,(v_lagframes).w
 	endif
