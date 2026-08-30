@@ -5,7 +5,6 @@
 ; ---------------------------------------------------------------------------
 
 DrownCount:
-	;jmp	(DeleteObject).l
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Drown_Index(pc,d0.w),d1
@@ -215,7 +214,31 @@ Drown_Countdown:; Routine $A
 		subq.b	#1,drown_displaytime(a0)		; decrement timer until next number bubble
 		bpl.s	.reduceAir				; if time remains, branch
 		move.b	drown_type(a0),drown_displaytime(a0)	; reset timer until next number bubble
-		bset	#7,drown_extrabubflag(a0)		; trigger a new number bubble to spawn
+
+		; Spawn number bubble
+		move.w	(v_air).w,d2				; get remaining air in seconds
+		lsr.w	#1,d2					; d2 = animation ID for number bubble (0-5)
+		subq.w	#1,d2		; make 0-based
+		cmpi.w	#5,d2		; if illegal value, abort (failsafe)
+		bhi.s	.reduceAir
+
+		jsr	(FindFreeObj).l				; find a free object slot
+		bne.w	.return					; if object RAM is full, branch
+
+		move.l	#DrownCount,obID(a1)			; load an extra bubble object
+		move.b	d2,obSubtype(a1)			; set bubble to be a number bubble instead
+		move.w	#28,drown_numtime(a1)			; delay for 28 frames before showing number bubble
+
+		move.w	(v_player+obX).w,obX(a1)		; match X-position to Sonic
+		moveq	#6,d0					; offset it 6px to the right
+		btst	#0,(v_player+obStatus).w		; is Sonic flipped horizontally?
+		beq.s	.noflipnum				; if not, branch
+		neg.w	d0					; offset it 6px to the left instead
+		move.b	#$40,obAngle(a1)			; use alternate start offset for wobble data
+	.noflipnum:
+		add.w	d0,obX(a1)				; offset bubble +/- 6px horizontally
+		move.w	(v_player+obY).w,obY(a1)		; match Y-position to Sonic
+
 		bra.s	.reduceAir				; don't play warning sound again
 ; ---------------------------------------------------------------------------
 
@@ -293,7 +316,7 @@ Drown_Countdown:; Routine $A
 		jsr	(FindFreeObj).l				; find a free object slot
 		bne.w	.return					; if object RAM is full, branch
 		;move.l	#DrownCount,obID(a1)			; load an extra bubble object
-		move.l	#BubbleParticle,obID(a1)			; load an extra bubble object
+		move.l	#BubbleParticle,obID(a1)		; load an extra bubble object
 
 		move.w	(v_player+obX).w,obX(a1)		; match X-position to Sonic
 		moveq	#6,d0					; offset it 6px to the right
@@ -304,11 +327,10 @@ Drown_Countdown:; Routine $A
 	.noflip:
 		add.w	d0,obX(a1)				; offset bubble +/- 6px horizontally
 		move.w	(v_player+obY).w,obY(a1)		; match Y-position to Sonic
-		;move.b	#6,obSubtype(a1)			; set to "small bubble"
 		move.b	#0,obSubtype(a1)			; set to "small bubble"
 
 		tst.w	drown_restarttime(a0)			; is Sonic currently drowning?
-		beq.w	.checkNumberBubble			; if not, branch
+		beq.w	.decrementExtraBubbles			; if not, branch
 		andi.w	#7,drown_delaytime(a0)			; make next extra bubble spawn in no more than 0-7 frames
 		move.w	(v_player+obY).w,d0			; get Sonic's current Y-position
 		subi.w	#12,d0					; spawn bubbles 12px higher (to match Sonic's mouth)
@@ -318,32 +340,7 @@ Drown_Countdown:; Routine $A
 		move.w	(v_framecount).w,d0			; get current level frame counter
 		andi.b	#3,d0					; 1/4 chance to spawn a big bubble
 		bne.s	.decrementExtraBubbles			; branch in other cases
-		;move.b	#$E,obSubtype(a1)			; set to "medium bubble" instead of small
 		move.b	#1,obSubtype(a1)			; set to "medium bubble" instead of small
-		bra.s	.decrementExtraBubbles			; skip over
-; ===========================================================================
-
-.checkNumberBubble:
-		btst	#7,drown_extrabubflag(a0)		; is a number bubble flagged to be spawned?
-		beq.s	.decrementExtraBubbles			; if not, branch
-		move.w	(v_air).w,d2				; get remaining air in seconds
-		lsr.w	#1,d2					; d2 = animation ID for number bubble (0-5)
-		jsr	(RandomNumber).l			; get a random number in d0
-		andi.w	#3,d0					; 1/4 chance
-		bne.s	.secondTry				; branch on other random numbers
-		bset	#6,drown_extrabubflag(a0)		; set flag that number bubble was spawned
-		bne.s	.decrementExtraBubbles			; was flag already set? if yes, branch
-		move.b	d2,obSubtype(a1)			; set bubble to be a number bubble instead
-		move.w	#28,drown_numtime(a1)			; delay for 28 frames before showing number bubble
-		move.l	#DrownCount,obID(a1)			; load an extra bubble object
-	.secondTry:
-		tst.b	drown_extrabubbles(a0)			; are more extra bubbles meant to be spawned?
-		bne.s	.decrementExtraBubbles			; if yes, branch
-		bset	#6,drown_extrabubflag(a0)		; set flag that number bubble was spawned
-		bne.s	.decrementExtraBubbles			; was flag already set? if yes, branch
-		move.b	d2,obSubtype(a1)			; set bubble to be a number bubble instead
-		move.w	#28,drown_numtime(a1)			; delay for 28 frames before showing number bubble
-		move.l	#DrownCount,obID(a1)			; load an extra bubble object
 
 .decrementExtraBubbles:
 		subq.b	#1,drown_extrabubbles(a0)		; decrement number of remaining extra bubbles to spawn
@@ -388,6 +385,6 @@ ResumeMusic:
 
 .replenishAir:
 		move.w	#30,(v_air).w				; reset air to 30 seconds
-		clr.b	(v_sonicbubbles+bub_time).w		; reset time until next bubble spawn
+		clr.b	(v_sonicbubbles+drown_displaytime).w	; reset time until next bubble spawn
 		rts						; return
 ; End of function ResumeMusic
