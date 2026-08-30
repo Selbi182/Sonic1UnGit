@@ -35,6 +35,7 @@ LagOMeter: = 0
 
 LagFrameCounter: = 1
 ;	| If 1, adds a counter at the top right HUD that counts lag frames
+;	| If 2, also adds huge recursive calls to "LAGFRAME" to make them easier to spot in MD Profiler
 
 BootToLevel: = -1
 ;	| If set, will boot straight to a specified level (e.g. id_GHZ_act1)
@@ -515,7 +516,7 @@ VBlank_Index:	dc.w VBlank_Lag-VBlank_Index			; $00 - (lag frame)
 ; loc_B88: VBla_00:
 VBlank_Lag:
 		cmpi.b	#$80+id_Level,(v_gamemode).w		; is pre level sequence active?
-		beq.s	.prelevel				; if not, just update sound driver and resume operation
+		beq.s	VBlank_Lag_Go				; if not, just update sound driver and resume operation
 		cmpi.b	#id_Level,(v_gamemode).w		; is game on a level?
 		bne.w	VBlank_Music				; if not, just update sound driver and resume operation
 
@@ -523,9 +524,22 @@ VBlank_Lag:
 	if LagFrameCounter
 		addq.w	#1,(v_lagframes).w
 		bset	#7,(v_lagframes).w
+		if LagFrameCounter=2
+			; Huge recursive calls to "LAGFRAME" to make them easier to spot in MD Profiler
+			moveq	#10,d0
+			bsr.s	LAGFRAME
+			bra.s	VBlank_Lag_Go
+
+		LAGFRAME:
+			subq.w	#1,d0
+			beq.s	.done
+			bsr.s	LAGFRAME
+		.done:
+			rts			
+		endif
 	endif
 
-.prelevel:
+VBlank_Lag_Go:
 		cmpi.b	#id_LZ,(v_zone).w			; is level LZ?
 		bne.w	VBlank_Music				; if not, just update sound driver and resume operation
 

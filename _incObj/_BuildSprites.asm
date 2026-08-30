@@ -117,6 +117,15 @@ buildsprite:	macro xflip,yflip
 			sub.w	d4,d0				; d0 = flipped Y-position
 		endif
 		add.w	d2,d0					; add base Y-position
+
+		; Y-culling for individual pieces (assuming 32px, max height)
+		andi.w	#$1FF,d0	
+		cmpi.w	#$80-32,d0
+		bls.s	.yCull\@
+		cmpi.w	#$80+224+32,d0
+		bhs.s	.yCull\@
+
+		; Piece is vertically on screen
 		swap	d0					; write together with next (optimization)
 
 	; --- Sprite width/height and Sprite Link ---
@@ -144,14 +153,38 @@ buildsprite:	macro xflip,yflip
 			sub.w	d4,d0				; d0 = flipped X-position
 		endif
 		add.w	d3,d0					; add X-position
-		bne.s	.x\@					; if non-zero, branch
-		addq.w	#1,d0					; force zero X-position to non-zero (avoid unwanted sprite masking)
-	.x\@:	move.l	d0,(a2)+
+
+		; Y-culling for individual pieces (assuming 32px, max height)
+		andi.w	#$1FF,d0				; wrap every 512px (sprite plane size) for the mask prevention check
+		cmpi.w	#$80-32,d0
+		bls.s	.xCull\@
+		cmpi.w	#$80+320+32,d0
+		bhs.s	.xCull\@
+
+		; Piece is horizontally on screen
+		move.l	d0,(a2)+
 
 	; --- Loop for all pieces in mapping ---
+	.next\@:
 		dbf	d1,.loopSpritePieces			; loop for all pieces in mapping
 		rts						; done
 	
+	; --- Culling individual sprite pieces in mapping ---
+	.yCull\@:
+		; sprite buffer (a2) hasn't been advanced yet, no change required
+		addq.w	#6,a1					; skip remaining sprite piece definitions
+		dbf	d1,.loopSpritePieces			; loop for all pieces in mapping
+		rts						; done
+
+	.xCull\@:
+		; sprite piece (a1) has already fully advanced, no change required
+		subq.w	#4,a2					; undo first write to sprite buffer
+		subq.w	#1,d5					; undo sprite link increase
+		addq.w	#1,d7					; undo sprite count increase
+		dbf	d1,.loopSpritePieces			; loop for all pieces in mapping
+		rts						; done
+
+	; --- Total abortion if limit of 80 sprites is reached ---
 	.abort\@:
 		addq.b	#1,d5					; sprite limit exhausted
 		addq.w	#4,sp					; don't return to sprite render loop
