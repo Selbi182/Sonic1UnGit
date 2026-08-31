@@ -16,6 +16,7 @@ Cat_Index:	dc.w Cat_Main-Cat_Index		; 0 - init
 		dc.w Cat_BodySeg1-Cat_Index	; 8 - 3rd body segment
 		dc.w Cat_Delete-Cat_Index	; A - delete head or segment
 		dc.w Cat_Fragment-Cat_Index	; C - fragmentated/bouncy state
+		dc.w Cat_DeadFragment-Cat_Index	; E - harmless body fragment after head was destroyed
 
 cat_inertia:	equ obSubpixelY	; Caterkiller inertia
 cat_waittime:	equ objoff_1B	; time to wait between actions
@@ -135,13 +136,10 @@ Cat_Head:	; Routine 2
 
 ; Cat_ChkGone:
 Cat_Despawn:
-		respawn_entry.s	.delete
+		respawn_entry.s	Cat_Delete
 		bclr	#7,(a2)
 
-	.delete:
-		move.b	#$A,obRoutine(a0)			; goto Cat_Delete next (also used as flag in .chk_broken)
-		rts						; return
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
 Cat_Delete:	; Routine $A
 		jmp	(DeleteObject).l			; delete Caterkiller head
@@ -321,22 +319,47 @@ Cat_BodySeg1:	; Routine 4, 8
 		move.b	d1,cat_floormap(a0,d0.w)		; write floor height for current position in array
 
 .chkBroken:
-		cmpi.b	#$C,obRoutine(a1)			; has head already been set to fragment? (set to Cat_Fragment)
-		beq.s	Cat_FragmentateBody_NotifyHead		; if yes, branch
+		cmpi.l	#Caterkiller,obID(a1)			; is parent segment still a caterkiller object?
+		bne.s	.deadFragment				; if not, delete child as well
+		cmpi.b	#$C,obRoutine(a1)			; has parent segment already been set to Cat_Fragment?
+		beq.w	Cat_FragmentateBody_NotifyHead		; if yes, begin harmful fragmentation for this body part too
+		cmpi.b	#$E,obRoutine(a1)			; has parent segment already been set to Cat_DeadFragment?
+		bne.s	Cat_DisplayBody				; if not, keep displaying body segment
 
-		cmpi.l	#ExplosionItem,obID(a1)		; has the head been destroyed?
-		beq.s	.delete					; if yes, branch
-		cmpi.b	#$A,obRoutine(a1)			; is the parent going to delete itself? (set to Cat_Delete)
-		bne.s	.display				; if not, branch
-		jsr	(DeleteChild).l				; delete the parent (don't mind this misnomer)
+.deadFragment:
+		clr.b	obColType(a0)				; make body segment harmless
+		ori.w	#$8000,obGfx(a0)			; make body segment high priority
+		move.b	#$E,obRoutine(a0)			; set to Cat_DeadFragment
+		
+		jsr	(RandomNumber).l			; get two random numbers
+		asr.w	#6,d0					; scale down a lot
+		move.w	(v_player+obVelX).w,d1			; get Sonic's X-speed
+		asr.w	#2,d1					; scale that down too
+		add.w	d1,d0					; combine
+		move.w	d0,obVelX(a0)				; set X-speed for dead fragment
+		
+		swap	d0					; swap to second random number
+		asr.w	#6,d0					; scale down a lot
+		subi.w	#$380,d0				; add an upwards bias
+		move.w	d0,obVelY(a0)				; set Y-speed for dead fragment
 
-.delete:
-		move.b	#$A,obRoutine(a0)			; mark self for deletion (Cat_Delete)
+		bra.s	Cat_DisplayBody				; skip Cat_DeadFragment this frame
+; ===========================================================================
+
+Cat_DeadFragment:	; Routine $E
+		jsr	(ObjectFall).l				; update position and make dead fragment fall
+
+		bchg	#0,cat_mode(a0)				; alternate displaying flag
+		bne.s	.show					; if non-zero now, display fragment
+		rts						; otherwise, flicer this frame
+	.show:
+		tst.b	obRender(a0)				; has dead fragment gone offscreen?
+		bpl.w	Cat_Delete				; if yes, delete it
+; ---------------------------------------------------------------------------
+
+Cat_DisplayBody:
+		DisplaySprite					; display dead fragment
 		rts						; return
-
-.display:
-		DisplaySprite
-		rts			; display sprite
 
 ; ===========================================================================
 Cat_FragSpeed:	; X-speed
