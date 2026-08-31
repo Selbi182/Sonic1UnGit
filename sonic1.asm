@@ -1130,8 +1130,9 @@ ClearScreen:
 		clearRAM v_hscrolltablebuffer,v_hscrolltablebuffer_end_padded ; clear H-Scroll table buffer
 
 		clr.b	(v_draw_hud).w
-		ResetDMAQueue
+		clr.b	(v_skipspriteculling).w
 
+		ResetDMAQueue
 		rts						; return
 ; End of function ClearScreen
 
@@ -1933,6 +1934,8 @@ Tit_LoadText:
 	.notPAL:
 
 		clearRAM v_sonicteam,v_sonicteam+object_size	; delete RAM used by "SONIC TEAM PRESENTS" object (fully)
+
+		move.b	#1,(v_skipspriteculling).w		; skip X-sprite culling to have the masking sprites work properly
 
 		move.l	#TitleSonic,(v_titlesonic+obID).w	; load big Sonic object
 		move.l	#PSBTM,(v_pressstart+obID).w		; load "PRESS START BUTTON" object

@@ -181,7 +181,8 @@ v_palmuscounter:	ds.b	1				; counter used to fix tempo for music in PAL regions
 v_vblank_routine:	ds.b	1				; VBlank - routine counter (previously called v_vbla_routine)
 			ds.b	1				; unused
 v_spritecount:		ds.b	1				; number of sprites on-screen
-			ds.b	5				; unused
+v_skipspriteculling:	ds.b	1				; flag set to disable X-sprite culling
+			ds.b	4				; unused
 v_pcyc_num:		ds.w	1				; palette cycling - current reference number
 v_pcyc_time:		ds.w	1				; palette cycling - time until the next change
 v_random:		ds.l	1				; pseudo random number buffer

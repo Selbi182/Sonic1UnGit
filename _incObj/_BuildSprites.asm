@@ -179,8 +179,8 @@ buildsprite:	macro xflip,yflip
 
 	.xCull\@:
 	    if (xflip|yflip)=0					; intentional masks can only happen if they aren't flipped (optimization)
-		tst.w	-4(a1)					; is this an intentional masking sprite? (obGfx=0, title screen mask)
-		beq.s	.finish\@				; if yes, don't cull sprite after all
+		tst.b	(v_skipspriteculling).w			; is X-sprite culling disabled? (for the title screen torso mask)
+		bne.s	.finish\@				; if yes, don't cull sprite after all
 	    endif
 
 		; sprite piece (a1) has already fully advanced, no change required
