@@ -58,7 +58,7 @@ v_ringanimqueue:	ds.w	$3F				; queue of recently collected rings storing pointer
 v_ringmanager_size:	equ	*-v_ringmanager			; size of all RAM occupied by rings manager
 
 v_registeredcollision:	ds.b	$80				; collision response queue for ReactToItem
-v_registeredcollision_rings:	ds.b	$80			; sprite render queue for lost rings
+v_lostring_spritequeue:	ds.b	$80				; sprite render queue for lost rings
 
 
 	obj $FFFFC800	; mostly original S1 RAM definitions starting from here on out
@@ -182,7 +182,8 @@ v_vblank_routine:	ds.b	1				; VBlank - routine counter (previously called v_vbla
 			ds.b	1				; unused
 v_spritecount:		ds.b	1				; number of sprites on-screen
 v_skipspriteculling:	ds.b	1				; flag set to disable X-sprite culling
-			ds.b	4				; unused
+v_firstfreeobjslot:	ds.w	1				; pointer to (assumed) first free object slot in v_lvlobjspace
+			ds.b	2				; unused
 v_pcyc_num:		ds.w	1				; palette cycling - current reference number
 v_pcyc_time:		ds.w	1				; palette cycling - time until the next change
 v_random:		ds.l	1				; pseudo random number buffer
@@ -487,7 +488,7 @@ v_title_ccount:		ds.w	1				; number of times C is pressed on title screen
 			ds.w	1				; unused
 v_creditsnum:		ds.w	1				; credits index number
 v_levelmusic:		ds.b	1				; stores the music ID for the current level music
-			ds.b	1				; unused
+v_smpsrunning:		ds.b	1				; flag set while SMPS is running to avoid double updates
 v_megadrive:		ds.b	1				; Mega Drive machine type
 v_pal:			ds.b	1				; set if PAL console
 f_debugmode:		ds.w	1				; debug mode flag

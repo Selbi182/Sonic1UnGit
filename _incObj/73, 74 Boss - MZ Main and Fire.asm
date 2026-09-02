@@ -159,7 +159,7 @@ BMZ_ShipUpdate:
 ; loc_18392
 BMZ_Defeated:
 		moveq	#100,d0
-		bsr.w	AddPoints
+		jsr	(AddPoints).l
 		move.b	#4,ob2ndRout(a0)			; set object routine to BMZ_Recover
 		move.w	#180,BossMarble_GenericTimer(a0)	; set the boss timer
 		clr.w	obVelX(a0)				; stop moving horizontally

@@ -371,11 +371,12 @@ briopti_origX:	equ	objoff_30	; initial X-position
 ; ===========================================================================
 
 BriOpti_Main:
+		move.l	#BridgeOptimized,obID(a0)
 		addq.b	#2,obRoutine(a0)			; go to BriOpti_Action
 		move.l	#Map_OptiBridge_Idle,obMap(a0)		; set default mappings to idle state
 		move.w	#ArtTile_GHZ_Bridge|Tile_Pal3,obGfx(a0)	; use third palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a0)			; set priority to 3
+		move.w	#spr_prio3,obPriority(a0)		; set priority to 3
 		clr.b	obFrame(a0)				; force frame 0
 		move.b	#BriOpti_LogCount*16/2,obActWid(a0)	; set width to bridge length (half of: number of logs * 16px width per log)
 		move.w	obX(a0),briopti_origX(a0)		; backup internal X position for offscreen deletion check

@@ -4,7 +4,7 @@
 ; ---------------------------------------------------------------------------
 
 TransferLevelDrawRequests:
-		move.w	(v_drawbuffer_count).w,d1		; is draw buffer empty?
+		move.w	(v_drawbuffer_count).w,d1		; does draw buffer contain any tasks?
 		bne.s	.doTransfer				; if yes, do transfer now
 		rts						; otherwise, nothing to do
 ; ---------------------------------------------------------------------------

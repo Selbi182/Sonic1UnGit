@@ -282,7 +282,7 @@ BossFinal_Eggman_Crush:
 ; loc_19FBC:
 .defeated:
 		moveq	#100,d0
-		bsr.w	AddPoints
+		jsr	(AddPoints).l
 		move.b	#6,BossFinal_ParentObj(a0)		; set routine to BossFinal_Eggman_Fall
 		move.w	#boss_fz_x+$170,obX(a0)			; set location to fall from
 		move.w	#boss_fz_y+$2C,obY(a0)

@@ -149,7 +149,7 @@ BLZ_ShipUpdate:
 ; loc_17F92:
 .setDefeatFlag:
 		moveq	#100,d0
-		bsr.w	AddPoints
+		jsr	(AddPoints).l
 		move.b	#-1,BossLabyrinth_EarlyDefeatFlag(a0)	; set early defeat flag
 		rts
 ; ===========================================================================

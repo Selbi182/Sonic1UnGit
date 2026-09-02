@@ -187,15 +187,21 @@ React_CollisionDetected:
 		cmpi.b	#col_32x32,d0				; has a monitor been touched? ($46)
 		beq.s	React_Monitor				; if yes, branch
 
-		; Assume object is a ring (standard, lost, or giant)
+React_Ring:
+		cmpi.l	#GiantRing,obID(a1)			; was collected object a giant ring?
+		beq.s	.giantRing				; if yes, branch
+
+		; Object was a regular ring (lost ring, attraction-lost ring, or placed-in-debug ring)
 	;	cmpi.b	#90,flashtime(a0)			; has Sonic recently been hurt and has more than 90 frames of flashing time left?
 	;	bhs.w	.return					; if yes, prevent collecting ring
-		addq.b	#2,obRoutine(a1)			; advance the ring's routine counter (e.g. Ring_Collect)
-
+		move.l	#Ring_Collect,obID(a1)			; change ring to a collected ring
 	.return:
 		rts						; return
 
-
+.giantRing:
+		addq.b	#2,obRoutine(a1)			; advance to GRing_Collect
+		rts						; return
+		
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Handle touching monitors
@@ -290,7 +296,7 @@ React_BadnikHit:
 		jsr	(AddPoints).l				; add d0 to current score
 
 		; Change badnik into gray explosion
-		move.l	#ExplosionItem,obID(a1)		; change badnik into an to explosion/animal object
+		move.l	#ExplosionItem,obID(a1)			; change badnik into an to explosion/animal object
 		move.b	#0,obRoutine(a1)			; set to "ExItem_Animal" routine to also spawn animal/points objects
 
 		; Bounce Sonic vertically
@@ -365,10 +371,19 @@ HurtSonic:
 		tst.w	(v_rings).w				; does Sonic have any rings?
 		beq.w	.hitWithoutRings			; if not, branch to kill Sonic
 
-		jsr	(RLoss_SpawnRings).l
+		move.w	(v_rings).w,d5				; get number of rings you had when getting hurt
+		jsr	(RLoss_SpawnRings).l			; spawn lost rings (d5 = input rings, will be capped to 32)
+
+		clr.w	(v_rings).w				; reset number of rings to zero
+		clr.b	(v_lifecount).w				; reset the flags for extra lives on 100/200 rings collected
+		move.b	#$80,(f_ringcount).w			; update ring counter ($80 means all digits should be reset to __0)
+		move.b	#255,(v_ani3_time).w			; set animation timer
+		move.w	#sfx_RingLoss,d0			; set ring loss sound
+		jsr	(QueueSound3).l				; play it
+
 	; .hasshield:
 	.bounceSonicAway:
-		move.b	#0,(v_shield).w				; remove a potential shield
+		clr.b	(v_shield).w				; remove a potential shield
 		move.b	#4,obRoutine(a0)			; set Sonic to "Sonic_Hurt" routine
 		bsr.w	Sonic_ResetOnFloor			; reset airborne state
 		bset	#1,obStatus(a0)				; force airborne flag again
@@ -392,16 +407,19 @@ HurtSonic:
 		move.b	#id_Hurt,obAnim(a0)			; set Sonic to hurt animation
 		move.b	#2*60,flashtime(a0)			; set temporary invulnerability time to 2 seconds
 
+		tst.b	(f_ringcount).w				; have lost rings been spawned?
+		bmi.s	.return					; if yes, do not play regular damage sound
 		move.w	#sfx_HitSpikes,d0			; use spike damage sound
 		cmpi.l	#Spikes,obID(a2)			; was damage caused by spikes?
 		beq.s	.sound					; if yes, branch
 		cmpi.l	#Harpoon,obID(a2)			; was damage caused by LZ harpoon?
 		beq.s	.sound					; if yes, branch
 		move.w	#sfx_Death,d0				; use generic damage sound
-
 	.sound:
-		jsr	(QueueSound3).l				; play selected sound
-		rts						; return
+		jmp	(QueueSound3).l				; play selected sound
+	
+	.return:
+		rts
 ; ===========================================================================
 
 ; .norings:
@@ -459,27 +477,18 @@ KillSonic:
 		move.w	#sfx_Death,d0				; play normal death sound
 
 	.sound:
-		move.l	obID(a2),d1		; get object ID of object that killed Sonic
-		cmpi.l	#LavaBall,d1		; MZ and SLZ lava balls (object 14)
-		beq.s	.firedeath
-		cmpi.l	#GrassFire,d1	; MZ grass fire (object 35)
-		beq.s	.firedeath
-		cmpi.l	#LavaTag,d1		; MZ invisible lava tag (object 54)
-		beq.s	.firedeath
-		cmpi.l	#LavaGeyser,d1	; MZ lava geysers/falls (object 4D)
-		beq.s	.firedeath
-		cmpi.l	#LavaWall,d1		; MZ wall of lava from act 2 (object 4E)
-		beq.s	.firedeath
-		cmpi.l	#Gargoyle,d1		; LZ gargoyle fireballs (object 62)
-		beq.s	.firedeath
-		cmpi.l	#Flamethrower,d1	; SBZ flamethrower (obejct 6D)
-		beq.s	.firedeath
-		cmpi.l	#BossFire,d1		; MZ fire balls from boss (object 74)
-		bne.s	.normal			; if it was none of the above, don't do burnt death
+		moveq	#0,d2					; start at first entry in fire object list
+	.loopFindFireDeath:
+		move.l	KillSonic_FireObjects(pc,d2.w),d1	; get next entry from fire object list
+		bmi.s	.normal					; branch if end of list reached
+		cmp.l	obID(a2),d1				; was object that killed Sonic a fire object?
+		beq.s	.firedeath				; if yes, branch
+		addq.w	#4,d2					; go to next object in list
+		bra.s	.loopFindFireDeath			; loop for all entries in list
 
 	.firedeath:
-		move.b	#id_Burnt,obAnim(a0)	; set Sonic to "burnt death" animation
-		move.w	#sfx_Flamethrower,d0	; use burnt death sound
+		move.b	#id_Burnt,obAnim(a0)			; set Sonic to "burnt death" animation
+		move.w	#sfx_Flamethrower,d0			; use burnt death sound
 
 	.normal:
 		jsr	(QueueSound2).l				; play selected sound
@@ -488,7 +497,18 @@ KillSonic:
 	.return:
 		rts						; return
 ; End of function KillSonic
+; ---------------------------------------------------------------------------
 
+KillSonic_FireObjects:
+		dc.l	LTag_ChkDel	; MZ invisible lava tag (object 54)
+		dc.l	LavaBall	; MZ and SLZ lava balls (object 14)
+		dc.l	GrassFire	; MZ grass fire (object 35)
+		dc.l	LavaGeyser	; MZ lava geysers/falls (object 4D)
+		dc.l	LavaWall	; MZ wall of lava from act 2 (object 4E)
+		dc.l	BossFire	; MZ fire balls from boss (object 74)
+		dc.l	Gargoyle	; LZ gargoyle fireballs (object 62)
+		dc.l	Flamethrower	; SBZ flamethrower (obejct 6D)
+		dc.l	-1		; end of list
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

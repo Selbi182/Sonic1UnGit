@@ -107,6 +107,9 @@ Pri_Switch:	; Routine 4
 ; ===========================================================================
 
 Pri_ChkSonic:
+		tst.w	(v_debuguse).w				; is debug mode on?
+		bne.s	.noTouch				; if yes, ignore touch
+		
 		lea	(v_player).w,a1				; load Sonic player object
 		move.w	obX(a1),d0				; get Sonic's current X-position
 		move.w	obX(a0),d1				; get bubble's current X-position

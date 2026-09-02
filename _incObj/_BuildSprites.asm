@@ -357,6 +357,120 @@ BuildHUD:
 ; End of function BuildHUD
 
 
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Subroutine to render regular ring sprites (S3K Rings Manager)
+; ---------------------------------------------------------------------------
+
+BuildRings:
+		movea.l	(v_ringwindow_start).w,a0		; load start of ring layout in ROM
+		move.l	(v_ringwindow_end).w,d0			; load ring layout end address
+		sub.l	a0,d0					; is start = end?
+		beq.s	.return					; if yes, nothing to do (no rings on-screen)
+
+		movea.w	(v_ringstates_pointer).w,a1		; load ring status start address
+		lea	(v_screenposx).w,a3			; load camera X-position
+
+	.loop:
+		tst.b	d7					; is sprite limit exhausted?
+		beq.s	.return					; if yes, abort ring rendering
+		subq.b	#1,d7					; decrease remaining sprite slots
+		
+		move.b	(a1)+,d1				; has this ring been collected and finished sparkling?
+		bmi.w	.next					; if yes, check next ring
+		move.w	(a0),d3					; get ring X-position
+		sub.w	(a3),d3					; subtract camera X-position
+		addi.w	#$80-8,d3				; add VDP sprite start - half of ring width (16/2 = 8px)
+
+		move.w	2(a0),d2				; get ring Y-position
+		sub.w	4(a3),d2				; subtract camera Y-position (4(a3) = v_screenposy)
+		addi.w	#8,d2					; add half of ring height (16/2 = 8px)
+		andi.w	#$7FF,d2				; apply vertical screen wrap
+		cmpi.w	#224+16,d2				; is ring below visible screen?
+		bhs.s	.next					; if yes, don't render
+		addi.w	#$80-16,d2				; add VDP sprite start and undo earlier 8px offset
+
+		move.w	d2,(a2)+				; store sprite Y-position in sprite buffer
+
+		andi.w	#$000F,d1				; extract stored ring frame value
+		bne.s	.renderRing				; does this ring have a custom frame ID? if yes, use that (sparkle for collected rings)
+		moveq	#0,d1					; force frame 0 for all smooth ring frames (updated in VRAM)
+	.renderRing:
+		move.b	#5,(a2)+				; store sprite width/height in sprite buffer
+
+		addq.b	#1,d5					; increase total sprites counter
+		move.b	d5,(a2)+				; store sprite link in sprite buffer
+
+		add.w	d1,d1					; double frame ID for word-based indexing
+		move.w	Map_RingsCompact(pc,d1.w),(a2)+		; get VRAM settings and store in sprite buffer
+
+		move.w	d3,(a2)+				; store sprite X-position in sprite buffer
+
+	.next:
+		addq.w	#4,a0					; advance to next ring in ROM
+		subq.w	#4,d0					; decrement number of remaining rings to handle
+		bne.w	.loop					; if we've got more rings to render, loop
+
+	.return:
+		rts						; rings manager rings sprite rendering done
+; ---------------------------------------------------------------------------
+
+; Compact rings mappings for optimization purposes
+Map_RingsCompact:
+		dc.w ArtTile_Ring+$0|Tile_Pal2			; 0 - ring
+		dc.w ArtTile_Ring+$4|Tile_Pal2			; 1 - ring
+		dc.w ArtTile_Ring+$8|Tile_Pal2			; 2 - ring
+		dc.w ArtTile_Ring+$4|Tile_Pal2|$800		; 3 - ring
+			     
+		dc.w ArtTile_Ring+$A|Tile_Pal2			; 4 - sparkle
+		dc.w ArtTile_Ring+$A|Tile_Pal2|$1800		; 5 - sparkle
+		dc.w ArtTile_Ring+$A|Tile_Pal2|$0800		; 6 - sparkle
+		dc.w ArtTile_Ring+$A|Tile_Pal2|$1000		; 7 - sparkle
+
+		dc.w 0, 0					; blank frames in case of overflow
+
+; End of function BuildRings
+
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Subroutine to render lost ring sprites, filled in Objet 37.
+; ---------------------------------------------------------------------------
+
+BuildRings_Loss:
+		lea	(v_lostring_spritequeue).w,a3		; load queued lost ring sprites
+		move.w	(a3),d0					; get entry count
+		beq.w	.return					; are there any entries to render? if not, exit
+		clr.l	(a3)+					; clear render loop entry count for next time (and a3 += 4)
+
+		lsr.w	#2,d0					; divide entry count by 4
+		subq.w	#1,d0					; minus 1 for dbf
+
+		move.w	#ArtTile_Ring_Loss|Tile_Pal2,d3		; all lost rings use the same art tile
+		swap	d3					; unchaging in the upper word of d3 for optimization
+		move.w	#$0500,d1				; dimension (preshifted by <<8) is always the same (2x2)
+
+	.loop:
+		tst.b	d7					; is sprite limit exhausted?
+		beq.s	.return					; if yes, abort ring rendering
+		subq.b	#1,d7					; decrease remaining sprite slots
+
+		move.w	(a3)+,d2				; get screen-fixed Y-position for ring
+		swap	d2					; swap Y-position into upper word
+		move.w	d1,d2					; move preshifted dimension to lower word
+		addq.b	#1,d5					; increase sprite link count
+		move.b	d5,d2					; move new sprite link count to lower byter 
+		move.l	d2,(a2)+				; write Y-position, dimension, and link number to sprite buffer
+
+		move.w	(a3)+,d3				; get screen-fixed X-position for ring
+		move.l	d3,(a2)+				; write art tile (unchaging) and X-position to sprite buffer
+
+	.next:
+		dbf	d0,.loop				; if we've got more rings to render, loop
+
+	.return:
+		rts						; return
+; End of function BuildRings_Loss
+
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

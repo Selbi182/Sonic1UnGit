@@ -78,13 +78,8 @@ Smash_Solid:	; Routine 2
 
 		moveq	#8-1,d1					; set number of fragments to load to 8 (number of sprite pieces in wall)
 		move.l	#(gravity*2)<<8,d2			; set counter-gravity
-		bsr.s	SmashObject				; smash the block into four fragment objects (set to routine 4, Smash_Fragment)
+		bsr.w	SmashObject				; smash the block into four fragment objects (set to routine 4, Smash_Fragment)
 		bra.w	Particle_MovingFragment
-
-; ===========================================================================
-; This subroutine is shared with most other smashable objects. This object likely
-; was the first one where it was used, hence it being sandwiched in between here.
-		include	"_incObj/sub SmashObject.asm"
 
 ; ===========================================================================
 ; Smashed block fragment speeds used by GHZ smashable walls

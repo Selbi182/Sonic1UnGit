@@ -144,7 +144,7 @@ BGHZ_ShipUpdate:
 ; loc_1784C:
 BGHZ_Defeated:
 		moveq	#100,d0
-		bsr.w	AddPoints
+		jsr	(AddPoints).l
 		move.b	#8,ob2ndRout(a0) 			; set object routine to BGHZ_Explode
 		move.w	#$B3,BGHZ_BossGenericTimer(a0) 		; set the boss timer
 		rts

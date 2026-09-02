@@ -74,8 +74,7 @@ Sign_Spin:	; Routine 4
 
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	.return					; if object RAM is full, branch
-		move.l	#Rings,obID(a1)			; load rings object to use as sparkle effect
-		move.b	#6,obRoutine(a1)			; set to Ring_Sparkle routine
+		move.l	#Ring_Sparkle_Init,obID(a1)		; load ring sparkle object
 
 		move.b	(a2)+,d0				; get next X-position from Sign_SparkPos
 		ext.w	d0					; extend position delta to word

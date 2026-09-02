@@ -164,7 +164,7 @@ BSYZ_StatusUpdate:
 ; loc_19258:
 BSYZ_Defeated:
 		moveq	#100,d0
-		bsr.w	AddPoints
+		jsr	(AddPoints).l
 		move.b	#6,ob2ndRout(a0)			; set object routine to BSLZ_Recover
 		move.w	#180,BossSpringYard_GenericTimer(a0)  ; set the boss timer
 		clr.w	obVelX(a0)				; stop moving horizontally

@@ -194,7 +194,7 @@ BSLZ_StatusUpdate:
 ; loc_18A46:
 BSLZ_Defeated:
 		moveq	#100,d0
-		bsr.w	AddPoints
+		jsr	(AddPoints).l
 		move.b	#6,ob2ndRout(a0)			; set object routine to BSLZ_Recover
 		move.b	#120,BossStarLight_GenericTimer(a0)     ; set the boss timer
 		clr.w	obVelX(a0)				; stop moving horizontally

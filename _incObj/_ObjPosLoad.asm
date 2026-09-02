@@ -163,7 +163,7 @@ ObjMan_Main_Cont:
 		subi.w	#$80,d6				; look one chunk to the left
 		bcs.s	ObjMan_GoingBack_Part2		; branch, if camera position would be behind level's left boundary
 
-		jsr	(FindFreeObj).l			; find an empty object slot
+		bsr.w	FindFreeObj			; find an empty object slot
 		bne.s	ObjMan_GoingBack_Part2		; branch, if there are none
 
 OPLBack4:	; load all objects left of the screen that are now in range
@@ -209,7 +209,7 @@ ObjPosLoad_GoingForward:
 		movea.l	(v_opl_data).w,a0		; get next object from the right
 		movea.w (v_opl_data+8).w,a3		; and its respawn table index
 		addi.w	#$280,d6			; look two chunks forward
-		jsr	(FindFreeObj).l			; find an empty object slot
+		bsr.w	FindFreeObj			; find an empty object slot
 		bne.s	ObjMan_GoingForward_Part2	; branch, if there are none
 
 OPLBack6:	; load all objects right of the screen that are now in range
@@ -291,7 +291,7 @@ ObjMan_GoingDown_NoYWrap:
 		bhi.w	ObjPosLoad_SameYRange		; don't do anything, if camera is too close to bottom
 
 ObjPosLoad_YCheck:
-		jsr	(FindFreeObj).l			; get an empty object slot
+		bsr.w	FindFreeObj			; get an empty object slot
 		bne.s	ObjPosLoad_SameYRange		; branch, if there are none
 		move.w	d3,d4
 		addi.w	#$80,d4
@@ -339,7 +339,7 @@ OPLBack8:	; check if current object needs to be loaded
 
 		move.b	3(a0),obSubtype(a1)
 		move.w	a3,respawn_index(a1)
-		jsr	(FindFreeObj).l			; find new object slot
+		bsr.w	FindFreeObj			; find new object slot
 		bne.s	ObjPosLoad_SameYRange		; brach, if there are none left
 OPL8:
 		addq.w	#6,a0				; address of next object
@@ -474,32 +474,49 @@ LoadObj:
 
 		move.b	(a0)+,obSubtype(a1)
 		move.w	a3,respawn_index(a1)
-	;	bra.w	FindFreeObj	; fall-through...
+	;	bra.s	FindFreeObj			; fall-through...
 ; End of function ChkLoadObj
 
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Subroutine to find a free object space
+; Subroutine to find a free object space.
+; 
+; This subroutine has been overhauled to use v_firstfreeobjslot as
+; remembered starting point of the "lowest known occupied object RAM slot",
+; in order to avoid pointless repeated iterations through the early slots.
 ; 
 ; output:
 ;	a1 = free position in object RAM
 ;	CCR Z-flag = set if slot was found, clear if RAM is full
+; 
+; clobbers: d0, a1
 ; ---------------------------------------------------------------------------
 
 FindFreeObj:
-		lea	(v_lvlobjspace).w,a1			; start address for object RAM
-		move.w	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d0 ; check entire dynamic object RAM
+		movea.w	(v_firstfreeobjslot).w,a1		; start at lowest known occupied object RAM slot (optimization)
+		move.w	#v_lvlobjend&$FFFF,d0			; get end location of object RAM (16-bit)
+		sub.w	a1,d0					; d0 = remaining RAM after parent object
+		lsr.w	#object_size_bits,d0			; divide by $40 (object_size)
+		subq.w	#1,d0					; minus 1 for dbf
+		bcs.s	.ramFull				; if underflowed, parent object is at the end of RAM, quit
 
-FFree_Loop:
+	.loop:
 		tst.l	obID(a1)				; is object RAM slot empty?
-		beq.s	FFree_Found				; if yes, exit and use that slot
+		beq.s	.found					; if yes, exit and use that slot
 		lea	object_size(a1),a1			; go to next object RAM slot
-		dbf	d0,FFree_Loop				; repeat up to 95 times
+		dbf	d0,.loop				; repeat for all free object RAM slots after parent
 
-FFree_Found:
-		rts						; return with result in a1
+	.ramFull:
+		moveq	#-1,d0					; keep Z-flag clear
+		rts						; return with result in CCR
+
+	.found:
+		move.w	a1,(v_firstfreeobjslot).w		; remember new lowest occupied object RAM slot
+		moveq	#0,d0					; keep Z-flag set
+		rts						; return with result in CCR and a1
 ; End of function FindFreeObj
+
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -519,16 +536,22 @@ FindNextFreeObj:
 		sub.w	a0,d0					; d0 = remaining RAM after parent object
 		lsr.w	#6,d0					; divide by $40 (object_size)
 		subq.w	#1,d0					; minus 1 for dbf
-		bcs.s	NFree_Found				; if underflowed, parent object is at the end of RAM, quit
+		bcs.s	.ramFull				; if underflowed, parent object is at the end of RAM, quit
 
-NFree_Loop:
+	.loop:
 		tst.l	obID(a1)				; is object RAM slot empty?
-		beq.s	NFree_Found				; if yes, exit and use that slot
+		beq.s	.found					; if yes, exit and use that slot
 		lea	object_size(a1),a1			; go to next object RAM slot
-		dbf	d0,NFree_Loop				; repeat for all free object RAM slots after parent
+		dbf	d0,.loop				; repeat for all free object RAM slots after parent
 
-NFree_Found:
-		rts						; return with result in a1
+	.ramFull:
+		moveq	#-1,d0					; keep Z-flag clear
+		rts						; return with result in CCR
+
+	.found:
+		; TODO update v_firstfreeobjslot accordingly
+		moveq	#0,d0					; keep Z-flag set
+		rts						; return with result in CCR and a1
 ; End of function FindNextFreeObj
 
 
@@ -539,6 +562,8 @@ NFree_Found:
 ; input:
 ;	a0 = pointer to object to delete (DeleteObject)
 ;	a1 = pointer to object to delete (DeleteChild)
+; 
+; clobbers: d1, a1
 ; ---------------------------------------------------------------------------
 
 DeleteObject:
@@ -546,8 +571,15 @@ DeleteObject:
 ; ---------------------------------------------------------------------------
 
 DeleteChild:	; object is already in a1
+		cmpa.w	#v_lvlobjspace,a1			; is the object that is to be deleted a dynamic level object?
+		blo.s	.noUpdate				; if not, branch
+		cmpa.w	(v_firstfreeobjslot).w,a1		; is deleted object before the last known "first free slot"?
+		bgt.s	.noUpdate				; if not, branch
+		move.w	a1,(v_firstfreeobjslot).w		; remember new lowest dynamic object RAM pointer
+	.noUpdate:
+
 		moveq	#0,d1					; overwrite with zeroes
-	rept	object_size/4
+	rept	object_size/4					; $40 bytes per object
 		move.l	d1,(a1)+				; clear the object RAM
 	endr
 		rts						; deletion done

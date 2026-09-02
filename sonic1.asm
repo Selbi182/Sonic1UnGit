@@ -33,7 +33,7 @@ OneHitBosses: = 1
 LagOMeter: = 0
 ;	| If 1, displays a Lag-o-Meter at the top-right of the screen
 
-LagFrameCounter: = 1
+LagFrameCounter: = 2
 ;	| If 1, adds a counter at the top right HUD that counts lag frames
 ;	| If 2, also adds huge recursive calls to "LAGFRAME" to make them easier to spot in MD Profiler
 
@@ -46,8 +46,15 @@ CheatsEnabled: = 2
 ;	|       will be enabled by default, without requiring any title screen button inputs
 ;	| If 2, same as 1 but debug mode doesn't need to have A held down to get activated
 
+DebugHUDAlways: = 0
+;	| If 0, Debug Mode HUD will only show while in item placement mode
+;	| If 1, Debug Mode HUD will always show if cheat is enabled
+
 DebugSurviveNoRings: = 1
 ;	| If 1, getting hurt without rings while Debug Mode is on will NOT kill Sonic (default behavior)
+
+RingsCollect32: = 0
+;	| If 1, each collected ring is worth 32 rings for quick testing of ring loss
 
 ; ===========================================================================
 ; Simplifying macros and functions
@@ -427,6 +434,19 @@ id_Credits:	gmptr	GM_Credits				; Credits ($1C)
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
+; Subroutine to attempt recovering from an exception if C is pressed.
+; ---------------------------------------------------------------------------
+
+Debugger_RecoverFromException:
+		movea.l	(0).w,sp		; reset Stack Pointer (sp)
+		bsr.w	VDPSetupGame		; restore Sonic 1 VDP settings
+		enable_display			; make sure display is enabled
+		bra.w	MainGameLoop		; return to main game loop and try resuming operation
+; End of function Debugger_RecoverFromException
+
+
+; ===========================================================================
+; ---------------------------------------------------------------------------
 ; Uncompressed art text for debug mode, level select, and errors
 ; (formerly "menutext.bin")
 ; ---------------------------------------------------------------------------
@@ -460,7 +480,7 @@ VBlank:
 
 		tst.b	(v_vblank_routine).w			; was a VBlank routine set?
 		beq.s	VBlank_Lag				; if not, this is a lag frame, branch
-		bmi.s	VBlank_Music				; if marked as id_VBlank_MusicOnly, only run Sound Driver updates
+		bmi.s	VBlank_Exit				; if marked as id_VBlank_MusicOnly, only run Sound Driver updates
 
 		move.w	(vdp_control_port).l,d0			; clear write-pending flag in VDP (prevents issues if 68k was reset while writing a command to VDP)
 		move.l	#$40000010,(vdp_control_port).l		; set VDP to VSRAM write mode
@@ -469,24 +489,28 @@ VBlank:
 		; Wait here in a loop doing nothing for a while. This seems to be a pretty harsh attempt
 		; to push CRAM dots outside of the visible view area, due to Sonic 1 not using all
 		; the available screen space PAL offers, as they would otherwise be seen at the bottom.
-		tst.b	(v_pal).w			; is Mega Drive PAL?
+		tst.b	(v_pal).w				; is Mega Drive PAL?
 		beq.s	.notPAL					; if not, branch
 		move.w	#$700,d0				; set to waste a bunch of cycles
-	.waitPAL:
-		dbf	d0,.waitPAL				; loop until cycles have been wasted
+		dbf	d0,*					; loop until cycles have been wasted
 
 .notPAL:
 		move.b	(v_vblank_routine).w,d0			; copy specified VBlank routine to d0
-		move.b	#id_VBlank_Lag,(v_vblank_routine).w	; reset actual routine to lag frame (which ideally should get set again in the next frame)
-		move.w	#1,(f_hblank_pal).w			; set HBlank palette swap flag (only relevant for LZ)
 		andi.w	#$3E,d0					; mask out irrelevant bits in VBlank routine
 		move.w	VBlank_Index(pc,d0.w),d0		; load address to relevant VBlank routine
 		jsr	VBlank_Index(pc,d0.w)			; jump to VBlank routine and then return here
 
-VBlank_Music:
-		jsr	(UpdateMusic).l				; run sound driver to advance music
-
 VBlank_Exit:
+		move.b	#id_VBlank_Lag,(v_vblank_routine).w	; reset actual routine to lag frame (which ideally should get set again in the next frame)
+
+		enable_ints					; enable interrupts (we can accept horizontal interrupts from now on)
+		tst.b	(v_smpsrunning).w			; is SMPS currently running?
+		bne.s	.soundDriverDone			; if yes, branch
+		st.b	(v_smpsrunning).w			; set "SMPS running flag"
+		jsr	(UpdateMusic).l				; run sound driver to advance music
+		sf.b	(v_smpsrunning).w			; reset "SMPS running flag"
+
+	.soundDriverDone:
 		addq.l	#1,(v_vblank_count).w			; increment VBlank counter
 		movem.l	(sp)+,d0-a6				; restore all backed-up registers
 		rte						; return from interrupt and resume normal operation
@@ -518,7 +542,7 @@ VBlank_Lag:
 		cmpi.b	#$80+id_Level,(v_gamemode).w		; is pre level sequence active?
 		beq.s	VBlank_Lag_Go				; if not, just update sound driver and resume operation
 		cmpi.b	#id_Level,(v_gamemode).w		; is game on a level?
-		bne.w	VBlank_Music				; if not, just update sound driver and resume operation
+		bne.w	VBlank_Exit				; if not, just update sound driver and resume operation
 
 .isLevel:
 	if LagFrameCounter
@@ -541,7 +565,7 @@ VBlank_Lag:
 
 VBlank_Lag_Go:
 		cmpi.b	#id_LZ,(v_zone).w			; is level LZ?
-		bne.w	VBlank_Music				; if not, just update sound driver and resume operation
+		bne.w	VBlank_Exit				; if not, just update sound driver and resume operation
 
 		; --- A lag frame has occurred while in Labyrinth Zone ---
 
@@ -552,11 +576,9 @@ VBlank_Lag_Go:
 		tst.b	(v_pal).w			; is Mega Drive PAL?
 		beq.s	.paletteTransfer			; if not, branch
 		move.w	#$700,d0				; set to waste a bunch of cycles
-	.waitPAL:
-		dbf	d0,.waitPAL				; loop until cycles have been wasted
+		dbf	d0,*					; loop until cycles have been wasted
 
 .paletteTransfer:
-		move.w	#1,(f_hblank_pal).w			; set HBlank flag
 		tst.b	(f_wtr_state).w				; is the screen completely underwater?
 		bne.s	.waterAbove 				; if not, branch
 		writeCRAM	v_palette,0			; write regular palette buffer to CRAM
@@ -567,7 +589,7 @@ VBlank_Lag_Go:
 		move.w	(v_hblank_hreg).w,d0	; get HBlank interrupt counter
 		move.w	d0,(a5)			; write to VDP register ($8Axx)
 		move.b	d0,(v_waterline).w	; copy target scan line ($xx)
-		bra.w	VBlank_Music				; branch back to update sound driver and resume operation
+		bra.w	VBlank_Exit				; branch back to update sound driver and resume operation
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -653,15 +675,7 @@ VBlank_Levels:
 
 		bsr.w	TransferLevelDrawRequests		; update level tiles while screen is moving
 		jsr	(AnimateLevelGfx).l			; updated animated tiles
-		jsr	(HUD_Update).l				; update HUD data
-
-		cmpi.b	#96,(v_hblank_line).w			; is LZ water surface within 96 pixels of the top of the screen?
-		bhs.s	.exit					; if not, do sound driver updates now
-		move.b	#1,(f_doupdatesinhblank).w		; otherwise, we don't have enough time to do them now before HBlank hits, defer updates to then
-		addq.l	#4,sp					; postpone updating the sound driver
-		bra.w	VBlank_Exit				; go straight back to to the VBlank exit
-	.exit:
-		rts						; return
+		jmp	(HUD_Update).l				; update HUD data
 ; End of function VBlank_UpdateScreen
 
 ; ===========================================================================
@@ -783,9 +797,7 @@ VBlank_StandardTransfers:
 
 		writeVRAM	v_spritetablebuffer,vram_sprites  ; transfer sprite buffer table to actual sprites VRAM
 		writeVRAM	v_hscrolltablebuffer,vram_hscroll ; transfer H-scroll buffer table to actual H-scroll VRAM
-		jsr	ProcessDMAQueue(pc)
-
-		rts						; return
+		jmp	ProcessDMAQueue(pc)
 ; End of function VBlank_StandardTransfers
 ; End of VBlank (as a whole)
 
@@ -797,10 +809,6 @@ VBlank_StandardTransfers:
 
 ; PalToCRAM: <-- old misnomer
 HBlank:
-		tst.w	(f_hblank_pal).w			; is palette set to change?
-		beq.w	.nochg					; if not, branch
-		move.w	#0,(f_hblank_pal).w			; clear palette change flag
-
 		movem.l	d0-d2/a0-a2,-(sp)			; backup registers
 
 		lea	(vdp_data_port).l,a1			; load VDP data port to a1
@@ -839,20 +847,6 @@ HBlank:
 
 .skipTransfer:
 		movem.l	(sp)+,d0-d2/a0-a2			; restore registers
-
-		tst.b	(f_doupdatesinhblank).w			; was frame update delayed by water surface being near the top of the screen?
-		bne.s	.delayed_transfer			; if yes, resume transfer now
-
-	.nochg:
-		rte						; return from horizontal interrupt and resume normal operation
-; ===========================================================================
-
-; loc_119E:
-.delayed_transfer:
-		clr.b	(f_doupdatesinhblank).w			; clear delayed updates flag
-		movem.l	d0-a6,-(sp)				; backup all registers except stack pointer (a7)
-		jsr	(UpdateMusic).l				; update the sound driver
-		movem.l	(sp)+,d0-a6				; restore registers
 		rte						; return from horizontal interrupt and resume normal operation
 ; End of function HBlank
 
@@ -1128,6 +1122,8 @@ ClearScreen:
 		clearRAM v_spritequeue
 		clearRAM v_spritetablebuffer,v_spritetablebuffer_end ; clear sprite table buffer
 		clearRAM v_hscrolltablebuffer,v_hscrolltablebuffer_end_padded ; clear H-Scroll table buffer
+
+		move.w	#v_lvlobjspace,(v_firstfreeobjslot).w	; reset FindFreeObj starting pointer
 
 		clr.b	(v_draw_hud).w
 		clr.b	(v_skipspriteculling).w
@@ -3646,6 +3642,8 @@ TryAg_Exit:		; exit end screen and restart the gam
 ; >>> Rings
 		include	"_incObj/_RingsManager.asm"
 		include	"_incObj/25, 37 Rings.asm"
+Map_Ring:	include	"_maps/Rings.asm"
+		include "_incObj/sub CollectRing & ExtraLife & AddPoints.asm"
 		include	"_incObj/4B, 7C Giant Ring and Flash.asm"
 
 
@@ -3685,7 +3683,8 @@ Map_Over:	include	"_maps/Game Over.asm"
 		include	"_incObj/36 Spikes.asm"
 		include	"_incObj/3B GHZ Purple Rock.asm"
 		include	"_incObj/49 GHZ Waterfall Sound.asm"
-		include	"_incObj/3C GHZ, SLZ Smashable Wall.asm" ; includes SmashObject
+		include	"_incObj/3C GHZ, SLZ Smashable Wall.asm"
+		include	"_incObj/sub SmashObject.asm"
 
 
 ; ===========================================================================

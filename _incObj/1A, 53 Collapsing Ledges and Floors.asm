@@ -287,33 +287,8 @@ FragmentatePlatform:
 ; ===========================================================================
 
 .loopFragments:
-
-
-
-
-; FindNextFreeObj:
-		movea.l	a1,a2					; get RAM location of parent object
-		move.w	#v_lvlobjend&$FFFF,d0			; get end location of object RAM (16-bit)
-		sub.w	a1,d0					; d0 = remaining RAM after parent object
-		lsr.w	#6,d0					; divide by $40 (object_size)
-		subq.w	#1,d0					; minus 1 for dbf
-		bcs.s	.NFree_Found				; if underflowed, parent object is at the end of RAM, quit
-
-.NFree_Loop:
-		tst.l	obID(a2)				; is object RAM slot empty?
-		beq.s	.NFree_Found				; if yes, exit and use that slot
-		lea	object_size(a2),a2			; go to next object RAM slot
-		dbf	d0,.NFree_Loop				; repeat for all free object RAM slots after parent
-
-.NFree_Found:
+		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	.fragmentationDone			; if object RAM is full, branch
-
-
-		movea.w	a2,a1
-
-
-
-
 		addq.w	#8,a3					; advance to next sprite piece in mappings
 	.firstFragment:
 		move.b	#6,obRoutine(a1)			; set fragment routine to "..._FragmentPiece"
