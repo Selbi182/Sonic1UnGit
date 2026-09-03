@@ -161,7 +161,9 @@ v_jpadhold_6btn_p2:	ds.b	1				; joypad input - P2 held (6-button controller extr
 v_jpadpress_6btn_p2:	ds.b	1				; joypad input - P2 pressed (6-button controller extra inputs)
 
 v_vdp_buffer1:		ds.w	1				; VDP instruction buffer of register $81 (used for enabling/disabling display)
-			ds.b	6				; unused
+HBlankHndl:		ds.w	1				; HBlank opcode (jmp or rte)
+HBlankSubW:		ds.w	1				; HBlank target subroutine
+			ds.b	2				; unused
 v_generictimer:		ds.w	1				; generic timer, decrements to 0 in VBlank (word)
 v_scrposy_vdp:		ds.w	1				; screen position y (VDP)
 v_bgscrposy_vdp:	ds.w	1				; background screen position y (VDP)

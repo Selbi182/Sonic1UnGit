@@ -53,8 +53,11 @@ DebugHUDAlways: = 0
 DebugSurviveNoRings: = 1
 ;	| If 1, getting hurt without rings while Debug Mode is on will NOT kill Sonic (default behavior)
 
-RingsCollect32: = 0
+RingsCollect32: = 1
 ;	| If 1, each collected ring is worth 32 rings for quick testing of ring loss
+
+DisableSound: = 0
+;	| If 1, sound driver is never updated (use this for benchmarking, SMPS is very expensive)
 
 ; ===========================================================================
 ; Simplifying macros and functions
@@ -116,7 +119,7 @@ Vectors:
 		dc.l ErrorTrap					; IRQ level 1
 		dc.l ErrorTrap					; IRQ level 2
 		dc.l ErrorTrap					; IRQ level 3 (28)
-		dc.l HBlank					; IRQ level 4 (horizontal retrace interrupt)
+		dc.l HBlankHndl					; IRQ level 4 (horizontal retrace interrupt)
 		dc.l ErrorTrap					; IRQ level 5
 		dc.l VBlank					; IRQ level 6 (vertical retrace interrupt)
 		dc.l ErrorTrap					; IRQ level 7 (32)
@@ -155,9 +158,13 @@ Vectors:
 
 		dc.b "SEGA MEGA DRIVE "				; Hardware system ID (Console name)
 		dc.b "(C)SEGA 1991.APR"				; Copyright holder and release date (generally year)
-	rept 2
-		 ; Name (identical for domestic and overseas version)
-		dc.b "SONIC THE               HEDGEHOG                "
+
+	rept 2	; Name (identical for domestic and overseas version)		 
+	    if DisableSound
+		dc.b "Sonic 1 UnGit [SOUND DISABLED]                  "
+	    else
+		dc.b "Sonic 1 UnGit                                   "	
+	    endif
 	endr
 
 		dc.b "GM 00004049-01"				; Serial/version number (Rev non-0)
@@ -174,7 +181,8 @@ RomEndLoc:	dc.l EndOfRom-1					; End address of ROM
 		dc.b "    "					; SRAM start
 		dc.b "    "					; SRAM end
 
-		dc.b "                                                    " ; Notes
+		dc.b "            "				; Modem support
+		dc.b "                                        " ; Notes (unused, anything can be put in this space, but it has to be 40 bytes)
 		dc.b "JUE             "				; Region (Country code)
 EndOfHeader:
 
@@ -386,6 +394,9 @@ GameInit:
 		move.b	d0,(f_creditscheat).w			; enable hidden Japanese credits cheat
 	endif
 
+		move.l	#HBlank_BaseHandler,(HBlankHndl).w	; setup HBlank base handler
+		move.w	#NullInt,(HBlankSubW).w			; don't run any code during HInt
+
 		jsr	(MegaPCM_LoadDriver).l
 		lea	(SampleTable).l,a0
 		jsr	(MegaPCM_LoadSampleTable).l
@@ -503,14 +514,16 @@ VBlank:
 VBlank_Exit:
 		move.b	#id_VBlank_Lag,(v_vblank_routine).w	; reset actual routine to lag frame (which ideally should get set again in the next frame)
 
+	if DisableSound=0
 		enable_ints					; enable interrupts (we can accept horizontal interrupts from now on)
 		tst.b	(v_smpsrunning).w			; is SMPS currently running?
 		bne.s	.soundDriverDone			; if yes, branch
 		st.b	(v_smpsrunning).w			; set "SMPS running flag"
 		jsr	(UpdateMusic).l				; run sound driver to advance music
 		sf.b	(v_smpsrunning).w			; reset "SMPS running flag"
-
 	.soundDriverDone:
+	endif
+
 		addq.l	#1,(v_vblank_count).w			; increment VBlank counter
 		movem.l	(sp)+,d0-a6				; restore all backed-up registers
 		rte						; return from interrupt and resume normal operation
@@ -586,9 +599,10 @@ VBlank_Lag_Go:
 	.waterAbove:
 		writeCRAM	v_palette_water,0		; write water palette buffer to CRAM
 	.waterBelow:
-		move.w	(v_hblank_hreg).w,d0	; get HBlank interrupt counter
-		move.w	d0,(a5)			; write to VDP register ($8Axx)
-		move.b	d0,(v_waterline).w	; copy target scan line ($xx)
+		move.w	(v_hblank_hreg).w,d0			; get HBlank interrupt counter
+		move.w	d0,(a5)					; write to VDP register ($8Axx)
+		move.b	d0,(v_waterline).w			; copy target scan line ($xx)
+		move.w	#HBlank_WaterSurface,(HBlankSubW).w	; allow HBlank water palette swap 
 		bra.w	VBlank_Exit				; branch back to update sound driver and resume operation
 
 ; ===========================================================================
@@ -669,9 +683,10 @@ VBlank_Levels:
 		writeVRAM	v_spritetablebuffer,vram_sprites  ; transfer sprite buffer table to actual sprites VRAM
 		jsr	ProcessDMAQueue(pc)
 
-		move.w	(v_hblank_hreg).w,d0	; get HBlank interrupt counter
-		move.b	d0,(v_waterline).w	; copy target scan line ($xx)
-		move.w	d0,(a5)			; write to VDP register ($8Axx)
+		move.w	(v_hblank_hreg).w,d0			; get HBlank interrupt counter
+		move.b	d0,(v_waterline).w			; copy target scan line ($xx)
+		move.w	d0,(a5)					; write to VDP register ($8Axx)
+		move.w	#HBlank_WaterSurface,(HBlankSubW).w	; allow HBlank water palette swap 
 
 		bsr.w	TransferLevelDrawRequests		; update level tiles while screen is moving
 		jsr	(AnimateLevelGfx).l			; updated animated tiles
@@ -719,10 +734,10 @@ VBlank_Ending:
 	.waterAbove:
 		writeCRAM	v_palette_water,0		; write water palette buffer to CRAM
 	.waterBelow:
-		move.w	(v_hblank_hreg).w,d0	; get HBlank interrupt counter
-		move.w	d0,(a5)			; write to VDP register ($8Axx)
-		move.b	d0,(v_waterline).w	; copy target scan line ($xx)
-
+		move.w	(v_hblank_hreg).w,d0			; get HBlank interrupt counter
+		move.w	d0,(a5)					; write to VDP register ($8Axx)
+		move.b	d0,(v_waterline).w			; copy target scan line ($xx)
+		move.w	#HBlank_WaterSurface,(HBlankSubW).w	; allow HBlank water palette swap
 		writeVRAM	v_hscrolltablebuffer,vram_hscroll ; transfer H-scroll buffer table to actual H-scroll VRAM
 		writeVRAM	v_spritetablebuffer,vram_sprites  ; transfer sprite buffer table to actual sprites VRAM
 		jsr	ProcessDMAQueue(pc)
@@ -751,9 +766,10 @@ VBlank_Unused0E:
 ; loc_F9A: VBla_12:
 VBlank_PaletteFade:
 		bsr.w	VBlank_StandardTransfers		; do standard screen transfers
-		move.w	(v_hblank_hreg).w,d0	; get HBlank interrupt counter
-		move.w	d0,(a5)			; write to VDP register ($8Axx)
-		move.b	d0,(v_waterline).w	; copy target scan line ($xx)
+		move.w	(v_hblank_hreg).w,d0			; get HBlank interrupt counter
+		move.w	d0,(a5)					; write to VDP register ($8Axx)
+		move.b	d0,(v_waterline).w			; copy target scan line ($xx)
+		move.w	#HBlank_WaterSurface,(HBlankSubW).w	; allow HBlank water palette swap
 		rts
 
 ; ===========================================================================
@@ -804,11 +820,28 @@ VBlank_StandardTransfers:
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
+; Base/void HBlank handler
+; ---------------------------------------------------------------------------
+
+NullInt:
+		rte
+; ---------------------------------------------------------------------------
+
+HBlank_BaseHandler:
+		; WARNING! Don't change this code or opcode size unless you know
+		; what you're doing, this may break the interrupt handler completely!
+		jmp	(NullInt).w
+
+
+; ===========================================================================
+; ---------------------------------------------------------------------------
 ; Horizontal interrupt (exclusively used for the LZ water palette effect)
 ; ---------------------------------------------------------------------------
 
 ; PalToCRAM: <-- old misnomer
-HBlank:
+HBlank_WaterSurface:
+		move.w	#NullInt,(HBlankSubW).w			; disable further horizontal interrupts this frame
+
 		movem.l	d0-d2/a0-a2,-(sp)			; backup registers
 
 		lea	(vdp_data_port).l,a1			; load VDP data port to a1
@@ -2553,13 +2586,16 @@ Level_ClrRam:
 		move.w	#$8400+(vram_bg>>13),(a6)		; set background nametable address
 		move.w	#$8500+(vram_sprites>>9),(a6)		; set sprite table address
 		move.w	#$9001,(a6)				; 64-cell hscroll size
-		move.w	#$8004,(a6)				; 8-colour mode
+		move.w	#$8004,(a6)				; 8-colour mode, disable horizontal interrupts
 		move.w	#$8720,(a6)				; set background colour (line 3; colour 0)
 		move.w	#$8A00+223,(v_hblank_hreg).w		; set palette change position (for water)
 		move.w	(v_hblank_hreg).w,(a6)			; write to VDP
 
+		move.w	#$4E73,(HBlankHndl).w			; override HBlank handler with "rte"
+		move.w	#NullInt,(HBlankSubW).w			; don't run any code during HInt
 		cmpi.b	#id_LZ,(v_zone).w			; is level LZ?
 		bne.s	Level_LoadPal				; if not, branch
+		move.w	#HBlank_WaterSurface,(HBlankSubW).w	; target HBlank water palette swap handler
 		move.w	#$8014,(a6)				; enable horizontal interrupts (HBlank)
 		moveq	#0,d0					; clear d0
 		move.b	(v_act).w,d0				; get current LZ act
@@ -2700,6 +2736,8 @@ Level_WtrNotSbz:
 		bsr.w	PalLoad_Water				; load underwater palette to active palette
 
 Level_Delay:
+		move.w	#$4EF8,(HBlankHndl).w			; restore HBlank handler ("jmp xxx.w")
+
 		move.w	#$202F,(v_pfade_start).w		; set to fade in 2nd, 3rd & 4th palette lines
 		bsr.w	PalFadeIn_Playable_Alt
 		move.b	#1,(v_draw_hud).w			; enable HUD drawing (and allow flashing)
@@ -3246,6 +3284,8 @@ GM_Ending:
 		move.w	#$8A00+223,(v_hblank_hreg).w		; set palette change position (for water)
 		move.w	(v_hblank_hreg).w,(a6)			; write to VDP
 		move.w	#30,(v_air).w				; replenish air
+		move.w	#$4E73,(HBlankHndl).w			; override HBlank handler with "rte"
+		move.w	#NullInt,(HBlankSubW).w			; don't run any code during HInt
 
 		move.w	#id_EndZ_good,(v_zone_act).w		; set to good ending by default (level number 600, extra flowers)
 		cmpi.b	#ss_emeralds_num,(v_emeralds).w		; do you have all 6 emeralds?
