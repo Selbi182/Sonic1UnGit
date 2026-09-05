@@ -589,8 +589,8 @@ BossFinal_Display:
 ; loc_1A2C6:
 BossFinal_Cockpit: ; Routine 8
 		movea.l	BossFinal_ParentObj(a0),a1		; copy main controller
-		move.b	(a1),d0					; copy first byte of parent object
-		cmp.b	(a0),d0					; is the object ID (first byte) the same as our own byte?
+		move.l	obID(a1),d0				; copy first byte of parent object
+		cmp.l	obID(a0),d0				; is the object ID (first byte) the same as our own byte?
 		bne.w	BossFinal_Delete			; if not, branch
 		cmpi.l	#Map_Eggman,obMap(a1)			; are the mappings currently set to Eggman?
 		beq.s	.escapeFace				; if yes, branch

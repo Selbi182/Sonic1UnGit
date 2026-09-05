@@ -377,8 +377,8 @@ BossLabyrinth_ShipDel:
 
 BossLabyrinth_FaceMain:	; Routine 4
 		movea.l	BossLabyrinth_ParentObj(a0),a1		; load the main boss controller
-		move.b	(a1),d0					; copy object ID
-		cmp.b	(a0),d0					; does the face have the same object ID as the boss (aka boss has been deleted offscreen)?
+		move.l	obID(a1),d0				; copy object ID
+		cmp.l	obID(a0),d0				; does the face have the same object ID as the boss (aka boss has been deleted offscreen)?
 		bne.s	BossLabyrinth_FaceDel			; if not, branch
 		moveq	#0,d0
 		move.b	ob2ndRout(a1),d0

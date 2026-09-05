@@ -539,8 +539,8 @@ BossSpringYard_FaceMain:	; Routine 4
 		move.w	BSYZ_FaceMain_Index(pc,d0.w),d0		; use the object routine index and BSYZ_FaceMain_Index to calculate our offset
 		jsr	BSYZ_FaceMain_Index(pc,d0.w)		; jump into the table and use our offset to pick a routine in the index to go to
 		move.b	d1,obAnim(a0)				; set facenormal1 animation
-		move.b	(a0),d0					; copy boss object
-		cmp.b	(a1),d0					; are the IDs the same?
+		move.l	obID(a0),d0				; copy boss object
+		cmp.l	obID(a1),d0				; are the IDs the same?
 		bne.s	BossSpringYard_FaceDelete		; if not, delete
 		bra.s	BossSpringYard_SetupAnim				;
 ; ===========================================================================
