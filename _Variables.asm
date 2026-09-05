@@ -102,8 +102,9 @@ v_starsobj4:		equ	v_objspace+object_size*11	; object variable space for the invi
 
 v_splash:		equ	v_objspace+object_size*12	; object variable space for the water splash ($40 bytes)
 v_sonicbubbles:		equ	v_objspace+object_size*13	; object variable space for the bubbles that come out of Sonic's mouth/drown countdown ($40 bytes)
-
 v_afterimage:		equ	v_objspace+object_size*14	; object variable space for Sonic's after image effect ($40 bytes)
+
+v_points:		equ	v_objspace+object_size*15	; object variable space for points from destroyed badniks ($40 bytes)
 
 v_endcard:		equ	v_objspace+object_size*23	; object variable space for the level results card ($1C0 bytes)
 v_endcardsonic:		equ	v_endcard+object_size*0		; object variable space for the level results card "SONIC HAS" text ($40 bytes)
