@@ -13,6 +13,7 @@ MBlock_Index:	dc.w MBlock_Main-MBlock_Index
 		dc.w MBlock_Platform-MBlock_Index
 		dc.w MBlock_StandOn-MBlock_Index
 
+mblock_raft:		equ objoff_2F	; flag set for hidden LZ1 raft
 mblock_origX:		equ objoff_30	; initial X-position
 mblock_origY:		equ objoff_32	; initial Y-position
 mblock_slide_wait:	equ objoff_34	; (subtype 9/A only) delay before red sliding floor moves back
@@ -142,6 +143,13 @@ MBlock_LeftRight:
 
 ; Type 2/4/9 - stationary, advances to next subtype when stood on (3/5/A)
 MBlock_NextWhenStoodOn:
+		tst.b	(mblock_raft).w				; is this the hidden LZ1 raft?
+		beq.s	.noRaft					; if not, branch
+		move.w	(v_waterpos1).w,d0			; get water height
+		addq.w	#8,d0					; move platform 8px down
+		move.w	d0,obY(a0)				; align platform to water
+	.noRaft:
+
 		cmpi.b	#4,obRoutine(a0)			; is Sonic standing on the platform?
 		bne.s	.return					; if not, branch
 		addq.b	#1,obSubtype(a0)			; if yes, go to next subtype in list
@@ -169,6 +177,13 @@ MBlock_Right_StopOnWall:
 
 ; Type 5 (set from Type 4) - moves right, advances to Type 6 on wall hit (falling down)
 MBlock_Right_FallOnWall:
+		tst.b	(mblock_raft).w				; is this the hidden LZ1 raft?
+		beq.s	.noRaft					; if not, branch
+		move.w	(v_waterpos1).w,d0			; get water height
+		addq.w	#8,d0					; move platform 8px down
+		move.w	d0,obY(a0)				; align platform to water
+	.noRaft:
+
 		moveq	#0,d3					; clear d3
 		move.b	obActWid(a0),d3				; use platform half-width as pixels to look ahead
 		bsr.w	ObjHitWallRight				; get distance to platform right edge and nearest wall
@@ -202,9 +217,14 @@ MBlock_FallingDown:
 
 ; Type 7 - appears when switch ID 2 is pressed (secret LZ1 raft leading to shortcut)
 MBlock_SecretLZ1Raft:
+		tst.b	(f_obj56).w				; has switch already been pressed? (reusing another flag that's not used in LZ1)
+		bne.s	.spawn					; if yes, force spawn anyway
 		tst.b	(f_switch+2).w				; has switch number 02 been pressed?
 		beq.s	.hidePlatform				; if not, branch
+	.spawn:
 		subq.b	#3,obSubtype(a0)			; change platform to type 04 (stationary, moves right when stood on, drops on wall hit)
+		st.b	(mblock_raft).w				; set raft flag
+		st.b	(f_obj56).w				; set flag to force respawn
 
 	.hidePlatform:
 		; This line, combined with the coordinate being pushed
