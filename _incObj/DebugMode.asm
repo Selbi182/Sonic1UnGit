@@ -30,7 +30,7 @@ Debug_Init:	; Routine 0
 		; Do vertical wrapping in LZ3 and SBZ2
 		andi.w	#$7FF,(v_player+obY).w			; wrap Sonic's Y-position
 		andi.w	#$7FF,(v_screenposy).w			; wrap screen Y-position
-		andi.w	#$3FF,(v_bgscreenposy).w		; wrap background Y-position
+	;	andi.w	#$3FF,(v_bgscreenposy).w		; wrap background Y-position
 	.wrapDone:
 
 		move.b	#fr_Null,obFrame(a0)			; set Sonic's frame to null (blank)
