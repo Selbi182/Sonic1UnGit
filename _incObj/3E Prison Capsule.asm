@@ -4,14 +4,31 @@
 ; ---------------------------------------------------------------------------
 
 Prison:
+		; Cut the capsule sequence short if button is held
+		cmpi.b	#8,obRoutine(a0)			; are animals set to spawn/jump out?
+		blo.s	Pri_EndAct_Normal			; if not, branch
+		moveq	#btnABC,d0				; is ABC...
+		and.b	(v_jpadhold1).w,d0			; ...held?
+		beq.s	Pri_EndAct_Normal			; if not, branch
+
+		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d0 ; number of objects to check
+		lea	(v_lvlobjspace).w,a1			; start dynamic object RAM space
+	.loopFindExplosions:
+		cmp.l	#Explosion,obID(a1)			; have explosion objects full gone away? (VRAM conflict with end cards)
+		beq.s	Pri_EndAct_Normal			; if not yet, branch
+		lea	object_size(a1),a1			; go to next object
+		dbf	d0,.loopFindExplosions			; loop for all objects
+		move.b	#$C,obRoutine(a0)			; if explosions have disappeared, set to Pri_LoadEndCard
+
+Pri_EndAct_Normal:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Pri_Index(pc,d0.w),d1
 		jsr	Pri_Index(pc,d1.w)
 
 		out_of_range.s	.delete				; is capsule offscreen? if yes, branch
-		DisplaySprite
-		rts			; display capsule
+		DisplaySprite					; display capsule
+		rts
 	.delete:
 		jmp	(DeleteObject).l			; delete capsule
 ; ===========================================================================
@@ -21,6 +38,7 @@ Pri_Index:	dc.w Pri_Main-Pri_Index		; 0
 		dc.w Pri_Explosion-Pri_Index	; 6
 		dc.w Pri_Animals-Pri_Index	; 8
 		dc.w Pri_EndAct-Pri_Index	; A
+		dc.w Pri_LoadEndCard-Pri_Index	; C
 
 pri_origY:	equ objoff_30		; original y-axis position
 ; ===========================================================================
@@ -195,7 +213,7 @@ Pri_SpawnAnimals:
 		rts						; return
 ; ===========================================================================
 
-Pri_Animals:	; Routine $C
+Pri_Animals:	; Routine 8
 		moveq	#7,d0					; only spawn an animal every 8 frames...
 		and.b	(v_vblank_byte).w,d0			; ...based in VBlank frame counter
 		bne.s	.chkDelay				; skip on other frames
@@ -224,24 +242,27 @@ Pri_Animals:	; Routine $C
 		rts						; return
 ; ===========================================================================
 
-Pri_EndAct:	; Routine $E
+Pri_EndAct:	; Routine $A
 		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d0 ; number of objects to check
 		move.l	#Animals,d1				; set object ID to check
 		moveq	#object_size,d2				; set increment value per object to check
 		lea	(v_lvlobjspace).w,a1			; start dynamic object RAM space
-
-.loopFindAnimals:
+	.loopFindAnimals:
 		cmp.l	obID(a1),d1				; has animal object been deleted?
 		beq.s	.return					; if not yet, branch
 		adda.w	d2,a1					; check next object RAM slot
 		dbf	d0,.loopFindAnimals			; repeat for entire object RAM space
 
+		move.b	#$C,obRoutine(a0)			; all animals have gone off screen, load end cards
+	
+	.return:
+		rts
+; ===========================================================================
+
+Pri_LoadEndCard: ; Routine $C
 		jsr	(GotThroughAct).l			; all animal objects have been deleted, launch end-of-level title cards (object 3A)
 		addq.l	#4,sp					; don't return to Prison to avoid DisplaySprite
 		jmp	(DeleteObject).l			; delete prison switch object
-
-	.return:
-		rts						; return to display
 ; ===========================================================================
 
 		include	"_anim/Prison Capsule.asm"
