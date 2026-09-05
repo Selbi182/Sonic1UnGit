@@ -168,10 +168,14 @@ Mon_BreakOpen:	; Routine 4 (set from ReactToItem)
 		move.w	obY(a0),obY(a1)				; copy Y position
 		move.b	obAnim(a0),obAnim(a1)			; copy animation (which also handles the power-up)
 
+		cmpi.b	#5,obAnim(a1)				; was broken monitor invincibility?
+		bne.s	Mon_Explode				; if not, branch
+		move.b	#1,(v_invinc).w				; make Sonic immediately invincible for that short gap between
+
 Mon_Explode:
 		bsr.w	FindFreeObj				; find another free object slot
 		bne.s	Mon_RememberBroken			; if object RAM is full, branch
-		move.l	#ExplosionItem,obID(a1)		; load explosion object
+		move.l	#ExplosionItem,obID(a1)			; load explosion object
 		addq.b	#2,obRoutine(a1)			; skip over ExItem_Animal so no animal is spawned
 		move.w	obX(a0),obX(a1)				; copy X position
 		move.w	obY(a0),obY(a1)				; copy Y position
