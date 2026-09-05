@@ -158,10 +158,23 @@ PaletteFadeOut:
 .mainloop:
 		move.b	#id_VBlank_PaletteFade,(v_vblank_routine).w
 		bsr.w	WaitForVBlank
+
+		; Check if the entire palette is black, exit fade-out loop early if so
+		lea	(v_palette_water).w,a0
+		moveq	#(v_palette_end-v_palette_water)/4-1,d0
+	.checkAllBlack:
+		tst.l	(a0)+
+		bne.s	.notAllBlack
+		dbf	d0,.checkAllBlack
+		bra.s	.return
+	.notAllBlack:
+
 		bchg	#$00,d6					; MJ: change delay counter
 		beq.s	.mainloop				; MJ: if null, delay a frame
 		bsr.s	FadeOut_ToBlack
 		dbf	d4,.mainloop
+
+.return:
 		rts
 ; End of function PaletteFadeOut
 
