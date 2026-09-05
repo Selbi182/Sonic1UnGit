@@ -141,7 +141,9 @@ GotThroughAct:
 		clr.b	(v_invinc).w				; disable invincibility
 		clr.b	(f_timecount).w				; stop time counter
 		move.l	#GotThroughCard,(v_endcard+obID).w	; load end card object (and prevent this routine from running again)
+		move.b	#id_VBlank_MusicOnly,(v_vblank_routine).w
 		jsr	(Got_LoadArt).l				; load end-of-level title card graphics
+		clr.b	(v_vblank_routine).w
 		move.b	#1,(f_endactbonus).w			; update bonus HUD for pre-tally display
 
 	; Time Bonus

@@ -545,7 +545,7 @@ TTLCard_Got_TBonus:	spriteHeader		; TIME BONUS
 	spritePiece	-$07, -8, 1, 2, ArtTile_HUDScore_SCOR-ArtTile_Title_Card, 0, 0, 0, 0	; "S"
 	spritePiece	-$0A, -9, 2, 1, TTL_SmOval, 0, 0, 0, 0	; Small oval (upper half)
 	spritePiece	-$0B, -1, 2, 1, TTL_SmOval, 1, 1, 0, 0	; Small oval (lower half)
-	spritePiece	 $28, -$8, 4, 2, -$10, 0, 0, 0, 0	; Tally (first four digits)
+	spritePiece	 $28, -$8, 4, 2,ArtTile_Bonuses-ArtTile_Title_Card, 0, 0, 0, 0	; Tally (first four digits)
 	spritePiece	 $48, -8, 1, 2, ArtTile_FakeZero-ArtTile_Title_Card, 0, 0, 0, 0	; Tally (last digit, fake zero)
 TTLCard_Got_TBonus_End
 
@@ -555,7 +555,7 @@ TTLCard_Got_RBonus:	spriteHeader		; RING BONUS
 	spritePiece	-$07, -8, 1, 2, ArtTile_HUDScore_SCOR-ArtTile_Title_Card, 0, 0, 0, 0	; "S"
 	spritePiece	-$0A, -9, 2, 1, TTL_SmOval, 0, 0, 0, 0	; Small oval (upper half)
 	spritePiece	-$0B, -1, 2, 1, TTL_SmOval, 1, 1, 0, 0	; Small oval (lower half)
-	spritePiece	 $28, -$8, 4, 2, -8, 0, 0, 0, 0		; Tally (first four digits)
+	spritePiece	 $28, -$8, 4, 2,ArtTile_Bonuses-ArtTile_Title_Card+8, 0, 0, 0, 0		; Tally (first four digits)
 	spritePiece	 $48, -8, 1, 2, ArtTile_FakeZero-ArtTile_Title_Card, 0, 0, 0, 0	; Tally (last digit, fake zero)
 TTLCard_Got_RBonus_End
 	even
@@ -596,7 +596,7 @@ TTLCard_SSR_Ring:	spriteHeader	; Ring Bonus tally
 	spritePiece	-$07, -8, 1, 2, ArtTile_HUDScore_SCOR-ArtTile_Title_Card, 0, 0, 0, 0	; "S"
 	spritePiece	-$0A, -9, 2, 1, TTL_SmOvalSSR, 0, 0, 0, 0 ; Small oval (upper half)
 	spritePiece	-$0B, -1, 2, 1, TTL_SmOvalSSR, 1, 1, 0, 0 ; Small oval (lower half)
-	spritePiece	 $28, -8, 4, 2, -8, 0, 0, 0, 0		; Tally (first four digits)
+	spritePiece	 $28, -8, 4, 2, ArtTile_Bonuses-ArtTile_Title_Card+8, 0, 0, 0, 0		; Tally (first four digits)
 	spritePiece	 $48, -8, 1, 2, ArtTile_FakeZero-ArtTile_Title_Card, 0, 0, 0, 0	; Tally (last digit, fake zero)
 TTLCard_SSR_Ring_End
 

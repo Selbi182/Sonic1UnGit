@@ -578,6 +578,8 @@ ArtTile_Lives_Counter_Num:	equ ArtTile_Lives_Counter_2+5
 
 ArtTile_HUDLagFrame:		equ $7FC
 
+ArtTile_Bonuses:		equ $5E0
+
 ; Generic
 ArtTile_Sonic:			equ $780
 ArtTile_Points:			equ $79E
@@ -601,7 +603,6 @@ ArtTile_Prison_Capsule:		equ $49D
 ArtTile_Hidden_Points:		equ $4B6
 ArtTile_Warp:			equ $541
 ArtTile_Mini_Sonic:		equ $551
-ArtTile_Bonuses:		equ $570
 ArtTile_Signpost:		equ $680
 
 ; Sega Screen
