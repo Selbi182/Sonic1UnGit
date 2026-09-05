@@ -23,7 +23,7 @@ SmashObject:
 ; ===========================================================================
 
 .loopFragments:
-		bsr.w	FindNextFreeObj				; find a free object slot after the previous one
+		bsr.w	FindNextFreeObj_Next			; find a free object slot after the previous one
 		bne.s	.playSmashSound				; if object RAM is full, abort process
 		addq.w	#8,a3					; advance to next sprite piece in mappings (each piece is 5 bytes)
 

@@ -109,7 +109,7 @@ SpinC_Main_Spawner:
 ; ---------------------------------------------------------------------------
 
 .loopMakePlatforms:
-		jsr	(FindNextFreeObj).l			; find next free object RAM slot
+		jsr	(FindNextFreeObj_Next).l		; find next free object RAM slot
 		bne.s	.next					; if object RAM is full, branch
 
 	; SpinC_LoadPform:

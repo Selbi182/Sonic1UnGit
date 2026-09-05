@@ -287,7 +287,7 @@ FragmentatePlatform:
 ; ===========================================================================
 
 .loopFragments:
-		bsr.w	FindFreeObj				; find a free object slot
+		bsr.w	FindNextFreeObj_Next			; find a free object slot
 		bne.s	.fragmentationDone			; if object RAM is full, branch
 		addq.w	#8,a3					; advance to next sprite piece in mappings
 	.firstFragment:

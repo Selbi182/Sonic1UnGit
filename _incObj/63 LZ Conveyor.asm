@@ -139,7 +139,7 @@ LCon_Main_Spawner:
 ; ---------------------------------------------------------------------------
 
 .loopMakePlatforms:
-		bsr.w	FindNextFreeObj				; find next free object RAM slot
+		bsr.w	FindNextFreeObj_Next			; find next free object RAM slot
 		bne.s	.next					; if object RAM is full, branch
 
 	.makePlatform:

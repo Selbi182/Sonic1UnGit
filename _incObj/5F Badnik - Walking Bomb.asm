@@ -178,7 +178,7 @@ Bom_BurnFuseAndExplode:
 ; ---------------------------------------------------------------------------
 
 .loopShrapnel:
-		bsr.w	FindNextFreeObj				; find a free object slot
+		bsr.w	FindNextFreeObj_Next			; find a free object slot
 		bne.s	.nextShrapnel				; if object RAM is full, branch (should probably branch after the dbf...)
 
 	.firstShrapnel:

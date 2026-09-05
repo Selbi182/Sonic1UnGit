@@ -44,7 +44,7 @@ Stair_Main:	; Routine 0
 ; ===========================================================================
 
 	.loop:
-		bsr.w	FindNextFreeObj				; find a free object slot
+		bsr.w	FindNextFreeObj_Next			; find a free object slot
 		bne.w	Stair_Move				; if object RAM is full, branch
 		move.b	#4,obRoutine(a1)			; set stair element to Stair_Solid routine
 

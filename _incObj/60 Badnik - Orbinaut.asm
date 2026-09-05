@@ -43,9 +43,10 @@ Orb_Main:	; Routine 0
 		movea.l	a2,a3					; keep a copy of the base address (will be used for ammo counter)
 		addq.w	#1,a2					; advance remembered data pointer to next byte, will hold RAM indices
 		moveq	#4-1,d1					; load 4 orbiting spikeballs
+		movea.l	a0,a1
 
 .loopSpikeBalls:
-		bsr.w	FindNextFreeObj				; find a free object slot
+		bsr.w	FindNextFreeObj_Next			; find a free object slot
 		bne.s	.finishSpikeBalls			; if object RAM is full, branch
 		addq.b	#1,(a3)					; increment number of attached spikeballs (ammo, basically)
 		move.w	a1,d5					; copy target RAM location from FindNextFreeObj

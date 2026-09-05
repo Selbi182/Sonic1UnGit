@@ -47,9 +47,10 @@ Bri_Main:	; Routine 0
 		sub.w	d0,d3					; d3 = X-position of leftmost log
 		subq.b	#2,d1					; -1 for dbf, -1 for parent log
 		bcs.s	Bri_Action				; branch on underflow (bridge only has only 1 log)
+		movea.l	a0,a1
 
 .loopBuildBridge:
-		jsr	(FindNextFreeObj).l			; find next free object RAM slot
+		jsr	(FindNextFreeObj_Next).l			; find next free object RAM slot
 		bne.s	Bri_Action				; if object RAM is full, abort
 		addq.b	#1,bridge_children(a0)			; increment number of loaded child objects
 
@@ -336,15 +337,14 @@ Bri_ChkDel:
 		movea.l	d0,a1					; move result to a1 as input for DeleteChild
 		cmp.w	a0,d0					; is current object the main parent log?
 		beq.s	.next					; if yes, postpone deletion
-		bsr.w	DeleteChild				; delete child log object
+		jsr	(DeleteChild).l				; delete child log object
 	.next:	dbf	d2,.loopDeleteLogs			; repeat for bridge length
 
 	.deleteParentLog:
-		bra.w	DeleteObject				; finally, delete main parent log itself
 ; ===========================================================================
 
-Bri_Delete:	; Routine 6/8 (unused?)
-		bra.w	DeleteObject				; delete object
+Bri_Delete:	; Routine 6/8
+		jmp	(DeleteObject).l				; delete object
 ; ===========================================================================
 
 Map_Bri:	include	"_maps/Bridge.asm"
@@ -446,9 +446,12 @@ BriOpti_StoodOn:
 ; ---------------------------------------------------------------------------
 
 BriOpti_ChkDelOrDisplay:
-		out_of_range.w	DeleteObject,briopti_origX(a0)	; check if bridge has gone offscreen and delete it if so
+		out_of_range.s	.delete,briopti_origX(a0)	; check if bridge has gone offscreen and delete it if so
 		DisplaySprite
 		rts				; display sprite
+
+	.delete:
+		jmp	(DeleteObject).l
 ; ===========================================================================
 
 ; ---------------------------------------------------------------------------

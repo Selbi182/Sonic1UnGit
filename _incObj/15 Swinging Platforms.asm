@@ -21,12 +21,6 @@ swing_children:	equ objoff_30		; number of child link objects ($28 = child count
 swing_origY:	equ objoff_1C		; original y-axis position
 swing_origX:	equ objoff_1E		; original x-axis position
 swing_radius:	equ objoff_1B		; radius distance from center, individual per chain link
-
-
-;swing_children:	equ obSubtype		; number of child link objects ($28 = child count, $29-$39 RAM indices to links)
-;swing_origY:	equ objoff_38		; original y-axis position
-;swing_origX:	equ objoff_3A		; original x-axis position
-;swing_radius:	equ objoff_3C		; radius distance from center, individual per chain link
 ; ===========================================================================
 
 Swing_Main:	; Routine 0
@@ -73,13 +67,15 @@ Swing_CreateLinks:
 		move.b	d3,swing_radius(a0)			; set radius for parent object, based on link count
 		subq.b	#8,d3					; undo previous 8px addition
 
+		movea.l	a0,a1
+
 		tst.b	obFrame(a0)				; is parent object a main block? (...isn't it always?)
 		beq.s	.loopMakeChain				; if yes, branch
 		addq.b	#8,d3					; redo 8px addition once again
 		subq.w	#1,d1					; spawn one less child object
 
 .loopMakeChain:
-		bsr.w	FindNextFreeObj				; find next free object RAM slot
+		bsr.w	FindNextFreeObj_Next			; find next free object RAM slot
 		bne.s	.finalizeParent				; if object RAM is full, abort
 
 		addq.b	#1,swing_children(a0)			; increment number of loaded child objects
@@ -89,7 +85,7 @@ Swing_CreateLinks:
 		andi.w	#$7F,d5					; d5 = index of child in object RAM
 		move.b	d5,(a2)+				; store new child index at the end of swing_children
 
-		move.l	#Particle_DisplayOnly,obID(a1)		; copy object ID from parent
+		move.l	#Particle_DisplayOnly,obID(a1)		; links are display-only sprites
 		move.l	obMap(a0),obMap(a1)			; copy mappings from parent
 		move.w	obGfx(a0),obGfx(a1)			; copy art tile from parent
 		bclr	#6,obGfx(a1)				; force palette line 1 instead of line 3 (gray)
@@ -142,7 +138,7 @@ Swing_Platform:	; Routine 2
 
 ; Swing_Action:
 Swing_Swinging:	; Routine $C
-		bsr.w	Swing_Move				; swing platform and update its child links
+		bsr.s	Swing_Move				; swing platform and update its child links
 
 		bra.w	Swing_ChkDel				; delete platform and links if out of range
 ; ===========================================================================
@@ -154,7 +150,7 @@ Swing_StoodOn:	; Routine 4
 		bsr.w	ExitPlatform				; allow Sonic exiting platform (sets obRoutine = 2 (Swing_Platform) on exit)
 
 		move.w	obX(a0),-(sp)				; backup platform X-position before calling Swing_Move
-		bsr.w	Swing_Move				; swing platform and update its child links
+		bsr.s	Swing_Move				; swing platform and update its child links
 
 		move.w	(sp)+,d2				; restore previous platform X-position as input for MvSonicOnPtfm
 		moveq	#0,d3					; clear d3

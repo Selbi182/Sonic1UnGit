@@ -70,18 +70,19 @@ Cat_Main:	; Routine 0
 		moveq	#0,d3
 		moveq	#4,d4
 		movea.l	a0,a2					; parent object address
+		movea.l	a0,a1
 		moveq	#3-1,d1					; load 3 spiked body segments
 
 .loopCreateBodySegments:
-		jsr	(FindNextFreeObj).l			; find a free object slot
+		jsr	(FindNextFreeObj_Next).l		; find a free object slot
 		bne.w	Cat_Despawn				; if object RAM is full, branch
 
-		move.l	#Caterkiller,obID(a1)		; load body segment object
+		move.l	#Caterkiller,obID(a1)			; load body segment object
 		move.b	d6,obRoutine(a1)			; goto Cat_BodySeg1 or Cat_BodySeg2 next
 		addq.b	#2,d6					; alternate between the two
 		move.l	obMap(a0),obMap(a1)			; copy mappings
 		move.w	obGfx(a0),obGfx(a1)			; copy art tile and palette line
-		move.w	#spr_prio5,obPriority(a1)			; set sprite priority (behind head)
+		move.w	#spr_prio5,obPriority(a1)		; set sprite priority (behind head)
 		move.b	#16/2,obActWid(a1)			; set sprite display width
 		move.b	#col_16x16|col_special,obColType(a1)	; special ReactToItem handler for body parts ($CB)
 		add.w	d5,d2					; increase body part gap distance

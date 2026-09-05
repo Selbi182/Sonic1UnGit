@@ -73,7 +73,7 @@ CStom_Main:	; Routine 0
 ; ---------------------------------------------------------------------------
 
 .loopMakeStomper:
-		bsr.w	FindNextFreeObj				; find a free object slot
+		bsr.w	FindNextFreeObj_Next			; find a free object slot
 		bne.w	.setupMainBlock				; if object RAM is full, branch
 
 	.makeStomper:

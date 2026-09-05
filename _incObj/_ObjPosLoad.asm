@@ -536,24 +536,47 @@ FindNextFreeObj:
 		sub.w	a0,d0					; d0 = remaining RAM after parent object
 		lsr.w	#6,d0					; divide by $40 (object_size)
 		subq.w	#1,d0					; minus 1 for dbf
-		bcs.s	.ramFull				; if underflowed, parent object is at the end of RAM, quit
+		bcs.s	.return					; if underflowed, parent object is at the end of RAM, quit
 
 	.loop:
 		tst.l	obID(a1)				; is object RAM slot empty?
-		beq.s	.found					; if yes, exit and use that slot
+		beq.s	.return					; if yes, exit and use that slot
 		lea	object_size(a1),a1			; go to next object RAM slot
 		dbf	d0,.loop				; repeat for all free object RAM slots after parent
 
-	.ramFull:
-		moveq	#-1,d0					; keep Z-flag clear
-		rts						; return with result in CCR
-
-	.found:
-		; TODO update v_firstfreeobjslot accordingly
-		moveq	#0,d0					; keep Z-flag set
+	.return:
 		rts						; return with result in CCR and a1
 ; End of function FindNextFreeObj
 
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Variant of FindNextFreeObj using a1 as input, intended for repeated calls.
+; (Requires that the first call already has a1 set up properly!)
+; 
+; input:
+;	a1 = base object pointer
+; 
+; output:
+;	a1 = free position in object RAM
+;	CCR Z-flag = set if slot was found, clear if RAM is full
+; ---------------------------------------------------------------------------
+
+FindNextFreeObj_Next:
+		move.w	#v_lvlobjend&$FFFF,d0			; get end location of object RAM (16-bit)
+		sub.w	a1,d0					; d0 = remaining RAM after parent object
+		lsr.w	#6,d0					; divide by $40 (object_size)
+		subq.w	#1,d0					; minus 1 for dbf
+		bcs.s	.return					; if underflowed, parent object is at the end of RAM, quit
+
+	.loop:
+		tst.l	obID(a1)				; is object RAM slot empty?
+		beq.s	.return					; if yes, exit and use that slot
+		lea	object_size(a1),a1			; go to next object RAM slot
+		dbf	d0,.loop				; repeat for all free object RAM slots after parent
+
+	.return:
+		rts						; return with result in CCR and a1
+; End of function FindNextFreeObj_Next
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
