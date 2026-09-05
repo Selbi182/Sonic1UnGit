@@ -2,8 +2,8 @@
 ; ---------------------------------------------------------------------------
 ; Object 57 - spiked balls twirling on a chain (SYZ, LZ)
 ; ---------------------------------------------------------------------------
-sball_children:	equ objoff_30		; number of child objects (1 byte)
-		; $30-$37		; object RAM numbers of children (1 byte each)
+sball_childcount: equ objoff_2F		; number of child objects (1 byte)
+sball_children:	equ objoff_30		; object RAM numbers of children (2 bytes each)
 sball_origY:	equ objoff_1C		; centre y-axis position (2 bytes)
 sball_origX:	equ objoff_1E		; centre x-axis position (2 bytes)
 sball_radius:	equ objoff_1B		; radius (1 byte)
@@ -40,7 +40,7 @@ SpikeBall:
 		andi.b	#%11000000,d0				; mask out other bits ($C0)
 		move.b	d0,sball_angle(a0)				; set starting angle for chain based on flip flags
 
-		lea	sball_children(a0),a2			; load child RAM index array
+		lea	sball_childcount(a0),a2			; load child RAM index array
 		move.b	obSubtype(a0),d1			; get object subtype again
 		andi.w	#7,d1					; read only the lower digit, limited to 0-7 (child count)
 		move.b	#0,(a2)+				; initialize to 0 children
@@ -48,6 +48,7 @@ SpikeBall:
 		lsl.w	#4,d3					; multiply by $10 (distance between each link)
 		move.b	d3,sball_radius(a0)			; set radius for parent tip to maximum
 
+		movea.l	a0,a1
 		subq.w	#1,d1					; subtract 1 for dbf
 		bcs.s	.finalizeTip				; if it underflowed, only the parent is in chain, branch
 		btst	#3,obSubtype(a0)			; are 8 balls set to be spawned?
@@ -56,17 +57,13 @@ SpikeBall:
 		bcs.s	.finalizeTip				; if it underflowed, only the parent is in chain, branch
 
 .makeChain:
-		bsr.w	FindNextFreeObj				; find a free object slot (after current)
+		bsr.w	FindNextFreeObj_Next			; find a free object slot (after current)
 		bne.s	.finalizeTip				; if object RAM is full, branch
 
-		addq.b	#1,sball_children(a0)			; increment child object counter
-		move.w	a1,d5					; get child object RAM address
-		subi.w	#v_objspace&$FFFF,d5			; subtract by base object RAM location
-		lsr.w	#object_size_bits,d5			; divide by $40 (object_size)
-		andi.w	#$7F,d5					; limit to sane values
-		move.b	d5,(a2)+				; store RAM index for child object in parent for twirl and delete logic
+		addq.b	#1,sball_childcount(a0)			; increment child object counter
+		move.w	a1,(a2)+				; store RAM index for child object in parent for twirl and delete logic
 
-		move.l	#Particle_DisplayOnly,obID(a1)
+		move.l	#Particle_DisplayOnly,obID(a1)		; links are display-only sprites
 		move.l	obMap(a0),obMap(a1)			; copy mappings from parent
 		move.w	obGfx(a0),obGfx(a1)			; copy art tile from parent
 		move.b	obRender(a0),obRender(a1)		; copy render flags from parent
@@ -87,11 +84,7 @@ SpikeBall:
 		dbf	d1,.makeChain				; repeat for length of chain
 
 .finalizeTip:
-		move.w	a0,d5					; move RAM address for this parent object to d5
-		subi.w	#v_objspace&$FFFF,d5			; subtract by base object RAM location
-		lsr.w	#object_size_bits,d5			; divide by $40 (object_size)
-		andi.w	#$7F,d5					; limit to sane values
-		move.b	d5,(a2)+				; store RAM index for parent object in itself for twirl logic
+		move.w	a0,(a2)+				; store RAM index for parent object in itself for twirl logic
 
 		cmpi.b	#id_LZ,(v_zone).w			; check if level is LZ
 		bne.s	SBall_Move				; if not, branch
@@ -107,16 +100,12 @@ SBall_Move:	; Routine 2
 		jsr	(CalcSine).l				; calculate sine and cosine for current angle
 		move.w	sball_origY(a0),d2			; get initial Y-position
 		move.w	sball_origX(a0),d3			; get initial X-position
-		lea	sball_children(a0),a2			; load child RAM index array
+		lea	sball_childcount(a0),a2			; load child RAM index array
 
 		moveq	#0,d6					; clear d6
 		move.b	(a2)+,d6				; get number of loaded child objects
 	.loop:
-		moveq	#0,d4					; clear d4
-		move.b	(a2)+,d4				; get next child RAM index from array
-		lsl.w	#object_size_bits,d4			; multiply by $40 (object_size)
-		addi.l	#v_objspace&$FFFFFF,d4			; add base object RAM location
-		movea.l	d4,a1					; a1 = address of current child object in RAM
+		movea.w	(a2)+,a1				; a1 = address of current child object in RAM
 
 		moveq	#0,d4					; clear d4 again
 		move.b	sball_radius(a1),d4			; get radius for child object
@@ -139,14 +128,10 @@ SBall_ChkDel:
 
 .delete:
 		moveq	#0,d2					; clear d2
-		lea	sball_children(a0),a2			; load child RAM index array
+		lea	sball_childcount(a0),a2			; load child RAM index array
 		move.b	(a2)+,d2				; get number of loaded child objects
 	.deleteloop:
-		moveq	#0,d0					; clear d0
-		move.b	(a2)+,d0				; get next child RAM index from array
-		lsl.w	#object_size_bits,d0			; multiply by $40 (object_size)
-		addi.l	#v_objspace&$FFFFFF,d0			; add base object RAM location
-		movea.l	d0,a1					; move result to a1 (input for DeleteChild)
+		move.w	(a2)+,a1				; move child to a1 (input for DeleteChild)
 		bsr.w	DeleteChild				; delete the child object
 		dbf	d2,.deleteloop				; loop for all children in chain
 

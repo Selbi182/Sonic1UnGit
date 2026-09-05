@@ -63,7 +63,7 @@ GRing_Collect:	; Routine 4
 GRing_PlaySnd:
 		move.w	#sfx_GiantRing,d0			; set giant ring sound
 		jsr	(QueueSound2).l				; play it
-		bra.s	GRing_Animate				; keep animating ring until it's deleted by flash
+		bra.w	GRing_Animate				; keep animating ring until it's deleted by flash
 ; ===========================================================================
 
 GRing_Delete:	; Routine 6

@@ -4,6 +4,8 @@
 ; Also this more easily allows to inject non-standard sprite layers at
 ; specific priorities (e.g. HUD and rings).
 ; ---------------------------------------------------------------------------
+Debug_DisplayAndDeleteBugs: equ 1
+; ---------------------------------------------------------------------------
 
 spritelayer:	macro
 
@@ -14,7 +16,14 @@ spritelayer:	macro
 
 	.objectLoop\@:
 		move.w	(a4,d6.w),d4				; load object's address in RAM
+	if Debug_DisplayAndDeleteBugs
+		bne.s	.ok\@					; if non-zero, it's a proper object, render sprite
+		RaiseError "Display-and-Delete Bug"		; oh no
+	else
 		beq.w	.setNotVisible\@			; skip if sprite was queued for display but already got deleted
+	endif
+
+	.ok\@:
 		movea.w	d4,a0					; load object into to address register
 
 		move.w	obY(a0),d2				; load object Y-position (note, for screen-positioned objects this was changed from obScreenY)
@@ -154,8 +163,7 @@ buildsprite:	macro xflip,yflip
 		endif
 		add.w	d3,d0					; add X-position
 
-		; Y-culling for individual pieces (assuming 32px, max height)
-		andi.w	#$1FF,d0				; wrap every 512px (sprite plane size) for the mask prevention check
+		; X-culling for individual pieces (assuming 32px, max width)
 		cmpi.w	#$80-32,d0
 		bls.s	.xCull\@
 		cmpi.w	#$80+320+32,d0

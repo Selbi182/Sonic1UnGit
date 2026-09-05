@@ -120,6 +120,13 @@ Shi_Stars:	; Routine 4
 		beq.s	.display				; if yes, branch
 		move.b	(v_starsobj1+obFrame).w,obFrame(a0)	; borrow frame from first invincibility object
 .display:
+		tst.l	(v_player+obX).w			; is Sonic standing still?
+		bne.s	.moving					; if not, branch
+		cmpi.b	#1,obAnim(a0)				; is this the first invincibility object?
+		beq.s	.moving					; if yes, branch
+		rts						; hide the other stars while standing still to save on sprites
+	
+	.moving:
 		move.w	(v_player+invtime).w,d0
 		cmpi.w	#120,d0
 		bhs.s	.show

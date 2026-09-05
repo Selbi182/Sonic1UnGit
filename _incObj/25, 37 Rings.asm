@@ -69,6 +69,12 @@ rloss_velX:	equ	objoff_32				; X-speed of lost ring (long, preshifted <<8)
 rloss_velY:	equ	objoff_36				; Y-speed of lost ring (long, preshifted <<8)
 ; ---------------------------------------------------------------------------
 
+RingLoss_FirstFrame:
+		; First call to lost rings, to avoid lag frames on the frame rings are spawned
+		move.l	#RingLoss,obID(a0)			; activate real ring loss logic for next frame
+		rts						; don't do anything else this frame
+; ===========================================================================
+
 RingLoss_Shortcut:
 		lea	object_size(a0),a0			; advance to next object RAM slot (assumed to be another RingLoss, see .shortcut below)
 ; ---------------------------------------------------------------------------
@@ -106,7 +112,7 @@ RingLoss:
 		sub.w	(v_screenposy).w,d5			; subtract camera Y-position
 		addq.w	#16/2,d5				; add half of ring height (16/2 = 8px)
 		cmpi.w	#224+16,d5				; is ring vertically inside visible screen?
-		bcc.s	.checkFloorBounce			; if not, don't render (unsigned check = both sides)
+		bcc.w	.checkFloorBounce			; if not, don't render (unsigned check = both sides)
 		subi.w	#16-$80,d5				; add VDP sprite start and undo earlier 8px offset
 		swap	d5					; Y-position is written with X-position into v_lostring_spritequeue later
 
@@ -147,7 +153,8 @@ RingLoss:
 
 	.ringTouched:
 	;	cmpi.b	#90,(v_player+flashtime).w		; are more than 1.5s of invulnerability time from getting hurt left?
-	;	bhs.s	.renderLostRingSprite			; if yes, disallow collecting ring
+		cmpi.b	#(2*60)-15,(v_player+flashtime).w	; are more than 1.75s of invulnerability time from getting hurt left?
+		bhs.s	.renderLostRingSprite			; if yes, disallow collecting ring
 		tst.b	(v_debuguse).w				; is debug mode in use?
 		bne.s	.renderLostRingSprite			; if yes, prevent ring collection
 		cmpi.b	#2,(v_player+obRoutine).w		; is Sonic in his normal mode? (Sonic_Control)
@@ -255,7 +262,7 @@ RLoss_SpawnRings:
 	.ok:	subq.w	#1,d5					; decrement for dbf
 		bmi.s	.return					; if we have no rings, abort (failsafe)
 
-		move.l	#RingLoss,d4				; load ring loss objects
+		move.l	#RingLoss_FirstFrame,d4			; load ring loss objects
 		move.w	obX(a0),d2				; spawn rings at Sonic's X-position
 		move.w	obY(a0),d3				; spawn rings at Sonic's Y-position
 		lea	SpillRingData(pc),a3			; load pre-calculated spill velocities

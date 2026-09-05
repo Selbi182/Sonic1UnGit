@@ -7,6 +7,10 @@
 ;	a0 = address of OST of last object
 ; ---------------------------------------------------------------------------
 
+Particle_DisplayOnly:	equ -1
+
+; ---------------------------------------------------------------------------
+
 ExecuteObjects:
 		moveq	#(v_objspace_end-v_objspace)/object_size-1,d7 ; $80 objects - 1
 		lea	(v_objspace).w,a0			; set address for object RAM
@@ -15,6 +19,7 @@ ExecuteObjects:
 .run_object:
 		move.l	obID(a0),d0				; load object ID from RAM
 		beq.s	.next_object				; if ID is 0, this is an empty object slot, branch
+		bmi.s	.display_only				; if ID is negative, this is a display-only object
 		movea.l	d0,a1
 		jsr	(a1)					; run the object's code
 
@@ -35,4 +40,23 @@ ExecuteObjects:
 		lea	object_size(a0),a0			; increase a0 to go to next object entry ($40 bytes)
 		dbf	d7,.run_object				; loop until all objects have been executed
 		rts						; return
+
+.display_only:
+		DisplaySprite
+
+		tst.b	obColType(a0)				; does this object have collision with Sonic?
+		beq.s	.next_object				; if not, branch
+		tst.b	obRender(a0)				; is object even visible?
+		bpl.s	.next_object				; if not, branch
+		lea	(v_registeredcollision).w,a1		; get target queue
+		move.w	(a1),d0					; get queue's entry count
+		addq.b	#2,d0					; increase count by another entry (word)
+		bmi.s	.next_object				; if byte value went to $80, queue is full
+		move.w	d0,(a1)					; set new queue's entry count
+		move.w	a0,(a1,d0.w)				; insert RAM address for object to queue
+
+		lea	object_size(a0),a0			; increase a0 to go to next object entry ($40 bytes)
+		dbf	d7,.run_object				; loop until all objects have been executed
+		rts						; return
+		
 ; End of function ExecuteObjects

@@ -28,7 +28,7 @@ Particle_MovingFragment:
 		move.l	d2,particle_velY(a0)
 ; ---------------------------------------------------------------------------
 
-Particle_DisplayOnly:
+;Particle_DisplayOnly:	; relocated to be directly part of ExecuteObjects
 		DisplaySprite
 		rts				; otherwise, keep displaying fragment sprite
 ; ---------------------------------------------------------------------------
