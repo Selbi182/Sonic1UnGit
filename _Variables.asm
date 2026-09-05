@@ -28,6 +28,8 @@ v_plc_VRAMAddr:		ds.w	1				; VRAM destination address
 v_plc_ArtPtr:		ds.l	1				; pointer within compressed art (for multi-module art)
 v_plc_Modules:		ds.b	1				; number of remaining modules (for multi-module art)
 v_plc_Busy:		ds.b	1				; flag set while PLC is being executed
+v_plc_QuickNext:	ds.b	1
+			ds.b	1				; unused
 v_plc_buffer_end:
 
 Art_Buffer:		ds.b	$1000				; art decompression buffer used for PLCs

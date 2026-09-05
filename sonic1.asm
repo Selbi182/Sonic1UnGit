@@ -37,16 +37,17 @@ LagFrameCounter: = 2
 ;	| If 1, adds a counter at the top right HUD that counts lag frames
 ;	| If 2, also adds huge recursive calls to "LAGFRAME" to make them easier to spot in MD Profiler
 
-BootToLevel: = -1
+BootToLevel: = -2
 ;	| If set, will boot straight to a specified level (e.g. id_GHZ_act1)
-;	|         (set to -1 for booting to Sega Screen normally)
+;	| If -1, disable (boot to Sega Screen normally)
+;	| If -2, boot straight to level select
 
 CheatsEnabled: = 2
 ;	| If 1, all in-game cheats (Level Select, Debug Mode, Slow-Motion, Japanese Credits)
 ;	|       will be enabled by default, without requiring any title screen button inputs
 ;	| If 2, same as 1 but debug mode doesn't need to have A held down to get activated
 
-DebugHUDAlways: = 0
+DebugHUDAlways: = 1
 ;	| If 0, Debug Mode HUD will only show while in item placement mode
 ;	| If 1, Debug Mode HUD will always show if cheat is enabled
 
@@ -414,6 +415,9 @@ GameInit:
 		move.b	#id_Level,(v_gamemode).w
 		move.w	#BootToLevel,(v_zone_act).w
 		enable_display
+	elseif (BootToLevel=-2)
+		move.b	#id_Title,(v_gamemode).w
+		enable_display	
 	endif
 
 MainGameLoop:
@@ -1484,7 +1488,7 @@ ExecutePLC:
 		clr.l	(v_plc_buffer_only_end-plc_slot_size+0).w ; clear art location of last entry
 		clr.w	(v_plc_buffer_only_end-plc_slot_size+4).w ; clear VRAM dump location of last entry
 
-		; Immediately execute the next PLC entry if it's small enough to fit into the buffer
+		; Immediately execute the next PLC entry if it's small enough to fit into the buffer ("Quick Next")
 		tst.l	(v_plc_buffer).w			; are more tasks in the PLC queue?
 		beq.s	.return					; if not, branch
 		movea.l	(v_plc_buffer).w,a0			; get art location of next entry from PLC queue
@@ -1495,7 +1499,11 @@ ExecutePLC:
 		bge.s	.return					; if not, branch
 		movea.w	(VDP_Command_Buffer_Slot).w,a0		; get current DMA queue length
 		cmpa.w	#VDP_Command_Buffer_Slot,a0		; is DMA queue already full?
-		bne.w	.getNewPLCEntry				; if not, immediately execute next PLC entry
+		beq.s	.return					; if yes, branch
+		cmpi.b	#5,(v_plc_QuickNext).w			; has quick-next counter already reached 5?
+		bhs.s	.return					; if yes, abort anyway (to prevent lag frames)
+		addq.b	#1,(v_plc_QuickNext).w			; increase quick-next counter
+		bra.w	.getNewPLCEntry				; if not, immediately execute next PLC entry
 
 .return:
 		rts						; return
@@ -1741,6 +1749,7 @@ WaitForVBlank:
 
 		tst.l	(v_plc_buffer).w			; are any PLC jobs queued?
 		beq.s	.wait					; if not, branch
+		clr.b	(v_plc_QuickNext).w			; clear quick-next counter
 		tst.b	(v_plc_Busy).w				; has PLC DMA missed the previous frame?
 		bne.s	.wait					; if yes, don't advance PLC this frame
 		bsr.w	ExecutePLC				; decompress the next PLC entry and queue it for DMA
@@ -1878,6 +1887,9 @@ GM_Title:		; fading out from previous game mode
 		bsr.w	ClearScreen				; wipe the screen
 		clearRAM v_objspace				; clear object RAM
 		clearRAM v_lvllayout
+	if (BootToLevel=-2)
+		bra.s	Tit_SetupDuringSTP			; skip STP
+	endif
 
 		moveq	#plcid_TitleSonicTeam,d0		; load patterns through PLC list
 		bsr.w	QuickPLC				; decompress PLC list now and return once done
@@ -1897,6 +1909,7 @@ GM_Title:		; fading out from previous game mode
 		bsr.w	PaletteFadeIn				; fade-in STP screen
 ; ---------------------------------------------------------------------------
 
+Tit_SetupDuringSTP:
 		; load main title screen patterns while "SONIC TEAM PRESENTS" screen is shown
 		disable_ints					; display is frozen during the STP screen
 
@@ -1910,6 +1923,10 @@ GM_Title:		; fading out from previous game mode
 Tit_LoadText:
 		move.w	(a5)+,(a6)				; write one row of the level select font to VRAM
 		dbf	d1,Tit_LoadText				; loop until it's fully loaded
+
+	if (BootToLevel=-2)
+		jmp	(Tit_EnterLevelSelect).l		; skip straight to level select
+	endif
 
 		move.b	#0,(v_lastlamp).w			; clear lamppost counter
 		move.w	#0,(v_debuguse).w			; exit debug mode if necessary
@@ -2148,6 +2165,7 @@ LevelSelect:
 		beq.s	LevelSelect				; if not, loop level select
 
 LevSel_SelectionMade:
+		clr.b	(v_lastlamp).w				; clear lamppost count
 		move.w	(v_levselitem).w,d0			; get currently selected line
 		cmpi.w	#levsel_sndtest_row,d0			; have you selected item $14 (sound test)?
 		bne.s	LevSel_Level_SS				; if not, go to Level/SS subroutine
@@ -2284,12 +2302,16 @@ LevSelCode_US:	dc.b btnUp,btnDn,btnL,btnR,0,$FF
 LevSelControls:
 		move.b	(v_jpadpress1).w,d1			; get current button presses
 		andi.b	#btnUp+btnDn,d1				; is up/down pressed this frame?
-		bne.s	LevSel_UpDown				; if yes, branch
+		bne.s	LevSel_UpDown_Press			; if yes, branch
 		subq.w	#1,(v_levseldelay).w			; if held, subtract 1 from delay until next move
 		bpl.s	LevSel_SndTest				; if time remains, branch
+		move.w	#4-1,(v_levseldelay).w			; reset time delay (held)
+		bra.s	LevSel_UpDown
+
+LevSel_UpDown_Press:
+		move.w	#12-1,(v_levseldelay).w			; reset time delay (press)
 
 LevSel_UpDown:
-		move.w	#12-1,(v_levseldelay).w			; reset time delay
 		move.b	(v_jpadhold1).w,d1			; get currently held buttons
 		andi.b	#btnUp+btnDn,d1				; is up/down held?
 		beq.s	LevSel_SndTest				; if not, branch
@@ -3673,7 +3695,8 @@ TryAg_Exit:		; exit end screen and restart the gam
 ; >>> Badniks, explosions, and Badnik-related objects
 		include	"_incObj/1E, 20 Badnik - Ball Hog and Cannonball.asm"
 		include	"_incObj/27, 3F Explosions.asm"
-		include	"_incObj/28, 29 Animals and Points.asm"
+		include	"_incObj/28 Animals.asm"
+		include	"_incObj/29 Points.asm"
 		include	"_incObj/1F Badnik - Crabmeat.asm"
 		include	"_incObj/22, 23 Badnik - Buzz Bomber and Missile.asm"
 
