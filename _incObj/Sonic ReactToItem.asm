@@ -154,6 +154,7 @@ React_CheckHitboxOverlap:
 		moveq	#0,d1					; clear d1 (hitbox sizes are stored as bytes)
 		move.b	(a2)+,d1				; get object's vertical hitbox radius
 		move.w	obY(a1),d0				; get object's current Y-position
+		andi.w	#$7FF,d0				; fix Y-wrapping if necessary
 		sub.w	d1,d0					; get object's top edge
 		sub.w	d3,d0					; compare against Sonic's top edge
 		bhs.s	.sonicAbove				; branch if Sonic is above the object

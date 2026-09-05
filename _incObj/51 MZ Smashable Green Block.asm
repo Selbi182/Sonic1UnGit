@@ -71,9 +71,9 @@ Smab_Solid:	; Routine 2
 
 		bsr.w	FindFreeObj				; find a free object slot for the points
 		bne.s	.moveParent				; if object RAM is full, branch
-		move.l	#Points,obID(a1)			; load floating points object
-		move.w	obX(a0),obX(a1)				; use block's X-position
-		move.w	obY(a0),obY(a1)				; use block's Y-position
+		move.l	#Points,(v_points+obID).w		; load floating points object
+		move.w	obX(a0),(v_points+obX).w		; use block's X-position
+		move.w	obY(a0),(v_points+obY).w		; use block's Y-position
 
 		move.w	(v_itembonus).w,d2			; get combo-score chain before landing on floor again
 		addq.w	#1*2,(v_itembonus).w			; increment bonus counter (2 because Smab_Scores is word-based)
@@ -91,7 +91,7 @@ Smab_Solid:	; Routine 2
 		jsr	(AddPoints).l				; add d0 to current points
 
 		lsr.w	#1,d2					; make item bonus multiples of 1 again for frame ID
-		move.b	d2,obFrame(a1)				; set frame ID for floating points object
+		move.b	d2,(v_points+obFrame).w			; set frame ID for floating points object
 	.moveParent:
 		bra.w	Particle_MovingFragment
 
