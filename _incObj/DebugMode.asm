@@ -51,6 +51,7 @@ Debug_Init:	; Routine 0
 		move.b	d0,jumping(a0)				; clear jump flag
 		move.b	d0,objoff_38(a0)
 		move.b	d0,sticktoconvex(a0)			; clear SBZ gear flag
+		move.w	d0,flashtime(a0)
 
 		; Debug Mode makes no attempt to check if Sonic was standing on any
 		; object before entering it, causing behavior such as being stuck to

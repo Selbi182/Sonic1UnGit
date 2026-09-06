@@ -16,6 +16,7 @@ Pyl_Display:
 		add.l	d1,d1					; move pylons twice as fast as camera
 		swap	d1					; use upper word for position
 		neg.w	d1					; make pylons move opposite to the camera direction
+		andi.w	#$1FF,d1				; wrap to avoid sprite culling
 		move.w	d1,obX(a0)				; set new X-position
 
 		move.l	(v_screenposy).w,d1			; get current camera Y-position
