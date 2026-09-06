@@ -169,6 +169,12 @@ HudDebug:
 		move.b	(v_spritecount).w,d1			; load "number of sprites rendered" count
 		bsr.w	Hud_Secs				; write digits to VRAM
 
+.objectcounter:
+		locVRAM	(ArtTile_HUDTimeCentis+2)*tile_size,d0	; set VRAM address (replacing centiseconds)
+		moveq	#0,d1					; clear d1
+		move.b	(v_objcount).w,d1			; load "number of objects processed in ExecuteObjects" count
+		bsr.w	Hud_Secs				; write digits to VRAM
+
 .chklives:
 	if Enable_InfiniteLives=0
 		tst.b	(f_lifecount).w				; does the lives counter need updating?

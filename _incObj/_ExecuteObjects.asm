@@ -12,6 +12,7 @@ Particle_DisplayOnly:	equ -1
 ; ---------------------------------------------------------------------------
 
 ExecuteObjects:
+		clr.b	(v_objcount).w				; reset processed objects counter
 		moveq	#(v_objspace_end-v_objspace)/object_size-1,d7 ; $80 objects - 1
 		lea	(v_objspace).w,a0			; set address for object RAM
 
@@ -22,6 +23,7 @@ ExecuteObjects:
 		bmi.s	.display_only				; if ID is negative, this is a display-only object
 		movea.l	d0,a1
 		jsr	(a1)					; run the object's code
+		addq.b	#1,(v_objcount).w			; one more processed object
 
 		tst.b	obColType(a0)				; does this object have collision with Sonic?
 		beq.s	.next_object				; if not, branch
@@ -43,6 +45,7 @@ ExecuteObjects:
 
 .display_only:
 		DisplaySprite
+		addq.b	#1,(v_objcount).w			; one more processed object
 
 		tst.b	obColType(a0)				; does this object have collision with Sonic?
 		beq.s	.next_object				; if not, branch

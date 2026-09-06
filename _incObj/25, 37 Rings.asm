@@ -76,6 +76,7 @@ RingLoss_FirstFrame:
 ; ===========================================================================
 
 RingLoss_Shortcut:
+		addq.b	#1,(v_objcount).w			; one more processed object
 		lea	object_size(a0),a0			; advance to next object RAM slot (assumed to be another RingLoss, see .shortcut below)
 ; ---------------------------------------------------------------------------
 

@@ -184,7 +184,7 @@ v_misc_variables:
 v_vblank_0e_counter:	ds.b	1				; tracks how many times vertical interrupts routine 0E occurred (pretty much unused because routine 0E is unused)
 v_palmuscounter:	ds.b	1				; counter used to fix tempo for music in PAL regions
 v_vblank_routine:	ds.b	1				; VBlank - routine counter (previously called v_vbla_routine)
-			ds.b	1				; unused
+v_objcount:		ds.b	1				; number of objects processed in ExecuteObjects
 v_spritecount:		ds.b	1				; number of sprites on-screen
 v_skipspriteculling:	ds.b	1				; flag set to disable X-sprite culling
 v_firstfreeobjslot:	ds.w	1				; pointer to (assumed) first free object slot in v_lvlobjspace
