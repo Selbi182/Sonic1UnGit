@@ -212,7 +212,7 @@ Pow_Index:	dc.w Pow_Main-Pow_Index				; 0 - init
 
 Pow_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)			; advance to Pow_Move
-		move.w	#ArtTile_Monitor,obGfx(a0)		; set art tile
+		move.w	#ArtTile_Monitor|Tile_Prio,obGfx(a0)		; set art tile
 		move.b	#sprite_rawmappings|sprite_cam_field,obRender(a0) ; set "raw-mappings" flag and playfield-positioned mode
 		move.w	#spr_prio3,obPriority(a0)			; set sprite priority to 3
 		move.b	#16/2,obActWid(a0)			; set display width

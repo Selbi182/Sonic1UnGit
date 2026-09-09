@@ -281,7 +281,6 @@ FragmentatePlatform:
 		bset	#sprite_rawmappings_bit,obRender(a0)	; set "raw-mappings" flag
 		move.l	obID(a0),d4				; copy object ID to fragments
 		move.b	obRender(a0),d5				; copy render flags to fragments
-		bclr	#sprite_customheight_bit,d5
 		movea.l	a0,a1					; overwrite main platform with first fragment object
 		bra.s	.firstFragment				; skip loop for first fragment
 ; ===========================================================================
@@ -300,6 +299,7 @@ FragmentatePlatform:
 		move.w	obGfx(a0),obGfx(a1)			; copy art tile
 		move.w	obPriority(a0),obPriority(a1)		; copy sprite priority
 		move.b	obActWid(a0),obActWid(a1)		; copy display width
+		move.b	obHeight(a0),obHeight(a1)		; copy display height
 
 		move.b	(a4)+,collapsible_timedelay(a1)		; write next time delay from "CollapseData_..." array
 

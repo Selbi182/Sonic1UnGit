@@ -7,7 +7,7 @@
 Points:
 		move.l	#Poi_Slower,obID(a0)			; advance to Poi_Slower
 		move.l	#Map_Points,obMap(a0)			; set mappings
-		move.w	#ArtTile_Points|Tile_Pal2,obGfx(a0)	; set art tile and palette
+		move.w	#ArtTile_Points|Tile_Pal2|Tile_Prio,obGfx(a0) ; set art tile and palette
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.w	#spr_prio1,obPriority(a0)		; set sprite priority (above Sonic)
 		move.b	#16/2,obActWid(a0)			; set display width
