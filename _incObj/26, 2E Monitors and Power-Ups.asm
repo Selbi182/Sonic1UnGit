@@ -42,7 +42,7 @@ Mon_Main:	; Routine 0
 ; ===========================================================================
 
 .notbroken:
-		move.b	#col_32x32|col_item,obColType(a0)	; set collision size to 16x16 and type to item (=$46)
+		move.b	#col_40x32|col_item,obColType(a0)	; set collision size
 		move.b	obSubtype(a0),obAnim(a0)		; use subtype as animation ID
 
 Mon_Solid:	; Routine 2
@@ -81,6 +81,8 @@ Mon_Solid:	; Routine 2
 ; ===========================================================================
 
 .normal:	; 2nd Routine 0
+		cmpi.b	#id_Roll,(v_player+obAnim).w		; is Sonic in his roll animation?
+		beq.w	.checkpush				; if yes, ignore collision
 		move.w	#30/2+sonic_solid_width,d1		; width/2
 		move.w	#30/2,d2				; height/2
 		bsr.w	Mon_SolidSides				; check collision (0 = none; 1 = side; -1 = top/bottom)

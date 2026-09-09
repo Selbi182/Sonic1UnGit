@@ -185,7 +185,7 @@ React_CollisionDetected:
 		; Otherwise, obColType is $40-$7F (col_item)
 		move.b	obColType(a1),d0			; reload collision type
 		andi.b	#$FF-(col_item|col_hurt|col_special),d0	; mask out special subgroup bits
-		cmpi.b	#col_32x32,d0				; has a monitor been touched? ($46)
+		cmpi.b	#col_40x32,d0				; has a monitor been touched? ($46)
 		beq.s	React_Monitor				; if yes, branch
 
 React_Ring:
@@ -209,30 +209,12 @@ React_Ring:
 ; ---------------------------------------------------------------------------
 
 React_Monitor:
-		tst.w	obVelY(a0)				; is Sonic moving upwards?
-		bpl.s	.chkBreakMonitor			; if not, branch
-		btst	#1,obStatus(a0)				; is Sonic in air?
-		beq.s	.chkBreakMonitor			; if not, don't bump monitor
-		tst.b	doublejump(a0)
-		bne.s	.doBreakMonitor
-
-.chkBumpMonitor:
-		move.w	obY(a0),d0				; get Sonic's Y-position
-		subi.w	#16,d0					; check 16px higher
-		cmp.w	obY(a1),d0				; has Sonic touched the monitor from below?
-		blo.s	.return					; if not, branch
-
-		neg.w	obVelY(a0)				; reverse Sonic's vertical speed
-		move.w	#-$180,obVelY(a1)			; bump monitor upwards a little
-		tst.b	ob2ndRout(a1)				; is monitor being stood on or already set to fall?
-		bne.s	.return					; if yes, do nothing
-		addq.b	#4,ob2ndRout(a1)			; advance the monitor's secondary routine counter to ".fall" state
-		rts						; return
-; ---------------------------------------------------------------------------
-
-.chkBreakMonitor:
 		cmpi.b	#id_Roll,obAnim(a0)			; is Sonic rolling/jumping?
 		bne.s	.return					; if not, don't break monitor
+		
+		cmpi.w	#-son_jumpspeed+($38*2),obVelY(a0)	; has Sonic been jumping for two frames?
+		ble.s	.return					; if not yet, don't break monitor
+		
 		neg.w	obVelY(a0)				; reverse Sonic's y-motion
 	.doBreakMonitor:
 		addq.b	#2,obRoutine(a1)			; advance the monitor's routine counter

@@ -2403,12 +2403,12 @@ FindHomingTarget:
 
 .loop:
 		tst.l	obID(a1)		; is the current object even initialized? (i.e. ID is not 0)
-		beq.s	.next			; if it's a null object, go to next object
+		beq.w	.next			; if it's a null object, go to next object
 		move.b	obColType(a1),d1	; load collision type to d1
 		beq.s	.next			; if it has no collision type, invalid object
 		cmpi.b	#$E,d1			; is this object's collision type $E or lower (badnik)?
 		bls.s	.targetfound		; if yes, target found
-		cmpi.b	#$46,d1			; is this a monitor?
+		cmpi.b	#col_40x32|col_item,d1	; is this a monitor?
 		bne.s	.next			; if not, branch
 		cmpi.b	#2,obRoutine(a1)	; is monitor still unbroken?
 		bhi.s	.next			; if not, branch
@@ -2418,14 +2418,15 @@ FindHomingTarget:
 		sub.w	obX(a0),d1		; subtract Sonic's X coordinate from it
 		bpl.s	.xpos			; if result is positive, branch
 		neg.w	d1			; make the X distance positive (abs)
-.xpos:		cmpi.w	#150,d1			; is the X distance between Sonic and the object exceeding the maximum?
+.xpos:		cmpi.w	#128,d1			; is the X distance between Sonic and the object exceeding the maximum?
 		bhi.s	.next			; if yes, too far away, branch
 
-		move.w	obY(a1),d1		; copy target object's Y coordinate to d1
+		moveq	#-24,d1			; 24px downwards bias
+		add.w	obY(a1),d1		; copy target object's Y coordinate to d1
 		sub.w	obY(a0),d1		; subtract Sonic's Y coordinate from it
 		bpl.s	.ypos			; if result is positive, branch
 		neg.w	d1			; make the Y distance positive (abs)
-.ypos:		cmpi.w	#150,d1			; is the Y distance between Sonic and the object exceeding the maximum?
+.ypos:		cmpi.w	#96,d1			; is the Y distance between Sonic and the object exceeding the maximum?
 		bhi.s	.next			; if yes, too far away, branch
 
 		move.w	obX(a1),d1		; copy target object's X coordinate to d1
