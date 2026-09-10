@@ -140,8 +140,14 @@ Mon_Animate:	; Routine 6
 		bsr.w	AnimateSprite				; animate monitor
 
 Mon_Display:	; Routine 8
-		RememberState					; handle display, respawn table, and offscreen delete
+		out_of_range_with_y_check.s .offscreen,obX(a0),obY(a0) ; check if object is off-screen, branch if so
+		DisplaySprite					; object is on-screen, display sprite
 		rts
+
+	.offscreen:
+		respawn_entry.s	.del				; get respawn entry for this object; branch to DeleteObject if none exists
+		bclr	#7,(a2)					; clear respawn table entry, so object manager can load this object again
+	.del:	jmp	(DeleteObject).l			; delete object
 ; ===========================================================================
 
 Mon_BreakOpen:	; Routine 4 (set from ReactToItem)
@@ -173,8 +179,7 @@ Mon_RememberBroken:
 		bset	#0,(a2)
 .broken:
 		move.b	#9,obAnim(a0)				; set monitor animation to broken
-		DisplaySprite					; keep displaying broken monitor
-		rts
+		bra.w	Mon_Display
 
 
 ; ===========================================================================
