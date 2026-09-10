@@ -1,10 +1,10 @@
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 17 - rotating helix of spikes on a horizontal pole (GHZ)
+; Heavily optimized by assuming it always has 16 spikes (256px).
 ; ---------------------------------------------------------------------------
-helix_childcount:equ objoff_2F		; helix length
-helix_children:	equ objoff_30		; $30-3F = indices for child object RAM addresses (limited to 15, which is the default in GHZ3)
-helix_frame:	equ objoff_29		; start frame (different for each spike)
+helix_child:	equ objoff_30		; pointer to child helix, to the right of parent
+helix_origX:	equ objoff_32		; initial X-position
 ; ---------------------------------------------------------------------------
 
 Helix:
@@ -13,98 +13,61 @@ Helix:
 		move.w	#ArtTile_GHZ_Spike_Pole|Tile_Pal3,obGfx(a0) ; set art tile and palette (located inside main GHZ graphics)
 		move.b	#sprite_cam_field,obRender(a0)		; set playfield-positioned mode
 		move.w	#spr_prio3,obPriority(a0)		; set sprite priority
-		move.b	#16/2,obActWid(a0)			; set sprite display width
+		move.b	#$130/2,obActWid(a0)			; set sprite display width
+		move.b	#col_8x32|col_hurt,obColType(a0)	; make middle spike harmful
 
-		move.w	obY(a0),d2				; get base Y-position of parent
-		move.w	obX(a0),d3				; get base X-position of parent
-		move.l	#Hel_RotateAndDisplay,d4		; set children to Hel_RotateAndDisplay
+		move.w	obX(a0),helix_origX(a0)			; remember initial X-position
+		subi.w	#256/2,obX(a0)				; shift helix to the left by half its size
 
-		clr.b	helix_childcount(a0)
-		lea	helix_children(a0),a2			; load helix children array (will hold RAM indices for child spikes)
-		moveq	#0,d1					; clear d1
-		move.b	obSubtype(a0),d1
-		move.w	d1,d0					; copy spike count
-		lsr.w	#1,d0					; divide by 2 to center
-		lsl.w	#4,d0					; multiply by $10px width per spike
-		sub.w	d0,d3					; d3 = X-position of leftmost spike
-
-		movea.l	a0,a1
-
-		subq.b	#2,d1					; adjust dbf loop count (-1 for parent spike; -1 for dbf itself)
-		bcs.s	Hel_ParentSpike				; if only one spike needs to be loaded, branch (all we need is the parent)
-		moveq	#0,d6					; start at frame ID 0
-
-.loopBuildHelix:
-		bsr.w	FindNextFreeObj_Next			; find next free object slot
+		clr.w	helix_child(a0)				; make sure child index is 0 if it failed to load
+		bsr.w	FindNextFreeObj				; find a free object after parent
 		bne.s	Hel_ParentSpike				; if object RAM is full, branch
-		addq.b	#1,helix_childcount(a0)			; increment number of loaded spikes
+		move.w	a1,helix_child(a0)			; remember child location in RAM for parent
 
-		move.w	a1,d5					; get resulting target RAM address for child spike
-		subi.w	#v_objspace&$FFFF,d5			; make address 0-based
-		lsr.w	#object_size_bits,d5			; divide by object_size ($40)
-		andi.w	#$7F,d5					; d5 = 0-based index of child spike in object RAM
-		move.b	d5,(a2)+				; copy child address index to parent RAM (helix_children)
+		move.l	#Hel_ChildSpike,obID(a1)		; load a second helix object for the child
+		move.w	obX(a0),obX(a1)				; copy parent X-position
+		addi.w	#256/2,obX(a1)				; move to the right (second set of 8 spikes)
+		move.w	helix_origX(a0),helix_origX(a1)		; update base X-position
+		addi.w	#256/2,helix_origX(a1)			; move to the right
 
-		move.l	d4,obID(a1)				; set to Hel_RotateAndDisplay
-		move.w	d2,obY(a1)				; copy parent Y-position
-		move.w	d3,obX(a1)				; copy parent X-position
-		move.l	obMap(a0),obMap(a1)			; copy parent mappings
-		move.w	#ArtTile_GHZ_Spike_Pole|Tile_Pal3,obGfx(a1) ; set art tile and palette line
-		move.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a1)		; set sprite priority
-		move.b	#16/2,obActWid(a1)			; set sprite display width
+		move.w	obY(a0),obY(a1)				; copy parent Y-position
+		move.l	obMap(a0),obMap(a1)			; set mappings
+		move.w	obGfx(a0),obGfx(a1)			; set art tile and palette (located inside main GHZ graphics)
+		move.b	obRender(a0),obRender(a1)		; set playfield-positioned mode
+		move.w	obPriority(a0),obPriority(a1)		; set sprite priority
+		move.b	obActWid(a0),obActWid(a1)		; set sprite display width
+		move.b	obColType(a0),obColType(a1)		; make middle spike harmful
 
-		move.b	d6,helix_frame(a1)			; set base spike frame ID
-		addq.b	#1,d6					; increment base frame ID for next spike
-		andi.b	#7,d6					; wrap around 0-7 frame IDs
-		addi.w	#$10,d3					; position each spike $10px apart (left to right)
-
-		cmp.w	obX(a0),d3				; is this the middle spike? (will be the parent spike)
-		bne.s	.next					; if not, branch
-		move.b	d6,helix_frame(a0)			; set base spike frame ID for parent
-		addq.b	#1,d6					; increment base frame ID for next spike
-		andi.b	#7,d6					; wrap around 0-7 frame IDs
-		addi.w	#$10,d3					; position each spike $10px apart (left to right)
-		addq.b	#1,helix_children(a0)			; increment number of loaded spikes
-	.next:
-		dbf	d1,.loopBuildHelix			; repeat d1 times (helix length)
 ; ---------------------------------------------------------------------------
 
 Hel_ParentSpike:
-		out_of_range.s	Hel_Delete			; has helix gone offscreen? if yes, delete it
+		out_of_range.s	Hel_Delete,helix_origX(a0)	; has helix gone offscreen? if yes, delete it
 
-Hel_RotateAndDisplay:
-		move.b	(v_ani0_frame).w,d0			; get current frame value from SynchroAnimate => Sync1
-		move.b	#col_none,obColType(a0)			; make spike harmless by default
-		add.b	helix_frame(a0),d0			; add base spike frame ID
-		andi.b	#7,d0					; limit to frames 0-7
+Hel_ChildSpike:
+		moveq	#7,d0					; limit to frames 0-7
+		and.b	(v_ani0_frame).w,d0			; get current frame value from SynchroAnimate => Sync1
 		move.b	d0,obFrame(a0)				; update current spike frame
-		bne.s	.display				; is new spike frame 0 ("pointing up")? if not, branch
-		move.b	#col_8x32|col_hurt,obColType(a0)	; make spike harmful while it's pointing up
+		lsl.w	#4,d0					; multiply current frame by $10
+		neg.w	d0					; make result negative
+		add.w	helix_origX(a0),d0			; add initial X-position
+		subi.w	#128/2,d0				; adjust to the left
+		cmpi.b	#5,obFrame(a0)				; is frame 5-7 showing? (middle spike had to be wrapped)
+		blo.s	.setX					; if not, branch
+		addi.w	#128,d0					; wrap middle spike to the right
+	.setX:	move.w	d0,obX(a0)				; update X-position so that the upright (damaging) spike is always cnetered
 
-	.display:
 		DisplaySprite
 		rts
 ; ===========================================================================
 
 Hel_Delete:
-		lea	helix_children(a0),a2			; load helix children array (holds RAM indices for child spikes)
-		moveq	#0,d2					; clear d2
-		move.b	helix_childcount(a0),d2
-		subq.b	#2,d2					; adjust dbf loop count (-1 for parent spike; -1 for dbf itself)
-		bcs.s	.deleteParent				; if only one spike was loaded (the parent itself), branch
-
-	.delLoop:
-		moveq	#0,d0					; clear d0
-		move.b	(a2)+,d0				; get 0-based object RAM index of child spike
-		lsl.w	#object_size_bits,d0			; multiply by object_size ($40)
-		addi.l	#v_objspace&$FFFFFF,d0			; add base object RAM address
-		movea.l	d0,a1					; get child spike address
-		bsr.w	DeleteChild				; delete child spike object
-		dbf	d2,.delLoop				; repeat d2 times (helix length)
+		move.w	helix_child(a0),d0			; get child object
+		beq.s	.deleteParent				; if it doesn't have a child, branch
+		movea.w	d0,a1					; load child into address register
+		bsr.w	DeleteChild				; delete child
 
 	.deleteParent:
-		bra.w	DeleteObject				; delete spike object
+		bra.w	DeleteObject				; delete parent
 
 ; ===========================================================================
 
