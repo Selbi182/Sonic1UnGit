@@ -2396,7 +2396,7 @@ FindHomingTarget:
 		beq.s	.next			; if it has no collision type, invalid object
 		cmpi.b	#$E,d1			; is this object's collision type $E or lower (badnik)?
 		bls.s	.targetfound		; if yes, target found
-		cmpi.b	#col_40x32|col_item,d1	; is this a monitor?
+		cmpi.b	#col_32x32|col_item,d1	; is this a monitor?
 		bne.s	.next			; if not, branch
 		cmpi.b	#2,obRoutine(a1)	; is monitor still unbroken?
 		bhi.s	.next			; if not, branch

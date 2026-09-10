@@ -19,7 +19,7 @@ Mon_Index:	dc.w Mon_Main-Mon_Index				; 0 - init
 Mon_Main:	; Routine 0
 		cmpi.b	#8,obSubtype(a0)			; is monitor subtype valid? i.e. no higher than goggles monitor (ID 8)
 		bls.s	.valid					; if yes, branch
-		move.l	#Invisibarrier,obID(a0)		; otherwise, convert this monitor to an invisible solid barrier
+		move.l	#Invisibarrier,obID(a0)			; otherwise, convert this monitor to an invisible solid barrier
 		jmp	(Invisibarrier).l			; execute barrier logic
 .valid:
 
@@ -29,7 +29,7 @@ Mon_Main:	; Routine 0
 		move.l	#Map_Monitor,obMap(a0)			; set mappings
 		move.w	#ArtTile_Monitor,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set render mode to playfield-positioned
-		move.w	#spr_prio3,obPriority(a0)			; set sprite priority to 3
+		move.w	#spr_prio3,obPriority(a0)		; set sprite priority to 3
 		move.b	#30/2,obActWid(a0)			; set render width
 
 		respawn_entry.s	.notbroken
@@ -42,14 +42,12 @@ Mon_Main:	; Routine 0
 ; ===========================================================================
 
 .notbroken:
-		move.b	#col_40x32|col_item,obColType(a0)	; set collision size
+		move.b	#col_32x32|col_item,obColType(a0)	; set collision size
 		move.b	obSubtype(a0),obAnim(a0)		; use subtype as animation ID
 
 Mon_Solid:	; Routine 2
 		move.b	ob2ndRout(a0),d0			; is monitor set to fall or being stood on?
 		beq.s	.normal					; if not, branch
-		subq.b	#2,d0					; is monitor specifically set to fall?
-		bne.s	.fall					; if yes, branch
 
 		; 2nd Routine 2
 		moveq	#0,d1					; clear d1
@@ -69,21 +67,8 @@ Mon_Solid:	; Routine 2
 		bra.w	Mon_Animate				; process monitor normally
 ; ===========================================================================
 
-.fall:		; 2nd Routine 4
-		bsr.w	ObjectFall				; apply gravity and update monitor position
-		jsr	(ObjFloorDist).l			; get distance from monitor to floor
-		tst.w	d1					; has monitor hit the floor?
-		bpl.w	Mon_Animate				; if not, branch
-		add.w	d1,obY(a0)				; align monitor with surface
-		clr.w	obVelY(a0)				; stop monitor from falling
-		clr.b	ob2ndRout(a0)				; clear special monitor subroutines
-		bra.w	Mon_Animate				; process monitor normally
-; ===========================================================================
-
 .normal:	; 2nd Routine 0
-		cmpi.b	#id_Roll,(v_player+obAnim).w		; is Sonic in his roll animation?
-		beq.w	.checkpush				; if yes, ignore collision
-		move.w	#30/2+sonic_solid_width,d1		; width/2
+		move.w	#28/2+sonic_solid_width,d1		; width/2 (changed from 30/2 for quick side-breaking)
 		move.w	#30/2,d2				; height/2
 		bsr.w	Mon_SolidSides				; check collision (0 = none; 1 = side; -1 = top/bottom)
 		beq.w	.checkpush				; if not, branch
@@ -155,8 +140,8 @@ Mon_Animate:	; Routine 6
 		bsr.w	AnimateSprite				; animate monitor
 
 Mon_Display:	; Routine 8
-		RememberState
-		rts				; handle display, respawn table, and offscreen delete
+		RememberState					; handle display, respawn table, and offscreen delete
+		rts
 ; ===========================================================================
 
 Mon_BreakOpen:	; Routine 4 (set from ReactToItem)
@@ -188,8 +173,8 @@ Mon_RememberBroken:
 		bset	#0,(a2)
 .broken:
 		move.b	#9,obAnim(a0)				; set monitor animation to broken
-		DisplaySprite
-		rts				; keep displaying broken monitor
+		DisplaySprite					; keep displaying broken monitor
+		rts
 
 
 ; ===========================================================================
@@ -202,8 +187,8 @@ PowerUp:
 		move.b	obRoutine(a0),d0			; get routine number
 		move.w	Pow_Index(pc,d0.w),d1			; find entry in offset table
 		jsr	Pow_Index(pc,d1.w)			; jump to current routine and return
-		DisplaySprite
-		rts				; display monitor icon sprite
+		DisplaySprite					; display monitor icon sprite
+		rts
 ; ===========================================================================
 Pow_Index:	dc.w Pow_Main-Pow_Index				; 0 - init
 		dc.w Pow_Move-Pow_Index				; 2 - icon is moving up
@@ -212,9 +197,9 @@ Pow_Index:	dc.w Pow_Main-Pow_Index				; 0 - init
 
 Pow_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)			; advance to Pow_Move
-		move.w	#ArtTile_Monitor|Tile_Prio,obGfx(a0)		; set art tile
+		move.w	#ArtTile_Monitor|Tile_Prio,obGfx(a0)	; set art tile
 		move.b	#sprite_rawmappings|sprite_cam_field,obRender(a0) ; set "raw-mappings" flag and playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a0)			; set sprite priority to 3
+		move.w	#spr_prio3,obPriority(a0)		; set sprite priority to 3
 		move.b	#16/2,obActWid(a0)			; set display width
 		move.w	#-$300,obVelY(a0)			; set initial upwards momentum of the icon
 
@@ -259,7 +244,7 @@ Pow_ChkShoes:
 		bne.s	Pow_ChkShield				; if not, branch
 
 		move.b	#1,(v_shoes).w				; set speed shoes flag (used for reverting when time ran out)
-		move.l	#AfterImage,(v_afterimage+obID).w		; load after image object
+		move.l	#AfterImage,(v_afterimage+obID).w	; load after image object
 		move.w	#20*60,(v_player+shoetime).w		; set time limit for speed shoes to 20 seconds
 
 		move.w	#son_maxspeed*2,(v_sonspeedmax).w	; double Sonic's top speed
@@ -282,7 +267,7 @@ Pow_ChkShield:
 		bne.s	Pow_ChkInvinc				; if not, branch
 
 		move.b	#1,(v_shield).w				; give Sonic a shield
-		move.l	#ShieldItem,(v_shieldobj+obID).w		; load shield object ($38)
+		move.l	#ShieldItem,(v_shieldobj+obID).w	; load shield object ($38)
 		move.w	#sfx_Shield,d0				; set shield sound effect
 		jmp	(QueueSound1).l				; play it
 ; ===========================================================================
@@ -294,13 +279,13 @@ Pow_ChkInvinc:
 		move.b	#1,(v_invinc).w				; make Sonic invincible
 		move.w	#20*60,(v_player+invtime).w		; set time limit for invincibility to 20 seconds
 
-		move.l	#ShieldItem,(v_starsobj1+obID).w		; load 1st stars object
+		move.l	#ShieldItem,(v_starsobj1+obID).w	; load 1st stars object
 		move.b	#1,(v_starsobj1+obAnim).w		; set shortest travel delay
-		move.l	#ShieldItem,(v_starsobj2+obID).w		; load 2nd stars object
+		move.l	#ShieldItem,(v_starsobj2+obID).w	; load 2nd stars object
 		move.b	#2,(v_starsobj2+obAnim).w		; set short travel delay
-		move.l	#ShieldItem,(v_starsobj3+obID).w		; load 3rd stars object
+		move.l	#ShieldItem,(v_starsobj3+obID).w	; load 3rd stars object
 		move.b	#3,(v_starsobj3+obAnim).w		; set long travel delay
-		move.l	#ShieldItem,(v_starsobj4+obID).w		; load 4th stars object
+		move.l	#ShieldItem,(v_starsobj4+obID).w	; load 4th stars object
 		move.b	#4,(v_starsobj4+obAnim).w		; set longest travel delay
 
 		tst.b	(f_lockscreen).w			; is boss mode on?

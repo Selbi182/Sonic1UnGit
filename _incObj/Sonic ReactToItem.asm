@@ -185,7 +185,7 @@ React_CollisionDetected:
 		; Otherwise, obColType is $40-$7F (col_item)
 		move.b	obColType(a1),d0			; reload collision type
 		andi.b	#$FF-(col_item|col_hurt|col_special),d0	; mask out special subgroup bits
-		cmpi.b	#col_40x32,d0				; has a monitor been touched? ($46)
+		cmpi.b	#col_32x32,d0				; has a monitor been touched? ($46)
 		beq.s	React_Monitor				; if yes, branch
 
 React_Ring:
@@ -211,12 +211,7 @@ React_Ring:
 React_Monitor:
 		cmpi.b	#id_Roll,obAnim(a0)			; is Sonic rolling/jumping?
 		bne.s	.return					; if not, don't break monitor
-		
-		cmpi.w	#-son_jumpspeed+($38*2),obVelY(a0)	; has Sonic been jumping for two frames?
-		ble.s	.return					; if not yet, don't break monitor
-		
 		neg.w	obVelY(a0)				; reverse Sonic's y-motion
-	.doBreakMonitor:
 		addq.b	#2,obRoutine(a1)			; advance the monitor's routine counter
 		bsr.w	ResetHomingAttack
 
