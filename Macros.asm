@@ -355,8 +355,21 @@ respawn_entry:	macro exit
 
 RememberState	macro
 		out_of_range.s	.offscreen\@			; check if object is off-screen, branch if so
-		DisplaySprite
-		rts				; object is on-screen, display sprite
+		DisplaySprite					; object is on-screen, display sprite
+		rts
+
+.offscreen\@:
+		respawn_entry.s	.delete\@			; get respawn entry for this object; branch to DeleteObject if none exists
+		bclr	#7,(a2)					; clear respawn table entry, so object manager can load this object again
+	.delete\@:
+		jmp	(DeleteObject).l			; delete object
+		endm
+
+; Same as above, but with extra Y-check
+RememberStateXY	macro
+		out_of_range_with_y_check.s	.offscreen\@,obX(a0),obY(a0)	; check if object is off-screen, branch if so
+		DisplaySprite					; object is on-screen, display sprite
+		rts
 
 .offscreen\@:
 		respawn_entry.s	.delete\@			; get respawn entry for this object; branch to DeleteObject if none exists

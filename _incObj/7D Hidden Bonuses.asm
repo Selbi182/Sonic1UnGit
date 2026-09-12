@@ -2,20 +2,10 @@
 ; ---------------------------------------------------------------------------
 ; Object 7D - hidden points at the end of a level
 ; ---------------------------------------------------------------------------
+bonus_timelen:	equ objoff_30		; length of time to display bonus sprites
+; ---------------------------------------------------------------------------
 
 HiddenBonus:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Bonus_Index(pc,d0.w),d1
-		jmp	Bonus_Index(pc,d1.w)
-; ===========================================================================
-Bonus_Index:	dc.w Bonus_ChkTouch-Bonus_Index
-		dc.w Bonus_Display-Bonus_Index
-
-bonus_timelen:	equ objoff_30		; length of time to display bonus sprites
-; ===========================================================================
-
-Bonus_ChkTouch:	; Routine 0
 		moveq	#$10,d2					; set trigger radius to $10px in all directions
 		move.w	d2,d3					; backup
 		add.w	d3,d3					; double radius to diameter
@@ -40,11 +30,11 @@ Bonus_ChkTouch:	; Routine 0
 ; ---------------------------------------------------------------------------
 
 Bonus_Touched:	; Sonic hit the invisible marker
-		addq.b	#2,obRoutine(a0)			; advance to Bonus_Display
+		move.l	#Bonus_Display,obID(a0)			; advance to Bonus_Display
 		move.l	#Map_Bonus,obMap(a0)			; set mappings
 		move.w	#ArtTile_Hidden_Points|Tile_Prio,obGfx(a0) ; set art tile and priority flag
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio0,obPriority(a0)			; set to maximum sprite priority
+		move.w	#spr_prio0,obPriority(a0)		; set to maximum sprite priority
 		move.b	#32/2,obActWid(a0)			; set sprite display width
 
 		move.b	obSubtype(a0),obFrame(a0)		; use subtype as frame ID
@@ -60,7 +50,7 @@ Bonus_Touched:	; Sonic hit the invisible marker
 ; ---------------------------------------------------------------------------
 
 Bonus_ChkDel:
-		out_of_range.s	.delete				; has object gone offscreen? if yes, branch
+		out_of_range_with_y_check.s	.delete,obX(a0),obY(a0)	; has object gone offscreen? if yes, branch
 		rts						; return
 
 	.delete:
@@ -77,7 +67,7 @@ Bonus_Points:	; Bonus points array
 Bonus_Display:	; Routine 2
 		subq.w	#1,bonus_timelen(a0)			; decrement display time
 		bmi.s	.delete					; if time is zero, delete object
-		out_of_range.s	.delete				; has objet gone offscreen? if yes, delete
+		out_of_range_with_y_check.s	.delete,obX(a0),obY(a0) ; has objet gone offscreen? if yes, delete
 		DisplaySprite
 		rts			; keep displaying object
 

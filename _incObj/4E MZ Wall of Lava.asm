@@ -2,25 +2,11 @@
 ; ---------------------------------------------------------------------------
 ; Object 4E - advancing wall of lava (MZ act 2)
 ; ---------------------------------------------------------------------------
-
-LavaWall:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	LWall_Index(pc,d0.w),d1
-		jmp	LWall_Index(pc,d1.w)
-; ===========================================================================
-LWall_Index:	dc.w LWall_Main-LWall_Index		; 0
-		dc.w LWall_Solid-LWall_Index		; 2
-		dc.w LWall_ChkSonic-LWall_Index		; 4
-		dc.w LWall_BackChild-LWall_Index	; 6
-		dc.w LWall_Delete-LWall_Index		; 8
-
 lwall_flag:	equ objoff_36		; flag set when lava wall is moving
 lwall_parent:	equ objoff_3C		; address of parent lava wall object for child
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-LWall_Main:	; Routine 0
-		addq.b	#4,obRoutine(a0)			; advance to LWall_ChkSonic
+LavaWall:
 		movea.l	a0,a1					; replace this root object with the first lava segment
 		moveq	#2-1,d1					; load two lava segments (parent and child object)
 		bra.s	.make					; no need to find free RAM for root object
@@ -30,21 +16,21 @@ LWall_Main:	; Routine 0
 		bsr.w	FindNextFreeObj				; find a free object slot
 		bne.s	.next					; if object RAM is full, branch
 	.make:
-		move.l	#LavaWall,obID(a1)			; load another lava wall object
+		move.l	#LWall_ChkSonic,obID(a1)		; advance to LWall_ChkSonic
 		move.l	#Map_LWall,obMap(a1)			; set mappings
 		move.w	#ArtTile_MZ_Lava|Tile_Pal4,obGfx(a1)	; set art tile and palette line (contains lava palcycle)
 		move.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode
-		move.b	#160/2,obActWid(a1)			; set sprite display width (very large)
+		move.b	#182/2,obActWid(a1)			; set sprite display width (very large)
 		move.w	obX(a0),obX(a1)				; copy X-position
 		move.w	obY(a0),obY(a1)				; copy Y-position
-		move.w	#spr_prio1,obPriority(a1)			; set sprite priority (above Sonic)
+		move.w	#spr_prio1,obPriority(a1)		; set sprite priority (above Sonic)
 		move.b	#0,obAnim(a1)				; set to first animation (it only has one)
 		move.b	#col_128x64|col_hurt,obColType(a1)	; set ReactToItem type (damaging)
 		move.l	a0,lwall_parent(a1)			; remember parent object
 	.next:
 		dbf	d1,.loop				; repeat sequence once for child lava wall
 
-		addq.b	#6,obRoutine(a1)			; set child lava wall to LWall_BackChild
+		move.l	#LWall_BackChild,obID(a1)		; set child lava wall to LWall_BackChild
 		move.b	#4,obFrame(a1)				; set child lava wall to frame 4 (".lava_back")
 ; ---------------------------------------------------------------------------
 
@@ -71,7 +57,7 @@ LWall_ChkSonic:	; Routine 4
 		tst.b	lwall_flag(a0)				; is lava wall set to move?
 		beq.s	LWall_Solid				; if not, branch
 		move.w	#$180,obVelX(a0)			; set lava wall to move to the right
-		subq.b	#2,obRoutine(a0)			; go back to LWall_Solid
+		move.l	#LWall_Solid,obID(a0)			; go back to LWall_Solid
 ; ---------------------------------------------------------------------------
 
 LWall_Solid:	; Routine 2
@@ -80,11 +66,7 @@ LWall_Solid:	; Routine 2
 		move.w	d2,d3					; copy for collision height (stood-on)
 		addq.w	#1,d3					; +1px for stood-on height
 		move.w	obX(a0),d4				; use current X-position for collision check
-		move.b	obRoutine(a0),d0			; backup routine number (...why? SolidObject doesn't change it!)
-		move.w	d0,-(sp)				; store routine number to stack
 		bsr.w	SolidObject				; make lava wall solid
-		move.w	(sp)+,d0				; restore routine number from stack
-		move.b	d0,obRoutine(a0)			; restore routine number
 
 		; The lava wall object appears to be hardcoded with the expectation to only appear
 		; a single time in MZ2, as this X-position check expects a very specific coordinate.
@@ -114,13 +96,13 @@ LWall_Solid:	; Routine 2
 		respawn_entry.s	.delete
 		bclr	#7,(a2)
 	.delete:
-		move.b	#8,obRoutine(a0)			; set to LWall_Delete
+		move.l	#LWall_Delete,obID(a0)			; set to LWall_Delete
 		rts						; return
 ; ===========================================================================
 
 LWall_BackChild: ; Routine 6
 		movea.l	lwall_parent(a0),a1			; get parent object
-		cmpi.b	#8,obRoutine(a1)			; has parent been marked for deletion?
+		cmpi.l	#LWall_Delete,obID(a1)			; has parent been marked for deletion?
 		beq.s	LWall_Delete				; if yes, delete child object too
 
 		move.w	obX(a1),obX(a0)				; move rest of lava wall

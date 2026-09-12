@@ -2,21 +2,11 @@
 ; ---------------------------------------------------------------------------
 ; Object 6E - electrocution orbs (SBZ)
 ; ---------------------------------------------------------------------------
+elec_freq:	equ objoff_34		; zapping frequency as andable value
+; ---------------------------------------------------------------------------
 
 Electro:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Elec_Index(pc,d0.w),d1
-		jmp	Elec_Index(pc,d1.w)
-; ===========================================================================
-Elec_Index:	dc.w Elec_Main-Elec_Index
-		dc.w Elec_Shock-Elec_Index
-
-elec_freq:	equ objoff_34		; zapping frequency as andable value
-; ===========================================================================
-
-Elec_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Elec_Shock
+		move.l	#Elec_Shock,obID(a0)			; advance to Elec_Shock
 		move.l	#Map_Elec,obMap(a0)			; set mappings
 		move.w	#ArtTile_SBZ_Electric_Orb,obGfx(a0)	; set art tile
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
@@ -52,7 +42,7 @@ Elec_Shock:	; Routine 2
 		move.b	#col_144x16|col_hurt,obColType(a0)	; if yes, make object hurt Sonic this frame
 
 	.display:
-		RememberState
+		RememberStateXY
 		rts				; display sprite or delete if offscreen
 
 ; ===========================================================================

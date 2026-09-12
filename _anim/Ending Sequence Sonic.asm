@@ -8,12 +8,12 @@ Ani_ESon:	dc.w .hold-Ani_ESon
 
 .hold:		dc.b 3
 		dc.b 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 2
-		dc.b af2ndRoutine
+		dc.b afRoutine
 		even
 
 .confused:	dc.b 5
 		dc.b 3, 4, 3, 4, 3, 4, 3
-		dc.b af2ndRoutine
+		dc.b afRoutine
 		even
 
 .leap:		dc.b 3

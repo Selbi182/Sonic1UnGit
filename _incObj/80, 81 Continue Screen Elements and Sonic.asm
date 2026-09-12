@@ -4,19 +4,7 @@
 ; ---------------------------------------------------------------------------
 
 ContScrItem:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	CSI_Index(pc,d0.w),d1
-		jmp	CSI_Index(pc,d1.w)
-; ===========================================================================
-CSI_Index:	dc.w CSI_Main-CSI_Index				; 0
-		dc.w CSI_Display-CSI_Index			; 2
-		dc.w CSI_MakeMiniSonic-CSI_Index		; 4
-		dc.w CSI_ShowMiniSonic-CSI_Index		; 6
-; ===========================================================================
-
-CSI_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to CSI_Display
+		move.l	#CSI_Display,obID(a0)			; advance to CSI_Display
 		move.l	#Map_ContScr,obMap(a0)			; set mappings
 		move.w	#ArtTile_Continue_Sonic|Tile_Prio,obGfx(a0) ; set art tile and priority flag
 		move.b	#sprite_cam_screen,obRender(a0)		; set to screen-positioned mode
@@ -68,7 +56,6 @@ CSI_CreateMiniSonics:
 		andi.b	#1,d2					; limit it to 1 for even/odd check
 
 .loopMiniSonics:
-		move.l	#ContScrItem,obID(a1)		; load another mini-Sonic object
 		move.w	(a2)+,obX(a1)				; get next X-position from CSI_MinSonXPos
 		tst.b	d2					; do you have an odd number of continues?
 		beq.s	.configMiniSonic			; if not, branch
@@ -76,7 +63,7 @@ CSI_CreateMiniSonics:
 	.configMiniSonic:
 		move.w	#$80+$50,obY(a1)			; set fixed Y-position
 		move.b	#6,obFrame(a1)				; set to first mini-Sonic frame (foot down)
-		move.b	#6,obRoutine(a1)			; use CSI_ShowMiniSonic routine
+		move.l	#CSI_ShowMiniSonic,obID(a1)		; use CSI_ShowMiniSonic routine
 		move.l	#Map_ContScr,obMap(a1)			; set mappings
 		move.w	#ArtTile_Mini_Sonic|Tile_Prio,obGfx(a1)	; set art tile and priority flag
 		move.b	#sprite_cam_screen,obRender(a1)		; set to screen-positioned mode
@@ -90,7 +77,7 @@ CSI_CreateMiniSonics:
 CSI_ShowMiniSonic: ; Routine 6
 		tst.b	obSubtype(a0)				; is this the mini-Sonic sprite that should get "used"?
 		beq.s	.animate				; if not, branch
-		cmpi.b	#6,(v_player+obRoutine).w		; is Sonic running after a continue has been used?
+		cmpi.l	#CSon_RunRight,(v_player+obID).w	; is Sonic running after a continue has been used?
 		blo.s	.animate				; if not, branch
 		move.b	(v_vblank_byte).w,d0			; make "used" mini-Sonic flash
 		andi.b	#1,d0					; show every other frame
@@ -108,7 +95,7 @@ CSI_ShowMiniSonic: ; Routine 6
 
 	.display:
 		DisplaySprite
-		rts			; display mini-Sonic sprite
+		rts
 
 	.delete:
 		jmp	(DeleteObject).l			; delete mini-Sonic
@@ -120,27 +107,13 @@ CSI_ShowMiniSonic: ; Routine 6
 ; ---------------------------------------------------------------------------
 
 ContSonic:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	CSon_Index(pc,d0.w),d1
-		jsr	CSon_Index(pc,d1.w)
-		DisplaySprite
-		rts			; display Sonic
-; ===========================================================================
-CSon_Index:	dc.w CSon_Main-CSon_Index			; 0
-		dc.w CSon_ChkLand-CSon_Index			; 2
-		dc.w CSon_Animate-CSon_Index			; 4
-		dc.w CSon_RunRight-CSon_Index			; 6
-; ===========================================================================
-
-CSon_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to CSon_ChkLand
+		move.l	#CSon_ChkLand,obID(a0)			; advance to CSon_ChkLand
 		move.w	#$A0,obX(a0)				; set X-position
 		move.w	#$C0,obY(a0)				; set starting Y-position
 		move.l	#Map_Sonic,obMap(a0)			; set mappings (cross-referenced from main Sonic object)
 		move.w	#ArtTile_Sonic,obGfx(a0)		; set art tile (cross-referenced from main Sonic object)
 		move.b	#sprite_cam_field,obRender(a0)		; set playfield-positioned mode
-		move.w	#spr_prio2,obPriority(a0)			; set sprite priority (behind other elements)
+		move.w	#spr_prio2,obPriority(a0)		; set sprite priority (behind other elements)
 		move.b	#id_Float3,obAnim(a0)			; use "floating" animation
 		move.w	#$400,obVelY(a0)			; make Sonic fall from above
 ; ---------------------------------------------------------------------------
@@ -149,7 +122,7 @@ CSon_ChkLand:	; Routine 2
 		cmpi.w	#$1A0,obY(a0)				; has Sonic landed yet?
 		bne.s	CSon_ShowFall				; if not, branch
 
-		addq.b	#2,obRoutine(a0)			; advance to CSon_Animate
+		move.l	#CSon_Animate,obID(a0)			; advance to CSon_Animate
 		clr.w	obVelY(a0)				; stop Sonic falling
 		move.l	#Map_ContScr,obMap(a0)			; swap out mappings with continue screen Sonic mappings
 		move.w	#ArtTile_Continue_Sonic|Tile_Prio,obGfx(a0) ; swap out art tile with continue screen Sonic art tile
@@ -160,7 +133,9 @@ CSon_ChkLand:	; Routine 2
 CSon_ShowFall:
 		jsr	(SpeedToPos).l				; update Sonic's position as he falls
 		jsr	(Sonic_Animate).l			; animate Sonic (cross-referenced)
-		jmp	(Sonic_LoadGfx).l			; update Sonic's graphics if necessary (cross-referenced)
+		jsr	(Sonic_LoadGfx).l			; update Sonic's graphics if necessary (cross-referenced)
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 CSon_Animate:	; Routine 4
@@ -168,11 +143,13 @@ CSon_Animate:	; Routine 4
 		bmi.s	.continueUsed				; if yes, continue has been used
 
 		lea	(Ani_CSon).l,a1				; load continue screen Sonic animation script
-		jmp	(AnimateSprite).l			; advance animation
+		jsr	(AnimateSprite).l			; advance animation
+		DisplaySprite
+		rts
 ; ---------------------------------------------------------------------------
 
 	.continueUsed:
-		addq.b	#2,obRoutine(a0)			; advance to CSon_RunRight
+		move.l	#CSon_RunRight,obID(a0)			; advance to CSon_RunRight
 		move.l	#Map_Sonic,obMap(a0)			; set mappings (cross-referenced from main Sonic object)
 		move.w	#ArtTile_Sonic,obGfx(a0)		; set art tile (cross-referenced from main Sonic object)
 		move.b	#id_Float4,obAnim(a0)			; use "getting up" animation (changes to id_Walk on finish)
@@ -194,7 +171,9 @@ CSon_RunRight:	; Routine 6
 	.showRun:
 		jsr	(SpeedToPos).l				; update Sonic's position once his inertia is fast enough
 		jsr	(Sonic_Animate).l			; animate Sonic (cross-referenced)
-		jmp	(Sonic_LoadGfx).l			; update Sonic's graphics if necessary (cross-referenced)
+		jsr	(Sonic_LoadGfx).l			; update Sonic's graphics if necessary (cross-referenced)
+		DisplaySprite
+		rts
 
 ; ===========================================================================
 

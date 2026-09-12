@@ -4,28 +4,13 @@
 ; ---------------------------------------------------------------------------
 
 LavaMaker:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	LavaM_Index(pc,d0.w),d1
-		jsr	LavaM_Index(pc,d1.w)
-		out_of_range.w	DeleteObject
-		rts
-; ===========================================================================
-LavaM_Index:	dc.w LavaM_Main-LavaM_Index
-		dc.w LavaM_MakeLava-LavaM_Index
-; ===========================================================================
-
-LavaM_Rates:	; Lava ball firing intervals (multiples of 30 frames)
-		dc.b 30, 60, 90, 120, 150, 180
-; ===========================================================================
-
-LavaM_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to LavaM_MakeLava
+		move.l	#LavaM_MakeLava,obID(a0)		; advance to LavaM_MakeLava
 
 		move.b	obSubtype(a0),d0			; get maker's subtype
 		lsr.w	#4,d0					; only read upper digit
 		andi.w	#$F,d0					; limit to sane values
-		move.b	LavaM_Rates(pc,d0.w),obDelayAni(a0)	; load firing interval for subtype (multiples of 30 frames)
+		mulu.w	#30,d0					; Lava ball firing intervals (multiples of 30 frames)
+		move.b	d0,obDelayAni(a0)			; load firing interval for subtype (multiples of 30 frames)
 		move.b	obDelayAni(a0),obTimeFrame(a0)		; set interval for firing lava balls
 		andi.b	#$F,obSubtype(a0)			; clear upper subtype digit
 ; ---------------------------------------------------------------------------
@@ -46,27 +31,17 @@ LavaM_MakeLava:	; Routine 2
 		move.b	obSubtype(a0),obSubtype(a1)		; copy maker's subtype
 
 	.return:
-		rts						; return
+		out_of_range_with_y_check.w	DeleteObject,obX(a0),obY(a0)
+		rts
 
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 14 - lava balls (MZ, SLZ)
 ; ---------------------------------------------------------------------------
-
-LavaBall:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	LBall_Index(pc,d0.w),d1
-		jmp	LBall_Index(pc,d1.w)
-; ===========================================================================
-LBall_Index:	dc.w LBall_Main-LBall_Index
-		dc.w LBall_Action-LBall_Index
-		dc.w LBall_Delete-LBall_Index
-
 lball_fromboss:	equ objoff_29	; set if spawned from MZ boss (from lava pit, see notes in BossMarble_MakeLava)
 lball_origY:	equ objoff_30	; initial Y-position
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
 LBall_Speeds:	dc.w -$400	; 0 - vertical
 		dc.w -$500	; 1 - vertical
@@ -79,8 +54,8 @@ LBall_Speeds:	dc.w -$400	; 0 - vertical
 		dc.w     0	; 8 - stationary
 ; ===========================================================================
 
-LBall_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to LBall_Action
+LavaBall:
+		move.l	#LBall_Action,obID(a0)			; advance to LBall_Action
 		move.b	#16/2,obHeight(a0)			; set height
 		move.b	#16/2,obWidth(a0)			; set width
 		move.l	#Map_Fire,obMap(a0)			; set mappings
@@ -129,6 +104,8 @@ LBall_Action:	; Routine 2
 		bsr.w	SpeedToPos				; update lava ball position
 		lea	(Ani_Fire).l,a1				; load animation script
 		bsr.w	AnimateSprite				; (wall-collided balls advance obRoutine to LBall_Delete)
+		tst.b	obRoutine(a0)
+		bne.w	LBall_Delete
 
 LBall_ChkDel:
 		out_of_range.w	DeleteObject			; has lava ball gone out of range? if yes, delete it

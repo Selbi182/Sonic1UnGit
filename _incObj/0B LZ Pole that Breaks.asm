@@ -2,23 +2,12 @@
 ; ---------------------------------------------------------------------------
 ; Object 0B - breakable pole in wind tunnels that Sonic hangs onto (LZ)
 ; ---------------------------------------------------------------------------
-
-Pole:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Pole_Index(pc,d0.w),d1
-		jmp	Pole_Index(pc,d1.w)
-; ===========================================================================
-Pole_Index:	dc.w Pole_Main-Pole_Index
-		dc.w Pole_Action-Pole_Index
-		dc.w Pole_Display-Pole_Index
-
 pole_breaktime:	equ objoff_30		; time between grabbing the pole and it breaking
 pole_grabbed:	equ objoff_32		; flag set while Sonic grabs the pole
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Pole_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Pole_Action
+Pole:
+		move.l	#Pole_Action,obID(a0)			; advance to Pole_Action
 		move.l	#Map_Pole,obMap(a0)			; set mappings
 		move.w	#ArtTile_LZ_Pole|Tile_Pal3,obGfx(a0)	; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
@@ -32,7 +21,7 @@ Pole_Main:	; Routine 0
 		move.w	d0,pole_breaktime(a0)			; set time until pole breaks
 ; ---------------------------------------------------------------------------
 
-Pole_Action:	; Routine 2
+Pole_Action:
 		tst.b	pole_grabbed(a0)			; has Sonic already grabbed the pole?
 		beq.s	.checkGrab				; if not, branch to check for grab
 
@@ -72,7 +61,7 @@ Pole_Action:	; Routine 2
 
 	.release:
 		clr.b	obColType(a0)				; clear ReactToItem touched flag
-		addq.b	#2,obRoutine(a0)			; set pole to Pole_Display (no more interactability)
+		move.l	#Pole_Display,obID(a0)			; set pole to Pole_Display (no more interactability)
 		clr.b	(f_playerctrl).w			; clear control override flag
 		clr.b	(f_wtunneldisallow).w			; re-enable wind tunnels
 		clr.b	pole_grabbed(a0)			; clear pole-grabbed flag
@@ -105,7 +94,7 @@ Pole_Action:	; Routine 2
 ; ---------------------------------------------------------------------------
 
 Pole_Display:	; Routine 4
-		RememberState
+		RememberStateXY
 		rts				; display pole, or delete it if out of range
 
 ; ===========================================================================

@@ -2,48 +2,33 @@
 ; ---------------------------------------------------------------------------
 ; Object 22 - Buzz Bomber enemy (GHZ, MZ, SYZ)
 ; ---------------------------------------------------------------------------
-
-BuzzBomber:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Buzz_Index(pc,d0.w),d1
-		jmp	Buzz_Index(pc,d1.w)
-; ===========================================================================
-Buzz_Index:	dc.w Buzz_Main-Buzz_Index	; 0
-		dc.w Buzz_Action-Buzz_Index	; 2
-		dc.w Buzz_Delete-Buzz_Index	; 4
-
 buzz_timedelay:	equ objoff_32	; time delays for flying and before/during/after firing a missile
 buzz_buzzstate:	equ objoff_34	; state flags (0 = normal // 1 = just fired // 2 = near Sonic, before firing)
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Buzz_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Buzz_Action
+BuzzBomber:
+		move.l	#Buzz_Action,obID(a0)			; advance to Buzz_Action
 		move.l	#Map_Buzz,obMap(a0)			; set mappings
 		move.w	#ArtTile_Buzz_Bomber,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)		; set sprite priority
 		move.b	#col_48x24|col_badnik,obColType(a0)	; set ReactToItem entry to 8 (badnik, 48x24)
 		move.b	#48/2,obActWid(a0)			; set sprite display width
 ; ---------------------------------------------------------------------------
 
 Buzz_Action:	; Routine 2
-		moveq	#0,d0					; clear d0 (ob2ndRout is a byte, but we need word-addressing)
-		move.b	ob2ndRout(a0),d0			; get secondary routine counter
-		move.w	Buzz_ActIndex(pc,d0.w),d1		; find current index in Buzz_ActIndex
-		jsr	Buzz_ActIndex(pc,d1.w)			; jump there, then return here
-
+		bsr.s	Buzz_Action_Wait
 		lea	(Ani_Buzz).l,a1				; load Buzz Bomber animation script
 		bsr.w	AnimateSprite				; animate with correct slope ID
-		RememberState
+		RememberStateXY
 		rts				; display sprite, or delete object if offscreen
-; ===========================================================================
-Buzz_ActIndex:	dc.w Buzz_Action_Wait-Buzz_ActIndex		; 0
-		dc.w Buzz_Action_Move-Buzz_ActIndex		; 2
 ; ===========================================================================
 
 ; .move:
 Buzz_Action_Wait:
+		tst.b	ob2ndRout(a0)
+		bne.w	Buzz_Action_Move
+
 		subq.w	#1,buzz_timedelay(a0)			; decrement time delay
 		bpl.s	.return					; if time remains, branch
 		btst	#1,buzz_buzzstate(a0)			; has flag been set that Buzz Bomber is near Sonic?
@@ -129,9 +114,6 @@ Buzz_Action_Move:
 		rts						; return
 ; ===========================================================================
 
-Buzz_Delete:	; Routine 4 (unreachable, deletion is handled elsewhere)
-		bra.w	DeleteObject				; delete object
-
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -193,7 +175,7 @@ Msl_Animate:	; Routine 2
 
 Msl_ChkCancel:
 		movea.l	msl_parent(a0),a1			; load parent Buzz Bomber object
-		cmpi.l	#ExplosionItem,obID(a1)		; has Buzz Bomber been destroyed?
+		cmpi.l	#ExItem_Animate,obID(a1)		; has Buzz Bomber been destroyed?
 		bne.s	.return					; if not, branch (Z-flag = 0)
 		bsr.s	Msl_Delete				; delete missile and return here
 		moveq	#0,d0					; notify caller that missile has been deleted (Z-flag = 1)

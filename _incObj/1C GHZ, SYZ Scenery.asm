@@ -8,7 +8,8 @@ Scenery:
 		moveq	#0,d0					; clear d0 for word-addressing
 		move.b	obSubtype(a0),d0			; get subtype of scenery object
 		mulu.w	#$A,d0					; multiply by $A (size per Scen_Values entry)
-		lea	Scen_Values(pc,d0.w),a1			; load setup values for specified subtype
+		lea	Scen_Values(pc),a1
+		lea	(a1,d0.w),a1				; load setup values for specified subtype
 		move.l	(a1)+,obMap(a0)				; load mappings address
 		move.w	(a1)+,obGfx(a0)				; load art tile and palette line
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
@@ -18,10 +19,9 @@ Scenery:
 ; ---------------------------------------------------------------------------
 
 Scen_ChkDel:	; Routine 2
-		out_of_range.w	DeleteObject			; delete object if it has gone offscreen
-		DisplaySprite
-		rts				; otherwise, keep displaying it
-;
+		RememberStateXY
+		rts
+
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Setup values for scenery objects:

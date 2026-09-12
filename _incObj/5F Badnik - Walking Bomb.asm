@@ -2,37 +2,18 @@
 ; ---------------------------------------------------------------------------
 ; Object 5F - Walking Bomb enemy (SLZ, SBZ)
 ; ---------------------------------------------------------------------------
-
-Bomb:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Bom_Index(pc,d0.w),d1
-		jmp	Bom_Index(pc,d1.w)
-; ===========================================================================
-Bom_Index:	dc.w Bom_Main-Bom_Index		; 0
-		dc.w Bom_Action-Bom_Index	; 2
-		dc.w Bom_Fuse-Bom_Index		; 4
-
 bom_time:	equ objoff_30		; multi-purpose timer (walking, waiting, fuse)
 bom_origY:	equ objoff_34		; fuse's original y-axis position independent it moving
 bom_parent:	equ objoff_3C		; address of parent Bomb object (set but not used)
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Bom_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Bom_Action
+Bomb:
+		move.l	#Bom_Action,obID(a0)			; advance to Bom_Action
 		move.l	#Map_Bomb,obMap(a0)			; set mappings
 		move.w	#ArtTile_Bomb,obGfx(a0)			; set art tile
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)		; set sprite priority
 		move.b	#24/2,obActWid(a0)			; set sprite display width
-
-		move.b	obSubtype(a0),d0			; get subtype (0 = normal badnik, 4 = fuse, 6 = shrapnel)
-		beq.s	.normalBadnik				; if normal badnik, branch
-		move.b	d0,obRoutine(a0)			; directly set alternate routine from subtype
-		rts						; go there on next run
-; ---------------------------------------------------------------------------
-
-	.normalBadnik:
 		move.b	#col_24x24|col_hurt,obColType(a0)	; set ReactToItem type (invincible and damaging)
 		bchg	#0,obStatus(a0)				; face right by default (immediately gets changed to left on spawn)
 ; ---------------------------------------------------------------------------
@@ -54,7 +35,7 @@ Bom_ActIndex:	dc.w Bom_Action_Waiting-Bom_ActIndex		; 0
 ; ===========================================================================
 
 Bom_Action_Waiting:
-		bsr.w	Bom_CheckStartFuse			; check if Sonic is in range of Bomb and start fuse if so
+		bsr.s	Bom_CheckStartFuse			; check if Sonic is in range of Bomb and start fuse if so
 
 		subq.w	#1,bom_time(a0)				; decrement time delay before turning around
 		bpl.s	.return					; if time remains, branch
@@ -71,7 +52,7 @@ Bom_Action_Waiting:
 ; ===========================================================================
 
 Bom_Action_Walking:
-		bsr.w	Bom_CheckStartFuse			; check if Sonic is in range of Bomb and start fuse if so
+		bsr.s	Bom_CheckStartFuse			; check if Sonic is in range of Bomb and start fuse if so
 
 		subq.w	#1,bom_time(a0)				; decrement time delay before stopping to walk
 		bmi.s	.stopWalking				; if time expired, branch
@@ -90,7 +71,6 @@ Bom_Action_WaitAndExplode:
 		subq.w	#1,bom_time(a0)				; decrement time delay before exploding
 		bpl.s	.return					; if time remains, branch
 		move.l	#Explosion,obID(a0)			; change Bomb into an explosion
-		move.b	#0,obRoutine(a0)			; set explosion object to init routine
 
 	.return:
 		rts						; return
@@ -126,12 +106,11 @@ Bom_CheckStartFuse:
 
 		bsr.w	FindNextFreeObj				; find a free object slot
 		bne.s	.return					; if object RAM is full, branch
-		move.l	#Bomb,obID(a1)			; load fuse object
+		move.l	#Bom_Fuse_Init,obID(a1)			; load fuse object
 		move.w	obX(a0),obX(a1)				; copy X-position
 		move.w	obY(a0),obY(a1)				; copy Y-position
 		move.w	obY(a0),bom_origY(a1)			; remember original Y-position when making shrapnel
 		move.b	obStatus(a0),obStatus(a1)		; copy X/Y-flip flags
-		move.b	#4,obSubtype(a1)			; set fuse to use Bom_Fuse routine
 		move.b	#3,obAnim(a1)				; set to fuse animation
 
 		move.w	#$10,obVelY(a1)				; make fuse slowly move down
@@ -148,26 +127,25 @@ Bom_CheckStartFuse:
 
 ; ===========================================================================
 
+Bom_Fuse_Init:
+		move.l	#Bom_Fuse,obID(a0)			; advance to Bom_Fuse
+		move.l	#Map_Bomb,obMap(a0)			; set mappings
+		move.w	#ArtTile_Bomb,obGfx(a0)			; set art tile
+		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
+		move.w	#spr_prio3,obPriority(a0)		; set sprite priority
+		move.b	#24/2,obActWid(a0)			; set sprite display width
+		move.b	#col_24x24|col_hurt,obColType(a0)	; set ReactToItem type (invincible and damaging)
+		bchg	#0,obStatus(a0)				; face right by default (immediately gets changed to left on spawn)
+; ---------------------------------------------------------------------------
+
 Bom_Fuse:	; Routine 4
-		bsr.s	Bom_BurnFuseAndExplode			; advance fuse and spawn shrapnel once expired
-
-		lea	(Ani_Bomb).l,a1				; load animation script
-		bsr.w	AnimateSprite				; animate fuse
-		RememberState
-		rts				; display or delete fuse
-
-; ---------------------------------------------------------------------------
-; Subroutine to advance burning the fuse, and spawn shrapnel on expiration.
-; ---------------------------------------------------------------------------
-
-Bom_BurnFuseAndExplode:
 		subq.w	#1,bom_time(a0)				; decrement fuse timer
 		bmi.s	.fuseExpired				; if timer expired, branch
-		bra.w	SpeedToPos				; update fuse's position
+		bsr.w	SpeedToPos				; update fuse's position
+		bra.w	Bom_Fuse_Display
 ; ---------------------------------------------------------------------------
 
 .fuseExpired:
-		addq.l	#4,sp					; skip returning to Bom_Fuse
 		clr.w	bom_time(a0)				; clear fuse timer
 		move.w	bom_origY(a0),obY(a0)			; restore initial Y-position of bomb
 
@@ -211,14 +189,20 @@ Bom_BurnFuseAndExplode:
 		dbf	d1,.loopShrapnel			; repeat 3 more times
 
 		jmp	(Particle_MovingFragment_Animate).l
-; End of function Bom_BurnFuseAndExplode
 ; ===========================================================================
-
 Bom_ShrSpeed:	;    X-vel  Y-vel
 		dc.w -$200, -$300	; 1st shrapnel
 		dc.w -$100, -$200	; 2nd shrapnel
 		dc.w  $200, -$300	; 3rd shrapnel
 		dc.w  $100, -$200	; 4th shrapnel
+; ===========================================================================
+
+Bom_Fuse_Display:
+		lea	(Ani_Bomb).l,a1				; load animation script
+		bsr.w	AnimateSprite				; animate fuse
+		RememberState
+		rts
+
 ; ===========================================================================
 
 		include	"_anim/Bomb Enemy.asm"

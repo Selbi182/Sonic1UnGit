@@ -8,7 +8,7 @@ Staircase:
 		move.b	obRoutine(a0),d0
 		move.w	Stair_Index(pc,d0.w),d1
 		jsr	Stair_Index(pc,d1.w)
-		out_of_range.w	DeleteObject,stair_origX(a0)
+		out_of_range_with_y_check.w	DeleteObject,stair_origX(a0),stair_origY(a0)
 		DisplaySprite
 		rts
 ; ===========================================================================

@@ -2,28 +2,18 @@
 ; ---------------------------------------------------------------------------
 ; Object 6D - flame thrower (SBZ)
 ; ---------------------------------------------------------------------------
-
-Flamethrower:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Flame_Index(pc,d0.w),d1
-		jmp	Flame_Index(pc,d1.w)
-; ===========================================================================
-Flame_Index:	dc.w Flame_Main-Flame_Index
-		dc.w Flame_Action-Flame_Index
-
 flame_timer:		equ objoff_30	; current timer value
 flame_firetime:		equ objoff_32	; base time for flamethrower to fire
 flame_pausetime:	equ objoff_34	; base time for flamethrower to idle
 flame_hurtframe:	equ objoff_36	; frame ID that is harmful to Sonic
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Flame_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Flame_Action
+Flamethrower:
+		move.l	#Flame_Action,obID(a0)			; advance to Flame_Action
 		move.l	#Map_Flame,obMap(a0)			; set mappings
 		move.w	#ArtTile_SBZ_Flamethrower|Tile_Prio,obGfx(a0) ; set art tile and high-priority flag
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio1,obPriority(a0)			; set sprite priority (above Sonic)
+		move.w	#spr_prio1,obPriority(a0)		; set sprite priority (above Sonic)
 		move.b	#24/2,obActWid(a0)			; set sprite display width
 
 		move.b	obSubtype(a0),d0			; get object subtype
@@ -67,8 +57,7 @@ Flame_Animate:
 		move.b	#col_24x48|col_hurt,obColType(a0)	; make flamethrower harmless
 
 	.display:
-		out_of_range.w	DeleteObject			; has object gone out of range? if yes, delete it
-		DisplaySprite
+		RememberStateXY
 		rts				; display flamethrower sprite
 
 ; ===========================================================================

@@ -7,17 +7,10 @@ debug_startspeed: equ 15	; initial movement speed when first holding D-Pad
 ; ---------------------------------------------------------------------------
 
 DebugMode:
-		moveq	#0,d0					; clear d0
-		move.b	(v_debuguse).w,d0			; get debug mode state (0 if just launched, 2 if already active)
-		move.w	Debug_Index(pc,d0.w),d1			; find relevant section in offset table
-		jmp	Debug_Index(pc,d1.w)			; jump to that label
-; ===========================================================================
-Debug_Index:	dc.w Debug_Init-Debug_Index			; 0 - init
-		dc.w Debug_Action-Debug_Index			; 2 - main mode
-; ===========================================================================
+		tst.b	(v_debuguse).w
+		bne.w	Debug_Action
 
-; Debug_Main:
-Debug_Init:	; Routine 0
+;Debug_Init:
 		addq.b	#2,(v_debuguse).w			; set to Debug_Action
 
 	;	move.w	(v_limittop2).w,(v_limittopdb).w	; buffer level x-boundary

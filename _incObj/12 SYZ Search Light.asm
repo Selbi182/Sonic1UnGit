@@ -4,22 +4,12 @@
 ; ---------------------------------------------------------------------------
 
 SpinningLight:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Light_Index(pc,d0.w),d1
-		jmp	Light_Index(pc,d1.w)
-; ===========================================================================
-Light_Index:	dc.w Light_Main-Light_Index
-		dc.w Light_Animate-Light_Index
-; ===========================================================================
-
-Light_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Light_Animate
+		move.l	#Light_Animate,obID(a0)			; advance to Light_Animate
 		move.l	#Map_Light,obMap(a0)			; set mappings
 		move.w	#ArtTile_Level,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#32/2,obActWid(a0)			; set display width
-		move.w	#spr_prio6,obPriority(a0)			; set very low sprite priority
+		move.w	#spr_prio6,obPriority(a0)		; set very low sprite priority
 ; ---------------------------------------------------------------------------
 
 Light_Animate:	; Routine 2
@@ -29,12 +19,11 @@ Light_Animate:	; Routine 2
 		addq.b	#1,obFrame(a0)				; advance to next frame ID
 		cmpi.b	#6,obFrame(a0)				; has it reached frame ID 6?
 		blo.s	.chkdel					; if not, branch
-		move.b	#0,obFrame(a0)				; reset back to frame 0
+		clr.b	obFrame(a0)				; reset back to frame 0
 
 	.chkdel:
-		out_of_range.w	DeleteObject			; has object gone offscreen? if yes, delete it
-		DisplaySprite
-		rts				; display sprite
+		RememberStateXY
+		rts
 ; ===========================================================================
 
 Map_Light	include	"_maps/Light.asm"

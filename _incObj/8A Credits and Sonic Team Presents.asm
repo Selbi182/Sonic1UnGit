@@ -4,17 +4,7 @@
 ; ---------------------------------------------------------------------------
 
 CreditsText:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Cred_Index(pc,d0.w),d1
-		jmp	Cred_Index(pc,d1.w)
-; ===========================================================================
-Cred_Index:	dc.w Cred_Main-Cred_Index
-		dc.w Cred_Display-Cred_Index
-; ===========================================================================
-
-Cred_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Cred_Display
+		move.l	#Cred_Display,obID(a0)			; advance to Cred_Display
 		move.w	#(320/2)+$80,obX(a0)			; set X-position to horizontally centered ($120)
 		move.w	#(224/2)+$80,obY(a0)			; set Y-position to vertically centered ($F0)
 		move.l	#Map_Cred,obMap(a0)			; set mappings pointer
@@ -22,7 +12,7 @@ Cred_Main:	; Routine 0
 		move.w	(v_creditsnum).w,d0			; load credits page index number (doesn't reset between game mode changes)
 		move.b	d0,obFrame(a0)				; display appropriate sprite
 		move.b	#sprite_cam_screen,obRender(a0)		; set to screen coordinates positioning mode
-		move.w	#spr_prio0,obPriority(a0)			; set top sprite priority
+		move.w	#spr_prio0,obPriority(a0)		; set top sprite priority
 
 		cmpi.b	#id_Title,(v_gamemode).w		; is the mode #4 (title screen)?
 		bne.s	Cred_Display				; if not, branch

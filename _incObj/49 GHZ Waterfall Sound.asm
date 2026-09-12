@@ -9,13 +9,13 @@ WaterSound:
 ; ---------------------------------------------------------------------------
 
 WSnd_PlaySnd:	; Routine 2
-		move.b	(v_vblank_byte).w,d0			; get low byte of VBlank counter
-		andi.b	#$3F,d0					; only play waterfall sound effect every 64 frames
+		moveq	#$3F,d0					; only play waterfall sound effect every 64 frames
+		and.b	(v_vblank_byte).w,d0			; get low byte of VBlank counter
 		bne.s	.chkDel					; branch on other frames
 		move.w	#sfx_Waterfall,d0			; set waterfall SFX sound command
 		jsr	(QueueSound2).l				; play it
 
 	.chkDel:
-		out_of_range.w	DeleteObject			; check if object has gone offscreen and delete it if so
+		out_of_range_with_y_check.w	DeleteObject,obX(a0),obY(a0) ; check if object has gone offscreen and delete it if so
 		rts						; return (do not display any sprite)
 ; ===========================================================================

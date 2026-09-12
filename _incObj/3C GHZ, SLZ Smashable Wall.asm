@@ -31,7 +31,7 @@ Smash_Solid:	; Routine 2
 		bne.s	.chkroll				; if yes, branch
 
 	.return:
-		RememberState
+		RememberStateXY
 		rts
 ; ===========================================================================
 
@@ -40,14 +40,14 @@ Smash_Solid:	; Routine 2
 		bne.s	.doSmash				; if yes, smash
 
 		cmpi.b	#id_Roll,obAnim(a1)			; is Sonic rolling?
-		bne.s	.return					; if not, don't smash
+		bne.w	.return					; if not, don't smash
 
 		move.w	smash_speed(a0),d0			; get Sonic's impact speed
 		bpl.s	.chkspeed				; if positive, branch
 		neg.w	d0					; make it positive for check
 	.chkspeed:
 		cmpi.w	#$480,d0				; was Sonic's impact speed $480 or higher?
-		blo.s	.return					; if not, don't smash
+		blo.w	.return					; if not, don't smash
 
 .doSmash:
 		move.w	smash_speed(a0),obVelX(a1)		; restore Sonic's speed before SolidObject got called

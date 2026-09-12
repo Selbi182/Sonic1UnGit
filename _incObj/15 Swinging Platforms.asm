@@ -209,7 +209,7 @@ Swing_Move:
 ; ===========================================================================
 
 Swing_ChkDel:
-		out_of_range.w	.deleteAll,swing_origX(a0)	; has platform gone out of range? if yes, delete it with all links
+		out_of_range_with_y_check.w	.deleteAll,swing_origX(a0),swing_origY(a0)	; has platform gone out of range? if yes, delete it with all links
 		DisplaySprite
 		rts				; display platform
 ; ---------------------------------------------------------------------------

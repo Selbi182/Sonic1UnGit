@@ -9,7 +9,7 @@ Elevator:
 		move.w	Elev_Index(pc,d0.w),d1
 		jsr	Elev_Index(pc,d1.w)
 
-		out_of_range.w	DeleteObject,elev_origX(a0)
+		out_of_range_with_y_check.w	DeleteObject,elev_origX(a0),elev_origY(a0)
 		DisplaySprite
 		rts
 ; ===========================================================================
@@ -295,7 +295,7 @@ Elev_Spawner:	; Routine 6
 
 	.chkdel:
 		addq.l	#4,sp					; don't return to "Elevator:" to prevent calling DisplaySprite
-		out_of_range.w	DeleteObject			; has spawner gone out of range? if yes, delete it
+		out_of_range_with_y_check.w	DeleteObject,obX(a0),obY(a0) ; has spawner gone out of range? if yes, delete it
 		rts						; keep spawner alive while invisible
 
 ; ===========================================================================

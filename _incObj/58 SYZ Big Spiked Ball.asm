@@ -2,28 +2,18 @@
 ; ---------------------------------------------------------------------------
 ; Object 58 - giant moving spiked metal balls (SYZ)
 ; ---------------------------------------------------------------------------
-
-BigSpikeBall:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	BBall_Index(pc,d0.w),d1
-		jmp	BBall_Index(pc,d1.w)
-; ===========================================================================
-BBall_Index:	dc.w BBall_Main-BBall_Index
-		dc.w BBall_Move-BBall_Index
-
 bball_origY:	equ objoff_38		; original y-axis position
 bball_origX:	equ objoff_3A		; original x-axis position
 bball_radius:	equ objoff_3C		; radius of circle (subtype $x3 only)
 bball_speed:	equ objoff_3E		; rotation speed (subtype $x3 only)
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-BBall_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to BBall_Move
+BigSpikeBall:
+		move.l	#BBall_Move,obID(a0)			; advance to BBall_Move
 		move.l	#Map_BBall,obMap(a0)			; set mappings
 		move.w	#ArtTile_SYZ_Big_Spikeball,obGfx(a0)	; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 		move.b	#48/2,obActWid(a0)			; set sprite display width
 		move.w	obX(a0),bball_origX(a0)			; remember initial X-position
 		move.w	obY(a0),bball_origY(a0)			; remember initial Y-position
@@ -50,7 +40,7 @@ BBall_Move:	; Routine 2
 		move.w	BBall_Types(pc,d0.w),d1			; find behavior for ball type
 		jsr	BBall_Types(pc,d1.w)			; execute behavior, then return here
 
-		out_of_range.w	DeleteObject,bball_origX(a0)	; has spike ball gone out of range? if yes, delete it
+		out_of_range_with_y_check.w	DeleteObject,bball_origX(a0),bball_origY(a0)	; has spike ball gone out of range? if yes, delete it
 		DisplaySprite
 		rts				; otherwise, display ball
 ; ===========================================================================

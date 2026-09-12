@@ -113,7 +113,7 @@ Spikes_NoHurt:
 		movea.l	(sp)+,a0				; restore spikes RAM location to a0
 
 Spikes_Display:
-		out_of_range.w	DeleteObject,spikes_origX(a0)	; check if spikes are offscreen and delete them if so
+		out_of_range_with_y_check.w	DeleteObject,spikes_origX(a0),spikes_origY(a0)	; check if spikes are offscreen and delete them if so
 		DisplaySprite
 		rts				; display spikes sprite
 

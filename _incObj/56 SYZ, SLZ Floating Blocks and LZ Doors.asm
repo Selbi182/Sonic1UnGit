@@ -2,22 +2,12 @@
 ; ---------------------------------------------------------------------------
 ; Object 56 - floating blocks (SYZ/SLZ), large doors (LZ)
 ; ---------------------------------------------------------------------------
-
-FloatingBlock:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	FBlock_Index(pc,d0.w),d1
-		jmp	FBlock_Index(pc,d1.w)
-; ===========================================================================
-FBlock_Index:	dc.w FBlock_Main-FBlock_Index
-		dc.w FBlock_Action-FBlock_Index
-
 fb_origY:	equ objoff_30		; original y-axis position
 fb_origX:	equ objoff_34		; original x-axis position
 fb_moving:	equ objoff_38		; flag set if object is currently moving
 fb_distance:	equ objoff_3A		; total distance to move
 fb_switch:	equ objoff_3C		; switch ID that triggers action behavior
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
 FBlock_Var:	;     width, height
 		dc.b   32/2, 32/2	; $0x/$8x - SYZ 1x1 block
@@ -30,8 +20,8 @@ FBlock_Var:	;     width, height
 		dc.b  128/2, 32/2	; $7x/$Fx - LZ large sideways 4x1 block that opens on switch
 ; ===========================================================================
 
-FBlock_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to FBlock_Action
+FloatingBlock:
+		move.l	#FBlock_Action,obID(a0)			; advance to FBlock_Action
 		move.l	#Map_FBlock,obMap(a0)			; set mappings
 
 		move.w	#ArtTile_Level|Tile_Pal3,obGfx(a0)	; set art tile (SYZ/SLZ, part of level graphics)
@@ -41,7 +31,7 @@ FBlock_Main:	; Routine 0
 
 	.continueSetup:
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)		; set sprite priority
 
 		moveq	#0,d0					; clear d0
 		move.b	obSubtype(a0),d0			; get object subtype
@@ -122,8 +112,9 @@ FBlock_Action:	; Routine 2
 		move.b	obSubtype(a0),d0			; get object subtype
 		andi.w	#$F,d0					; read only lower digit
 		add.w	d0,d0					; double for word-based indexing
-		move.w	FBlock_TypeIndex(pc,d0.w),d1		; find entry in jump table
-		jsr	FBlock_TypeIndex(pc,d1.w)		; execute block movement behavior, then return here
+		lea	FBlock_TypeIndex(pc),a1
+		move.w	(a1,d0.w),d1				; find entry in jump table
+		jsr	(a1,d1.w)				; execute block movement behavior, then return here
 		move.w	(sp)+,d4				; restore previous X-position as input for SolidObject
 
 		tst.b	obRender(a0)				; is object on screen?
@@ -138,7 +129,7 @@ FBlock_Action:	; Routine 2
 		bsr.w	SolidObject				; make object solid and handle squash kills
 
 .chkDel:
-		out_of_range.s	.checkSYZSpecial,fb_origX(a0)	; has object gone out of range? if yes, branch
+		out_of_range_with_y_check.s	.checkSYZSpecial,fb_origX(a0),fb_origY(a0)	; has object gone out of range? if yes, branch
 	.display:
 		DisplaySprite
 		rts				; display object

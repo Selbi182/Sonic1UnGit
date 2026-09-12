@@ -2,26 +2,16 @@
 ; ---------------------------------------------------------------------------
 ; Object 55 - Basaran enemy (MZ)
 ; ---------------------------------------------------------------------------
+bas_sonicY:	equ objoff_36	; copy of Sonic's Y-position when Basaran started to drop down
+; ---------------------------------------------------------------------------
 
 Basaran:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Bas_Index(pc,d0.w),d1
-		jmp	Bas_Index(pc,d1.w)
-; ===========================================================================
-Bas_Index:	dc.w Bas_Main-Bas_Index		; 0
-		dc.w Bas_Action-Bas_Index	; 2
-
-bas_sonicY:	equ objoff_36	; copy of Sonic's Y-position when Basaran started to drop down
-; ===========================================================================
-
-Bas_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Bas_Action
+		move.l	#Bas_Action,obID(a0)			; advance to Bas_Action
 		move.l	#Map_Bas,obMap(a0)			; set mappings
 		move.w	#ArtTile_Basaran|Tile_Prio,obGfx(a0)	; set art tile and priority flag
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#24/2,obHeight(a0)			; set height
-		move.w	#spr_prio2,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio2,obPriority(a0)		; set sprite priority
 		move.b	#col_16x16|col_badnik,obColType(a0)	; set ReactToItem type ($B)
 		move.b	#32/2,obActWid(a0)			; set sprite display width
 ; ---------------------------------------------------------------------------

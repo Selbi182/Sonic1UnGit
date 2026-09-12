@@ -2,26 +2,16 @@
 ; ---------------------------------------------------------------------------
 ; Object 1E - Ball Hog enemy (SBZ)
 ; ---------------------------------------------------------------------------
+hog_launched:	equ objoff_32		; set if a cannonball has been launched this animation cycle
+; ---------------------------------------------------------------------------
 
 BallHog:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Hog_Index(pc,d0.w),d1
-		jmp	Hog_Index(pc,d1.w)
-; ===========================================================================
-Hog_Index:	dc.w Hog_Main-Hog_Index		; 0
-		dc.w Hog_Action-Hog_Index	; 2
-
-hog_launched:	equ objoff_32		; set if a cannonball has been launched this animation cycle
-; ===========================================================================
-
-Hog_Main:	; Routine 0
 		move.b	#38/2,obHeight(a0)			; set height
 		move.b	#16/2,obWidth(a0)			; set width
 		move.l	#Map_Hog,obMap(a0)			; set mappings
 		move.w	#ArtTile_Ball_Hog|Tile_Pal2,obGfx(a0)	; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 		move.b	#col_24x36|col_badnik,obColType(a0)	; set ReactToItem type ($5)
 		move.b	#24/2,obActWid(a0)			; set sprite display width
 
@@ -32,7 +22,7 @@ Hog_Main:	; Routine 0
 		bpl.s	.hide					; if not, branch
 		add.w	d1,obY(a0)				; match object's position with the floor
 		move.w	#0,obVelY(a0)				; clear falling speed
-		addq.b	#2,obRoutine(a0)			; advance to Hog_Action
+		move.l	#Hog_Action,obID(a0)
 	.hide:
 
 		cmpi.w	#$7FF,obY(a0)				; has object fallen below max level height?
@@ -55,8 +45,8 @@ Hog_Action:	; Routine 2
 		clr.b	hog_launched(a0)			; clear flag to launch another ball on next animation finish
 
 	.display:
-		RememberState
-		rts				; display sprite or delete if offscreen
+		RememberStateXY
+		rts						; display sprite or delete if offscreen
 ; ---------------------------------------------------------------------------
 
 .launchBall:
@@ -87,26 +77,16 @@ Hog_Action:	; Routine 2
 ; ---------------------------------------------------------------------------
 ; Object 20 - cannonball that Ball Hog throws (SBZ)
 ; ---------------------------------------------------------------------------
+CBal_time:	equ objoff_30	; frames until the cannonball explodes
+; ---------------------------------------------------------------------------
 
 Cannonball:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	CBal_Index(pc,d0.w),d1
-		jmp	CBal_Index(pc,d1.w)
-; ===========================================================================
-CBal_Index:	dc.w CBal_Main-CBal_Index	; 0
-		dc.w CBal_Bounce-CBal_Index	; 2
-
-CBal_time:	equ objoff_30	; frames until the cannonball explodes
-; ===========================================================================
-
-CBal_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to CBal_Bounce
+		move.l	#CBal_Bounce,obID(a0)			; advance to CBal_Bounce
 		move.b	#14/2,obHeight(a0)			; set height
 		move.l	#Map_Hog,obMap(a0)			; set mappings
 		move.w	#ArtTile_Ball_Hog|Tile_Pal2,obGfx(a0)	; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a0)			; set sprite priority (above Ball Hog)
+		move.w	#spr_prio3,obPriority(a0)		; set sprite priority (above Ball Hog)
 		move.b	#col_12x12|col_hurt,obColType(a0)	; set ReactToItem type ($87)
 		move.b	#16/2,obActWid(a0)			; set sprite display width
 
@@ -166,7 +146,7 @@ CBal_Animate:
 		cmp.w	obY(a0),d0				; has cannonball fallen off the level?
 		blo.w	DeleteObject				; if yes, delete it
 		DisplaySprite
-		rts				; otherwise, keep displaying sprite
+		rts						; otherwise, keep displaying sprite
 
 ; ===========================================================================
 

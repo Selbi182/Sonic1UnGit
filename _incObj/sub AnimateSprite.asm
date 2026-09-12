@@ -13,8 +13,8 @@ AnimateSprite:
 		cmp.b	obPrevAni(a0),d0			; has animation changed?
 		beq.s	Anim_Run				; if not, branch
 		move.b	d0,obPrevAni(a0)			; remember new animation ID
-		move.b	#0,obAniFrame(a0)			; reset animation frame index
-		move.b	#0,obTimeFrame(a0)			; reset animation frame duration
+		clr.b	obAniFrame(a0)				; reset animation frame index
+		clr.b	obTimeFrame(a0)				; reset animation frame duration
 ; ---------------------------------------------------------------------------
 
 Anim_Run:
@@ -28,8 +28,9 @@ Anim_LoadNextFrame:
 		moveq	#0,d1					; clear d1
 		move.b	obAniFrame(a0),d1			; load current frame index number
 		move.b	1(a1,d1.w),d0				; read next frame ID from script
-		cmpi.b	#af2ndRoutine,d0	; MJ: is this a special flag?
-		bhs.s	Anim_End_FF		; MJ: if yes, branch
+		bpl.s	Anim_SetFrameAndFlipFlags	; MJ: is this definitely not a special flag? if yes, branch (optimization for most cases)
+		cmpi.b	#afRoutine,d0			; MJ: is this a special flag?
+		bhs.s	Anim_End_FF			; MJ: if yes, branch
 ; ---------------------------------------------------------------------------
 
 Anim_SetFrameAndFlipFlags:
@@ -55,7 +56,7 @@ Anim_Wait:
 Anim_End_FF:
 		addq.b	#1,d0					; is the end flag = $FF?
 		bne.s	Anim_End_FE				; if not, branch
-		move.b	#0,obAniFrame(a0)			; restart the animation from the beginning
+		clr.b	obAniFrame(a0)				; restart the animation from the beginning
 		move.b	1(a1),d0				; read first frame ID in script
 		bra.s	Anim_SetFrameAndFlipFlags		; display new frame
 ; ===========================================================================
@@ -81,23 +82,8 @@ Anim_End_FD:
 ; afRoutine = increment routine counter
 Anim_End_FC:
 		addq.b	#1,d0					; is the end flag = $FC?
-		bne.s	Anim_End_FB				; if not, branch
-		addq.b	#2,obRoutine(a0)			; advance primary routine counter
-; ---------------------------------------------------------------------------
-
-; afReset = reset animation and secondary object routine counter
-Anim_End_FB:
-		addq.b	#1,d0					; is the end flag = $FB?
-		bne.s	Anim_End_FA				; if not, branch
-		move.b	#0,obAniFrame(a0)			; restart the animation from the beginning
-		clr.b	ob2ndRout(a0)				; reset secondary routine counter
-; ---------------------------------------------------------------------------
-
-; af2ndRoutine = increment secondary object routine counter
-Anim_End_FA:
-		addq.b	#1,d0					; is the end flag = $FA?
 		bne.s	Anim_End				; if not, branch
-		addq.b	#2,ob2ndRout(a0)			; advance secondary routine counter
+		addq.b	#2,obRoutine(a0)			; advance primary routine counter
 ; ---------------------------------------------------------------------------
 
 Anim_End:

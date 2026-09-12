@@ -11,7 +11,7 @@ Seesaw:
 		move.b	obRoutine(a0),d0
 		move.w	See_Index(pc,d0.w),d1
 		jsr	See_Index(pc,d1.w)
-		out_of_range.w	DeleteObject,see_origX(a0)
+		out_of_range_with_y_check.w	DeleteObject,see_origX(a0),see_origY(a0)
 		DisplaySprite
 		rts
 ; ===========================================================================

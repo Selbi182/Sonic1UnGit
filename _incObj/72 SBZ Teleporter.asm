@@ -2,25 +2,6 @@
 ; ---------------------------------------------------------------------------
 ; Object 72 - invisible teleporter system inside tubes (SBZ act 2)
 ; ---------------------------------------------------------------------------
-
-Teleport:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Tele_Index(pc,d0.w),d1
-		jsr	Tele_Index(pc,d1.w)
-
-		out_of_range.s	.delete
-		rts
-
-	.delete:
-		jmp	(DeleteObject).l
-
-; ===========================================================================
-Tele_Index:	dc.w Tele_Main-Tele_Index
-		dc.w Tele_Action-Tele_Index
-		dc.w Tele_PreBump-Tele_Index
-		dc.w Tele_Teleporting-Tele_Index
-
 tele_time:	equ objoff_30	; remaining time Sonic should move in current direction
 tele_prebumpval:equ objoff_32	; current pre-bump value before Sonic gets shot off (incremented by 2, triggers at $80)
 tele_targetX:	equ objoff_36	; next X-position target
@@ -28,10 +9,10 @@ tele_targetY:	equ objoff_38	; next Y-position target
 tele_current:	equ objoff_3A	; current entry in tele_entries (in multiples of 4)
 tele_entries:	equ objoff_3B	; number of entries in teleporter target data (in multiples of 4)
 tele_dataptr:	equ objoff_3C	; pointer to the teleporter target data for the current tube network
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Tele_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Tele_Action
+Teleport:
+		move.l	#Tele_Action,obID(a0)			; advance to Tele_Action
 
 		move.b	obSubtype(a0),d0			; get teleporter subtype
 		add.w	d0,d0					; double for word-based indexing
@@ -71,7 +52,7 @@ Tele_Action:	; Routine 2
 		blo.s	.return					; if not, disable teleporter
 
 	.activateTeleporter:
-		addq.b	#2,obRoutine(a0)			; advance to Tele_PreBump
+		move.l	#Tele_PreBump,obID(a0)			; advance to Tele_PreBump
 		move.b	#$81,(f_playerctrl).w			; set Sonic override flags (lock controls and disable object interaction)
 		move.b	#id_Roll,obAnim(a1)			; use Sonic's rolling animation
 		move.w	#$800,obInertia(a1)			; set to fast ground speed to use fast rolling animation
@@ -88,7 +69,7 @@ Tele_Action:	; Routine 2
 		jsr	(QueueSound2).l				; play it
 
 	.return:
-		rts						; return
+		bra.s	Tele_ChkDel
 ; ===========================================================================
 
 Tele_PreBump:	; Routine 4
@@ -101,20 +82,23 @@ Tele_PreBump:	; Routine 4
 		sub.w	d0,d2					; subtract adjusted sine result
 		move.w	d2,obY(a1)				; make Sonic bump up and down in teleporter
 
-		cmpi.b	#$80,tele_prebumpval(a0)			; has bump value advanced to a full bump?
-		bne.s	.return					; if not, branch
+		cmpi.b	#$80,tele_prebumpval(a0)		; has bump value advanced to a full bump?
+		bne.s	Tele_ChkDel					; if not, branch
 		bsr.w	Tele_NextDirection			; begin teleportation
-		addq.b	#2,obRoutine(a0)			; advance to Tele_Teleporting
+		move.l	#Tele_Teleporting,obID(a0)		; advance to Tele_Teleporting
 		move.w	#sfx_Teleport,d0			; play teleport sound
 		jsr	(QueueSound2).l				; (in later games, this is a generic dash sound)
 
-	.return:
-		rts						; return
+Tele_ChkDel:
+		out_of_range_with_y_check.s	.delete,obX(a0),obY(a0)
+		rts
+
+	.delete:
+		jmp	(DeleteObject).l
 ; ===========================================================================
 
 ; Tele_Bend:
 Tele_Teleporting: ; Routine 6
-		addq.l	#4,sp					; skip returning to "Teleporter:" routine to avoid out-of-range deletion
 		lea	(v_player).w,a1				; load Sonic player object
 
 		subq.b	#1,tele_time(a0)			; decrement timer for Sonic to travel in current direction
@@ -142,24 +126,17 @@ Tele_Teleporting: ; Routine 6
 
 	.continueInTube:
 		; Note: This is a direct copy of SpeedToPos, targeting a1 instead of a0.
-		move.l	obX(a1),d2				; get Sonic's X-axis position
-		move.l	obY(a1),d3				; get Sonic's Y-axis position
-		move.w	obVelX(a1),d0				; load Sonic's horizontal speed
-		ext.l	d0					; extend speed to longword
-		asl.l	#8,d0					; shift speed up a byte (16.16 fixed point)
-		add.l	d0,d2					; add speed to X-axis position
-		move.w	obVelY(a1),d0				; load Sonic's vertical speed
-		ext.l	d0					; extend speed to longword
-		asl.l	#8,d0					; shift speed up a byte (16.16 fixed point)
-		add.l	d0,d3					; add speed to Y-axis position
-		move.l	d2,obX(a1)				; update Sonic's X-axis position
-		move.l	d3,obY(a1)				; update Sonic's Y-axis position
-		rts						; return
+		movem.w	obVelX(a1),d0/d2			; load X and Y speed to d0/d2
+		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a1)				; add X speed to X position (note this affects the subpixel position)
+		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d2,obY(a1)				; add Y speed to Y position (note this affects the subpixel position)
+		rts
 ; ---------------------------------------------------------------------------
 
 	.exitTeleporter:
 		andi.w	#$7FF,obY(a1)				; wrap Sonic vertically (SBZ2 is a Y-wrapping level)
-		clr.b	obRoutine(a0)				; reset teleporter back to Tele_Main
+		move.l	#Teleport,obID(a0)			; reset teleporter back to Tele_Main
 		clr.b	(f_playerctrl).w			; clear Sonic control override flags
 		move.w	#0,obVelX(a1)				; stop Sonic horizontally
 		move.w	#$200,obVelY(a1)			; move Sonic down a bit to quickly land on floor again

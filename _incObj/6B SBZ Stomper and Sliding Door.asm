@@ -3,16 +3,6 @@
 ; Object 6B - stomper and sliding door (SBZ)
 ;             and ancient lift at the start of SBZ3/LZ4
 ; ---------------------------------------------------------------------------
-
-ScrapStomp:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Sto_Index(pc,d0.w),d1
-		jmp	Sto_Index(pc,d1.w)
-; ===========================================================================
-Sto_Index:	dc.w Sto_Main-Sto_Index
-		dc.w Sto_Action-Sto_Index
-
 sto_origY:	equ objoff_30		; original y-axis position
 sto_origX:	equ objoff_34		; original x-axis position
 sto_delay:	equ objoff_36		; delay timer before moving again
@@ -20,7 +10,7 @@ sto_active:	equ objoff_38		; flag set when a switch is pressed
 sto_offset_now:	equ objoff_3A		; current X/Y-offset from origin
 sto_offset_max:	equ objoff_3C		; maximum move distance from origin (third entry in Sto_Var)
 sto_switch:	equ objoff_3E		; switch ID that triggers platform behavior
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
 Sto_Var:	; width, height, max distance, action type
 		dc.b  128/2,  24/2, 128, 1	; $8x - sliding platform extending on switch press
@@ -30,8 +20,8 @@ Sto_Var:	; width, height, max distance, action type
 		dc.b  256/2, 128/2,   0, 5	; $4x - ancient lift at the start of SBZ3/LZ4
 ; ===========================================================================
 
-Sto_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Sto_Action
+ScrapStomp:
+		move.l	#Sto_Action,obID(a0)			; advance to Sto_Action
 
 		moveq	#0,d0					; clear d0
 		move.b	obSubtype(a0),d0			; get object subtype
@@ -106,8 +96,9 @@ Sto_Action:	; Routine 2
 		move.b	obSubtype(a0),d0			; get action type (set from Sto_Var)
 		andi.w	#$F,d0					; only read lower digit
 		add.w	d0,d0					; double for word-based indexing
-		move.w	Sto_TypeIndex(pc,d0.w),d1		; find entry in jump table
-		jsr	Sto_TypeIndex(pc,d1.w)			; execute behavior, then return here
+		lea	Sto_TypeIndex(pc),a1
+		move.w	(a1,d0.w),d1				; find entry in jump table
+		jsr	(a1,d1.w)				; execute behavior, then return here
 		move.w	(sp)+,d4				; restore previous X-position as input for SolidObject
 
 		tst.b	obRender(a0)				; is platform on screen?
@@ -124,7 +115,7 @@ Sto_Action:	; Routine 2
 ; ---------------------------------------------------------------------------
 
 	.chkdel:
-		out_of_range.s	.chkgone,sto_origX(a0)		; has object gone out of range? if yes, branch
+		out_of_range_with_y_check.s	.chkgone,sto_origX(a0),sto_origY(a0)		; has object gone out of range? if yes, branch
 		DisplaySprite
 		rts			; display object
 

@@ -6,30 +6,20 @@
 ; as well as the small circular spot that moves inside the gear.
 ; The gear graphics themselves are part of the level chunks.
 ; ---------------------------------------------------------------------------
-
-RunningDisc:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Disc_Index(pc,d0.w),d1
-		jmp	Disc_Index(pc,d1.w)
-; ===========================================================================
-Disc_Index:	dc.w Disc_Main-Disc_Index
-		dc.w Disc_Action-Disc_Index
-
 disc_origY:		equ objoff_30		; original y-axis position
 disc_origX:		equ objoff_32		; original x-axis position
 disc_spot_distance:	equ objoff_34		; radius distance for the small moving spot inside gear
 disc_spot_speed:	equ objoff_36		; small spot rotation speed
 disc_triggersize:	equ objoff_38		; trigger distance for Sonic to latch onto gear
 disc_sonic_attached:	equ objoff_3A		; flag set while Sonic is attached to gear
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Disc_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Disc_Action
+RunningDisc:
+		move.l	#Disc_Action,obID(a0)			; advance to Disc_Action
 		move.l	#Map_Disc,obMap(a0)			; set mappings
 		move.w	#ArtTile_SBZ_Disc|Tile_Pal3|Tile_Prio,obGfx(a0) ; set art tile, palette line, and high-priority flag
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 		move.b	#16/2,obActWid(a0)			; set sprite display width
 
 		move.w	obX(a0),disc_origX(a0)			; remember initial X-position
@@ -184,7 +174,7 @@ Disc_MoveSpot:
 ; ===========================================================================
 
 Disc_Display:
-		out_of_range.s	.delete,disc_origX(a0)		; is object out of range? if yes, branch
+		out_of_range_with_y_check.s	.delete,disc_origX(a0),disc_origY(a0)		; is object out of range? if yes, branch
 		DisplaySprite
 		rts			; display small spot
 

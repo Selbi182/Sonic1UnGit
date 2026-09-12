@@ -4,26 +4,13 @@
 ; ---------------------------------------------------------------------------
 
 Monitor:
-		moveq	#0,d0					; clear d0
-		move.b	obRoutine(a0),d0			; get routine number
-		move.w	Mon_Index(pc,d0.w),d1			; find entry in offset table
-		jmp	Mon_Index(pc,d1.w)			; jump to current routine
-; ===========================================================================
-Mon_Index:	dc.w Mon_Main-Mon_Index				; 0 - init
-		dc.w Mon_Solid-Mon_Index			; 2 - idle and unbroken
-		dc.w Mon_BreakOpen-Mon_Index			; 4 - break triggered from ReactToItem
-		dc.w Mon_Animate-Mon_Index			; 6 - idle and broken
-		dc.w Mon_Display-Mon_Index			; 8 - if spawned already broken
-; ===========================================================================
-
-Mon_Main:	; Routine 0
 		cmpi.b	#8,obSubtype(a0)			; is monitor subtype valid? i.e. no higher than goggles monitor (ID 8)
 		bls.s	.valid					; if yes, branch
 		move.l	#Invisibarrier,obID(a0)			; otherwise, convert this monitor to an invisible solid barrier
 		jmp	(Invisibarrier).l			; execute barrier logic
 .valid:
 
-		addq.b	#2,obRoutine(a0)			; go to "Mon_Solid" next
+		move.l	#Mon_Solid,obID(a0)			; go to "Mon_Solid" next
 		move.b	#28/2,obHeight(a0)			; set height
 		move.b	#28/2,obWidth(a0)			; set width
 		move.l	#Map_Monitor,obMap(a0)			; set mappings
@@ -36,7 +23,7 @@ Mon_Main:	; Routine 0
 		btst	#0,(a2)					; has monitor already been broken?
 		beq.s	.notbroken				; if not, branch
 
-		move.b	#8,obRoutine(a0)			; run "Mon_Display" routine
+		move.l	#Mon_Display,obID(a0)			; run "Mon_Display" routine
 		move.b	#$B,obFrame(a0)				; use broken monitor frame
 		rts						; only start displaying next frame
 ; ===========================================================================
@@ -140,18 +127,12 @@ Mon_Animate:	; Routine 6
 		bsr.w	AnimateSprite				; animate monitor
 
 Mon_Display:	; Routine 8
-		out_of_range_with_y_check.s .offscreen,obX(a0),obY(a0) ; check if object is off-screen, branch if so
-		DisplaySprite					; object is on-screen, display sprite
+		RememberStateXY
 		rts
-
-	.offscreen:
-		respawn_entry.s	.del				; get respawn entry for this object; branch to DeleteObject if none exists
-		bclr	#7,(a2)					; clear respawn table entry, so object manager can load this object again
-	.del:	jmp	(DeleteObject).l			; delete object
 ; ===========================================================================
 
 Mon_BreakOpen:	; Routine 4 (set from ReactToItem)
-		addq.b	#2,obRoutine(a0)			; advance to "Mon_Animate"
+		move.l	#Mon_Animate,obID(a0)			; advance to "Mon_Animate"
 		move.b	#col_none,obColType(a0)			; prevent further collision with monitor
 
 		bsr.w	FindFreeObj				; find a free object slot
@@ -168,8 +149,7 @@ Mon_BreakOpen:	; Routine 4 (set from ReactToItem)
 Mon_Explode:
 		bsr.w	FindFreeObj				; find another free object slot
 		bne.s	Mon_RememberBroken			; if object RAM is full, branch
-		move.l	#ExplosionItem,obID(a1)			; load explosion object
-		addq.b	#2,obRoutine(a1)			; skip over ExItem_Animal so no animal is spawned
+		move.l	#ExItem_Main,obID(a1)			; load explosion object
 		move.w	obX(a0),obX(a1)				; copy X position
 		move.w	obY(a0),obY(a1)				; copy Y position
 
@@ -184,24 +164,96 @@ Mon_RememberBroken:
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
+; Subroutine to	make the sides of a monitor solid
+; 
+; input:
+;	d1 = width/2
+;	d2 = height/2
+; 
+; output:
+;	d0 = distance from side of monitor
+;	d1 = collision type: 0 = none; 1 = side collision; -1 = top/bottom collision
+;	d3 = distance from top of monitor
+; ---------------------------------------------------------------------------
+
+Mon_SolidSides:
+		lea	(v_player).w,a1				; load Sonic's player object
+		move.w	obX(a1),d0				; get Sonic's X position
+		sub.w	obX(a0),d0				; subtract monitor's X position from it
+		add.w	d1,d0					; add collision width
+		bmi.s	.no_collision				; if Sonic is to the left of the monitor, branch
+		move.w	d1,d3					; copy collision width
+		add.w	d3,d3					; double it
+		cmp.w	d3,d0					; is Sonic to the right of the monitor?
+		bhi.s	.no_collision				; if yes, branch
+
+		move.b	obHeight(a1),d3				; get Sonic's collision height
+		ext.w	d3					; extend to word
+		add.w	d3,d2					; add it to monitor's collision height
+		move.w	obY(a1),d3				; get Sonic's Y position
+		sub.w	obY(a0),d3				; subtract monitor's Y position from it
+		add.w	d2,d3					; add collision height
+		bmi.s	.no_collision				; if Sonic is above the monitor, branch
+		add.w	d2,d2					; double collision height
+		cmp.w	d2,d3					; is Sonic below the monitor?
+		bcc.s	.no_collision				; if yes, branch
+
+		tst.b	(f_playerctrl).w			; is Sonic's object interaction disabled?
+		bmi.s	.no_collision				; if yes, branch
+		cmpi.b	#6,(v_player+obRoutine).w		; is Sonic dying?
+		bhs.s	.no_collision				; if yes, branch
+		tst.w	(v_debuguse).w				; is debug mode active?
+		bne.s	.no_collision				; if yes, branch
+
+		cmp.w	d0,d1					; is Sonic between left side and middle of the monitor?
+		bcc.s	.left_hit				; if yes, branch
+
+	.right_hit:
+		add.w	d1,d1					; double collision width
+		sub.w	d1,d0					; update d0 for to right side of monitor
+
+	; loc_A4DC:
+	.left_hit:
+		cmpi.w	#$10,d3					; is Sonic between top & middle of monitor?
+		blo.s	.top_hit				; if yes, branch
+
+; loc_A4E2:
+.side_hit:
+		moveq	#1,d1					; set side collision flag
+		rts						; return with result in CCR
+; ===========================================================================
+
+; loc_A4E6:
+.no_collision:
+		moveq	#0,d1					; set no collision flag
+		rts						; return with result in CCR
+; ===========================================================================
+
+; loc_A4EA:
+.top_hit:
+		moveq	#0,d1					; clear d1
+		move.b	obActWid(a0),d1				; get display width of monitor
+		addq.w	#4,d1					; add 4px to top collision width
+		move.w	d1,d2					; copy it for right side check
+		add.w	d2,d2					; double the copy for right side check
+		add.w	obX(a1),d1				; add Sonic's X position to main collision width
+		sub.w	obX(a0),d1				; subtract Monitor's X position
+		bmi.s	.side_hit				; if Sonic is to the left of the monitor, branch
+		cmp.w	d2,d1					; is Sonic to the right of the monitor?
+		bhs.s	.side_hit				; if yes, branch
+
+		moveq	#-1,d1					; set top/bottom collision flag
+		rts						; return with result in CCR
+; End of function Mon_SolidSides
+
+
+; ===========================================================================
+; ---------------------------------------------------------------------------
 ; Object 2E - contents of monitors
 ; ---------------------------------------------------------------------------
 
 PowerUp:
-		moveq	#0,d0					; clear d0
-		move.b	obRoutine(a0),d0			; get routine number
-		move.w	Pow_Index(pc,d0.w),d1			; find entry in offset table
-		jsr	Pow_Index(pc,d1.w)			; jump to current routine and return
-		DisplaySprite					; display monitor icon sprite
-		rts
-; ===========================================================================
-Pow_Index:	dc.w Pow_Main-Pow_Index				; 0 - init
-		dc.w Pow_Move-Pow_Index				; 2 - icon is moving up
-		dc.w Pow_Delete-Pow_Index			; 4 - wait and delete
-; ===========================================================================
-
-Pow_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Pow_Move
+		move.l	#Pow_Move,obID(a0)			; advance to Pow_Move
 		move.w	#ArtTile_Monitor|Tile_Prio,obGfx(a0)	; set art tile
 		move.b	#sprite_rawmappings|sprite_cam_field,obRender(a0) ; set "raw-mappings" flag and playfield-positioned mode
 		move.w	#spr_prio3,obPriority(a0)		; set sprite priority to 3
@@ -223,13 +275,16 @@ Pow_Move:	; Routine 2
 		bpl.w	Pow_Checks				; if not, branch to give monitor reward now
 		bsr.w	SpeedToPos				; update icon position
 		addi.w	#$18,obVelY(a0)				; reduce icon's upward speed
+		DisplaySprite
 		rts						; wait until it has stopped moving
 ; ===========================================================================
 
 Pow_Checks:
-		addq.b	#2,obRoutine(a0)			; advance to Pow_Delete
+		move.l	#Pow_Delete,obID(a0)			; advance to Pow_Delete
 		move.w	#30-1,obTimeFrame(a0)			; display icon for half a second
 		move.b	obAnim(a0),d0				; get animation ID to use as check for the monitor type
+		bsr.s	Pow_ChkEggman
+		bra.w	Pow_Delete
 
 Pow_ChkEggman:
 		cmpi.b	#1,d0					; does monitor contain Eggman?
@@ -329,97 +384,9 @@ Pow_ChkEnd:
 
 Pow_Delete:	; Routine 4
 		subq.w	#1,obTimeFrame(a0)			; deduct 1 from final delay (half a second by default)
-		bmi.s	.return					; if time remains, branch
-		addq.l	#4,sp					; tamper return value to not return to PowerUp
-		bra.w	DeleteObject				; delete icon object
-
-.return:
+		bmi.w	DeleteObject				; if yes, delete icon object
+		DisplaySprite
 		rts						; return to PowerUp to keep displaying icon
-
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Subroutine to	make the sides of a monitor solid
-; 
-; input:
-;	d1 = width/2
-;	d2 = height/2
-; 
-; output:
-;	d0 = distance from side of monitor
-;	d1 = collision type: 0 = none; 1 = side collision; -1 = top/bottom collision
-;	d3 = distance from top of monitor
-; ---------------------------------------------------------------------------
-
-Mon_SolidSides:
-		lea	(v_player).w,a1				; load Sonic's player object
-		move.w	obX(a1),d0				; get Sonic's X position
-		sub.w	obX(a0),d0				; subtract monitor's X position from it
-		add.w	d1,d0					; add collision width
-		bmi.s	.no_collision				; if Sonic is to the left of the monitor, branch
-		move.w	d1,d3					; copy collision width
-		add.w	d3,d3					; double it
-		cmp.w	d3,d0					; is Sonic to the right of the monitor?
-		bhi.s	.no_collision				; if yes, branch
-
-		move.b	obHeight(a1),d3				; get Sonic's collision height
-		ext.w	d3					; extend to word
-		add.w	d3,d2					; add it to monitor's collision height
-		move.w	obY(a1),d3				; get Sonic's Y position
-		sub.w	obY(a0),d3				; subtract monitor's Y position from it
-		add.w	d2,d3					; add collision height
-		bmi.s	.no_collision				; if Sonic is above the monitor, branch
-		add.w	d2,d2					; double collision height
-		cmp.w	d2,d3					; is Sonic below the monitor?
-		bcc.s	.no_collision				; if yes, branch
-
-		tst.b	(f_playerctrl).w			; is Sonic's object interaction disabled?
-		bmi.s	.no_collision				; if yes, branch
-		cmpi.b	#6,(v_player+obRoutine).w		; is Sonic dying?
-		bhs.s	.no_collision				; if yes, branch
-		tst.w	(v_debuguse).w				; is debug mode active?
-		bne.s	.no_collision				; if yes, branch
-
-		cmp.w	d0,d1					; is Sonic between left side and middle of the monitor?
-		bcc.s	.left_hit				; if yes, branch
-
-	.right_hit:
-		add.w	d1,d1					; double collision width
-		sub.w	d1,d0					; update d0 for to right side of monitor
-
-	; loc_A4DC:
-	.left_hit:
-		cmpi.w	#$10,d3					; is Sonic between top & middle of monitor?
-		blo.s	.top_hit				; if yes, branch
-
-; loc_A4E2:
-.side_hit:
-		moveq	#1,d1					; set side collision flag
-		rts						; return with result in CCR
-; ===========================================================================
-
-; loc_A4E6:
-.no_collision:
-		moveq	#0,d1					; set no collision flag
-		rts						; return with result in CCR
-; ===========================================================================
-
-; loc_A4EA:
-.top_hit:
-		moveq	#0,d1					; clear d1
-		move.b	obActWid(a0),d1				; get display width of monitor
-		addq.w	#4,d1					; add 4px to top collision width
-		move.w	d1,d2					; copy it for right side check
-		add.w	d2,d2					; double the copy for right side check
-		add.w	obX(a1),d1				; add Sonic's X position to main collision width
-		sub.w	obX(a0),d1				; subtract Monitor's X position
-		bmi.s	.side_hit				; if Sonic is to the left of the monitor, branch
-		cmp.w	d2,d1					; is Sonic to the right of the monitor?
-		bhs.s	.side_hit				; if yes, branch
-
-		moveq	#-1,d1					; set top/bottom collision flag
-		rts						; return with result in CCR
-; End of function Mon_SolidSides
 
 ; ===========================================================================
 

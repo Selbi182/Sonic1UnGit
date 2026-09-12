@@ -2,25 +2,14 @@
 ; ---------------------------------------------------------------------------
 ; Object 69 - stationary spinning platforms and trapdoors (SBZ)
 ; ---------------------------------------------------------------------------
-
-SpinPlatform:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Spin_Index(pc,d0.w),d1
-		jmp	Spin_Index(pc,d1.w)
-; ===========================================================================
-Spin_Index:	dc.w Spin_Main-Spin_Index
-		dc.w Spin_Trapdoor-Spin_Index
-		dc.w Spin_Spinner-Spin_Index
-
 spin_timer:	equ objoff_30	; counter for time until event
 spin_timelen:	equ objoff_32	; time between changes (general)
 spin_spinning:	equ objoff_34	; flag set while platform is spinning
 spin_syncmask:	equ objoff_36	; level frame counter synchronization bit mask to check if platform should start spinning
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Spin_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Spin_Trapdoor
+SpinPlatform:
+		move.l	#Spin_Trapdoor,obID(a0)			; advance to Spin_Trapdoor
 		move.l	#Map_Trap,obMap(a0)			; set mappings
 		move.w	#ArtTile_SBZ_Trap_Door|Tile_Pal3,obGfx(a0) ; set art tile and palette line
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
@@ -35,7 +24,7 @@ Spin_Main:	; Routine 0
 	; Set up spinning platforms...
 		tst.b	obSubtype(a0)				; is subtype at least $80? (spinning platforms)
 		bpl.s	Spin_Trapdoor				; if not, branch (object is a trapdoor)
-		addq.b	#2,obRoutine(a0)			; advance to Spin_Spinner
+		move.l	#Spin_Spinner,obID(a0)			; advance to Spin_Spinner
 		move.l	#Map_Spin,obMap(a0)			; set alternate mappings
 		move.w	#ArtTile_SBZ_Spinning_Platform,obGfx(a0) ; set alternate art tile
 		move.b	#32/2,obActWid(a0)			; set alternate sprite display width
@@ -82,7 +71,7 @@ Spin_Trapdoor:	; Routine 2
 		move.w	obX(a0),d4				; collision X-position (stood-on)
 		bsr.w	SolidObject				; make trapdoor solid
 
-		RememberState
+		RememberStateXY
 		rts				; display trapdoor, or delete it if out of range
 ; ---------------------------------------------------------------------------
 
@@ -95,7 +84,7 @@ Spin_Trapdoor:	; Routine 2
 		clr.b	obSolid(a0)				; clear trapdoor's solidity flag
 
 	.display:
-		RememberState
+		RememberStateXY
 		rts				; display trapdoor, or delete it if out of range
 ; ===========================================================================
 
@@ -127,7 +116,7 @@ Spin_Spinner:	; Routine 4
 		move.w	obX(a0),d4				; collision X-position (stood-on)
 		bsr.w	SolidObject				; make platform solid
 
-		RememberState
+		RememberStateXY
 		rts				; display platform, or delete it if out of range
 ; ---------------------------------------------------------------------------
 
@@ -140,7 +129,7 @@ Spin_Spinner:	; Routine 4
 		clr.b	obSolid(a0)				; clear platform's solidity flag
 
 	.display:
-		RememberState
+		RememberStateXY
 		rts				; display platform, or delete it if out of range
 
 ; ===========================================================================

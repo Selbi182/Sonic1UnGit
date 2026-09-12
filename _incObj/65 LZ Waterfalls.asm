@@ -4,30 +4,16 @@
 ; ---------------------------------------------------------------------------
 
 Waterfall:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	WFall_Index(pc,d0.w),d1
-		jmp	WFall_Index(pc,d1.w)
-; ===========================================================================
-WFall_Index:	dc.w WFall_Main-WFall_Index	; 0
-		dc.w WFall_Animate-WFall_Index	; 2
-		dc.w WFall_Display-WFall_Index	; 4
-		dc.w WFall_OnWater-WFall_Index	; 6
-		dc.w WFall_Priority-WFall_Index	; 8
-; ===========================================================================
-
-WFall_Main:	; Routine 0
-		addq.b	#4,obRoutine(a0)			; advance to WFall_Display
+		move.l	#WFall_Display,obID(a0)			; advance to WFall_Display
 		move.l	#Map_WFall,obMap(a0)			; set mappings
 		move.w	#ArtTile_LZ_Splash|Tile_Pal3,obGfx(a0)	; set art tile and palette line (palette cycle)
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#48/2,obActWid(a0)			; set sprite display width
-		move.w	#spr_prio1,obPriority(a0)			; set sprite priority (above Sonic)
+		move.w	#spr_prio1,obPriority(a0)		; set sprite priority (above Sonic)
 
 		move.b	obSubtype(a0),d0			; get object type
 		bpl.s	.setFrame				; branch if $00-$7F
 		bset	#7,obGfx(a0)				; set high-priority VRAM flag
-
 	.setFrame:
 		andi.b	#$0F,d0					; read only the lower digit
 		move.b	d0,obFrame(a0)				; set that as frame ID
@@ -36,15 +22,15 @@ WFall_Main:	; Routine 0
 		cmpi.b	#9,d0					; is object type $x9 (splash)?
 		bne.s	WFall_Display				; if not, branch
 		clr.w	obPriority(a0)				; use highest sprite priority (in front of other waterfalls)
-		subq.b	#2,obRoutine(a0)			; go back to WFall_Animate
+		move.l	#WFall_Animate,obID(a0)			; go back to WFall_Animate
 		btst	#6,obSubtype(a0)			; is object subtype $49?
 		beq.s	.chkHidden				; if not, branch
-		move.b	#6,obRoutine(a0)			; advance to WFall_OnWater (align splash to surface)
+		move.l	#WFall_OnWater,obID(a0)			; advance to WFall_OnWater (align splash to surface)
 
 	.chkHidden:
 		btst	#5,obSubtype(a0)			; is object type $A9? (hidden splash in changing chunk at LZ3 start)
 		beq.s	WFall_Animate				; if not, branch
-		move.b	#8,obRoutine(a0)			; set to WFall_Priority
+		move.l	#WFall_Priority,obID(a0)		; set to WFall_Priority
 ; ---------------------------------------------------------------------------
 
 WFall_Animate:	; Routine 2
@@ -59,7 +45,7 @@ WFall_Display:	; Routine 4
 
 WFall_OnWater:	; Routine 6
 		move.w	(v_waterpos1).w,d0			; get current water height including sway
-		subi.w	#16,d0					; adjust splash 16px above it
+		subi.w	#15,d0					; adjust splash 15px above it
 		move.w	d0,obY(a0)				; match splash position to water height
 		bra.w	WFall_Animate				; animate splash
 ; ===========================================================================

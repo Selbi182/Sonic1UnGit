@@ -2,28 +2,18 @@
 ; ---------------------------------------------------------------------------
 ; Object 2D - Burrobot enemy (LZ)
 ; ---------------------------------------------------------------------------
-
-Burrobot:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Burro_Index(pc,d0.w),d1
-		jmp	Burro_Index(pc,d1.w)
-; ===========================================================================
-Burro_Index:	dc.w Burro_Main-Burro_Index
-		dc.w Burro_Action-Burro_Index
-
 burro_timedelay: equ objoff_30	; timer used for waiting before turning around, or automatic action changes
 burro_checktype: equ objoff_32	; (while moving) flag to alternate between checking ledges ahead or aligning to floor
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Burro_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Burro_Action
+Burrobot:
+		move.l	#Burro_Action,obID(a0)			; advance to Burro_Action
 		move.b	#38/2,obHeight(a0)			; set height
 		move.b	#16/2,obWidth(a0)			; set width
 		move.l	#Map_Burro,obMap(a0)			; set mappings
 		move.w	#ArtTile_Burrobot,obGfx(a0)		; set art tile
 		ori.b	#sprite_cam_field,obRender(a0)		; set playfield-positioned mode
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 		move.b	#col_24x36|col_badnik,obColType(a0)	; set ReactToItem type
 		move.b	#24/2,obActWid(a0)			; set sprite display width
 

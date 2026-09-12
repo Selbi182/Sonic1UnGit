@@ -4,26 +4,16 @@
 ; ---------------------------------------------------------------------------
 
 Bumper:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Bump_Index(pc,d0.w),d1
-		jmp	Bump_Index(pc,d1.w)
-; ===========================================================================
-Bump_Index:	dc.w Bump_Main-Bump_Index
-		dc.w Bump_Hit-Bump_Index
-; ===========================================================================
-
-Bump_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Bump_Hit
+		move.l	#Bump_Action,obID(a0)			; advance to Bump_Action
 		move.l	#Map_Bump,obMap(a0)			; set mappings
 		move.w	#ArtTile_SYZ_Bumper,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield positioning mode
 		move.b	#32/2,obActWid(a0)			; set sprite display width
-		move.w	#spr_prio1,obPriority(a0)			; set sprite priority (above Sonic)
+		move.w	#spr_prio1,obPriority(a0)		; set sprite priority (above Sonic)
 		move.b	#col_16x16_alt|col_special,obColType(a0) ; set collision type (handled through ReactToItem => D7orE1)
 ; ---------------------------------------------------------------------------
 
-Bump_Hit:	; Routine 2
+Bump_Action:	; Routine 2
 		tst.b	obColProp(a0)				; has Sonic touched the bumper? (set in ReactToItem)
 		beq.w	Bump_Display				; if not, branch
 		clr.b	obColProp(a0)				; reset bumper to not touched
@@ -68,16 +58,8 @@ Bump_Hit:	; Routine 2
 Bump_Display:
 		lea	(Ani_Bump).l,a1				; load bumper animation script
 		bsr.w	AnimateSprite				; advance animation
-		out_of_range.s	.delete				; is bumper out of range? if yes, branch
-		DisplaySprite
-		rts				; otherwise, keep displaying sprite
-; ===========================================================================
-
-.delete:
-		respawn_entry.s	.norespawnentry
-		bclr	#7,(a2)
-	.norespawnentry:
-		bra.w	DeleteObject				; display bumper sprite
+		RememberStateXY
+		rts
 ; ===========================================================================
 
 		include	"_anim/Bumper.asm"

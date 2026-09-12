@@ -3,50 +3,24 @@
 ; Object 87 - Sonic on ending sequence.
 ; (Note that this object works strongly in tandem with End_MoveSonic.)
 ; ---------------------------------------------------------------------------
+eson_time:	equ objoff_30		; time to wait between events (2 bytes)
+; ---------------------------------------------------------------------------
 
 EndSonic:
-		; This object uses ob2ndRout instead of the regular obRoutine, presumably
-		; to avoid conflicts for when it gets swapped-in for the true Sonic object.
-		moveq	#0,d0
-		move.b	ob2ndRout(a0),d0
-		move.w	ESon_Index(pc,d0.w),d1
-		jsr	ESon_Index(pc,d1.w)
-		DisplaySprite
-		rts
-; ===========================================================================
-ESon_Index:	dc.w ESon_Main-ESon_Index		; 0
-
-		; --- Good Ending (6 emeralds) ---
-		dc.w ESon_MakeEmeralds-ESon_Index	; 2
-		dc.w ESon_Animate-ESon_Index		; 4
-		dc.w ESon_LookUp-ESon_Index		; 6
-		dc.w ESon_DeleteEmeralds-ESon_Index	; 8
-		dc.w ESon_Animate-ESon_Index		; A
-		dc.w ESon_MakeLogo-ESon_Index		; C
-		dc.w ESon_Animate-ESon_Index		; E
-
-		; --- Bad Ending (not all emeralds) ---
-		dc.w ESon_BadEnding-ESon_Index		; 10
-		dc.w ESon_Animate-ESon_Index		; 12
-
-eson_time:	equ objoff_30		; time to wait between events (2 bytes)
-; ===========================================================================
-
-ESon_Main:	; Routine 0
 		cmpi.b	#ss_emeralds_num,(v_emeralds).w		; do you have all 6 emeralds?
 		beq.s	ESon_GoodEnding				; if yes, branch
-		addi.b	#$10,ob2ndRout(a0)			; else, skip emerald sequence (set to ESon_BadEnding)
+		move.l	#ESon_BadEnding,obID(a0)		; else, skip emerald sequence (set to ESon_BadEnding)
 		move.w	#(3*60)+36,eson_time(a0)		; set time before leap to just over 3.5 seconds
-		rts						; return
+		bra.w	ESon_BadEnding
 ; ===========================================================================
 
 ESon_GoodEnding:
-		addq.b	#2,ob2ndRout(a0)			; advance to ESon_MakeEmeralds
+		move.l	#ESon_MakeEmeralds,obID(a0)		; advance to ESon_MakeEmeralds
 		move.l	#Map_ESon,obMap(a0)			; set mappings
 		move.w	#ArtTile_Ending_Sonic,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		clr.b	obStatus(a0)				; clear X-flip flag
-		move.w	#spr_prio2,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio2,obPriority(a0)		; set sprite priority
 		move.b	#0,obFrame(a0)				; set to "looking at emeralds" frame
 		move.w	#(1*60)+20,eson_time(a0)		; set duration to look at emeralds to a bit under 1.5 seconds
 ; ---------------------------------------------------------------------------
@@ -56,12 +30,26 @@ ESon_MakeEmeralds:
 		subq.w	#1,eson_time(a0)			; decrement timer to stare at hands
 		bne.s	.return					; if time remains, branch
 
-		addq.b	#2,ob2ndRout(a0)			; advance to ESon_Animate ($4)
+		move.l	#ESon_Animate_LookAtHands,obID(a0)	; advance to ESon_Animate ($4)
 		move.w	#(0<<8)+1,obAnim(a0)			; set to "hold" animation and restart it immediately
-		move.l	#EndChaos,(v_endemeralds+obID).w		; load ending sequence chaos emeralds objects
+		move.l	#EndChaos,(v_endemeralds+obID).w	; load ending sequence chaos emeralds objects
 
 	.return:
+		DisplaySprite
 		rts						; return
+; ===========================================================================
+
+ESon_Animate_LookAtHands:	; Routine 4
+		lea	(Ani_ESon).l,a1				; load animation script
+		jsr	(AnimateSprite).l
+		tst.b	obRoutine(a0)
+		bne.s	.lookUp
+		DisplaySprite
+		rts						; return
+
+.lookUp:
+		clr.b	obRoutine(a0)
+		move.l	#ESon_LookUp,obID(a0)
 ; ===========================================================================
 
 ESon_LookUp:	; Routine 6
@@ -70,9 +58,10 @@ ESon_LookUp:	; Routine 6
 
 		move.w	#1,(f_restart).w			; signal to End_ChkEmerald to start white screen flash
 		move.w	#(1*60)+30,eson_time(a0)		; let white screen flash last for 1.5 seconds
-		addq.b	#2,ob2ndRout(a0)			; advance to ESon_DeleteEmeralds
+		move.l	#ESon_DeleteEmeralds,obID(a0)		; advance to ESon_DeleteEmeralds
 
 	.return:
+		DisplaySprite
 		rts						; return
 ; ===========================================================================
 
@@ -87,82 +76,83 @@ ESon_DeleteEmeralds:
 		dbf	d1,.clear				; loop until all emeralds have been deleted
 
 		move.w	#1,(f_restart).w			; signal to End_SlowFade that emeralds have disappeared
-		addq.b	#2,ob2ndRout(a0)			; advance to ESon_Animate ($A)
+		move.l	#ESon_Animate_Confusion,obID(a0)	; advance to ESon_Animate ($A)
 		move.b	#1,obAnim(a0)				; set Sonic to "confused" animation
 		move.w	#1*60,eson_time(a0)			; time to stay on last frame after confused animation has finished (1 second)
 
 	.return:
+		DisplaySprite
 		rts						; return
+; ===========================================================================
+
+ESon_Animate_Confusion:	; Routine $A
+		lea	(Ani_ESon).l,a1				; load animation script
+		jsr	(AnimateSprite).l
+		tst.b	obRoutine(a0)
+		bne.s	.makeLogo
+		DisplaySprite
+		rts						; return
+
+.makeLogo:
+		clr.b	obRoutine(a0)
+		move.l	#ESon_MakeLogo,obID(a0)
 ; ===========================================================================
 
 ESon_MakeLogo:	; Routine $C
 		subq.w	#1,eson_time(a0)			; decrement timer for Sonic to stay on last confusion frame
 		bne.s	.return					; if time remains, branch
 
-		addq.b	#2,ob2ndRout(a0)			; advance to ESon_Animate ($E, no longer advances past that)
+		move.l	#ESon_Animate_LeapAtScreen,obID(a0)	; advance to ESon_Animate ($E, no longer advances past that)
 		move.b	#2,obAnim(a0)				; set Sonic to "leap at screen" animation
 		move.l	#EndSTH,(v_endlogo+obID).w		; load "SONIC THE HEDGEHOG" object
 
 	.return:
+		DisplaySprite
 		rts						; return
 ; ===========================================================================
 
-ESon_Animate:	; Routine 4, $A, $E, $12
+ESon_Animate_LeapAtScreen:	; Routine $E
 		lea	(Ani_ESon).l,a1				; load animation script
-		jmp	(AnimateSprite).l			; (most of these animations are set up to increase ob2ndRout on finish!)
+		jsr	(AnimateSprite).l
+		DisplaySprite
+		rts						; return
+; ===========================================================================
 ; ===========================================================================
 
 ESon_BadEnding:	; Routine $10
 		subq.w	#1,eson_time(a0)			; decrement time before leap
 		bne.s	.return					; if time remains, branch
 
-		addq.b	#2,ob2ndRout(a0)			; advance to ESon_Animate ($12, doesn't advance past that)
+		move.l	#ESon_Animate_LeapAtScreen,obID(a0)	; advance to ESon_Animate ($12, doesn't advance past that)
 		move.l	#Map_ESon,obMap(a0)			; set mappings
 		move.w	#ArtTile_Ending_Sonic,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		clr.b	obStatus(a0)				; clear any X/Y-flip flags
-		move.w	#spr_prio2,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio2,obPriority(a0)		; set sprite priority
 		move.b	#5,obFrame(a0)				; use first "leaping" frame
 		move.b	#2,obAnim(a0)				; set Sonic to "leap at screen" animation
 		move.l	#EndSTH,(v_endlogo+obID).w		; load "SONIC THE HEDGEHOG" object
-		bra.s	ESon_Animate				; execute new animation immediately
+		bra.s	ESon_Animate_LeapAtScreen		; execute new animation immediately
 
 	.return:
+		DisplaySprite
 		rts						; return
-
-; ===========================================================================
-
-		include "_anim/Ending Sequence Sonic.asm"
-
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 88 - chaos emeralds on the ending sequence
 ; ---------------------------------------------------------------------------
-
-EndChaos:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	ECha_Index(pc,d0.w),d1
-		jsr	ECha_Index(pc,d1.w)
-		DisplaySprite
-		rts
-; ===========================================================================
-ECha_Index:	dc.w ECha_Main-ECha_Index	; 0
-		dc.w ECha_Move-ECha_Index	; 2
-
 echa_origX:	equ objoff_38		; x-axis center of emerald circle (2 bytes)
 echa_origY:	equ objoff_3A		; y-axis center of emerald circle (2 bytes)
 echa_radius:	equ objoff_3C		; radius (2 bytes)
 echa_angle:	equ objoff_3E		; angle for rotation (2 bytes)
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-ECha_Main:	; Routine 0
+EndChaos:
 		; (This isn't fr_Wait1: v_player is Object 88, which has its own frames.)
 		cmpi.b	#2,(v_player+obFrame).w			; is Sonic on final frame in "hold" animation?
 		beq.s	ECha_CreateEms				; if yes, branch
-		addq.l	#4,sp					; don't return to EndChaos to skip calling DisplaySprite
-		rts						; return
+		rts						; hide
 ; ===========================================================================
 
 ECha_CreateEms:
@@ -174,12 +164,11 @@ ECha_CreateEms:
 		moveq	#ss_emeralds_num-1,d1			; load one object per emerald (6)
 
 	.loopLoadEmeralds:
-		move.l	#EndChaos,obID(a1)			; load chaos emerald object
-		addq.b	#2,obRoutine(a1)			; set to ECha_Move
+		move.l	#ECha_Move,obID(a1)			; load chaos emerald object
 		move.l	#Map_ECha,obMap(a1)			; set mappings
 		move.w	#ArtTile_Ending_Emeralds,obGfx(a1)	; set art tile
 		move.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode
-		move.w	#spr_prio1,obPriority(a1)			; set sprite priority (above Sonic)
+		move.w	#spr_prio1,obPriority(a1)		; set sprite priority (above Sonic)
 		move.w	obX(a0),echa_origX(a1)			; remember initial X-position for spinning animation
 		move.w	obY(a0),echa_origY(a1)			; remember initial Y-position for spinning animation
 		move.b	d2,obFrame(a1)				; use current emerald color frame
@@ -223,30 +212,18 @@ ECha_Rise:
 		subq.w	#1,echa_origY(a0)			; make circle rise
 
 ECha_End:
+		DisplaySprite
 		rts						; return
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 89 - "SONIC THE HEDGEHOG" text on the ending sequence.
 ; ---------------------------------------------------------------------------
+esth_time:	equ objoff_30		; time to stay on the text before exiting to credits (2 bytes)
+; ---------------------------------------------------------------------------
 
 EndSTH:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	ESth_Index(pc,d0.w),d1
-		jsr	ESth_Index(pc,d1.w)
-		DisplaySprite
-		rts
-; ===========================================================================
-ESth_Index:	dc.w ESth_Main-ESth_Index		; 0
-		dc.w ESth_Move-ESth_Index		; 2
-		dc.w ESth_GotoCredits-ESth_Index	; 4
-
-esth_time:	equ objoff_30		; time to stay on the text before exiting to credits (2 bytes)
-; ===========================================================================
-
-ESth_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to ESth_Move
+		move.l	#ESth_Move,obID(a0)			; advance to ESth_Move
 		move.w	#$80-$A0,obX(a0)			; object starts outside the visible screen space
 		move.w	#$80+$58,obY(a0)			; set fixed Y-position
 		move.l	#Map_ESth,obMap(a0)			; set mappings
@@ -259,11 +236,12 @@ ESth_Move:	; Routine 2
 		cmpi.w	#$80+$40,obX(a0)			; has object reached $40 in visible screen space? ($C0)
 		beq.s	ESth_Delay				; if yes, branch
 		addi.w	#$10,obX(a0)				; move object to the right
-		rts						; sprite is displayed in EndSTH
+		DisplaySprite
+		rts
 ; ---------------------------------------------------------------------------
 
 ESth_Delay:
-		addq.b	#2,obRoutine(a0)			; advance to ESth_GotoCredits
+		move.l	#ESth_GotoCredits,obID(a0)		; advance to ESth_GotoCredits
 		move.w	#4*60,esth_time(a0)			; set duration for delay (4 seconds)
 ; ---------------------------------------------------------------------------
 
@@ -274,9 +252,12 @@ ESth_GotoCredits:
 		move.b	#id_Credits,(v_gamemode).w		; exit to credits game mode (this is a trigger for End_MainLoop)
 
 ESth_Wait:
-		rts						; sprite is displayed in EndSTH
+		DisplaySprite
+		rts
+
 ; ===========================================================================
 
+		include "_anim/Ending Sequence Sonic.asm"
 Map_ESon:	include	"_maps/Ending Sequence Sonic.asm"
 Map_ECha:	include	"_maps/Ending Sequence Emeralds.asm"
 Map_ESth:	include	"_maps/Ending Sequence STH.asm"

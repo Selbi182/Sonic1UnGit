@@ -27,7 +27,7 @@ Poi_Slower:	; Routine 2
 		bsr.w	SpeedToPos				; update position based on velocity
 		addi.w	#$18,obVelY(a0)				; reduce upward speed
 		DisplaySprite					; display points object
-		rts
+		rts						; return
 
 ; ===========================================================================
 

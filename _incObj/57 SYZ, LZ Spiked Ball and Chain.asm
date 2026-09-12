@@ -12,7 +12,7 @@ sball_angle:	equ objoff_12
 ; ---------------------------------------------------------------------------
 
 SpikeBall:
-		move.l	#SBall_Move,obID(a0)
+		move.l	#SBall_Move,obID(a0)			; advance to SBall_Move
 		move.l	#Map_SBall,obMap(a0)			; set mappings
 		move.w	#ArtTile_SYZ_Spikeball_Chain,obGfx(a0)	; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode

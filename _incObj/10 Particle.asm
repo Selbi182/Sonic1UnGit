@@ -10,8 +10,8 @@ particle_animscript:	equ objoff_3C
 ; ===========================================================================
 
 Particle_MovingFragment_Animate:
-		movea.l	particle_animscript(a0),a1
-		bsr.w	AnimateSprite
+		movea.l	particle_animscript(a0),a1		; load animation script defined before this object was loaded
+		bsr.w	AnimateSprite				; run animations
 		; continue to Particle_MovingFragment
 ; ---------------------------------------------------------------------------
 
@@ -24,13 +24,13 @@ Particle_MovingFragment:
 		move.l	particle_velY(a0),d2			; load X and Y speed to d0/d2
 		add.l	d2,obY(a0)				; add Y speed to Y position (note this affects the subpixel position)
 		
-		add.l	particle_fallspeed(a0),d2
-		move.l	d2,particle_velY(a0)
+		add.l	particle_fallspeed(a0),d2		; add defined fall speed (pre-shifted <<8) before this object was loaded
+		move.l	d2,particle_velY(a0)			; set updated Y-position
 ; ---------------------------------------------------------------------------
 
 ;Particle_DisplayOnly:	; relocated to be directly part of ExecuteObjects
 		DisplaySprite
-		rts				; otherwise, keep displaying fragment sprite
+		rts
 ; ---------------------------------------------------------------------------
 
 Particle_Delete:

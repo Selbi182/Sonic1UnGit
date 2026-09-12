@@ -4,22 +4,12 @@
 ; ---------------------------------------------------------------------------
 
 AutoDoor:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	ADoor_Index(pc,d0.w),d1
-		jmp	ADoor_Index(pc,d1.w)
-; ===========================================================================
-ADoor_Index:	dc.w ADoor_Main-ADoor_Index
-		dc.w ADoor_OpenShut-ADoor_Index
-; ===========================================================================
-
-ADoor_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to ADoor_OpenShut
+		move.l	#ADoor_OpenShut,obID(a0)		; advance to ADoor_OpenShut
 		move.l	#Map_ADoor,obMap(a0)			; set mappings
 		move.w	#ArtTile_SBZ_Door|Tile_Pal3,obGfx(a0)	; set art tile and palette line
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#16/2,obActWid(a0)			; set sprite display width
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 ; ---------------------------------------------------------------------------
 
 ADoor_OpenShut:	; Routine 2
@@ -67,7 +57,7 @@ ADoor_Animate:
 		jsr	(SolidObject).l				; make the door solid
 
 	.display:
-		RememberState
+		RememberStateXY
 		rts				; display door, or delete it if offscreen
 
 ; ===========================================================================

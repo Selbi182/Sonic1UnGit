@@ -2,24 +2,11 @@
 ; ---------------------------------------------------------------------------
 ; Object 1F - Crabmeat enemy (GHZ, SYZ)
 ; ---------------------------------------------------------------------------
-
-Crabmeat:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Crab_Index(pc,d0.w),d1
-		jmp	Crab_Index(pc,d1.w)
-; ===========================================================================
-Crab_Index:	dc.w Crab_Main-Crab_Index	; 0
-		dc.w Crab_Action-Crab_Index	; 2
-		dc.w Crab_Delete-Crab_Index	; 4
-		dc.w Crab_BallMain-Crab_Index	; 6
-		dc.w Crab_BallMove-Crab_Index	; 8
-
 crab_timedelay:	equ objoff_30		; delay timer before and after launching fireballs
 crab_flags:	equ objoff_32		; contains two flags (0 = scuttle check mode // 1 = firing flag)
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Crab_Main:	; Routine 0
+Crabmeat:
 		move.b	#32/2,obHeight(a0)			; set height
 		move.b	#16/2,obWidth(a0)			; set width
 		move.l	#Map_Crab,obMap(a0)			; set mappings
@@ -37,7 +24,7 @@ Crab_Main:	; Routine 0
 		add.w	d1,obY(a0)				; match object's position with the floor
 		move.b	d3,obAngle(a0)				; update angle to floor
 		move.w	#0,obVelY(a0)				; clear falling speed
-		addq.b	#2,obRoutine(a0)			; advance to Crab_Action
+		move.l	#Crab_Action,obID(a0)			; advance to Crab_Action
 	.hide:
 
 		cmpi.w	#$7FF,obY(a0)				; has object fallen below max level height?
@@ -91,8 +78,7 @@ Crab_Action_Fire:
 	.loadLeftFireball:
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	.loadRightFireball			; if object RAM is full, branch (could just branch to return here, right will also fail)
-		move.l	#Crabmeat,obID(a1)			; load left fireball
-		move.b	#6,obRoutine(a1)			; set to Crab_BallMain
+		move.l	#Crab_BallMain,obID(a1)			; load left fireball
 		move.w	obX(a0),obX(a1)				; copy Crabmeat's X-position
 		subi.w	#$10,obX(a1)				; align with left claw
 		move.w	obY(a0),obY(a1)				; copy Crabmeat's Y-position
@@ -101,8 +87,7 @@ Crab_Action_Fire:
 	.loadRightFireball:
 		bsr.w	FindFreeObj				; find a free object slot
 		bne.s	.return					; if object RAM is full, branch
-		move.l	#Crabmeat,obID(a1)			; load right fireball
-		move.b	#6,obRoutine(a1)			; set to Crab_BallMain
+		move.l	#Crab_BallMain,obID(a1)			; load right fireball
 		move.w	obX(a0),obX(a1)				; copy Crabmeat's X-position
 		addi.w	#$10,obX(a1)				; align with right claw
 		move.w	obY(a0),obY(a1)				; copy Crabmeat's Y-position
@@ -192,10 +177,6 @@ Crab_SetAni_Ascending:
 		rts						; return with animation ID in d0
 ; End of function Crab_SetAni
 
-; ===========================================================================
-
-Crab_Delete:	; Routine 4 (unreachable, deletion is handled elsewhere)
-		bra.w	DeleteObject				; delete object
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -203,11 +184,11 @@ Crab_Delete:	; Routine 4 (unreachable, deletion is handled elsewhere)
 ; ---------------------------------------------------------------------------
 
 Crab_BallMain:	; Routine 6
-		addq.b	#2,obRoutine(a0)			; advance to Crab_BallMove
+		move.l	#Crab_BallMove,obID(a0)			; advance to Crab_BallMove
 		move.l	#Map_Crab,obMap(a0)			; set mappings
 		move.w	#ArtTile_Crabmeat,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)		; set sprite priority
 		move.b	#col_12x12|col_hurt,obColType(a0)	; set hitbox size to 12x12 and make it damaging
 		move.b	#16/2,obActWid(a0)			; set sprite display width
 		move.w	#-$400,obVelY(a0)			; launch balls upwards
@@ -225,7 +206,7 @@ Crab_BallMove:	; Routine 8
 		cmp.w	obY(a0),d0				; have balls moved below the level boundary?
 		blo.s	.delete					; if yes, branch
 		DisplaySprite
-		rts				; display balls
+		rts
 
 	.delete:
 		bra.w	DeleteObject				; delete balls

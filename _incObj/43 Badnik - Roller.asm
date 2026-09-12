@@ -2,36 +2,26 @@
 ; ---------------------------------------------------------------------------
 ; Object 43 - Roller enemy (SYZ)
 ; ---------------------------------------------------------------------------
-
-Roller:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Roll_Index(pc,d0.w),d1
-		jmp	Roll_Index(pc,d1.w)
-; ===========================================================================
-Roll_Index:	dc.w Roll_Main-Roll_Index
-		dc.w Roll_Action-Roll_Index
-
 roll_waitunfolded:	equ objoff_30	; frames to wait in destroyable, unfolded state
 roll_stateflags:	equ objoff_32	; flags (bit 0 set if hit a ledge before // bit 7 set if Roller has unfolded before)
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Roll_Main:	; Routine 0
+Roller:
 		move.b	#28/2,obHeight(a0)			; set height
 		move.b	#16/2,obWidth(a0)			; set width
 
 		; Make the Roller fall until it has collided with the floor (while invisible)
 		bsr.w	ObjectFall				; increase gravity and update position
-		jsr	(ObjFloorDist).l				; get distance between Roller and floor
+		jsr	(ObjFloorDist).l			; get distance between Roller and floor
 		tst.w	d1					; has Roller hit the floor?
 		bpl.s	.hide					; if not, branch
 		add.w	d1,obY(a0)				; match object's position with the floor
 		move.w	#0,obVelY(a0)				; clear falling speed
-		addq.b	#2,obRoutine(a0)			; advance to Moto_Action
+		move.l	#Roll_Action,obID(a0)			; advance to Moto_Action
 		move.l	#Map_Roll,obMap(a0)			; set mappings
 		move.w	#ArtTile_Roller,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 		move.b	#32/2,obActWid(a0)			; set sprite display width
 	.hide:
 

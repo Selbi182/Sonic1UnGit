@@ -2,54 +2,22 @@
 ; ---------------------------------------------------------------------------
 ; Object 41 - springs
 ; ---------------------------------------------------------------------------
+spring_pow:	equ objoff_30		; power of current spring
+; ---------------------------------------------------------------------------
 
 Springs:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		beq.s	.action			; if spring wasn't yet initialized, branch to ensure setup
-		tst.b	obRender(a0)		; is spring visible?
-		bpl.s	.checkOffscreen		; if not, skip logic (optimization)
-
-	.action:
-		move.w	Spring_Index(pc,d0.w),d1
-		jsr	Spring_Index(pc,d1.w)
-
-	.checkOffscreen:
-		out_of_range_with_y_check.w	DeleteObject,obX(a0),obY(a0)
-		DisplaySprite
-		rts
-; ===========================================================================
-Spring_Index:	dc.w Spring_Main-Spring_Index		; 0
-		dc.w Spring_Up-Spring_Index		; 2
-		dc.w Spring_AniUp-Spring_Index		; 4
-		dc.w Spring_ResetUp-Spring_Index	; 6
-		dc.w Spring_LR-Spring_Index		; 8
-		dc.w Spring_AniLR-Spring_Index		; A
-		dc.w Spring_ResetLR-Spring_Index	; C
-		dc.w Spring_Down-Spring_Index		; E
-		dc.w Spring_AniDown-Spring_Index	; 10
-		dc.w Spring_ResetDown-Spring_Index	; 12
-
-spring_pow:	equ objoff_30		; power of current spring
-; ===========================================================================
-
-Spring_Powers:	dc.w -$1000		; power of red spring
-		dc.w -$A00		; power of yellow spring
-; ===========================================================================
-
-Spring_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to "Spring_Up"
+		move.l	#Spring_Up,obID(a0)			; advance to "Spring_Up"
 		move.l	#Map_Spring,obMap(a0)			; set mappings
 		move.w	#ArtTile_Spring_Horizontal,obGfx(a0)	; set art tile for upright springs (palette line 1, red)
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield positioning mode
 		move.b	#32/2,obActWid(a0)			; set display width
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 
 		move.b	obSubtype(a0),d0			; get spring subtype
 	.checkSideways:
 		btst	#4,d0					; does the spring face left/right?
 		beq.s	.checkDownwards				; if not, branch
-		move.b	#8,obRoutine(a0)			; use "Spring_LR" routine
+		move.l	#Spring_LR,obID(a0)			; use "Spring_LR" routine
 		move.b	#1,obAnim(a0)				; use different animation
 		move.b	#3,obFrame(a0)				; set to sideways frame
 		move.w	#ArtTile_Spring_Vertical,obGfx(a0)	; set art tile for sideways springs
@@ -59,7 +27,7 @@ Spring_Main:	; Routine 0
 	.checkDownwards:
 		btst	#5,d0					; does the spring face downwards?
 		beq.s	.checkYellow				; if not, branch
-		move.b	#$E,obRoutine(a0)			; use "Spring_Down" routine
+		move.l	#Spring_Down,obID(a0)			; use "Spring_Down" routine
 		bset	#1,obStatus(a0)				; set Y-flip flag
 
 	; Spring_NotDown:
@@ -70,12 +38,23 @@ Spring_Main:	; Routine 0
 
 	; loc_DB72:
 	.getPower:
+		move.w	#-$1000,d1				; red spring power
 		andi.w	#$F,d0					; mask out upper nybble
-		move.w	Spring_Powers(pc,d0.w),spring_pow(a0)	; get spring power for subtype
+		beq.s	.setPower				; if zero, use red spring power
+		move.w	#-$A00,d1				; yellow spring power
+	.setPower:
+		move.w	d1,spring_pow(a0)			; get spring power for subtype
+
+Spring_Display:
+		out_of_range_with_y_check.w	DeleteObject,obX(a0),obY(a0)
+		DisplaySprite
 		rts						; return to display
 ; ===========================================================================
 
 Spring_Up:	; Routine 2
+		tst.b	obRender(a0)				; is spring visible?
+		bpl.s	.return					; if not, skip logic (optimization)
+
 		move.w	#32/2+sonic_solid_width,d1
 		move.w	#16/2,d2
 		move.w	#32/2,d3
@@ -83,12 +62,14 @@ Spring_Up:	; Routine 2
 		bsr.w	SolidObject				; check Sonic's collision with spring
 		tst.b	obSolid(a0)				; is Sonic on top of the spring?
 		bne.s	.bounceUp				; if yes, branch
-		rts						; return
+
+	.return:
+		bra.w	Spring_Display
 ; ---------------------------------------------------------------------------
 
 	; Spring_BounceUp:
 	.bounceUp:
-		addq.b	#2,obRoutine(a0)			; set to "Spring_AniUp"
+		move.l	#Spring_AniUp,obID(a0)			; set to "Spring_AniUp"
 		addq.w	#8,obY(a1)				; push Sonic a few pixels into the spring
 		move.w	spring_pow(a0),obVelY(a1)		; bounce Sonic upwards
 		bset	#1,obStatus(a1)				; set Sonic's airborne flag
@@ -103,37 +84,46 @@ Spring_Up:	; Routine 2
 
 Spring_AniUp:	; Routine 4
 		lea	(Ani_Spring).l,a1			; animation script will advance routine...
-		bra.w	AnimateSprite				; ...to "Spring_ResetUp" once it's finished
-; ===========================================================================
+		bsr.w	AnimateSprite				; ...to "Spring_ResetUp" once it's finished
+		tst.b	obRoutine(a0)
+		beq.w	Spring_Display
 
-Spring_ResetUp:	; Routine 6
+; Spring_ResetUp:
+		clr.b	obRoutine(a0)
 		move.b	#1,obPrevAni(a0)			; reset animation
-		subq.b	#4,obRoutine(a0)			; goto "Spring_Up" routine
-		rts						; return
+		move.l	#Spring_Up,obID(a0)			; goto "Spring_Up" routine
+		bra.w	Spring_Display
 ; ===========================================================================
 ; ===========================================================================
 
 Spring_LR:	; Routine 8
+		tst.b	obRender(a0)				; is spring visible?
+		bpl.s	.return					; if not, skip logic (optimization)
+
 		move.w	#16/2+sonic_solid_width,d1
 		move.w	#28/2,d2
 		move.w	#30/2,d3
 		move.w	obX(a0),d4
 		bsr.w	SolidObject				; check Sonic's collision with spring
 
-		cmpi.b	#2,obRoutine(a0)			; is spring routine set to Spring_Up for some reason?
-		bne.s	.checkPushing				; if not, branch
-		move.b	#8,obRoutine(a0)			; force routine back to Spring_LR
-
-	; loc_DC0C:
-	.checkPushing:
-		btst	#5,obStatus(a0)				; is Sonic pushing against this spring?
-		bne.s	.bounceSideways				; if yes, branch
+		tst.b	d4					; has Sonic touched the side of the spring?
+		ble.s	.return					; if not, branch
+		move.w	obX(a1),d0				; get Sonic's X-position
+		sub.w	obX(a0),d0				; subtract spring's X-position
+		btst	#0,obStatus(a0) 			; is spring facing to the left?
+		beq.s	.checkTouch				; if not, branch
+		neg.w	d0					; negate difference to check other side
+	.checkTouch:
+		tst.w	d0					; has Sonic touched the spring from the correct side?
+		bgt.s	.bounceSideways 			; if yes, do bounce
+	.return:
+		bra.w	Spring_Display
 		rts						; no bounce
 ; ---------------------------------------------------------------------------
 
 	; Spring_BounceLR:
 	.bounceSideways:
-		addq.b	#2,obRoutine(a0)			; advance to Spring_AniLR
+		move.l	#Spring_AniLR,obID(a0)			; advance to Spring_AniLR
 		move.w	spring_pow(a0),obVelX(a1)		; bounce Sonic to the left
 		addq.w	#8,obX(a1)				; push Sonic a few pixels into the spring (to the right)
 		btst	#0,obStatus(a0)				; is spring facing to the left?
@@ -162,26 +152,27 @@ Spring_AniLR:	; Routine $A
 		clr.w	(v_cam_x_delay).w			; clear screen delay counter
 
 		lea	(Ani_Spring).l,a1			; animation script will advance routine...
-		bra.w	AnimateSprite				; ...to "Spring_ResetLR" once it's finished
-; ===========================================================================
+		bsr.w	AnimateSprite				; ...to "Spring_ResetLR" once it's finished
+		tst.b	obRoutine(a0)
+		beq.w	Spring_Display
 
-Spring_ResetLR:	; Routine $C
+; Spring_ResetLR:
+		clr.b	obRoutine(a0)
 		move.b	#2,obPrevAni(a0)			; reset animation
-		subq.b	#4,obRoutine(a0)			; goto "Spring_LR" routine
-		rts						; return
+		move.l	#Spring_LR,obID(a0)			; goto "Spring_LR" routine
+		bra.w	Spring_Display
 ; ===========================================================================
 ; ===========================================================================
 
 Spring_Down:	; Routine $E
+		tst.b	obRender(a0)				; is spring visible?
+		bpl.s	.return					; if not, skip logic (optimization)
+
 		move.w	#32/2+sonic_solid_width,d1
 		move.w	#16/2,d2
 		move.w	#32/2,d3
 		move.w	obX(a0),d4
 		bsr.w	SolidObject				; check Sonic's collision with spring
-
-		cmpi.b	#2,obRoutine(a0)			; is spring routine set to Spring_Up for some reason?
-		bne.s	.checkTouch				; if not, branch
-		move.b	#$E,obRoutine(a0)			; force routine back to Spring_Down
 
 	; loc_DCA4:
 	.checkTouch:
@@ -192,12 +183,12 @@ Spring_Down:	; Routine $E
 
 	; locret_DCAE:
 	.return:
-		rts						; return
+		bra.w	Spring_Display
 ; ---------------------------------------------------------------------------
 
 	; Spring_BounceDown:
 	.bounceDown:
-		addq.b	#2,obRoutine(a0)			; advance to "Spring_AniDown"
+		move.l	#Spring_AniDown,obID(a0)		; advance to "Spring_AniDown"
 		subq.w	#8,obY(a1)				; push Sonic a few pixels into the spring
 		move.w	spring_pow(a0),obVelY(a1)		; get spring force
 		neg.w	obVelY(a1)				; negate it to move Sonic downwards
@@ -212,14 +203,15 @@ Spring_Down:	; Routine $E
 
 Spring_AniDown:	; Routine $10
 		lea	(Ani_Spring).l,a1			; animation script will advance routine...
-		bra.w	AnimateSprite				; ...to "Spring_ResetDown" once it's finished
-; ===========================================================================
+		bsr.w	AnimateSprite				; ...to "Spring_ResetDown" once it's finished
+		tst.b	obRoutine(a0)
+		beq.w	Spring_Display
 
-Spring_ResetDown:
-		; Routine $12
+; Spring_ResetDown:
+		clr.b	obRoutine(a0)
 		move.b	#1,obPrevAni(a0)			; reset animation
-		subq.b	#4,obRoutine(a0)			; goto "Spring_Down" routine
-		rts						; return
+		move.l	#Spring_Down,obID(a0)			; goto "Spring_Down" routine
+		bra.w	Spring_Display
 ; ===========================================================================
 ; ===========================================================================
 

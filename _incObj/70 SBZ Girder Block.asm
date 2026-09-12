@@ -2,29 +2,19 @@
 ; ---------------------------------------------------------------------------
 ; Object 70 - large girder block (SBZ)
 ; ---------------------------------------------------------------------------
-
-Girder:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Gird_Index(pc,d0.w),d1
-		jmp	Gird_Index(pc,d1.w)
-; ===========================================================================
-Gird_Index:	dc.w Gird_Main-Gird_Index
-		dc.w Gird_Action-Gird_Index
-
 gird_origY:	equ objoff_30		; original y-axis position
 gird_origX:	equ objoff_32		; original x-axis position
 gird_time:	equ objoff_34		; duration for movement in a direction (in frames)
 gird_set:	equ objoff_38		; which movement settings to use (0/8/$10/$18)
 gird_delay:	equ objoff_3A		; delay before starting next movement
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Gird_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Gird_Action
+Girder:
+		move.l	#Gird_Action,obID(a0)			; advance to Gird_Action
 		move.l	#Map_Gird,obMap(a0)			; set mappings
 		move.w	#ArtTile_SBZ_Girder|Tile_Pal3,obGfx(a0)	; set art tile and palette line
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 		move.b	#192/2,obActWid(a0)			; set sprite display width and solidity width
 		move.b	#48/2,obHeight(a0)			; set solidity height
 		move.w	obX(a0),gird_origX(a0)			; remember initial X-position
@@ -62,7 +52,7 @@ Gird_Action:	; Routine 2
 ; ---------------------------------------------------------------------------
 
 	.chkdel:
-		out_of_range.s	.delete,gird_origX(a0)		; has object gone out of range (initial X-position)? if yes, branch
+		out_of_range_with_y_check.s	.delete,gird_origX(a0),gird_origY(a0)		; has object gone out of range (initial X-position)? if yes, branch
 		DisplaySprite
 		rts			; display girder block
 

@@ -20,7 +20,7 @@ LavaTag:
 ; ---------------------------------------------------------------------------
 
 LTag_ChkDel:	; Routine 2
-		out_of_range.w	DeleteObject,obX(a0)
+		out_of_range_with_y_check.w	DeleteObject,obX(a0),obY(a0)
 		rts						; don't delete, but also don't display
 ; ===========================================================================
 

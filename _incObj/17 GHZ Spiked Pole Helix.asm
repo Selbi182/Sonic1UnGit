@@ -56,7 +56,7 @@ Hel_ChildSpike:
 		addi.w	#128,d0					; wrap middle spike to the right
 	.setX:	move.w	d0,obX(a0)				; update X-position so that the upright (damaging) spike is always cnetered
 
-		DisplaySprite
+		DisplaySprite					; display 8 spikes
 		rts
 ; ===========================================================================
 

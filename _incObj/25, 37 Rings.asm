@@ -18,7 +18,7 @@ Rings:
 ; ---------------------------------------------------------------------------
 
 Ring_Animate:
-		out_of_range.s	Ring_Delete			; has ring gone out of range? if yes, delete it
+		out_of_range_with_y_check.s	Ring_Delete,obX(a0),obY(a0)	; has ring gone out of range? if yes, delete it
 		bra.s	Ring_Display
 ; ===========================================================================
 

@@ -18,13 +18,13 @@ EdgeWalls:
 ; ---------------------------------------------------------------------------
 
 Edge_Display:	; Routine 4
-		out_of_range.w	DeleteObject
+		out_of_range_with_y_check.w	DeleteObject,obX(a0),obY(a0)
 		DisplaySprite
 		rts
 ; ===========================================================================
 
 Edge_Solid:	; Routine 2
-		out_of_range.w	DeleteObject
+		out_of_range_with_y_check.w	DeleteObject,obX(a0),obY(a0)
 		DisplaySprite
 
 ; EdgeWall_SolidWall:

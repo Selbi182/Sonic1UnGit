@@ -2,30 +2,19 @@
 ; ---------------------------------------------------------------------------
 ; Object 33 - pushable blocks (MZ, available but unused in LZ)
 ; ---------------------------------------------------------------------------
-
-PushBlock:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	PushB_Index(pc,d0.w),d1
-		jmp	PushB_Index(pc,d1.w)
-; ===========================================================================
-PushB_Index:	dc.w PushB_Main-PushB_Index		; 0
-		dc.w PushB_Action-PushB_Index		; 2
-		dc.w PushB_ChkVisible-PushB_Index	; 4
-
 pblock_lavaspeed:	equ objoff_30	; X-speed while block is on lava
 pblock_onlava:		equ objoff_32	; flag set if block is on lava
 pblock_origX:		equ objoff_34	; initial X-position
 pblock_origY:		equ objoff_36	; initial Y-position
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
 PushB_Var:	;    width, frame
 		dc.b  32/2, 0	; 1x1 block
 		dc.b 128/2, 1	; 4x1 block
 ; ===========================================================================
 
-PushB_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to PushB_Action
+PushBlock:
+		move.l	#PushB_Action,obID(a0)			; advance to PushB_Action
 		move.b	#30/2,obHeight(a0)			; set height
 		move.b	#30/2,obWidth(a0)			; set width
 		move.l	#Map_Push,obMap(a0)			; set mappings
@@ -36,7 +25,7 @@ PushB_Main:	; Routine 0
 		move.w	#ArtTile_LZ_Push_Block|Tile_Pal3,obGfx(a0) ; LZ-specific art tile (unused)
 	.notLZ:
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)		; set sprite priority
 		move.w	obX(a0),pblock_origX(a0)		; remember original X-position
 		move.w	obY(a0),pblock_origY(a0)		; remember original Y-position
 
@@ -97,7 +86,7 @@ PushB_ChkWithinOrigin:
 
 		move.w	pblock_origX(a0),obX(a0)		; force back to original X-position
 		move.w	pblock_origY(a0),obY(a0)		; force back to original Y-position
-		move.b	#4,obRoutine(a0)			; set to PushB_ChkVisible
+		move.l	#PushB_ChkVisible,obID(a0)		; set to PushB_ChkVisible
 		bra.s	PushB_ChkVisible			; check if block is visible right away
 ; ---------------------------------------------------------------------------
 
@@ -112,7 +101,7 @@ PushB_ChkVisible: ; Routine 4
 		bsr.w	ChkPartiallyVisible			; is sprite (at least partially) on screen?
 		beq.s	.return					; if not, branch
 
-		move.b	#2,obRoutine(a0)			; set to PushB_Action
+		move.l	#PushB_Action,obID(a0)			; set to PushB_Action
 		clr.b	pblock_onlava(a0)			; clear on-lava flag
 		clr.w	obVelX(a0)				; clear X-speed
 		clr.w	obVelY(a0)				; clear Y-speed

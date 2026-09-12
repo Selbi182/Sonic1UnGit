@@ -4,7 +4,7 @@
 ; ---------------------------------------------------------------------------
 
 Button:
-		move.l	#But_Action,obID(a0)
+		move.l	#But_Action,obID(a0)			; advance But_Action
 		move.l	#Map_But,obMap(a0)			; set mappings
 
 		move.w	#ArtTile_Button,obGfx(a0)		; set art tile

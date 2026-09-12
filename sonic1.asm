@@ -37,7 +37,7 @@ LagFrameCounter: = 2
 ;	| If 1, adds a counter at the top right HUD that counts lag frames
 ;	| If 2, also adds huge recursive calls to "LAGFRAME" to make them easier to spot in MD Profiler
 
-BootToLevel: = -2
+BootToLevel: = -1
 ;	| If set, will boot straight to a specified level (e.g. id_GHZ_act1)
 ;	| If -1, disable (boot to Sega Screen normally)
 ;	| If -2, boot straight to level select
@@ -2305,7 +2305,7 @@ LevSelControls:
 		bne.s	LevSel_UpDown_Press			; if yes, branch
 		subq.w	#1,(v_levseldelay).w			; if held, subtract 1 from delay until next move
 		bpl.s	LevSel_SndTest				; if time remains, branch
-		move.w	#4-1,(v_levseldelay).w			; reset time delay (held)
+		move.w	#6-1,(v_levseldelay).w			; reset time delay (held)
 		bra.s	LevSel_UpDown
 
 LevSel_UpDown_Press:
@@ -3208,10 +3208,9 @@ GM_Continue:
 		move.l	#ContSonic,(v_player+obID).w		; load continue screen Sonic object
 		move.l	#ContScrItem,(v_continuetext+obID).w	; load continue screen objects (text and misc elements)
 		move.l	#ContScrItem,(v_continuelight+obID).w	; load floor light object Sonic is laying on
-		move.w	#spr_prio3,(v_continuelight+obPriority).w	; set priority to be behind Sonic
+		move.w	#spr_prio3,(v_continuelight+obPriority).w ; set priority to be behind Sonic
 		move.b	#4,(v_continuelight+obFrame).w		; set correct frame for the light
-		move.l	#ContScrItem,(v_continueicon+obID).w	; load continue icons object
-		move.b	#4,(v_continueicon+obRoutine).w		; set to continue icons routine
+		move.l	#CSI_MakeMiniSonic,(v_continueicon+obID).w ; load continue icons object
 
 		jsr	(ExecuteObjects).l			; initialize objects
 		jsr	(BuildSprites).l			; build sprites
@@ -3228,7 +3227,7 @@ GM_Continue:
 Cont_MainLoop:
 		move.b	#id_VBlank_Continue,(v_vblank_routine).w ; set VBlank routine to $16
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
-		cmpi.b	#6,(v_player+obRoutine).w		; has continue screen Sonic object signaled that we want to continue?
+		cmpi.l	#CSon_RunRight,(v_player+obID).w	; has continue screen Sonic object signaled that we want to continue?
 		bhs.s	Cont_NoCountdown			; if yes, stop updating countdown timer
 
 		disable_ints					; disable interrupts
@@ -3244,7 +3243,7 @@ Cont_NoCountdown:
 
 		cmpi.w	#320+64,(v_player+obX).w		; has Sonic run off screen after using a continue?
 		bhs.s	Cont_GotoLevel				; if yes, return to level and continue game
-		cmpi.b	#6,(v_player+obRoutine).w		; has continue screen Sonic object signaled that we want to continue?
+		cmpi.l	#CSon_RunRight,(v_player+obID).w	; has continue screen Sonic object signaled that we want to continue?
 		bhs.s	Cont_MainLoop				; if yes, Sonic is still running off-screen, loop until he is gone
 		tst.w	(v_generictimer).w			; has countdown run out?
 		bne.w	Cont_MainLoop				; if not, loop game mode

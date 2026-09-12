@@ -2,26 +2,15 @@
 ; ---------------------------------------------------------------------------
 ; Object 42 - Newtron enemy (GHZ)
 ; ---------------------------------------------------------------------------
+newt_fired:	equ objoff_32	; flag set once a missile has been fired (green Newtron only)
+; ---------------------------------------------------------------------------
 
 Newtron:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Newt_Index(pc,d0.w),d1
-		jmp	Newt_Index(pc,d1.w)
-; ===========================================================================
-Newt_Index:	dc.w Newt_Main-Newt_Index			; 0
-		dc.w Newt_Action-Newt_Index			; 2
-		dc.w Newt_GreenDelete-Newt_Index		; 4
-
-newt_fired:	equ objoff_32	; flag set once a missile has been fired (green Newtron only)
-; ===========================================================================
-
-Newt_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Newt_Action
+		move.l	#Newt_Action,obID(a0)			; advance to Newt_Action
 		move.l	#Map_Newt,obMap(a0)			; set mappings
 		move.w	#ArtTile_Newtron,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 		move.b	#40/2,obActWid(a0)			; set sprite display width
 		move.b	#32/2,obHeight(a0)			; set height
 		move.b	#16/2,obWidth(a0)			; set width
@@ -35,6 +24,8 @@ Newt_Action:	; Routine 2
 
 		lea	(Ani_Newt).l,a1				; load Newtron animation script
 		bsr.w	AnimateSprite				; animate with correct slope ID
+		tst.b	obRoutine(a0)
+		bne.w	Newt_GreenDelete
 		RememberState
 		rts				; display sprite, or delete object if offscreen
 ; ===========================================================================
@@ -164,7 +155,7 @@ Newt_Action_GreenNewtron:
 		rts						; return
 ; ===========================================================================
 
-Newt_GreenDelete: ; Routine 4 (Called by green Newtrons from animation script, which increases obRoutine once it finished)
+Newt_GreenDelete: ; Routine 4
 		respawn_entry.s	.delete
 		bclr	#7,(a2)
 	.delete:

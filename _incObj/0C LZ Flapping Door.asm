@@ -2,22 +2,12 @@
 ; ---------------------------------------------------------------------------
 ; Object 0C - flapping door before wind tunnels (LZ)
 ; ---------------------------------------------------------------------------
-
-FlapDoor:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Flap_Index(pc,d0.w),d1
-		jmp	Flap_Index(pc,d1.w)
-; ===========================================================================
-Flap_Index:	dc.w Flap_Main-Flap_Index
-		dc.w Flap_OpenClose-Flap_Index
-
 flap_wait:	equ objoff_30		; time until change (in multiples of 60 frames)
 flap_time:	equ objoff_32		; time between opening/closing
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Flap_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Flap_OpenClose
+FlapDoor:
+		move.l	#Flap_OpenClose,obID(a0)		; advance to Flap_OpenClose
 		move.l	#Map_Flap,obMap(a0)			; set mappings
 		move.w	#ArtTile_LZ_Flapping_Door|Tile_Pal3,obGfx(a0) ; set art tile and palette line
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
@@ -63,7 +53,7 @@ Flap_Animate:
 		bsr.w	SolidObject				; make the door solid
 
 	.display:
-		RememberState
+		RememberStateXY
 		rts				; display door, or delete it if offscreen
 
 ; ===========================================================================

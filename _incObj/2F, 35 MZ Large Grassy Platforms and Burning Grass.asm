@@ -2,23 +2,13 @@
 ; ---------------------------------------------------------------------------
 ; Object 2F - large grass-covered platforms (MZ)
 ; ---------------------------------------------------------------------------
-
-LargeGrass:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	LGrass_Index(pc,d0.w),d1
-		jmp	LGrass_Index(pc,d1.w)
-; ===========================================================================
-LGrass_Index:	dc.w LGrass_Main-LGrass_Index
-		dc.w LGrass_Action-LGrass_Index
-
 lgrass_origX:	equ objoff_1C	; initial X-position
 lgrass_origY:	equ objoff_1E	; initial Y-position
 lgrass_coldata:	equ objoff_30	; pointer to platform slope collision data
 lgrass_nudge:	equ objoff_34	; (type $x5 only, burnable) nudge Y-offset while Sonic is standing on platform
 lgrass_burning:	equ objoff_35	; (type $x5 only, burnable) flag set when platform has started burning
 lgrass_flames:	equ objoff_36	; (type $x5 only, burnable) array of children fire objects ($36 = child count, $37-$3E = RAM indices to flames)
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
 LGrass_Data: 	; collision angle data (relative offset)
 		; frame number, platform width
@@ -32,12 +22,12 @@ LGrass_Data: 	; collision angle data (relative offset)
 		dc.b 2,	64/2
 ; ===========================================================================
 
-LGrass_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to LGrass_Action
+LargeGrass:
+		move.l	#LGrass_Action,obID(a0)			; advance to LGrass_Action
 		move.l	#Map_LGrass,obMap(a0)			; set mappings
 		move.w	#ArtTile_Level|Tile_Pal3|Tile_Prio,obGfx(a0) ; set art tile, palette line, and high-priority flag
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio5,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio5,obPriority(a0)		; set sprite priority
 		move.w	obY(a0),lgrass_origY(a0)		; remember initial Y-position
 		move.w	obX(a0),lgrass_origX(a0)		; remember initial X-position
 
@@ -269,7 +259,7 @@ LGrass_ChkDel:
 		bpl.s	LGrass_DelFlames			; if not, delete fire objects
 
 LGrass_ChkGone:
-		out_of_range.w	DeleteObject,lgrass_origX(a0)	; has platform gone out of range? if yes, delete it
+		out_of_range_with_y_check.w	DeleteObject,lgrass_origX(a0),lgrass_origY(a0)	; has platform gone out of range? if yes, delete it
 		DisplaySprite
 		rts				; display platform sprite
 ; ===========================================================================
@@ -296,7 +286,7 @@ LGrass_DelFlames:
 		move.b	#0,lgrass_nudge(a0)			; reset to initial depression
 
 .return:
-		bra.s	LGrass_ChkGone				; continue deleting main platform object
+		bra.w	LGrass_ChkGone				; continue deleting main platform object
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

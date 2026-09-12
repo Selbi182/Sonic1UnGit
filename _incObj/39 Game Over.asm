@@ -4,24 +4,13 @@
 ; ---------------------------------------------------------------------------
 
 GameOverCard:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Over_Index(pc,d0.w),d1
-		jmp	Over_Index(pc,d1.w)
-; ===========================================================================
-Over_Index:	dc.w Over_ChkPLC-Over_Index
-		dc.w Over_MoveIn-Over_Index
-		dc.w Over_Wait-Over_Index
-; ===========================================================================
-
-Over_ChkPLC:	; Routine 0
 		tst.l	(v_plc_buffer).w			; have game over patterns in PLC finished decompressing?
 		beq.s	Over_Main				; if yes, branch
 		rts						; otherwise, wait until PLC queue is empty
 ; ===========================================================================
 
 Over_Main:
-		addq.b	#2,obRoutine(a0)			; advance to Over_MoveIn
+		move.l	#Over_MoveIn,obID(a0)			; advance to Over_MoveIn
 		move.w	#$80-48,obX(a0)				; set start X-position for "GAME"/"TIME" object (offscreen left)
 		btst	#0,obFrame(a0)				; is this the "OVER" object?
 		beq.s	.moreSetup				; if not, branch
@@ -48,8 +37,8 @@ Over_MoveIn:	; Routine 2
 
 .conjoined:
 		move.w	#12*60,obTimeFrame(a0)			; set time delay to 12 seconds
-		addq.b	#2,obRoutine(a0)			; advance to Over_Wait
-; ===========================================================================
+		move.l	#Over_Wait,obID(a0)			; advance to Over_Wait
+; ---------------------------------------------------------------------------
 
 Over_Wait:	; Routine 4
 		move.b	(v_jpadpress1).w,d0			; get buttons pressed this frame

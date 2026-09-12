@@ -2,50 +2,41 @@
 ; ---------------------------------------------------------------------------
 ; Object 8B - Eggman on "TRY AGAIN" and "END" screens
 ; ---------------------------------------------------------------------------
+eegg_time:	equ objoff_30		; time between juggle motions
+; ---------------------------------------------------------------------------
 
 EndEggman:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	EEgg_Index(pc,d0.w),d1
-		jsr	EEgg_Index(pc,d1.w)
-		DisplaySprite
-		rts
-; ===========================================================================
-EEgg_Index:	dc.w EEgg_Main-EEgg_Index	; 0
-		dc.w EEgg_Animate-EEgg_Index	; 2
-		dc.w EEgg_Juggle-EEgg_Index	; 4
-		dc.w EEgg_Wait-EEgg_Index	; 6
-
-eegg_time:	equ objoff_30		; time between juggle motions
-; ===========================================================================
-
-EEgg_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to EEgg_Animate
+		move.l	#EEgg_Animate,obID(a0)			; advance to EEgg_Animate
 		move.w	#$80+$A0,obX(a0)			; set X-position
 		move.w	#$80+$74,obY(a0)			; set Y-position
 		move.l	#Map_EEgg,obMap(a0)			; set mappings
 		move.w	#ArtTile_Try_Again_Eggman,obGfx(a0)	; set art tile
 		move.b	#sprite_cam_screen,obRender(a0)		; set to screen-positioned mode
-		move.w	#spr_prio2,obPriority(a0)			; set sprite priority (behind emeralds)
+		move.w	#spr_prio2,obPriority(a0)		; set sprite priority (behind emeralds)
 
 		move.b	#2,obAnim(a0)				; use "END" tantrum animation by default (good ending)
 		cmpi.b	#ss_emeralds_num,(v_emeralds).w		; do you have all 6 emeralds?
 		beq.s	EEgg_Animate				; if yes, we have a good ending
 
 		; Bad Ending (load emeralds)
-		move.l	#CreditsText,(v_tryagain+obID).w		; load credits object
+		move.l	#CreditsText,(v_tryagain+obID).w	; load credits object
 		move.w	#9,(v_creditsnum).w			; use "TRY AGAIN" text for credits text object
-		move.l	#TryChaos,(v_eggmanchaos+obID).w		; load emeralds object on "TRY AGAIN" screen
+		move.l	#TryChaos,(v_eggmanchaos+obID).w	; load emeralds object on "TRY AGAIN" screen
 		move.b	#0,obAnim(a0)				; use "TRY AGAIN" animation for Eggman
 ; ---------------------------------------------------------------------------
 
 EEgg_Animate:	; Routine 2
 		lea	(Ani_EEgg).l,a1				; load animation script
-		jmp	(AnimateSprite).l			; ("TRY AGAIN" animations will advance obRoutine on finish)
+		jsr	(AnimateSprite).l			; ("TRY AGAIN" animations will advance obRoutine on finish)
+		tst.b	obRoutine(a0)
+		bne.s	EEgg_Juggle
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 EEgg_Juggle:	; Routine 4
-		addq.b	#2,obRoutine(a0)			; advance to EEgg_Wait
+		move.l	#EEgg_Wait,obID(a0)			; advance to EEgg_Wait
+		clr.b	obRoutine(a0)
 
 		moveq	#2,d0					; move emeralds at 2px/frame to the right
 		btst	#0,obAnim(a0)				; is Eggman on second juggle animation?
@@ -70,38 +61,24 @@ EEgg_Wait:	; Routine 6
 		subq.w	#1,eegg_time(a0)			; decrement delay timer
 		bpl.s	.return					; branch if time remains
 		bchg	#0,obAnim(a0)				; alternate between left and right juggle animations
-		move.b	#2,obRoutine(a0)			; goto EEgg_Animate next
+		move.l	#EEgg_Animate,obID(a0)			; goto EEgg_Animate next
 
 	.return:
+		DisplaySprite
 		rts						; return
-; ===========================================================================
-
-		include "_anim/Try Again & End Eggman.asm"
 
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 8C - chaos emeralds on the "TRY AGAIN" screen
 ; ---------------------------------------------------------------------------
-
-TryChaos:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	TCha_Index(pc,d0.w),d1
-		jsr	TCha_Index(pc,d1.w)
-		DisplaySprite
-		rts
-; ===========================================================================
-TCha_Index:	dc.w TCha_LoadEmeralds-TCha_Index	; 0
-		dc.w TCha_JuggleEmeralds-TCha_Index	; 2
-
 tcha_origX:	equ objoff_38		; anchor X-position for juggle circle
 tcha_origY:	equ objoff_3A		; anchor Y-position for juggle circle
 tcha_radius:	equ objoff_3C		; juggle circle radius (fixed to $1C)
 tcha_juggledir:	equ objoff_3E		; current juggle direction/speed (+2 or -2)
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-TCha_LoadEmeralds: ; Routine 0
+TryChaos:
 		; One emerald object is loaded from the Eggman object.
 		; From here, convert that one in into the 6 actual emeralds to display.
 		movea.l	a0,a1					; overwrite this loader object with the first real emerald
@@ -110,12 +87,11 @@ TCha_LoadEmeralds: ; Routine 0
 		moveq	#ss_emeralds_num-1,d1			; load all emeralds...
 		sub.b	(v_emeralds).w,d1			; ...minus how many you have collected
 .loopEmeralds:
-		move.l	#TryChaos,obID(a1)			; load emerald object
-		addq.b	#2,obRoutine(a1)			; advance to TCha_Move
+		move.l	#TCha_JuggleEmeralds,obID(a1)		; load emerald object
 		move.l	#Map_ECha,obMap(a1)			; set mappings (same ones used in ending sequence)
 		move.w	#ArtTile_Try_Again_Emeralds,obGfx(a1)	; set art tile
 		move.b	#sprite_cam_screen,obRender(a1)		; set to screen-positioned mode
-		move.w	#spr_prio1,obPriority(a1)			; set sprite priority (above Eggman)
+		move.w	#spr_prio1,obPriority(a1)		; set sprite priority (above Eggman)
 		move.w	#$80+$84,obX(a1)			; start X-position
 		move.w	#$80+$A0,tcha_origX(a1)			; X-position for radius anchor point
 		move.w	#$80+$6C,obY(a1)			; start Y-position
@@ -183,7 +159,9 @@ TCha_JuggleEmeralds: ; Routine 2
 		move.w	d0,obY(a0)				; set final Y-position on circle
 
 	.return:
-		rts						; return
+		DisplaySprite
+		rts
 ; ===========================================================================
 
+		include "_anim/Try Again & End Eggman.asm"
 Map_EEgg:	include	"_maps/Try Again & End Eggman.asm"

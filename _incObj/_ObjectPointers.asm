@@ -127,7 +127,7 @@ Obj_Index:
 	dc.l	Lamppost		; 79
 	dc.l	BossStarLight		; 7A
 	dc.l	BossSpikeball		; 7B
-	dc.l	RingFlash		; 7C
+	dc.l	DeleteObject		; 7C
 	dc.l	HiddenBonus		; 7D
 	dc.l	SSResult		; 7E
 	dc.l	SSRChaos		; 7F

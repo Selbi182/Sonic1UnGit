@@ -2,23 +2,11 @@
 ; ---------------------------------------------------------------------------
 ; Object 40 - Moto Bug enemy (GHZ)
 ; ---------------------------------------------------------------------------
-
-MotoBug:
-		moveq	#0,d0					; clear d0 (for word-based addressing)
-		move.b	obRoutine(a0),d0			; get current object routine
-		move.w	Moto_Index(pc,d0.w),d1			; find current index in jump table
-		jmp	Moto_Index(pc,d1.w)			; jump there
-; ===========================================================================
-Moto_Index:	dc.w Moto_Main-Moto_Index			; 0 - initialization
-		dc.w Moto_Action-Moto_Index			; 2 - main mode
-		dc.w Moto_Smoke_Animate-Moto_Index		; 4 - smoke
-		dc.w Moto_Smoke_Delete-Moto_Index		; 6 - delete smoke
-
 moto_ledgewait:	equ	objoff_30				; wait time when reaching a ledge before turning around
 moto_smokewait:	equ	objoff_33				; interval between spawning smoke particle objects
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Moto_Main:	; Routine 0
+MotoBug:
 		move.l	#Map_Moto,obMap(a0)			; set mappings
 		move.w	#ArtTile_Moto_Bug,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
@@ -38,7 +26,7 @@ Moto_Main:	; Routine 0
 		bpl.s	.hide					; if not, branch
 		add.w	d1,obY(a0)				; match object's position with the floor
 		move.w	#0,obVelY(a0)				; clear falling speed
-		addq.b	#2,obRoutine(a0)			; advance to Moto_Action
+		move.l	#Moto_Action,obID(a0)			; advance to Moto_Action
 		bchg	#0,obStatus(a0)				; make Motobug face to the left on spawn
 	.hide:
 
@@ -48,7 +36,7 @@ Moto_Main:	; Routine 0
 ; ---------------------------------------------------------------------------
 
 	.smoke:
-		addq.b	#4,obRoutine(a0)			; set to Moto_Smoke_Animate
+		move.l	#Moto_Smoke_Animate,obID(a0)		; set to Moto_Smoke_Animate
 		bra.w	Moto_Smoke_Animate			; branch there immediately
 ; ===========================================================================
 
@@ -118,12 +106,10 @@ Moto_Action_Drive:
 Moto_Smoke_Animate: ; Routine 4
 		lea	(Ani_Moto).l,a1				; load animation script
 		bsr.w	AnimateSprite				; advance animation (for smoke, obRoutine will increase on finish)
+		tst.b	obRoutine(a0)
+		bne.w	DeleteObject
 		DisplaySprite
 		rts				; display smoke sprite
-; ===========================================================================
-
-Moto_Smoke_Delete: ; Routine 6
-		bra.w	DeleteObject				; delete smoke object
 
 ; ===========================================================================
 

@@ -189,7 +189,7 @@ React_CollisionDetected:
 		beq.s	React_Monitor				; if yes, branch
 
 React_Ring:
-		cmpi.l	#GiantRing,obID(a1)			; was collected object a giant ring?
+		cmpi.l	#GRing_Display,obID(a1)			; was collected object a giant ring?
 		beq.s	.giantRing				; if yes, branch
 
 		; Object was a regular ring (lost ring, attraction-lost ring, or placed-in-debug ring)
@@ -200,7 +200,7 @@ React_Ring:
 		rts						; return
 
 .giantRing:
-		addq.b	#2,obRoutine(a1)			; advance to GRing_Collect
+		move.l	#GRing_Collect,obID(a1)			; advance to GRing_Collect
 		rts						; return
 		
 ; ===========================================================================
@@ -212,7 +212,7 @@ React_Monitor:
 		cmpi.b	#id_Roll,obAnim(a0)			; is Sonic rolling/jumping?
 		bne.s	.return					; if not, don't break monitor
 		neg.w	obVelY(a0)				; reverse Sonic's y-motion
-		addq.b	#2,obRoutine(a1)			; advance the monitor's routine counter
+		move.l	#Mon_BreakOpen,obID(a1)			; advance the monitor's routine counter
 		bsr.w	ResetHomingAttack
 
 	.return:
@@ -275,7 +275,6 @@ React_BadnikHit:
 
 		; Change badnik into gray explosion
 		move.l	#ExplosionItem,obID(a1)			; change badnik into an to explosion/animal object
-		move.b	#0,obRoutine(a1)			; set to "ExItem_Animal" routine to also spawn animal/points objects
 
 		; Bounce Sonic vertically
 		tst.w	obVelY(a0)				; is Sonic moving upwards?

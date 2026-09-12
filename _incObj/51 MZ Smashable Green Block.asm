@@ -2,29 +2,17 @@
 ; ---------------------------------------------------------------------------
 ; Object 51 - smashable green block (MZ)
 ; ---------------------------------------------------------------------------
-
-SmashBlock:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Smab_Index(pc,d0.w),d1
-		jsr	Smab_Index(pc,d1.w)
-		RememberState
-		rts
-; ===========================================================================
-Smab_Index:	dc.w Smab_Main-Smab_Index
-		dc.w Smab_Solid-Smab_Index
-
 smab_sonani:	equ objoff_32		; backup of Sonic's current animation number
 smab_combo:	equ objoff_34		; number of blocks hit + previous stuff
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Smab_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Smab_Solid
+SmashBlock:
+		move.l	#Smab_Solid,obID(a0)			; advance to Smab_Solid
 		move.l	#Map_Smab,obMap(a0)			; set mappings
 		move.w	#ArtTile_MZ_Block|Tile_Pal3,obGfx(a0)	; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#32/2,obActWid(a0)			; set sprite display width
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 ; ---------------------------------------------------------------------------
 
 Smab_Solid:	; Routine 2
@@ -40,6 +28,7 @@ Smab_Solid:	; Routine 2
 		bne.s	.smash					; if yes, branch
 
 	.return:
+		RememberStateXY
 		rts						; return
 ; ===========================================================================
 
@@ -59,6 +48,8 @@ Smab_Solid:	; Routine 2
 		move.b	#2,obRoutine(a1)			; force Sonic to Sonic_Control routine
 		bclr	#3,obStatus(a0)				; clear block's stood-on flag
 		clr.b	obSolid(a0)				; clear block's solidity status
+		clr.b	doublejump(a1)				; reset homing attack flag so we can do another one
+		move.b	#1,jumping(a1)				; force jumping flag to allow variable jump height from rebound
 
 		; There are two mapping frames for the smashable block, the first with two sprite pieces and the second with four.
 		; They look identical on the surface, so during its normal state, the block is set to the first to save on sprites,

@@ -8,7 +8,7 @@ CirclingPlatform:
 		move.b	obRoutine(a0),d0
 		move.w	Circ_Index(pc,d0.w),d1
 		jsr	Circ_Index(pc,d1.w)
-		out_of_range.w	DeleteObject,circ_origX(a0)
+		out_of_range_with_y_check.w	DeleteObject,circ_origX(a0),circ_origY(a0)
 		DisplaySprite
 		rts
 ; ===========================================================================

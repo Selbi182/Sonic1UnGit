@@ -3,7 +3,7 @@
 ; ---------------------------------------------------------------------------
 
 AfterImage:
-		move.l	#After_CheckVisible,obID(a0)
+		move.l	#After_CheckVisible,obID(a0)	; advance to After_CheckVisible
 		move.l	#Map_Sonic,obMap(a0)
 		move.w	#ArtTile_Sonic,obGfx(a0)
 		move.w	#spr_prio2,obPriority(a0)

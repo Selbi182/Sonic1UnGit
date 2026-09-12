@@ -4,17 +4,7 @@
 ; ---------------------------------------------------------------------------
 
 PurpleRock:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Rock_Index(pc,d0.w),d1
-		jmp	Rock_Index(pc,d1.w)
-; ===========================================================================
-Rock_Index:	dc.w Rock_Main-Rock_Index
-		dc.w Rock_Solid-Rock_Index
-; ===========================================================================
-
-Rock_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Rock_Solid
+		move.l	#Rock_Solid,obID(a0)			; advance to Rock_Solid
 		move.l	#Map_PRock,obMap(a0)			; set mappings
 		move.w	#ArtTile_GHZ_Purple_Rock|Tile_Pal4,obGfx(a0) ; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
@@ -29,9 +19,8 @@ Rock_Solid:	; Routine 2
 		move.w	obX(a0),d4				; SolidObject input: object X-position (stood-on)
 		bsr.w	SolidObject				; make rock solid for Sonic
 
-		out_of_range.w	DeleteObject			; has object gone out of range? if yes, delete it
-		DisplaySprite
-		rts				; otherwise, display object
+		RememberStateXY
+		rts
 
 ; ===========================================================================
 

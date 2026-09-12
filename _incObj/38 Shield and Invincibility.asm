@@ -2,26 +2,15 @@
 ; ---------------------------------------------------------------------------
 ; Object 38 - shield and invincibility stars
 ; ---------------------------------------------------------------------------
-
-ShieldItem:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Shi_Index(pc,d0.w),d1
-		jmp	Shi_Index(pc,d1.w)
-; ===========================================================================
-Shi_Index:	dc.w Shi_Main-Shi_Index
-		dc.w Shi_Shield-Shi_Index
-		dc.w Shi_Stars-Shi_Index
-
 stars_lag:	equ objoff_30		; lag index before stars update position again
 shistar_prev:	equ objoff_32		; previous frame, used to check if graphics need updating
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Shi_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Shi_Shield
+ShieldItem:
+		move.l	#Shi_Shield,obID(a0)			; advance to Shi_Shield
 		move.l	#Map_Shield,obMap(a0)			; set shield mappings
 		move.b	#sprite_cam_field,obRender(a0)		; set playfield-positioning mode
-		move.w	#spr_prio1,obPriority(a0)			; set sprite priority (above Sonic)
+		move.w	#spr_prio1,obPriority(a0)		; set sprite priority (above Sonic)
 		move.b	#32/2,obActWid(a0)			; set sprite display width
 		st.b	shistar_prev(a0)			; make sure initial frame art loads
 
@@ -31,7 +20,7 @@ Shi_Main:	; Routine 0
 		rts						; return
 
 	.stars:
-		addq.b	#2,obRoutine(a0)			; advance to Shi_Stars
+		move.l	#Shi_Stars,obID(a0)			; advance to Shi_Stars
 		move.w	#ArtTile_Invincibility,obGfx(a0)	; stars-specific art tile
 		rts						; return
 ; ===========================================================================

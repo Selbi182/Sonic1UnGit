@@ -4,7 +4,7 @@
 ; ---------------------------------------------------------------------------
 
 Pylon:
-		move.l	#Pyl_Display,obID(a0)
+		move.l	#Pyl_Display,obID(a0)			; advance to Pyl_Display
 		move.l	#Map_Pylon,obMap(a0)			; set mappings
 		move.w	#ArtTile_SLZ_Pylon|Tile_Prio,obGfx(a0)	; set art tile and priority flag
 		move.b	#32/2,obActWid(a0)			; set display width

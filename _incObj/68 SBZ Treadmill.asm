@@ -5,22 +5,12 @@
 ; Note: This is just the invisible object that moves Sonic horizontally.
 ; The conveyor belt graphics themselves are part of the level chunks.
 ; ---------------------------------------------------------------------------
-
-Conveyor:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Conv_Index(pc,d0.w),d1
-		jmp	Conv_Index(pc,d1.w)
-; ===========================================================================
-Conv_Index:	dc.w Conv_Main-Conv_Index
-		dc.w Conv_Action-Conv_Index
-
 conv_speed:	equ objoff_36	; speed to push Sonic at in pixels per frame (can be positive or negative)
 conv_width:	equ objoff_38	; half-width of conveyor belt (128px or 56px)
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Conv_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Conv_Action
+Conveyor:
+		move.l	#Conv_Action,obID(a0)			; advance to Conv_Action
 
 		move.b	#256/2,conv_width(a0)			; set conveyor belt width to 256 pixels
 		move.b	obSubtype(a0),d1			; get subtype
@@ -37,16 +27,6 @@ Conv_Main:	; Routine 0
 ; ---------------------------------------------------------------------------
 
 Conv_Action:	; Routine 2
-		bsr.s	Conveyor_MoveSonic			; handle Sonic getting pushed along the conveyor belt
-
-		out_of_range.s	.delete				; has object gone out of range? if yes, branch
-		rts						; keep object alive (no display)
-
-	.delete:
-		jmp	(DeleteObject).l			; delete conveyor belt
-; ===========================================================================
-
-Conveyor_MoveSonic:
 		moveq	#0,d2					; clear d2
 		move.b	conv_width(a0),d2			; get half-width of conveyor belt
 		move.w	d2,d3					; copy half-width
@@ -72,5 +52,6 @@ Conveyor_MoveSonic:
 		add.w	d0,obX(a1)				; push Sonic on conveyor belt
 
 	.return:
+		RememberStateXY
 		rts						; return
 ; End of function Conveyor_MoveSonic

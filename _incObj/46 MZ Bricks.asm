@@ -2,27 +2,17 @@
 ; ---------------------------------------------------------------------------
 ; Object 46 - solid blocks and blocks that fall from the ceiling (MZ)
 ; ---------------------------------------------------------------------------
+brick_origY:	equ objoff_30		; initial Y-position used by wobble effect
+; ---------------------------------------------------------------------------
 
 MarbleBrick:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Brick_Index(pc,d0.w),d1
-		jmp	Brick_Index(pc,d1.w)
-; ===========================================================================
-Brick_Index:	dc.w Brick_Main-Brick_Index
-		dc.w Brick_Action-Brick_Index
-
-brick_origY:	equ objoff_30		; initial Y-position used by wobble effect
-; ===========================================================================
-
-Brick_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Brick_Action
+		move.l	#Brick_Action,obID(a0)			; advance to Brick_Action
 		move.b	#30/2,obHeight(a0)			; set height
 		move.b	#30/2,obWidth(a0)			; set width
 		move.l	#Map_Brick,obMap(a0)			; set mappings
 		move.w	#ArtTile_Level|Tile_Pal3,obGfx(a0)	; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)		; set sprite priority
 		move.b	#32/2,obActWid(a0)			; set sprite display width
 		move.w	obY(a0),brick_origY(a0)			; remember initial Y-position for wobble effect
 ; ---------------------------------------------------------------------------

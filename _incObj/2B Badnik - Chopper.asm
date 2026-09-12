@@ -2,27 +2,15 @@
 ; ---------------------------------------------------------------------------
 ; Object 2B - Chopper enemy (GHZ)
 ; ---------------------------------------------------------------------------
+chop_origY:	equ objoff_30	; original Y-position when Chopper was spawned
+; ---------------------------------------------------------------------------
 
 Chopper:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Chop_Index(pc,d0.w),d1
-		jsr	Chop_Index(pc,d1.w)
-		RememberState
-		rts
-; ===========================================================================
-Chop_Index:	dc.w Chop_Main-Chop_Index	; 0
-		dc.w Chop_ChgSpeed-Chop_Index	; 2
-
-chop_origY:	equ objoff_30	; original Y-position when Chopper was spawned
-; ===========================================================================
-
-Chop_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Chop_ChgSpeed
+		move.l	#Chop_ChgSpeed,obID(a0)			; advance to Chop_ChgSpeed
 		move.l	#Map_Chop,obMap(a0)			; set mappings
 		move.w	#ArtTile_Chopper,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 		move.b	#col_24x32|col_badnik,obColType(a0)	; set to ReactToItem entry 9 (badnik, 24x32)
 		move.b	#32/2,obActWid(a0)			; set sprite display width
 		move.w	#-$700,obVelY(a0)			; set vertical speed
@@ -53,6 +41,7 @@ Chop_ChgSpeed:	; Routine 2
 		move.b	#2,obAnim(a0)				; use stationary animation
 
 	.return:
+		RememberStateXY
 		rts						; return to display
 
 ; ===========================================================================

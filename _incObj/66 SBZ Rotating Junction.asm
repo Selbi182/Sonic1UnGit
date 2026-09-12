@@ -2,39 +2,26 @@
 ; ---------------------------------------------------------------------------
 ; Object 66 - rotating disc junction that grabs Sonic (SBZ)
 ; ---------------------------------------------------------------------------
-
-Junction:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Jun_Index(pc,d0.w),d1
-		jmp	Jun_Index(pc,d1.w)
-; ===========================================================================
-Jun_Index:	dc.w Jun_Main-Jun_Index
-		dc.w Jun_Action-Jun_Index
-		dc.w Jun_Display-Jun_Index
-		dc.w Jun_Inside-Jun_Index
-
 jun_grabframe:	equ objoff_32		; frame ID that triggered Sonic getting grabbed by junction
 jun_direction:	equ objoff_34		; current rotation direction (1 = clockwise, -1 = counterclockwise)
 jun_switchdown:	equ objoff_36		; flag set while reversal switch is pressed down by Sonic
 jun_switchid:	equ objoff_38		; which switch ID will reverse the disc
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Jun_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Jun_Action
+Junction:
+		move.l	#Jun_Action,obID(a0)			; advance to Jun_Action
 		move.w	#2-1,d1					; create two objects
 		movea.l	a0,a1					; write first object to current RAM location
-		bra.s	.makeitem				; keep first object at obRoutine 2
+		bra.s	.makeitem				; keep first object at Jun_Action
 ; ---------------------------------------------------------------------------
 
 	.loop:
 		jsr	(FindFreeObj).l				; find a free object slot
 		bne.s	.next					; if object RAM is full, branch
-		move.l	#Junction,obID(a1)			; load circular cover-up filler sprites object
-		addq.b	#4,obRoutine(a1)			; set to Jun_Display (do nothing but display)
+		move.l	#Jun_Display,obID(a1)			; load circular cover-up filler sprites object
 		move.w	obX(a0),obX(a1)				; copy parent X-position
 		move.w	obY(a0),obY(a1)				; copy parent Y-position
-		move.w	#spr_prio3,obPriority(a1)			; set sprite priority (above parent)
+		move.w	#spr_prio3,obPriority(a1)		; set sprite priority (above parent)
 		move.b	#$10,obFrame(a1)			; use large circular sprite
 	.makeitem:
 		move.l	#Map_Jun,obMap(a1)			; set mappings
@@ -45,7 +32,7 @@ Jun_Main:	; Routine 0
 		dbf	d1,.loop				; spawn one more object
 
 		move.b	#96/2,obActWid(a0)			; set small sprite display width for parent
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority for parent (behind circle)
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority for parent (behind circle)
 		move.b	#1,jun_direction(a0)			; set default rotation to clockwise
 		move.b	obSubtype(a0),jun_switchid(a0)		; store which switch ID can trigger reversing the direction
 ; ---------------------------------------------------------------------------
@@ -76,7 +63,7 @@ Jun_Action:	; Routine 2
 		bne.s	Jun_Display				; if not, branch
 
 		move.b	d1,jun_grabframe(a0)			; remember which frame ID caused the grab ($E or 7)
-		addq.b	#4,obRoutine(a0)			; advance to Jun_Inside
+		move.l	#Jun_Inside,obID(a0)			; advance to Jun_Inside
 		move.b	#1,(f_playerctrl).w			; lock Sonic's controls
 		move.b	#id_Roll,obAnim(a1)			; make Sonic use "rolling" animation
 		move.w	#$800,obInertia(a1)			; force fast ground speed for fast rolling animation
@@ -96,8 +83,8 @@ Jun_Action:	; Routine 2
 ; ---------------------------------------------------------------------------
 
 Jun_Display:	; Routine 4
-		RememberState
-		rts				; display object, or delete it if out of range
+		RememberStateXY
+		rts
 ; ===========================================================================
 
 ; Jun_Release:
@@ -121,14 +108,14 @@ Jun_Inside:	; Routine 6
 
 	.release:
 		clr.b	(f_playerctrl).w			; unlock Sonic's controls
-		subq.b	#4,obRoutine(a0)			; go back to Jun_Action
+		move.l	#Jun_Action,obID(a0)			; go back to Jun_Action
 ; ---------------------------------------------------------------------------
 
 .updateInside:
 		bsr.s	Jun_Rotate				; keep rotating and animating junction
 		bsr.w	Jun_ChgPos				; align Sonic's position while inside junction
-		RememberState
-		rts				; display object, or delete it if out of range
+		RememberStateXY
+		rts
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

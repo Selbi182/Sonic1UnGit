@@ -2,23 +2,13 @@
 ; ---------------------------------------------------------------------------
 ; Object 61 - multi-variant blocks (LZ)
 ; ---------------------------------------------------------------------------
-
-LabyrinthBlock:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	LBlk_Index(pc,d0.w),d1
-		jmp	LBlk_Index(pc,d1.w)
-; ===========================================================================
-LBlk_Index:	dc.w LBlk_Main-LBlk_Index
-		dc.w LBlk_Action-LBlk_Index
-
 lblk_origY:	equ objoff_30		; original y-axis position
 lblk_origX:	equ objoff_34		; original x-axis position
 lblk_time:	equ objoff_36		; time delay for block movement
 lblk_untouched:	equ objoff_38		; flag block as untouched
 lblk_nudgeval:	equ objoff_3E		; nudge Y-offset while Sonic is standing on block
 lblk_touchtype:	equ objoff_3F		; stores Sonic's touch response from SolidObject (0, +1, -1)
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
 LBlk_Var:	; width, height
 		dc.b 32/2, 32/2		; block that sinks when stood on
@@ -27,12 +17,12 @@ LBlk_Var:	; width, height
 		dc.b 32/2, 32/2		; generic solid block
 ; ===========================================================================
 
-LBlk_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to LBlk_Action
+LabyrinthBlock:
+		move.l	#LBlk_Action,obID(a0)			; advance to LBlk_Action
 		move.l	#Map_LBlock,obMap(a0)			; set mappings
 		move.w	#ArtTile_LZ_Blocks|Tile_Pal3,obGfx(a0)	; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)		; set sprite priority
 
 		moveq	#0,d0					; clear d0
 		move.b	obSubtype(a0),d0			; get block subtype
