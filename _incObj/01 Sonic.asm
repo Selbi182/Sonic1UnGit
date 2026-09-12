@@ -405,6 +405,8 @@ Sonic_Move:
 
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a1),d1				; get physical width of stood-on object
+		cmpi.b	#16/2,d1				; is this a really small platform?
+		bls.s	Sonic_LookUp				; if yes, ignore balancing (looks weird)
 		move.w	d1,d2					; copy width
 		add.w	d2,d2					; double it
 		subq.w	#4,d2					; minus 4
@@ -1823,8 +1825,6 @@ Sonic_HandleDeath:
 		move.l	#GameOverCard,(v_gameovertext2+obID).w	; load OVER object
 		move.b	#1,(v_gameovertext2+obFrame).w		; set OVER object to correct frame
 		clr.b	(f_timeover).w				; clear time over flag
-		clr.b	(v_gameovertext1+obRoutine).w		; make sure "GAME"/"TIME" object initializes properly
-		clr.b	(v_gameovertext2+obRoutine).w		; make sure "OVER" object initializes properly
 
 ; loc_138C2:
 .gameOverBgmAndPatterns:
@@ -2398,8 +2398,6 @@ FindHomingTarget:
 		bls.s	.targetfound		; if yes, target found
 		cmpi.b	#col_32x32|col_item,d1	; is this a monitor?
 		bne.s	.next			; if not, branch
-		cmpi.b	#2,obRoutine(a1)	; is monitor still unbroken?
-		bhi.s	.next			; if not, branch
 
 .targetfound:
 		move.w	obX(a1),d1		; copy target object's X coordinate to d1

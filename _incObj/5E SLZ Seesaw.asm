@@ -5,47 +5,30 @@
 ; Note: Throughout these comments, "ascending" means sloping upwards from
 ; left to right, and "descending" means going down from left to right.
 ; ---------------------------------------------------------------------------
-
-Seesaw:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	See_Index(pc,d0.w),d1
-		jsr	See_Index(pc,d1.w)
-		out_of_range_with_y_check.w	DeleteObject,see_origX(a0),see_origY(a0)
-		DisplaySprite
-		rts
-; ===========================================================================
-See_Index:	dc.w See_Main-See_Index			; 0
-		dc.w See_Seesaw_Platform-See_Index	; 2
-		dc.w See_Seesaw_StoodOn-See_Index	; 4
-		dc.w See_Spikeball_Setup-See_Index	; 6
-		dc.w See_Spikeball_Action-See_Index	; 8
-		dc.w See_Spikeball_InAir-See_Index	; A
-
 see_origX:	equ objoff_30		; initial X-position
 see_origY:	equ objoff_34		; initial Y-position
 see_landspeed:	equ objoff_38		; stored Y-speed at which Sonic landed on seesaw
 see_state_see:	equ obWidth		; 0 = descending, 1 = flat, 2 = ascending
 see_state_ball:	equ obWidth		; 0 = ball on right side, 2 = ball on left side (can't be 1)
 see_parent:	equ objoff_3C		; RAM address of parent seesaw object
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-See_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to See_Seesaw_Platform
+Seesaw:
+		move.l	#See_Seesaw_Platform,obID(a0)		; advance to See_Seesaw_Platform
 		move.l	#Map_Seesaw,obMap(a0)			; set mappings
 		move.w	#ArtTile_SLZ_Seesaw,obGfx(a0)		; set art tile
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 		move.b	#96/2,obActWid(a0)			; set sprite display width
 		move.w	obX(a0),see_origX(a0)			; remember initial X-position
+		move.w	obY(a0),see_origY(a0)			; remember initial Y-position
 
 		tst.b	obSubtype(a0)				; is seesaw meant to spawn spike ball?
 		bne.s	.checkXFlip				; if not, branch (seesaws for boss fight)
 
 		bsr.w	FindNextFreeObj				; find a free object slot
 		bne.s	.checkXFlip				; if object RAM is full, branch
-		move.l	#Seesaw,obID(a1)			; load spikeball object
-		addq.b	#6,obRoutine(a1)			; set to See_Spikeball routine
+		move.l	#See_Spikeball_Setup,obID(a1)		; load spikeball object
 		move.w	obX(a0),obX(a1)				; copy parent X-position
 		move.w	obY(a0),obY(a1)				; copy parent Y-position
 		move.b	obStatus(a0),obStatus(a1)		; copy parent X/Y-flip flags
@@ -74,7 +57,17 @@ See_Seesaw_Platform: ; Routine 2
 		move.w	obVelY(a1),see_landspeed(a0)		; remember Y-speed at which Sonic landed on seesaw
 
 		move.w	#96/2,d1				; width of seesaw for SlopeObject
-		jmp	(SlopeObject).l				; handle platform (sets obRoutine to 4 = See_Seesaw_StoodOn if stood on)
+		jsr	(SlopeObject).l				; handle platform (sets obRoutine to 4 = See_Seesaw_StoodOn if stood on)
+		btst	#3,obStatus(a0)
+		beq.s	.notOn
+		move.l	#See_Seesaw_StoodOn,obID(a0)
+	.notOn:
+
+See_Seesaw_Display:
+		;out_of_range_with_y_check.w	DeleteObject,see_origX(a0),see_origY(a0)
+		out_of_range.w	DeleteObject,see_origX(a0)	; gotta keep slant while going high up the sky...
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 See_Seesaw_StoodOn: ; Routine 4
@@ -88,11 +81,15 @@ See_Seesaw_StoodOn: ; Routine 4
 	.slopeObject:
 		move.w	#96/2,d1				; width of seesaw for ExitPlatform
 		jsr	(ExitPlatform).l			; allow Sonic walking off (sets obRoutine 2 = See_Seesaw_Platform on exit)
+		btst	#3,obStatus(a0)
+		bne.s	.stillOn
+		move.l	#See_Seesaw_Platform,obID(a0)
+	.stillOn:
 
 		move.w	#96/2,d1				; width of seesaw for SlopeObject_AssumeStoodOn
 		move.w	obX(a0),d2				; get platform X-position for SlopeObject_AssumeStoodOn input
-		jmp	(SlopeObject_AssumeStoodOn).l		; (part of Object 1A - Collapsing GHZ Ledges)
-
+		jsr	(SlopeObject_AssumeStoodOn).l		; (part of Object 1A - Collapsing GHZ Ledges)
+		bra.w	See_Seesaw_Display
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Subroutine to set the seesaw tilt based on what side Sonic is on
@@ -136,11 +133,11 @@ See_ChgFrame:	; Called from the spikeball to change seesaw tilt without Sonic
 
 ; See_Spikeball:
 See_Spikeball_Setup: ; Routine 6
-		addq.b	#2,obRoutine(a0)			; advance to See_Spikeball_Action
+		move.l	#See_Spikeball_Action,obID(a0)		; advance to See_Spikeball_Action
 		move.l	#Map_SSawBall,obMap(a0)			; set spikeball mappings
 		move.w	#ArtTile_SLZ_Spikeball,obGfx(a0)	; set spikeball art tile
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority (same as seesaw, but always behind due to RAM location)
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority (same as seesaw, but always behind due to RAM location)
 		move.b	#col_16x16|col_hurt,obColType(a0)	; make spikeball harmful on touch
 		move.b	#24/2,obActWid(a0)			; set sprite display width
 
@@ -187,7 +184,7 @@ See_Spikeball_Action: ; Routine 8
 		neg.w	obVelX(a0)				; move spikeball to the right instead
 
 	.setInAir:
-		addq.b	#2,obRoutine(a0)			; advance to See_Spikeball_InAir
+		move.l	#See_Spikeball_InAir,obID(a0)		; advance to See_Spikeball_InAir
 		bra.s	See_Spikeball_InAir			; go there immediately
 ; ---------------------------------------------------------------------------
 
@@ -213,7 +210,7 @@ See_Spikeball_Action_Align:
 
 		clr.w	obSubpixelY(a0)				; clear ball Y-subpixel portion
 		clr.w	obSubpixelX(a0)				; clear ball X-subpixel portion
-		rts						; return
+		bra.w	See_Seesaw_Display
 ; ===========================================================================
 
 ; See_SpikeFall:
@@ -230,7 +227,7 @@ See_Spikeball_InAir: ; Routine $A
 		bsr.w	ObjectFall				; double gravity while above threshold
 
 	.return:
-		rts						; no landing check while still going up
+		bra.w	See_Seesaw_Display			; no landing check while still going up
 ; ---------------------------------------------------------------------------
 
 See_Spikeball_InAir_FallingDown:
@@ -267,7 +264,7 @@ See_Spikeball_InAir_FallingDown:
 		bclr	#3,obStatus(a1)				; clear seesaw's stood-on flag
 		beq.s	.resetBall				; was Sonic standing on seesaw as ball landed? if not, branch
 		clr.b	obSolid(a1)				; clear seesaw's solidity flags
-		move.b	#2,obRoutine(a1)			; reset seesaw back to See_Seesaw_Platform
+		move.l	#See_Seesaw_Platform,obID(a1)		; reset seesaw back to See_Seesaw_Platform
 		lea	(v_player).w,a2				; load Sonic player object
 		move.w	obVelY(a0),obVelY(a2)			; bounce Sonic based on seesaw speed
 		neg.w	obVelY(a2)				; bounce Sonic upwards
@@ -282,10 +279,10 @@ See_Spikeball_InAir_FallingDown:
 	.resetBall:
 		clr.w	obVelX(a0)				; stop ball moving horizontally
 		clr.w	obVelY(a0)				; stop ball falling
-		subq.b	#2,obRoutine(a0)			; reset ball back to See_Spikeball_Action
+		move.l	#See_Spikeball_Action,obID(a0)		; reset ball back to See_Spikeball_Action
 
 	.return:
-		rts						; return
+		bra.w	See_Seesaw_Display
 
 ; ===========================================================================
 ; Relative Y-distances to align spikeball with seesaw

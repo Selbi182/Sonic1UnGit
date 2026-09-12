@@ -3,19 +3,6 @@
 ; Object 5B - blocks that form a staircase when touched (SLZ)
 ; ---------------------------------------------------------------------------
 
-Staircase:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Stair_Index(pc,d0.w),d1
-		jsr	Stair_Index(pc,d1.w)
-		out_of_range_with_y_check.w	DeleteObject,stair_origX(a0),stair_origY(a0)
-		DisplaySprite
-		rts
-; ===========================================================================
-Stair_Index:	dc.w Stair_Main-Stair_Index
-		dc.w Stair_Move-Stair_Index
-		dc.w Stair_Solid-Stair_Index
-
 stair_origX:		equ objoff_30		; original x-axis position
 stair_origY:		equ objoff_32		; original y-axis position
 stair_delay:		equ objoff_34		; delay between activation and stairs moving down
@@ -26,8 +13,8 @@ stair_childrenY_End:	equ objoff_3B		; last entry for the above array
 stair_parent:		equ objoff_3C		; address of parent object (4 bytes)
 ; ===========================================================================
 
-Stair_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Stair_Move
+Staircase:
+		move.l	#Stair_Move,obID(a0)			; advance to Stair_Move
 
 		moveq	#stair_childrenY,d3			; write children Y-positions to SSTs $38 to $3B
 		moveq	#1,d4					; store SSTs forwards
@@ -46,14 +33,13 @@ Stair_Main:	; Routine 0
 	.loop:
 		bsr.w	FindNextFreeObj_Next			; find a free object slot
 		bne.w	Stair_Move				; if object RAM is full, branch
-		move.b	#4,obRoutine(a1)			; set stair element to Stair_Solid routine
+		move.l	#Stair_Solid,obID(a1)			; set stair element to Stair_Solid routine
 
 	.makeblocks:
-		move.l	#Staircase,obID(a1)			; load stair block object
 		move.l	#Map_Stair,obMap(a1)			; set mappings
 		move.w	#ArtTile_Level|Tile_Pal3,obGfx(a1)	; set art tile (part of main level graphics) and palette line
 		move.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a1)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a1)		; set sprite priority
 		move.b	#32/2,obActWid(a1)			; set sprite display width and solidity width
 		move.b	obSubtype(a0),obSubtype(a1)		; copy subtype from parent
 		move.w	d2,obX(a1)				; set X-position for block
@@ -72,8 +58,9 @@ Stair_Move:	; Routine 2
 		move.b	obSubtype(a0),d0			; get subtype of parent stair (usually 0 or 2)
 		andi.w	#7,d0					; limit to sane values
 		add.w	d0,d0					; double for word-based indexing
-		move.w	Stair_TypeIndex(pc,d0.w),d1		; find stair behavior in offset table
-		jsr	Stair_TypeIndex(pc,d1.w)		; jump there to control stairs, then return here
+		lea	Stair_TypeIndex(pc),a1
+		move.w	(a1,d0.w),d1				; find stair behavior in offset table
+		jsr	(a1,d1.w)				; jump there to control stairs, then return here
 ; ---------------------------------------------------------------------------
 
 Stair_Solid:	; Routine 4
@@ -101,6 +88,8 @@ Stair_Solid:	; Routine 4
 		move.b	#1,stair_touch(a2)			; make collision state positive ("from above")
 
 	.return:
+		out_of_range_with_y_check.w	DeleteObject,stair_origX(a0),stair_origY(a0)
+		DisplaySprite
 		rts						; return
 
 ; ===========================================================================

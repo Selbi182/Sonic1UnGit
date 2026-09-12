@@ -2,28 +2,15 @@
 ; ---------------------------------------------------------------------------
 ; Object 18 - basic platforms (GHZ, SYZ, SLZ)
 ; ---------------------------------------------------------------------------
-
-BasicPlatform:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Plat_Index(pc,d0.w),d1
-		jmp	Plat_Index(pc,d1.w)
-; ===========================================================================
-Plat_Index:	dc.w Plat_Main-Plat_Index	; 0
-		dc.w Plat_Solid-Plat_Index	; 2
-		dc.w Plat_StoodOn-Plat_Index	; 4
-		dc.w Plat_Delete-Plat_Index	; 6
-		dc.w Plat_Action-Plat_Index	; 8
-
 plat_origX:	equ objoff_32	; initial X-position
 plat_origY:	equ objoff_34	; initial Y-position
 plat_nudgeval:	equ objoff_38	; nudge Y-offset while Sonic is on platform
 plat_delay:	equ objoff_3A	; multi-purpose delay timers
 plat_rawY:	equ objoff_3C	; raw Y-positon (without nudge Y-offset)
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Plat_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Plat_Solid
+BasicPlatform:
+		move.l	#Plat_Solid,obID(a0)			; advance to Plat_Solid
 
 		move.w	#ArtTile_Level|Tile_Pal3,obGfx(a0)	; set art tile for GHZ (part of the level graphics)
 		move.l	#Map_Plat_GHZ,obMap(a0)			; GHZ-specific mappings
@@ -65,6 +52,9 @@ Plat_Solid:	; Routine 2
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as platform solidity width
 		bsr.w	PlatformObject				; enable platform behavior (sets obRoutine = 4 (Plat_StoodOn) when stood on)
+		btst	#3,obStatus(a0)
+		beq.s	Plat_Action
+		move.l	#Plat_StoodOn,obID(a0)
 		; continue to Plat_Action...
 ; ---------------------------------------------------------------------------
 
@@ -84,7 +74,11 @@ Plat_StoodOn:	; Routine 4
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as platform solidity width
 		bsr.w	ExitPlatform				; enable platform behavior (sets obRoutine = 4 (Plat_Action) when stood on)
+		btst	#3,obStatus(a0)
+		bne.s	.stillOn
+		move.l	#Plat_Solid,obID(a0)
 
+	.stillOn:
 		move.w	obX(a0),-(sp)				; backup platform X-position before calling Plat_Move
 		bsr.w	Plat_Move				; execute platform type behavior
 		bsr.w	Plat_Nudge				; depress platform a bit while Sonic is on it
@@ -243,7 +237,7 @@ Plat_FallingDown:
 		move.w	obVelY(a0),obVelY(a1)			; set Sonic to continue falling on his own at the platform's current speed
 
 	.notOnPlatform:
-		move.b	#8,obRoutine(a0)			; set to Plat_Action routine (don't allow entering platform again)
+		move.l	#Plat_Action,obID(a0)			; set to Plat_Action routine (don't allow entering platform again)
 
 	.fallingDown:
 		move.l	plat_rawY(a0),d3			; get raw Y-position without nudge
@@ -258,7 +252,7 @@ Plat_FallingDown:
 		addi.w	#224,d0					; add screen height
 		cmp.w	plat_rawY(a0),d0			; has platform fallen below bottom level boundary?
 		bhs.s	.return					; if not, branch
-		move.b	#6,obRoutine(a0)			; set to Plat_Delete routine
+		move.l	#Plat_Delete,obID(a0)			; set to Plat_Delete routine
 
 	.return:
 		rts						; return
@@ -320,7 +314,7 @@ Plat_ChangeMotion:
 ; ===========================================================================
 
 Plat_ChkDel:
-		out_of_range.s	Plat_Delete,plat_origX(a0)	; has platform gone out of range? if yes, delete it
+		out_of_range_with_y_check.s	Plat_Delete,plat_origX(a0),plat_origY(a0)	; has platform gone out of range? if yes, delete it
 		DisplaySprite
 		rts				; display platform sprite
 ; ===========================================================================

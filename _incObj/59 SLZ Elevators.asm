@@ -2,22 +2,6 @@
 ; ---------------------------------------------------------------------------
 ; Object 59 - platforms that move when you stand on them (SLZ)
 ; ---------------------------------------------------------------------------
-
-Elevator:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Elev_Index(pc,d0.w),d1
-		jsr	Elev_Index(pc,d1.w)
-
-		out_of_range_with_y_check.w	DeleteObject,elev_origX(a0),elev_origY(a0)
-		DisplaySprite
-		rts
-; ===========================================================================
-Elev_Index:	dc.w Elev_Main-Elev_Index
-		dc.w Elev_Platform-Elev_Index
-		dc.w Elev_StoodOn-Elev_Index
-		dc.w Elev_Spawner-Elev_Index
-
 elev_origY:		equ objoff_30		; original y-axis position
 elev_origX:		equ objoff_32		; original x-axis position
 elev_moveddistance:	equ objoff_34		; distance platform has moved from origin so far
@@ -49,21 +33,20 @@ Elev_Var2:	; total distance to move divided by 8, action type for Elev_Types
 		dc.b	$180/8, 9	; E (from spawner)
 ; ===========================================================================
 
-Elev_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Elev_Platform
+Elevator:
+		move.l	#Elev_Platform,obID(a0)			; advance to Elev_Platform
 
 		moveq	#0,d0					; clear d0
 		move.b	obSubtype(a0),d0			; get platform subtype
 		bpl.s	.normalPlatform				; is this a spawner ($80 and above)? if not, branch
 
 	.spawner:
-		addq.b	#4,obRoutine(a0)			; set to Elev_Spawner routine
+		move.l	#Elev_Spawner,obID(a0)			; set to Elev_Spawner routine
 		andi.w	#$7F,d0					; clear bit 7 (spawner flag)
 		mulu.w	#6,d0					; multiply lower digit by 6
 		move.w	d0,elev_spawner_delay(a0)		; set spawner interval (e.g. $xA * 6 = 1 second)
 		move.w	d0,elev_spawner_delaybase(a0)		; ''
-		addq.l	#4,sp					; don't return to "Elevator:" to prevent calling DisplaySprite
-		rts						; keep spawner alive while invisible
+		bra.w	Elev_Spawner
 ; ---------------------------------------------------------------------------
 
 	.normalPlatform:
@@ -86,7 +69,7 @@ Elev_Main:	; Routine 0
 		move.l	#Map_Elev,obMap(a0)			; set mappings
 		move.w	#ArtTile_Level|Tile_Pal3,obGfx(a0)	; set art tile and palette line (part of level graphics)
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 		move.w	obX(a0),elev_origX(a0)			; remember initial X-position
 		move.w	obY(a0),elev_origY(a0)			; remember initial Y-position
 ; ---------------------------------------------------------------------------
@@ -95,7 +78,16 @@ Elev_Platform:	; Routine 2
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as solidity width
 		jsr	(PlatformObject).l			; make object a platform (can set obRoutine to 4 = Elev_StoodOn)
-		bra.w	Elev_Types				; execute platform action type
+		btst	#3,obStatus(a0)
+		beq.s	.notOn
+		move.l	#Elev_StoodOn,obID(a0)
+	.notOn:
+		bsr.w	Elev_Types				; execute platform action type
+
+Elev_Display:
+		out_of_range.w	DeleteObject,elev_origX(a0)
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 ; Elev_Action:
@@ -103,18 +95,21 @@ Elev_StoodOn:	; Routine 4
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as solidity width
 		jsr	(ExitPlatform).l			; allow exiting platform (can set obRoutine to 2 = Elev_Platform on exit)
-
+		btst	#3,obStatus(a0)
+		bne.s	.stillOn
+		move.l	#Elev_Platform,obID(a0)
+.stillOn:
 		move.w	obX(a0),-(sp)				; backup previous X-position before executing action types
 		bsr.w	Elev_Types				; execute platform action type
 		move.w	(sp)+,d2				; restore previous X-position for as MvSonicOnPtfm input
 
 		tst.l	obID(a0)				; has platform already deleted itself?
 		beq.s	.deleted				; if yes, branch
-		jmp	(MvSonicOnPtfm2).l			; move Sonic with platform as it moves
+		jsr	(MvSonicOnPtfm2).l			; move Sonic with platform as it moves
+		bra.w	Elev_Display
 ; ---------------------------------------------------------------------------
 
 .deleted:
-		addq.l	#4,sp					; don't return to "Elevator:" to prevent calling DisplaySprite
 		rts						; return
 
 ; ===========================================================================
@@ -149,8 +144,8 @@ Elev_Stationary:
 
 ; Type 1/3/5/7 - go to next action type in list when Sonic stands on the platform
 Elev_NextOnTouch:
-		cmpi.b	#4,obRoutine(a0)			; check if Sonic is standing on the object
-		bne.s	.return					; if not, branch
+		btst	#3,obStatus(a0)				; check if Sonic is standing on the object
+		beq.s	.return					; if not, branch
 		addq.b	#1,obSubtype(a0)			; if yes, go to next type in list
 
 	.return:
@@ -294,8 +289,7 @@ Elev_Spawner:	; Routine 6
 		move.b	#$E,obSubtype(a1)			; set to entry $E in Elev_Var2 (which sets action type 9)
 
 	.chkdel:
-		addq.l	#4,sp					; don't return to "Elevator:" to prevent calling DisplaySprite
-		out_of_range_with_y_check.w	DeleteObject,obX(a0),obY(a0) ; has spawner gone out of range? if yes, delete it
+		out_of_range.w	DeleteObject,obX(a0)		; has spawner gone out of range? if yes, delete it
 		rts						; keep spawner alive while invisible
 
 ; ===========================================================================

@@ -2,25 +2,13 @@
 ; ---------------------------------------------------------------------------
 ; Object 52 - moving platform blocks (MZ, LZ, SBZ)
 ; ---------------------------------------------------------------------------
-
-MovingBlock:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	MBlock_Index(pc,d0.w),d1
-		jmp	MBlock_Index(pc,d1.w)
-; ===========================================================================
-MBlock_Index:	dc.w MBlock_Main-MBlock_Index
-		dc.w MBlock_Platform-MBlock_Index
-		dc.w MBlock_StandOn-MBlock_Index
-
 mblock_raft:		equ objoff_2F	; flag set for hidden LZ1 raft
 mblock_origX:		equ objoff_30	; initial X-position
 mblock_origY:		equ objoff_32	; initial Y-position
 mblock_slide_wait:	equ objoff_34	; (subtype 9/A only) delay before red sliding floor moves back
 mblock_slide_goback:	equ objoff_36	; (subtype 9/A only) set if red sliding floor is currently moving back
-
 mblock_fix_storeX:	equ objoff_38	; stores X-position around MBlock_Move to avoid stack pointer corruption
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
 MBlock_Var:	; width, frame
 		dc.b  32/2, 0	; $0x - MZ single block / LZ small raft
@@ -30,8 +18,8 @@ MBlock_Var:	; width, frame
 		dc.b  96/2, 4	; $4x - MZ triple block
 ; ===========================================================================
 
-MBlock_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to MBlock_Platform
+MovingBlock:
+		move.l	#MBlock_Platform,obID(a0)		; advance to MBlock_Platform
 
 		move.l	#Map_MBlock,obMap(a0)			; MZ-specific mappings
 		move.w	#ArtTile_MZ_Block|Tile_Pal3,obGfx(a0)	; MZ-specific art tile
@@ -73,6 +61,9 @@ MBlock_Platform: ; Routine 2
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as platform solidity width
 		jsr	(PlatformObject).l			; enable platform behavior (can set obRoutine = 4, MBlock_StandOn)
+		btst	#3,obStatus(a0)
+		beq.s	MBlock_DisplayOrDelete
+		move.l	#MBlock_StandOn,obID(a0)
 		bra.s	MBlock_DisplayOrDelete			; display platform
 ; ===========================================================================
 
@@ -80,7 +71,10 @@ MBlock_StandOn:	; Routine 4
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as platform solidity width
 		jsr	(ExitPlatform).l			; allow exiting platform (can set obRoutine = 2, MBlock_Platform)
-
+		btst	#3,obStatus(a0)
+		bne.s	.stillOn
+		move.l	#MBlock_Platform,obID(a0)
+.stillOn:
 		move.w	obX(a0),mblock_fix_storeX(a0)		; backup current X-position before calling MBlock_Move (scratch RAM)
 		bsr.w	MBlock_Move				; execute platform movement behavior
 		move.w	mblock_fix_storeX(a0),d2		; restore previous X-position as input for MvSonicOnPtfm2 (scratch RAM)
@@ -150,8 +144,8 @@ MBlock_NextWhenStoodOn:
 		move.w	d0,obY(a0)				; align platform to water
 	.noRaft:
 
-		cmpi.b	#4,obRoutine(a0)			; is Sonic standing on the platform?
-		bne.s	.return					; if not, branch
+		btst	#3,obStatus(a0)				; is Sonic standing on the platform?
+		beq.s	.return					; if not, branch
 		addq.b	#1,obSubtype(a0)			; if yes, go to next subtype in list
 
 	.return:
@@ -217,6 +211,8 @@ MBlock_FallingDown:
 
 ; Type 7 - appears when switch ID 2 is pressed (secret LZ1 raft leading to shortcut)
 MBlock_SecretLZ1Raft:
+		cmpi.w	#id_LZ_act1,(v_zone_act).w
+		bne.s	.hidePlatform
 		tst.b	(f_obj56).w				; has switch already been pressed? (reusing another flag that's not used in LZ1)
 		bne.s	.spawn					; if yes, force spawn anyway
 		tst.b	(f_switch+2).w				; has switch number 02 been pressed?

@@ -59,7 +59,6 @@ PlatformObject:
 		add.w	d0,d2
 		addq.w	#3,d2
 		move.w	d2,obY(a1)
-		addq.b	#2,obRoutine(a0)			; increment object's routine counter
 
 Plat_NoCheck:							; jump here to skip all checks
 		btst	#3,obStatus(a1)				; is Sonic on a platform already?
@@ -71,9 +70,6 @@ Plat_NoCheck:							; jump here to skip all checks
 		movea.l	d0,a2					; point a2 to that address
 		bclr	#3,obStatus(a2)				; clear platform bit for the other platform
 		clr.b	ob2ndRout(a2)
-		cmpi.b	#4,obRoutine(a2)			; does its routine counter suggest it's being stood on? (platforms all use similar routines)
-		bne.s	.no					; if not, branch
-		subq.b	#2,obRoutine(a2)			; decrement counter to "detect mode"
 
 	.no:
 		move.w	a0,d0
@@ -249,7 +245,6 @@ ExitPlatform2:	; input width is already in d2
 
 	.exitedPlatform:
 		bclr	#3,obStatus(a1)				; clear Sonic's on-platform flag
-		move.b	#2,obRoutine(a0)			; reset platform to "Sonic is not standing on me" routine (always second)
 		bclr	#3,obStatus(a0)				; clear platform's stood-on flag
 
 	.return:

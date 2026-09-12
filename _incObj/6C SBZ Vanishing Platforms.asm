@@ -2,31 +2,19 @@
 ; ---------------------------------------------------------------------------
 ; Object 6C - vanishing platforms (SBZ)
 ; ---------------------------------------------------------------------------
-
-VanishPlatform:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	VanP_Index(pc,d0.w),d1
-		jmp	VanP_Index(pc,d1.w)
-; ===========================================================================
-VanP_Index:	dc.w VanP_Main-VanP_Index
-		dc.w VanP_Detect-VanP_Index
-		dc.w VanP_StoodOn-VanP_Index
-		dc.w VanP_Sync-VanP_Index
-
 vanp_timer:	equ objoff_30	; counter for time until event
 vanp_timelen:	equ objoff_32	; time between events (general)
 vanp_syncoffset:equ objoff_36	; offset to synchronize multiple platforms to level frame counter (multiples of $80)
 vanp_syncmask:	equ objoff_38	; level frame counter synchronization bit mask to check if platform should toggle
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-VanP_Main:	; Routine 0
-		addq.b	#6,obRoutine(a0)			; advance to VanP_Sync
+VanishPlatform:
+		move.l	#VanP_Sync,obID(a0)			; advance to VanP_Sync
 		move.l	#Map_VanP,obMap(a0)			; set mappings
 		move.w	#ArtTile_SBZ_Vanishing_Block|Tile_Pal3,obGfx(a0) ; set art tile and palette line
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#32/2,obActWid(a0)			; set sprite display width and solidity width
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 
 		moveq	#0,d0					; clear d0
 		move.b	obSubtype(a0),d0			; get object subtype
@@ -56,14 +44,14 @@ VanP_Sync:	; Routine 6
 		and.w	vanp_syncmask(a0),d0			; check against bitmask
 		bne.s	.animate				; if it's not 0, don't toggle platform
 
-		subq.b	#4,obRoutine(a0)			; goto VanP_Detect next
-		bra.s	VanP_Detect				; go there immediately
+		move.l	#VanP_Detect,obID(a0)			; goto VanP_Detect next
+		bra.w	VanP_Detect				; go there immediately
 ; ===========================================================================
 
 	.animate:
 		lea	(Ani_Van).l,a1				; load animation script
 		jsr	(AnimateSprite).l			; (stays on final animation frame indefinitely)
-		RememberState
+		RememberStateXY
 		rts				; display sprite, or delete if offscreen
 ; ===========================================================================
 
@@ -89,12 +77,12 @@ VanP_StoodOn:	; Routine 4
 		btst	#1,obFrame(a0)				; is platform visible? (frame IDs 1 and 3)
 		bne.w	.notSolid				; if not, don't make solid
 
-		cmpi.b	#2,obRoutine(a0)			; is Sonic already standing on platform?
-		bne.s	.sonicOnPlatform			; if yes, branch
+		btst	#3,obStatus(a0)				; is Sonic already standing on platform?
+		bne.w	.sonicOnPlatform			; if yes, branch
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as solidity width
 		jsr	(PlatformObject).l			; allow Sonic to stand on platform (obRoutine is set to 4 here if he is)
-		RememberState
+		RememberStateXY
 		rts				; display sprite, or delete if offscreen
 ; ===========================================================================
 
@@ -105,7 +93,7 @@ VanP_StoodOn:	; Routine 4
 
 		move.w	obX(a0),d2				; get platform's X-position
 		jsr	(MvSonicOnPtfm2).l			; move Sonic with platform
-		RememberState
+		RememberStateXY
 		rts				; display sprite, or delete if offscreen
 ; ===========================================================================
 
@@ -115,11 +103,11 @@ VanP_StoodOn:	; Routine 4
 		lea	(v_player).w,a1				; load Sonic player object
 		bclr	#3,obStatus(a1)				; clear Sonic's on-platform flag
 		bclr	#3,obStatus(a0)				; clear platform's stood-on flag
-		move.b	#2,obRoutine(a0)			; set platform back to VanP_Detect
+		move.l	#VanP_Detect,obID(a0)			; set platform back to VanP_Detect
 		clr.b	obSolid(a0)				; clear platform solidity flag
 
 	.display:
-		RememberState
+		RememberStateXY
 		rts				; display sprite, or delete if offscreen
 
 ; ===========================================================================

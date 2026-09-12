@@ -4,6 +4,9 @@
 ; the two objects being located in entirely different zones. They are more
 ; or less direct copies of each other, only with slight format adjustments.
 ; ---------------------------------------------------------------------------
+collapsible_timedelay:	equ objoff_38	; delay before fragment starts to fall
+collapsible_flag:	equ objoff_3A	; flag set if collapsing has started
+; ---------------------------------------------------------------------------
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -11,24 +14,7 @@
 ; ---------------------------------------------------------------------------
 
 CollapseLedge:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Ledge_Index(pc,d0.w),d1
-		jmp	Ledge_Index(pc,d1.w)
-; ===========================================================================
-Ledge_Index:	dc.w Ledge_Main-Ledge_Index
-		dc.w Ledge_ChkTouch-Ledge_Index
-		dc.w Ledge_OnPlatform-Ledge_Index
-		dc.w Ledge_FragmentPiece-Ledge_Index
-		dc.w Ledge_Delete-Ledge_Index
-		dc.w Ledge_WalkOff-Ledge_Index
-
-collapsible_timedelay:	equ objoff_38	; delay before fragment starts to fall
-collapsible_flag:	equ objoff_3A	; flag set if collapsing has started
-; ===========================================================================
-
-Ledge_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)
+		move.l	#Ledge_ChkTouch,obID(a0)
 		move.l	#Map_Ledge,obMap(a0)
 		move.w	#ArtTile_Level|Tile_Pal3,obGfx(a0)
 		ori.b	#sprite_cam_field,obRender(a0)
@@ -50,7 +36,11 @@ Ledge_ChkTouch:	; Routine 2
 		move.w	#96/2,d1
 		lea	(Ledge_SlopeData).l,a2
 		bsr.w	SlopeObject				; sets obRoutine to 4 on touch (Ledge_OnPlatform)
-		RememberState
+		btst	#3,obStatus(a0)
+		beq.s	.notOn
+		move.l	#Ledge_OnPlatform,obID(a0)
+	.notOn:
+		RememberStateXY
 		rts
 ; ===========================================================================
 
@@ -64,13 +54,17 @@ Ledge_OnPlatform:	; Routine 4
 Ledge_WalkOff:	; Routine $A
 		move.w	#96/2,d1
 		bsr.w	ExitPlatform				; sets obRoutine back to 2 on exit (Ledge_ChkTouch)
+		btst	#3,obStatus(a0)
+		bne.s	.stillOn
+		move.l	#Ledge_ChkTouch,obID(a0)
+	.stillOn:
 
 		move.w	#96/2,d1
 		lea	(Ledge_SlopeData).l,a2
 		move.w	obX(a0),d2
 		bsr.w	SlopeObject_AssumeStoodOn
 
-		RememberState
+		RememberStateXY
 		rts
 ; ===========================================================================
 
@@ -100,7 +94,7 @@ Ledge_FragmentPiece:	; Routine 6
 
 	.startCollapse:
 		move.b	#0,collapsible_flag(a0)
-		move.b	#6,obRoutine(a0)			; run "Ledge_FragmentPiece" routine
+		move.l	#Ledge_FragmentPiece,obID(a0)		; run "Ledge_FragmentPiece" routine
 
 	.return:
 		rts
@@ -122,21 +116,7 @@ Ledge_Delete:	; Routine 8
 ; ---------------------------------------------------------------------------
 
 CollapseFloor:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	CFlo_Index(pc,d0.w),d1
-		jmp	CFlo_Index(pc,d1.w)
-; ===========================================================================
-CFlo_Index:	dc.w CFlo_Main-CFlo_Index
-		dc.w CFlo_ChkTouch-CFlo_Index
-		dc.w CFlo_OnPlatform-CFlo_Index
-		dc.w CFlo_FragmentPiece-CFlo_Index
-		dc.w CFlo_Delete-CFlo_Index
-		dc.w CFlo_WalkOff-CFlo_Index
-; ===========================================================================
-
-CFlo_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)
+		move.l	#CFlo_ChkTouch,obID(a0)
 		move.l	#Map_CFlo,obMap(a0)
 		move.w	#ArtTile_MZ_Block|Tile_Pal3,obGfx(a0)
 
@@ -165,6 +145,10 @@ CFlo_ChkTouch:	; Routine 2
 	.solid:
 		move.w	#64/2,d1
 		bsr.w	PlatformObject				; sets obRoutine to 4 on touch (CFlo_OnPlatform)
+		btst	#3,obStatus(a0)
+		beq.s	.notOn
+		move.l	#CFlo_OnPlatform,obID(a0)
+	.notOn:
 
 		; This appears to add a small visual effect specifically to SLZ platforms
 		; to invert their collapsing pattern depending on which side was touched.
@@ -179,7 +163,7 @@ CFlo_ChkTouch:	; Routine 2
 		bset	#sprite_xflip_bit,obRender(a0)		; flip platform to inverse collapsing pattern
 
 	.display:
-		RememberState
+		RememberStateXY
 		rts
 ; ===========================================================================
 
@@ -192,11 +176,15 @@ CFlo_OnPlatform:	; Routine 4
 
 CFlo_WalkOff:	; Routine $A
 		move.w	#64/2,d1
-		bsr.w	ExitPlatform
+		bsr.w	ExitPlatform				; sets obRoutine back to 2 on exit (CFlo_ChkTouch)
+		btst	#3,obStatus(a0)
+		bne.s	.stillOn
+		move.l	#CFlo_ChkTouch,obID(a0)
+	.stillOn:
 
 		move.w	obX(a0),d2
 		bsr.w	MvSonicOnPtfm2
-		RememberState
+		RememberStateXY
 		rts
 ; ===========================================================================
 
@@ -226,7 +214,7 @@ CFlo_FragmentPiece:	; Routine 6
 
 	.startCollapse:
 		move.b	#0,collapsible_flag(a0)
-		move.b	#6,obRoutine(a0)			; run "CFlo_FragmentPiece" routine
+		move.l	#CFlo_FragmentPiece,obID(a0)		; run "CFlo_FragmentPiece" routine
 
 	.return:
 		rts
@@ -279,9 +267,14 @@ FragmentatePlatform:
 		adda.w	(a3,d0.w),a3				; find sprite mapping for current frame ID
 		addq.w	#2,a3					; skip over piece count header
 		bset	#sprite_rawmappings_bit,obRender(a0)	; set "raw-mappings" flag
-		move.l	obID(a0),d4				; copy object ID to fragments
 		move.b	obRender(a0),d5				; copy render flags to fragments
 		movea.l	a0,a1					; overwrite main platform with first fragment object
+
+		move.l	#Ledge_FragmentPiece,d4
+		cmpi.l	#Map_CFlo,obMap(a0)
+		bne.s	.firstFragment
+		move.l	#CFlo_FragmentPiece,d4
+
 		bra.s	.firstFragment				; skip loop for first fragment
 ; ===========================================================================
 
@@ -290,7 +283,6 @@ FragmentatePlatform:
 		bne.s	.fragmentationDone			; if object RAM is full, branch
 		addq.w	#8,a3					; advance to next sprite piece in mappings
 	.firstFragment:
-		move.b	#6,obRoutine(a1)			; set fragment routine to "..._FragmentPiece"
 		move.l	d4,obID(a1)				; copy object ID
 		move.l	a3,obMap(a1)				; copy mappings
 		move.b	d5,obRender(a1)				; copy render flags

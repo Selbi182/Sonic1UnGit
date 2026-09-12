@@ -3,32 +3,18 @@
 ; Object 15 - swinging platforms (GHZ, MZ, SLZ)
 ;           - spiked ball on a chain (SBZ)
 ; ---------------------------------------------------------------------------
-
-SwingingPlatform:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Swing_Index(pc,d0.w),d1
-		jmp	Swing_Index(pc,d1.w)
-; ===========================================================================
-Swing_Index:	dc.w Swing_Main-Swing_Index		; 0
-		dc.w Swing_Platform-Swing_Index		; 2
-		dc.w Swing_StoodOn-Swing_Index		; 4
-		dc.w Swing_Delete-Swing_Index		; 6
-		dc.w Swing_Delete-Swing_Index		; 8
-		dc.w Swing_Swinging-Swing_Index		; A
-
 swing_children:	equ objoff_30		; number of child link objects ($28 = child count, $29-$39 RAM indices to links)
 swing_origY:	equ objoff_1C		; original y-axis position
 swing_origX:	equ objoff_1E		; original x-axis position
 swing_radius:	equ objoff_1B		; radius distance from center, individual per chain link
 ; ===========================================================================
 
-Swing_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Swing_Platform
+SwingingPlatform:
+		move.l	#Swing_Platform,obID(a0)		; advance to Swing_Platform
 		move.l	#Map_Swing_GHZ,obMap(a0)		; GHZ and MZ specific mappings
 		move.w	#ArtTile_GHZ_MZ_Swing|Tile_Pal3,obGfx(a0) ; set GHZ/MZ art tile and palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)		; set sprite priority
 		move.b	#48/2,obActWid(a0)			; set sprite display width and platform solidity width
 		move.b	#16/2,obHeight(a0)			; set platform solidity height
 		move.w	obY(a0),swing_origY(a0)			; remember initial Y-position
@@ -50,7 +36,7 @@ Swing_Main:	; Routine 0
 		move.b	#48/2,obActWid(a0)			; SBZ-specific width
 		move.b	#48/2,obHeight(a0)			; SBZ-specific height
 		move.b	#col_32x32|col_hurt,obColType(a0)	; make entire spikeball harmful on touch
-		move.b	#$A,obRoutine(a0)			; use Swing_Swinging routine (disable platform logic)
+		move.l	#Swing_Swinging,obID(a0)		; use Swing_Swinging routine (disable platform logic)
 
 Swing_CreateLinks:
 		move.l	obID(a0),d4				; copy parent object ID to children
@@ -134,12 +120,14 @@ Swing_Platform:	; Routine 2
 		moveq	#0,d3					; clear d3
 		move.b	obHeight(a0),d3				; set custom platform solidity height as input
 		bsr.w	PlatformObject_CustomHeight		; enable platform behavior (sets obRoutine = 4 (Swing_StoodOn) when stood on)
+		btst	#3,obStatus(a0)
+		beq.s	Swing_Swinging
+		move.l	#Swing_StoodOn,obID(a0)
 ; ---------------------------------------------------------------------------
 
 ; Swing_Action:
 Swing_Swinging:	; Routine $C
 		bsr.s	Swing_Move				; swing platform and update its child links
-
 		bra.w	Swing_ChkDel				; delete platform and links if out of range
 ; ===========================================================================
 
@@ -148,6 +136,10 @@ Swing_StoodOn:	; Routine 4
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as platform solidity width
 		bsr.w	ExitPlatform				; allow Sonic exiting platform (sets obRoutine = 2 (Swing_Platform) on exit)
+		btst	#3,obStatus(a0)
+		bne.s	.stillOn
+		move.l	#Swing_Platform,obID(a0)
+.stillOn:
 
 		move.w	obX(a0),-(sp)				; backup platform X-position before calling Swing_Move
 		bsr.s	Swing_Move				; swing platform and update its child links
@@ -209,7 +201,7 @@ Swing_Move:
 ; ===========================================================================
 
 Swing_ChkDel:
-		out_of_range_with_y_check.w	.deleteAll,swing_origX(a0),swing_origY(a0)	; has platform gone out of range? if yes, delete it with all links
+		out_of_range_with_y_check.s	.deleteAll,swing_origX(a0),swing_origY(a0)	; has platform gone out of range? if yes, delete it with all links
 		DisplaySprite
 		rts				; display platform
 ; ---------------------------------------------------------------------------
@@ -231,10 +223,6 @@ Swing_ChkDel:
 
 	.return:
 		rts						; return
-; ===========================================================================
-
-Swing_Delete:	; Routine 6/8 (unused?)
-		bra.w	DeleteObject				; delete object
 
 ; ===========================================================================
 

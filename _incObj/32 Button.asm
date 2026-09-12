@@ -128,14 +128,8 @@ But_MZBlock:
 
 ; loc_BE5E:
 .blockFound:
-		moveq	#1,d0					; unnecessary specifications...
-		andi.w	#$3F,d0					; ...that always end up with the same values of 2...
-		add.w	d0,d0					; ...perhaps blocks were once meant to be of various sizes
-		lea	.mzBlock_sizes-2(pc,d0.w),a2		; load sizes (always the same)
-
 	.checkX:
-		move.b	(a2)+,d1				; load X-radius
-		ext.w	d1					; extend to word
+		moveq	#$10,d1					; load X-radius
 		move.w	obX(a1),d0				; get block's X-position
 		sub.w	d1,d0					; subtract X-radius
 		sub.w	d2,d0					; subtract left edge of button
@@ -153,8 +147,7 @@ But_MZBlock:
 
 ; loc_BE84:
 .checkY:
-		move.b	(a2)+,d1				; load Y-radius
-		ext.w	d1					; extend to word
+		moveq	#$10,d1					; load Y-radius
 		move.w	obY(a1),d0				; get block's Y-position
 		sub.w	d1,d0					; subtract Y-radius
 		sub.w	d3,d0					; subtract button top edge

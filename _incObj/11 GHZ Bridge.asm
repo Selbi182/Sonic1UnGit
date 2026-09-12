@@ -2,35 +2,22 @@
 ; ---------------------------------------------------------------------------
 ; Object 11 - GHZ bridge (the main object, for the stumps refer to Object 1C)
 ; ---------------------------------------------------------------------------
-
-Bridge:
-		cmpi.b	#BriOpti_LogCount,obSubtype(a0)		; is this a bridge with 12 logs? (standard size)
-		beq.w	BridgeOptimized				; if yes, go to the optimized bridge object
-
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Bri_Index(pc,d0.w),d1
-		jmp	Bri_Index(pc,d1.w)
-; ===========================================================================
-Bri_Index:	dc.w Bri_Main-Bri_Index		; 0
-		dc.w Bri_Action-Bri_Index	; 2
-		dc.w Bri_StoodOn-Bri_Index	; 4
-		dc.w Bri_Delete-Bri_Index	; 6
-		dc.w Bri_Delete-Bri_Index	; 8
-
 bridge_children:	equ objoff_30		; number of log objects, initially retrieved from subtype ($28)
 bridge_children_ram:	equ bridge_children+1	; RAM indices to log objects ($29-$39, usually read together with bridge_children)
 bridge_origY:		equ objoff_1C		; initial Y-position
 bridge_nudge:		equ objoff_1E		; general nudge Y-offset while Sonic is on bridge
 bridge_currentlog:	equ objoff_1F		; 0-based index of log Sonic is currently standing on
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Bri_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Bri_Action
+Bridge:
+		cmpi.b	#BriOpti_LogCount,obSubtype(a0)		; is this a bridge with 12 logs? (standard size)
+		beq.w	BridgeOptimized				; if yes, go to the optimized bridge object
+
+		move.l	#Bri_Action,obID(a0)			; advance to Bri_Action
 		move.l	#Map_Bri,obMap(a0)			; set mappings
 		move.w	#ArtTile_GHZ_Bridge|Tile_Pal3,obGfx(a0)	; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)		; set sprite priority
 		move.b	#16/2,obActWid(a0)			; set sprite display width (one log)
 
 		move.w	obY(a0),d2				; copy Y-position from parent
@@ -38,8 +25,7 @@ Bri_Main:	; Routine 0
 		move.l	obID(a0),d4				; copy parent object ID to children
 		lea	bridge_children(a0),a2			; load child object index array
 		moveq	#0,d1					; clear d1
-		;move.b	(a2),d1					; get subtype for bridge
-		move.b	obSubtype(a0),d1					; get subtype for bridge
+		move.b	obSubtype(a0),d1			; get subtype for bridge
 		move.b	#0,(a2)+				; clear subtype, and initialize number of spawned children to 0
 		move.w	d1,d0					; copy bridge log count to d0
 		lsr.w	#1,d0					; divide by 2 (half-size)
@@ -50,7 +36,7 @@ Bri_Main:	; Routine 0
 		movea.l	a0,a1
 
 .loopBuildBridge:
-		jsr	(FindNextFreeObj_Next).l			; find next free object RAM slot
+		jsr	(FindNextFreeObj_Next).l		; find next free object RAM slot
 		bne.s	Bri_Action				; if object RAM is full, abort
 		addq.b	#1,bridge_children(a0)			; increment number of loaded child objects
 
@@ -79,7 +65,7 @@ Bri_Main:	; Routine 0
 		move.l	#Map_Bri,obMap(a1)			; set mappings
 		move.w	#ArtTile_GHZ_Bridge|Tile_Pal3,obGfx(a1)	; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a1)		; set to playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a1)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a1)		; set sprite priority
 		move.b	#16/2,obActWid(a1)			; set sprite display width for individual log
 		addi.w	#16,d3					; position next log 16px further to the right
 
@@ -88,7 +74,10 @@ Bri_Main:	; Routine 0
 
 Bri_Action:	; Routine 2
 		bsr.s	Bri_CheckOnBridge			; allow stepping on bridge (sets obRoutine = 4 (Bri_StoodOn) on enter)
-
+		btst	#3,obStatus(a0)
+		beq.s	.notOn
+		move.l	#Bri_StoodOn,obID(a0)
+.notOn:
 		tst.b	bridge_nudge(a0)			; has bridge nudge gone back to 0?
 		beq.s	.display				; if yes, branch
 		subq.b	#4,bridge_nudge(a0)			; reduce nudging while Sonic isn't on bridge
@@ -129,7 +118,10 @@ Bri_CheckOnBridge:
 ; Bri_Platform:
 Bri_StoodOn:	; Routine 4
 		bsr.s	Bri_WalkOff				; allow exiting bridge (sets obRoutine = 2 (Bri_Action) on exit)
-
+		btst	#3,obStatus(a0)
+		bne.s	.stillOn
+		move.l	#Bri_Action,obID(a0)
+.stillOn:
 		bra.w	Bri_ChkDel				; delete main bridge object and all child logs if out of range
 
 ; ===========================================================================
@@ -317,9 +309,9 @@ Bri_Data_Align:	; Values used to align logs to the left & right of the one being
 ; ===========================================================================
 
 Bri_ChkDel:
-		out_of_range.w	.deleteBridge			; has bridge gone out of range? if yes, delete it with all child logs
+		out_of_range_with_y_check.s	.deleteBridge,obX(a0),bridge_origY(a0)	; has bridge gone out of range? if yes, delete it with all child logs
 		DisplaySprite
-		rts				; display main bridge object
+		rts
 ; ---------------------------------------------------------------------------
 
 .deleteBridge:
@@ -344,7 +336,7 @@ Bri_ChkDel:
 ; ===========================================================================
 
 Bri_Delete:	; Routine 6/8
-		jmp	(DeleteObject).l				; delete object
+		jmp	(DeleteObject).l			; delete object
 ; ===========================================================================
 
 Map_Bri:	include	"_maps/Bridge.asm"
@@ -355,24 +347,11 @@ Map_Bri:	include	"_maps/Bridge.asm"
 ; Object 11 - Optimized GHZ bridge (only 12 logs, but much more efficient)
 ; ---------------------------------------------------------------------------
 BriOpti_LogCount: equ 12 ; default Sonic 1 never uses anything but 12 logs
+briopti_origX:	  equ	objoff_30	; initial X-position
 ; ---------------------------------------------------------------------------
 
 BridgeOptimized:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	BriOpti_Index(pc,d0.w),d1
-		jmp	BriOpti_Index(pc,d1.w)
-; ===========================================================================
-BriOpti_Index:	dc.w BriOpti_Main-BriOpti_Index
-		dc.w BriOpti_Action-BriOpti_Index
-		dc.w BriOpti_StoodOn-BriOpti_Index
-
-briopti_origX:	equ	objoff_30	; initial X-position
-; ===========================================================================
-
-BriOpti_Main:
-		move.l	#BridgeOptimized,obID(a0)
-		addq.b	#2,obRoutine(a0)			; go to BriOpti_Action
+		move.l	#BriOpti_Action,obID(a0)		; go to BriOpti_Action
 		move.l	#Map_OptiBridge_Idle,obMap(a0)		; set default mappings to idle state
 		move.w	#ArtTile_GHZ_Bridge|Tile_Pal3,obGfx(a0)	; use third palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
@@ -399,6 +378,10 @@ BriOpti_ChkTouch:
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; get interactable bridge width
 		bsr.w	PlatformObject				; check if Sonic has walked onto the bridge
+		btst	#3,obStatus(a0)
+		beq.s	.notOn
+		move.l	#BriOpti_StoodOn,obID(a0)
+.notOn:
 		bra.w	BriOpti_ChkDelOrDisplay			; display or delete bridge
 ; ===========================================================================
 
@@ -406,6 +389,10 @@ BriOpti_StoodOn:
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; get interactable bridge width
 		bsr.w	ExitPlatform				; check if Sonic has walked off the bridge
+		btst	#3,obStatus(a0)
+		bne.s	.stillOn
+		move.l	#BriOpti_Action,obID(a0)
+.stillOn:
 
 		; set frame
 		lea	(v_player).w,a1				; load Sonic object to a1
@@ -446,7 +433,7 @@ BriOpti_StoodOn:
 ; ---------------------------------------------------------------------------
 
 BriOpti_ChkDelOrDisplay:
-		out_of_range.s	.delete,briopti_origX(a0)	; check if bridge has gone offscreen and delete it if so
+		out_of_range_with_y_check.s	.delete,briopti_origX(a0),obY(a0)	; check if bridge has gone offscreen and delete it if so
 		DisplaySprite
 		rts				; display sprite
 
