@@ -2,36 +2,18 @@
 ; ---------------------------------------------------------------------------
 ; Object 0D - signpost at the end of a level
 ; ---------------------------------------------------------------------------
-
-Signpost:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Sign_Index(pc,d0.w),d1
-		jsr	Sign_Index(pc,d1.w)
-		lea	(Ani_Sign).l,a1
-		bsr.w	AnimateSprite
-		out_of_range.w	DeleteObject
-		DisplaySprite
-		rts
-; ===========================================================================
-Sign_Index:	dc.w Sign_Main-Sign_Index
-		dc.w Sign_Touch-Sign_Index
-		dc.w Sign_Spin-Sign_Index
-		dc.w Sign_SonicRun-Sign_Index
-		dc.w Sign_Exit-Sign_Index
-
 spintime:	equ objoff_30		; time for signpost to spin
 sparkletime:	equ objoff_32		; time between sparkles
 sparkle_id:	equ objoff_34		; counter to keep track of sparkles
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Sign_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Sign_Touch
+Signpost:
+		move.l	#Sign_Touch,obID(a0)			; advance to Sign_Touch
 		move.l	#Map_Sign,obMap(a0)			; set mappings
 		move.w	#ArtTile_Signpost,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield positioning mode
 		move.b	#48/2,obActWid(a0)			; set display width
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 
 Sign_Touch:	; Routine 2
 		move.w	(v_player+obX).w,d0			; get Sonic's X-position
@@ -45,10 +27,10 @@ Sign_Touch:	; Routine 2
 		jsr	(QueueSound1).l				; play play it
 		clr.b	(f_timecount).w				; stop time counter
 		move.w	(v_limitright2).w,(v_limitleft2).w	; lock screen position
-		addq.b	#2,obRoutine(a0)			; advance to Sign_Spin
+		move.l	#Sign_Spin,obID(a0)			; advance to Sign_Spin
 
 	.notouch:
-		rts						; return
+		bra.w	Sign_Display
 ; ===========================================================================
 
 Sign_Spin:	; Routine 4
@@ -59,7 +41,7 @@ Sign_Spin:	; Routine 4
 		addq.b	#1,obAnim(a0)				; next spin cycle
 		cmpi.b	#3,obAnim(a0)				; have 3 spin cycles completed?
 		bne.s	.chksparkle				; if not, branch
-		addq.b	#2,obRoutine(a0)			; advance to Sign_SonicRun
+		move.l	#Sign_SonicRun,obID(a0)			; advance to Sign_SonicRun
 
 	.chksparkle:
 		subq.w	#1,sparkletime(a0)			; subtract 1 from time delay
@@ -92,7 +74,7 @@ Sign_Spin:	; Routine 4
 		move.b	#8,obActWid(a1)				; set display width
 
 	.return:
-		rts						; return to display
+		bra.w	Sign_Display
 
 ; ===========================================================================
 Sign_SparkPos:	; x-pos, y-pos
@@ -125,7 +107,7 @@ Sign_SonicRun:	; Routine 6
 
 ; loc_EC86:
 Sign_LoadEndCards:
-		addq.b	#2,obRoutine(a0)			; advance to Sign_Exit (GotThroughAct is only run once)
+		move.l	#Sign_Display,obID(a0)			; advance to Sign_Exit (GotThroughAct is only run once)
 		; continue to GotThroughAct...
 
 ; ---------------------------------------------------------------------------
@@ -176,7 +158,7 @@ GotThroughAct:
 
 ; locret_ECEE:
 Sign_Return:
-		rts						; return to display
+		bra.w	Sign_Display
 ; End of function GotThroughAct
 
 ; ===========================================================================
@@ -203,8 +185,12 @@ TimeBonuses:	dc.w 5000	; 0:00 - 0:14
 NoTimeBonus:	dc.w 0		; 5:00 - 9:59 (no points)
 ; ===========================================================================
 
-Sign_Exit:	; Routine 8
-		rts						; return to display
+Sign_Display:	; Routine 8
+		lea	(Ani_Sign).l,a1
+		bsr.w	AnimateSprite
+		out_of_range.w	DeleteObject
+		DisplaySprite
+		rts
 ; ===========================================================================
 
 		include	"_anim/Signpost.asm"

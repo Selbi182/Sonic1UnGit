@@ -5,24 +5,11 @@
 ; Note that this file is just for the object logic itself.
 ; For the text mappings, refer to: _maps/Title Cards.asm
 ; ---------------------------------------------------------------------------
-
-TitleCard:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Card_Index(pc,d0.w),d1
-		jmp	Card_Index(pc,d1.w)
-; ===========================================================================
-Card_Index:	dc.w Card_LoadForZone-Card_Index
-		dc.w Card_MoveIn-Card_Index
-		dc.w Card_Wait-Card_Index
-		dc.w Card_Wait-Card_Index
-
 card_mainX:	equ	objoff_30	; target X-position for card while moving in
 card_finalX:	equ	objoff_32	; target X-position for card while moving out
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-; Card_CheckSBZ3:
-Card_LoadForZone:	; Routine 0
+TitleCard:
 		movea.l	a0,a1					; set this root object to become the level name card
 
 		moveq	#0,d0					; clear d0 (zone is a byte, we need words)
@@ -38,13 +25,12 @@ Card_LoadForZone:	; Routine 0
 		moveq	#4-1,d1					; set to affect all four title card objects
 
 Card_Loop:
-		move.l	#TitleCard,obID(a1)			; load another title card object
+		move.l	#Card_MoveIn,obID(a1)			; load another title card object
 		move.w	(a3),obX(a1)				; load start x-position
 		move.w	(a3)+,card_finalX(a1)			; load finish x-position (same as start)
 		move.w	(a3)+,card_mainX(a1)			; load main target x-position
 		move.w	(a2)+,obY(a1)				; load fixed y-position
-		move.b	(a2)+,obRoutine(a1)			; set initial routine number
-		move.b	(a2)+,d0				; get frame ID
+		move.w	(a2)+,d0				; get frame ID
 		bne.s	.setupCardObject			; if frame ID is non-zero, branch (i.e. not the level name)
 		move.b	d2,d0					; for level name, use frame ID as set in d2 above
 	; Card_MakeSprite:
@@ -53,7 +39,7 @@ Card_Loop:
 		move.l	#Map_Card,obMap(a1)			; set mappings pointer
 		move.w	#ArtTile_Title_Card|Tile_Prio,obGfx(a1)	; set art tile and sprite priority flag
 		move.b	#sprite_cam_screen,obRender(a1)		; set to screen-positioned sprite mode
-		move.w	#spr_prio0,obPriority(a1)			; set to highest sprite priority
+		move.w	#spr_prio0,obPriority(a1)		; set to highest sprite priority
 		move.w	#1*60,obTimeFrame(a1)			; set time delay before moving out again to 1 second
 
 		lea	object_size(a1),a1			; advance to next card object (all elements are back-to-back in RAM)
@@ -101,7 +87,7 @@ Card_Wait:	; Routine 4/6
 		beq.s	Card_MoveOut				; if yes, move out card
 		subq.w	#1,obTimeFrame(a0)			; subtract 1 from time
 		DisplaySprite
-		rts				; display card
+		rts						; display card
 ; ===========================================================================
 
 ; Card_ChkPos2:
@@ -132,11 +118,11 @@ Card_MoveOut:
 		cmpi.w	#$80-64+16,d0				; has card moved beyond $50 on the x-axis (to the left)?
 		ble.s	Card_ChangeArt				; if yes, branch
 		DisplaySprite
-		rts				; otherwise, keep displaying card
+		rts						; otherwise, keep displaying card
 ; ===========================================================================
 
 Card_ChangeArt:
-		cmpi.b	#4,obRoutine(a0)			; is this the level name title card object?
+		cmpa.w	#v_ttlcardname,a0			; is this the level name title card object?
 		bne.s	Card_Delete				; if not, branch (art should only get loaded once)
 		moveq	#plcid_Explode,d0			; load explosion patterns
 		jsr	(AddPLC).l				; add to pattern load cues
@@ -150,27 +136,22 @@ Card_ChangeArt:
 ; ---------------------------------------------------------------------------
 ; Title card element setup data. Format:
 ; - Y-position
-; - base routine number
 ; - frame ID
 ; ---------------------------------------------------------------------------
 
 Card_ItemData:
 		; Level Name
 		dc.w $D0
-		dc.b 2
-		dc.b 0	; dynamic frame ID (see Card_Loop)
+		dc.w 0	; dynamic frame ID (see Card_Loop)
 
 		; ZONE
 		dc.w $E4
-		dc.b 2
-		dc.b 6*4
+		dc.w 6*4
 
 		; ACT
 		dc.w $EA
-		dc.b 2
-		dc.b (6*4)+1
+		dc.w (6*4)+1
 
 		; Oval
 		dc.w $E0
-		dc.b 2
-		dc.b (6*4)+2
+		dc.w (6*4)+2

@@ -47,7 +47,7 @@ CheatsEnabled: = 2
 ;	|       will be enabled by default, without requiring any title screen button inputs
 ;	| If 2, same as 1 but debug mode doesn't need to have A held down to get activated
 
-DebugHUDAlways: = 1
+DebugHUDAlways: = 0
 ;	| If 0, Debug Mode HUD will only show while in item placement mode
 ;	| If 1, Debug Mode HUD will always show if cheat is enabled
 
@@ -2767,10 +2767,10 @@ Level_Delay:
 ; ---------------------------------------------------------------------------
 
 		; level has faded in, make title cards move and enter main loop
-		addq.b	#2,(v_ttlcardname+obRoutine).w		; make title card move (name)
-		addq.b	#4,(v_ttlcardzone+obRoutine).w		; make title card move ("ZONE")
-		addq.b	#4,(v_ttlcardact+obRoutine).w		; make title card move ("ACT")
-		addq.b	#4,(v_ttlcardoval+obRoutine).w		; make title card move (blue oval)
+		move.l	#Card_Wait,(v_ttlcardname+obID).w	; make title card move (name)
+		move.l	#Card_Wait,(v_ttlcardzone+obID).w	; make title card move ("ZONE")
+		move.l	#Card_Wait,(v_ttlcardact+obID).w	; make title card move ("ACT")
+		move.l	#Card_Wait,(v_ttlcardoval+obID).w	; make title card move (blue oval)
 
 Level_StartGame:
 		bclr	#7,(v_gamemode).w			; subtract $80 from mode to end pre-level stuff

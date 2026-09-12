@@ -322,31 +322,20 @@ LGrass_Data_Asymmetrical:
 ; Object 35 - fireball that sits on the floor (MZ)
 ; (appears when you walk on grass platforms with subtype $x5)
 ; ---------------------------------------------------------------------------
-
-GrassFire:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	GFire_Index(pc,d0.w),d1
-		jmp	GFire_Index(pc,d1.w)
-; ===========================================================================
-GFire_Index:	dc.w GFire_Main-GFire_Index
-		dc.w GFire_Spread-GFire_Index
-		dc.w GFire_Move-GFire_Index
-
 gfire_origX:	equ objoff_34	; initial X-position
 gfire_origY:	equ objoff_36	; initial Y-position (set from parent)
 gfire_coldata:	equ objoff_30	; pointer to platform slope collision data
 gfire_platform:	equ objoff_38	; pointer to parent platform object
 gfire_nudge:	equ objoff_3C	; current pixels parent platform is depressed from standing
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-GFire_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to GFire_Spread
+GrassFire:
+		move.l	#GFire_Spread,obID(a0)			; advance to GFire_Spread
 		move.l	#Map_Fire,obMap(a0)			; set mappings
 		move.w	#ArtTile_MZ_Fireball,obGfx(a0)		; set art tile
 		move.w	obX(a0),gfire_origX(a0)			; remember initial X-position
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio1,obPriority(a0)			; set sprite priority (above platform and Sonic)
+		move.w	#spr_prio1,obPriority(a0)		; set sprite priority (above platform and Sonic)
 		move.b	#col_16x16|col_hurt,obColType(a0)	; make fire balls harmful on touch
 		move.b	#16/2,obActWid(a0)			; set sprite display width
 
@@ -355,7 +344,7 @@ GFire_Main:	; Routine 0
 
 		tst.b	obSubtype(a0)				; is this the parent fireball?
 		beq.s	GFire_Spread				; if yes, branch to spawn child fireballs
-		addq.b	#2,obRoutine(a0)			; advance child fireball to GFire_Move
+		move.l	#GFire_Move,obID(a0)			; advance child fireball to GFire_Move
 		bra.w	GFire_Move				; go there immediately
 ; ===========================================================================
 

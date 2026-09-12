@@ -130,7 +130,6 @@ CBal_ChkExplode:
 		bpl.s	CBal_Animate				; if time remains, branch
 
 		move.l	#Explosion,obID(a0)			; change cannonball into a normal explosion ($3F)
-		move.b	#0,obRoutine(a0)			; reset routine counter
 		bra.w	Explosion				; jump to explosion code
 ; ===========================================================================
 

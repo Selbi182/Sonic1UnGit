@@ -2,31 +2,10 @@
 ; ---------------------------------------------------------------------------
 ; Object 7E - Special Stage results screen
 ; ---------------------------------------------------------------------------
+ssr_mainX:	equ	objoff_30		; target X-position for card while moving in
+; ---------------------------------------------------------------------------
 
 SSResult:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	SSR_Index(pc,d0.w),d1
-		jmp	SSR_Index(pc,d1.w)
-; ===========================================================================
-SSR_Index:	dc.w SSR_ChkPLC-SSR_Index	; 0
-		dc.w SSR_Move-SSR_Index		; 2
-		dc.w SSR_Wait_Skippable-SSR_Index ; 4
-		dc.w SSR_RingBonus-SSR_Index	; 6
-		dc.w SSR_Wait-SSR_Index		; 8
-		dc.w SSR_Exit-SSR_Index		; A
-
-		; Extra continue acquired:
-		dc.w SSR_Wait-SSR_Index		; C
-		dc.w SSR_Continue-SSR_Index	; E
-		dc.w SSR_Wait-SSR_Index		; 10
-		dc.w SSR_Exit-SSR_Index		; 12
-		dc.w SSR_ContAni-SSR_Index	; 14
-
-ssr_mainX:	equ	objoff_30		; target X-position for card while moving in
-; ===========================================================================
-
-SSR_ChkPLC:	; Routine 0
 		tst.l	(v_plc_buffer).w			; have title card patterns in PLC finished decompressing?
 		beq.s	SSR_Main				; if yes, branch
 		rts						; otherwise, wait until PLC queue is empty
@@ -44,12 +23,12 @@ SSR_Main:
 	endif
 
 SSR_Loop:
-		move.l	#SSResult,obID(a1)			; load next end-of-level title card element
+		move.l	#SSR_Move,obID(a1)			; load next end-of-level title card element
 		move.w	(a2)+,obX(a1)				; load start x-position
 		move.w	(a2)+,ssr_mainX(a1)			; load target x-position
 		move.w	(a2)+,obY(a1)				; load y-position
-		move.b	(a2)+,obRoutine(a1)			; load routine number
-		move.b	(a2)+,obFrame(a1)			; load frame ID
+		move.w	(a2)+,d0
+		move.b	d0,obFrame(a1)				; load frame ID
 		move.l	#Map_SSR,obMap(a1)			; set mappings
 		move.w	#ArtTile_Title_Card|Tile_Prio,obGfx(a1)	; set art tile and sprite priority flag
 		move.b	#sprite_cam_screen,obRender(a1)		; set to screen-positioned sprite mode
@@ -107,44 +86,43 @@ SSR_Move:	; Routine 2
 	.reachedXTarget:
 		cmpi.b	#2,obFrame(a0)				; is this the ring bonus element? (only one element can control)
 		bne.s	.checkOffScreen				; if not, branch
-		addq.b	#2,obRoutine(a0)			; set to SSR_Wait (4)
+		move.l	#SSR_Wait_Skippable,obID(a0)		; set to SSR_Wait_Skippable (4)
 		move.w	#90,obTimeFrame(a0)
 		;move.w	#3*60,obTimeFrame(a0)			; set time delay before tally to 3 seconds
 		move.l	#SSRChaos,(v_ssresemeralds+obID).w	; load collected chaos emeralds object
 ; ---------------------------------------------------------------------------
 
-SSR_Wait_Skippable:
-		moveq	#btnABC,d0		; is button A, B, or C...
-		and.b	(v_jpadhold1).w,d0	; ...held?
-		bne.s	SSR_Wait_skip
+SSR_Wait_Skippable: ; Routine 4
+		moveq	#btnABC,d0				; is button A, B, or C...
+		and.b	(v_jpadhold1).w,d0			; ...held?
+		bne.s	.SSR_Wait_skip
 
-SSR_Wait:	; Routine 4, 8, $C, $10
 		subq.w	#1,obTimeFrame(a0)			; subtract 1 from time delay
-		bne.s	SSR_Wait_Display; if time remains, branch
-	SSR_Wait_skip:
+		bne.s	.SSR_Wait_Display			; if time remains, branch
+	.SSR_Wait_skip:
 		clr.w	obTimeFrame(a0)
-		addq.b	#2,obRoutine(a0)			; advance to whatever the next routine is
+		move.l	#SSR_RingBonus,obID(a0)
 
-	SSR_Wait_Display:
+	.SSR_Wait_Display:
 		DisplaySprite
-		rts				; display card sprites
+		rts						; display card sprites
 ; ===========================================================================
 
 SSR_RingBonus:	; Routine 6
 		DisplaySprite
 		move.b	#1,(f_endactbonus).w			; set time/ring bonus HUD update flag
 
-		moveq	#btnABC,d0		; is button A, B, or C...
-		and.b	(v_jpadhold1).w,d0	; ...held?
-		beq.s	.normal			; if not, tick down score tally normally
+		moveq	#btnABC,d0				; is button A, B, or C...
+		and.b	(v_jpadhold1).w,d0			; ...held?
+		beq.s	.normal					; if not, tick down score tally normally
 
-		add.w	(v_timebonus).w,d0	; add entire remaining time bonus to d0
-		add.w	(v_ringbonus).w,d0	; add entire remaining ring bonus to d0
-		clr.w	(v_timebonus).w		; clear remaining time bonus
-		clr.w	(v_ringbonus).w		; clear remaining ring bonus
-		jsr	(AddPoints).l		; add up the points stored in d0
-		moveq	#0,d0			; set remaining bonus to 0 so that Got_AddBonus gets skipped
-		bra.s	.finished		; skip regular logic
+		add.w	(v_timebonus).w,d0			; add entire remaining time bonus to d0
+		add.w	(v_ringbonus).w,d0			; add entire remaining ring bonus to d0
+		clr.w	(v_timebonus).w				; clear remaining time bonus
+		clr.w	(v_ringbonus).w				; clear remaining ring bonus
+		jsr	(AddPoints).l				; add up the points stored in d0
+		moveq	#0,d0					; set remaining bonus to 0 so that Got_AddBonus gets skipped
+		bra.s	.finished				; skip regular logic
 
 	.normal:
 		tst.w	(v_ringbonus).w				; is any ring bonus left?
@@ -165,7 +143,7 @@ SSR_RingBonus:	; Routine 6
 		move.w	#sfx_Cash,d0				; set "ka-ching" sound
 		jsr	(QueueSound2).l				; play it
 
-		addq.b	#2,obRoutine(a0)			; set to SSR_Wait (8, before SSR_Exit A)
+		move.l	#SSR_Wait_Exit,obID(a0)			; set to SSR_Wait (8, before SSR_Exit A)
 		move.w	#90,obTimeFrame(a0)
 		;move.w	#3*60,obTimeFrame(a0)			; set post summing-up time delay to 3 seconds
 
@@ -173,7 +151,7 @@ SSR_RingBonus:	; Routine 6
 		cmpi.w	#ss_continue_rings,(v_rings).w		; do you have at least 50 rings?
 		blo.s	.return					; if not, branch
 		move.w	#1*60,obTimeFrame(a0)			; set time delay before continue animation to 1 second
-		addq.b	#4,obRoutine(a0)			; set to SSR_Wait (C, before SSR_Continue)
+		move.l	#SSR_Wait_BeforeCont,obID(a0)		; set to SSR_Wait (C, before SSR_Continue)
 	endif
 
 	; locret_C8EA:
@@ -181,18 +159,34 @@ SSR_RingBonus:	; Routine 6
 		rts						; return
 ; ===========================================================================
 
-SSR_Exit:	; Routine $A, $12
+SSR_Wait_Exit:	; Routine 8
+		subq.w	#1,obTimeFrame(a0)			; subtract 1 from time delay
+		bne.s	.display				; if time remains, branch
+		clr.w	obTimeFrame(a0)
 		move.w	#1,(f_restart).w			; signal to SS_NormalExit that it should exit
+
+	.display:
 		DisplaySprite
-		rts				; keep displaying cards during fade-out
+		rts						; display card sprites
+; ===========================================================================
+
+SSR_Wait_BeforeCont:	; Routine 8, $C, $10
+		subq.w	#1,obTimeFrame(a0)			; subtract 1 from time delay
+		bne.s	.display				; if time remains, branch
+		clr.w	obTimeFrame(a0)
+		move.l	#SSR_Continue,obID(a0)
+
+	.display:
+		DisplaySprite
+		rts						; display card sprites
 ; ===========================================================================
 
 SSR_Continue:	; Routine $E
 		move.b	#4,(v_ssrescontinue+obFrame).w		; set Continue tally to frame ID (show mini-Sonic)
-		move.b	#$14,(v_ssrescontinue+obRoutine).w	; set Continue tally it to SSR_ContAni
+		move.l	#SSR_ContAni,(v_ssrescontinue+obID).w	; set Continue tally it to SSR_ContAni
 		move.w	#sfx_Continue,d0			; set continue jingle
 		jsr	(QueueSound2).l				; play it
-		addq.b	#2,obRoutine(a0)			; set to SSR_Wait (10, before SSR_Exit 12)
+		move.l	#SSR_Wait_Exit,obID(a0)		; set to SSR_Wait (10, before SSR_Exit 12)
 		move.w	#6*60,obTimeFrame(a0)			; set time delay to exit after continue animation to 6 seconds
 		DisplaySprite
 		rts				; keep displaying sprite
@@ -215,7 +209,6 @@ SSR_ContAni:	; Routine $14
 ; SSR title card element setup data. Format:
 ; - start X-position, target X-position
 ; - Y-position
-; - base routine number
 ; - frame ID
 ; ---------------------------------------------------------------------------
 ; SSR_Config:
@@ -223,32 +216,27 @@ SSR_ItemData:
 		; Header text
 		dc.w $020, $120
 		dc.w $C4
-		dc.b 2
-		dc.b 0	; dynamic frame ID (see SSR_Loop)
+		dc.w 0	; dynamic frame ID (see SSR_Loop)
 
 		; Score tally
 		dc.w $320, $120
 		dc.w $118
-		dc.b 2
-		dc.b 1
+		dc.w 1
 
 		; Ring Bonus tally
 		dc.w $360, $120
 		dc.w $128
-		dc.b 2
-		dc.b 2
+		dc.w 2
 
 		; Blue oval
 		dc.w $1EC, $11C
 		dc.w $C4
-		dc.b 2
-		dc.b 3
+		dc.w 3
 
 		; Continue tally
 		dc.w $3A0, $120
 		dc.w $138
-		dc.b 2
-		dc.b 6
+		dc.w 6
 ; ===========================================================================
 
 
@@ -256,16 +244,6 @@ SSR_ItemData:
 ; ---------------------------------------------------------------------------
 ; Object 7F - Chaos Emeralds from the Special Stage results screen
 ; ---------------------------------------------------------------------------
-
-SSRChaos:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	SSRC_Index(pc,d0.w),d1
-		jmp	SSRC_Index(pc,d1.w)
-; ===========================================================================
-SSRC_Index:	dc.w SSRC_Main-SSRC_Index
-		dc.w SSRC_Flash-SSRC_Index
-; ===========================================================================
 
 ; --- X-positions for Chaos Emeralds in order of collection ---
 ; These values are pseudo-interlaced instead of going left-to-right,
@@ -282,7 +260,7 @@ SSRC_PosData:	dc.w $110 ; 1st
 	endif
 ; ===========================================================================
 
-SSRC_Main:	; Routine 0
+SSRChaos:
 		movea.l	a0,a1					; set this root object to become the first emerald
 
 		lea	(SSRC_PosData).l,a2			; load emerald X-position data
@@ -293,7 +271,7 @@ SSRC_Main:	; Routine 0
 		bcs.w	DeleteObject				; if you have no emeralds, delete emerald object
 
 SSRC_Loop:
-		move.l	#SSRChaos,obID(a1)			; load next chaos emerald object
+		move.l	#SSRC_Flash,obID(a1)			; load next chaos emerald object
 		move.w	(a2)+,obX(a1)				; get next x-position from SSRC_PosData
 		move.w	#$F0,obY(a1)				; set fixed y-position
 
@@ -303,7 +281,6 @@ SSRC_Loop:
 		move.b	d3,obAnim(a1)				; set that emerald's animation
 		addq.b	#1,d2					; go to next entry in v_emldlist
 
-		addq.b	#2,obRoutine(a1)			; set to SSRC_Flash
 		move.l	#Map_SSRC,obMap(a1)			; set mappings
 		move.w	#ArtTile_SS_Results_Emeralds|Tile_Prio,obGfx(a1) ; set art tile and sprite priority flag
 		move.b	#sprite_cam_screen,obRender(a1)		; set to screen-positioned sprite mode

@@ -119,38 +119,25 @@ Buzz_Action_Move:
 ; ---------------------------------------------------------------------------
 ; Object 23 - Missile launched by Buzz Bomber and wall Newtron badniks
 ; ---------------------------------------------------------------------------
-
-Missile:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Msl_Index(pc,d0.w),d1
-		jmp	Msl_Index(pc,d1.w)
-; ===========================================================================
-Msl_Index:	dc.w Msl_Main-Msl_Index		; 0
-		dc.w Msl_Animate-Msl_Index	; 2
-		dc.w Msl_FromBuzz-Msl_Index	; 4
-		dc.w Msl_Delete-Msl_Index	; 6
-		dc.w Msl_FromNewt-Msl_Index	; 8
-
 msl_timedelay:	equ objoff_32	; delay before loading missile (Buzz Bomber missile only)
 msl_parent:	equ objoff_3C	; parent object (Buzz Bomber missile only)
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Msl_Main:	; Routine 0
+Missile:
 		subq.w	#1,msl_timedelay(a0)			; decrement delay before loading missile
-		bpl.s	Msl_ChkCancel				; if time remains, check if parent has been destroyed to cancel it
+		bpl.w	Msl_ChkCancel				; if time remains, check if parent has been destroyed to cancel it
 
-		addq.b	#2,obRoutine(a0)			; advance to Msl_Animate
+		move.l	#Msl_Animate,obID(a0)			; advance to Msl_Animate
 		move.l	#Map_Missile,obMap(a0)			; set mappings
 		move.w	#ArtTile_Buzz_Bomber|Tile_Pal2,obGfx(a0) ; set art tile and palette line
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)		; set sprite priority
 		move.b	#16/2,obActWid(a0)			; set sprite display width
 		andi.b	#3,obStatus(a0)				; clear status flags except X/Y-flip flags
 
 		tst.b	obSubtype(a0)				; was object created by a Newtron?
 		beq.s	Msl_Animate				; if not, branch
-		move.b	#8,obRoutine(a0)			; set to Msl_FromNewt
+		move.l	#Msl_FromNewt,obID(a0)			; set to Msl_FromNewt
 		move.b	#col_12x12|col_hurt,obColType(a0)	; set ReactToItem entry to $87 (damaging, 12x12)
 		move.b	#1,obAnim(a0)				; set animation directly to ".missile"
 		bra.w	Msl_FromNewt_Animate			; branch to animate and move missile
@@ -164,8 +151,15 @@ Msl_Animate:	; Routine 2
 	.display:
 		lea	(Ani_Missile).l,a1			; load animation script
 		bsr.w	AnimateSprite				; animate missile (animation 0 ".flare" will advance obRoutine once it's finished)
+		tst.b	obRoutine(a0)
+		bne.s	.next
 		DisplaySprite
 		rts				; display missile sprite
+
+.next:
+		clr.b	obRoutine(a0)
+		move.l	#Msl_FromBuzz,obID(a0)
+		bra.s	Msl_FromBuzz
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

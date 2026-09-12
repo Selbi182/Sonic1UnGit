@@ -2,30 +2,11 @@
 ; ---------------------------------------------------------------------------
 ; Object 3A - "SONIC HAS PASSED" title card
 ; ---------------------------------------------------------------------------
-
-GotThroughCard:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Got_Index(pc,d0.w),d1
-		jmp	Got_Index(pc,d1.w)
-; ===========================================================================
-Got_Index:	dc.w Got_ChkPLC-Got_Index		; 0
-		dc.w Got_MoveIn-Got_Index		; 2
-		dc.w Got_Wait_Skippable-Got_Index	; 4
-		dc.w Got_Bonus-Got_Index		; 6
-		dc.w Got_Wait-Got_Index			; 8
-		dc.w Got_NextLevel-Got_Index		; A
-
-		; SBZ2 post-level cutscene:
-		dc.w Got_Wait-Got_Index			; C
-		dc.w Got_SBZ2_MoveOut-Got_Index		; E
-		dc.w Got_SBZ2_Boundary-Got_Index	; 10
-
 got_mainX:	equ	objoff_30	; target X-position for card while moving in
 got_finalX:	equ	objoff_32	; target X-position for card while moving out (SBZ2 cutscene only)
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Got_ChkPLC:	; Routine 0
+GotThroughCard:
 		tst.l	(v_plc_buffer).w			; have title card patterns in PLC finished decompressing?
 		beq.s	Got_Main				; if yes, branch
 		rts						; otherwise, wait until PLC queue is empty
@@ -38,13 +19,12 @@ Got_Main:
 		moveq	#7-1,d1					; set to affect all seven end-of-level card objects
 
 Got_Loop:
-		move.l	#GotThroughCard,obID(a1)		; load next end-of-level title card element
+		move.l	#Got_MoveIn,obID(a1)			; load next end-of-level title card element
 		move.w	(a2),obX(a1)				; load start x-position
 		move.w	(a2)+,got_finalX(a1)			; load finish x-position (same as start)
 		move.w	(a2)+,got_mainX(a1)			; load main x-position
 		move.w	(a2)+,obY(a1)				; load y-position
-		move.b	(a2)+,obRoutine(a1)			; load routine number
-		move.b	(a2)+,d0				; load frame ID
+		move.w	(a2)+,d0				; load frame ID
 
 		cmpi.b	#6,d0					; is this the act 1/2/3 element?
 		bne.s	.setFrame				; if not, branch
@@ -98,36 +78,35 @@ Got_MoveIn:
 ; ===========================================================================
 
 	.startSBZ2Cutscene:
-		move.b	#$E,obRoutine(a0)			; set to Got_SBZ2_MoveOut
+		move.l	#Got_SBZ2_MoveOut,obID(a0)		; set to Got_SBZ2_MoveOut
 		bra.w	Got_SBZ2_MoveOut			; go there
 ; ===========================================================================
 
 	; loc_C61A:
 	.reachedXTarget:
-		cmpi.b	#$E,(v_endcardring+obRoutine).w		; is post-SBZ2 cutscene meant to start?
+		cmpi.l	#Got_SBZ2_MoveOut,(v_endcardring+obID).w ; is post-SBZ2 cutscene meant to start?
 		beq.s	.startSBZ2Cutscene			; if yes, branch
 
 		cmpi.b	#4,obFrame(a0)				; is this the ring bonus element? (only one element can control)
 		bne.s	.checkOffScreen				; if not, branch
-		addq.b	#2,obRoutine(a0)			; set to Got_Wait (4)
+		move.l	#Got_Wait_Skippable,obID(a0)		; set to Got_Wait (4)
 		move.w	#3*60,obTimeFrame(a0)			; set time delay before tally to 3 seconds
 		move.w	#bgm_GotThrough,d0
-		jsr	(QueueSound2).l	; play "Sonic got through" music
+		jsr	(QueueSound2).l				; play "Sonic got through" music
 ; ---------------------------------------------------------------------------
 
 Got_Wait_Skippable:	; Routine 4, 8, $C
 		moveq	#btnABC,d0		; is button A, B, or C...
 		and.b	(v_jpadhold1).w,d0	; ...held?
-		bne.s	Got_Wait_skip
+		bne.s	.Got_Wait_skip
 
-Got_Wait:	; Routine 4, 8, $C
 		subq.w	#1,obTimeFrame(a0)			; subtract 1 from time delay
-		bne.s	Got_Wait_Display
-	Got_Wait_skip:
+		bne.s	.Got_Wait_Display
+	.Got_Wait_skip:
 		clr.w	obTimeFrame(a0)
-		addq.b	#2,obRoutine(a0)			; advance to whatever the next routine is
+		move.l	#Got_Bonus,obID(a0)
 
-	Got_Wait_Display:
+	.Got_Wait_Display:
 		DisplaySprite
 		rts				; display card sprites
 ; ===========================================================================
@@ -174,10 +153,10 @@ Got_Bonus:	; Routine 6
 		move.w	#sfx_Cash,d0				; set "ka-ching" sound
 		jsr	(QueueSound2).l				; play it
 
-		addq.b	#2,obRoutine(a0)			; set to Got_Wait (8, before Got_NextLevel)
+		move.l	#Got_Wait_BeforeNextLevel,obID(a0)
 		cmpi.w	#id_SBZ_act2,(v_zone_act).w		; is level SBZ2?
 		bne.s	.setPostDelay				; if not, branch
-		addq.b	#4,obRoutine(a0)			; set to Got_Wait (C, before Got_SBZ2_MoveOut)
+		move.l	#Got_Wait_BeforeSBZ2,obID(a0)
 
 	; Got_SetDelay:
 	.setPostDelay:
@@ -197,6 +176,17 @@ Got_Bonus:	; Routine 6
 		bne.s	.return					; on other frames, branch
 		move.w	#sfx_Switch,d0				; set "blip" sound
 		jmp	(QueueSound2).l				; play it
+; ===========================================================================
+
+Got_Wait_BeforeNextLevel:
+		subq.w	#1,obTimeFrame(a0)			; subtract 1 from time delay
+		bne.s	.display
+		clr.w	obTimeFrame(a0)
+		move.l	#Got_NextLevel,obID(a0)
+
+	.display:
+		DisplaySprite
+		rts						; display card sprites
 ; ===========================================================================
 
 Got_NextLevel:	; Routine $A
@@ -251,6 +241,17 @@ LevelOrder:
 ; Scrap Brain Zone act 2 post-level cutscene start
 ; ---------------------------------------------------------------------------
 
+Got_Wait_BeforeSBZ2:
+		subq.w	#1,obTimeFrame(a0)			; subtract 1 from time delay
+		bne.s	.display
+		clr.w	obTimeFrame(a0)
+		move.l	#Got_SBZ2_MoveOut,obID(a0)
+
+	.display:
+		DisplaySprite
+		rts						; display card sprites
+; ===========================================================================
+
 ; Got_Move2: Got_MoveBack:
 Got_SBZ2_MoveOut: ; Routine $E
 		move.w	card_mainX(a0),d1			; get target moving-in X-position
@@ -285,7 +286,7 @@ Got_SBZ2_MoveOut: ; Routine $E
 		cmpi.b	#4,obFrame(a0)				; is this the ring bonus element? (use ring bonus to control cutscene)
 		bne.w	DeleteObject				; if not, delete card element immediately
 
-		addq.b	#2,obRoutine(a0)			; set to Got_SBZ2_Boundary
+		move.l	#Got_SBZ2_Boundary,obID(a0)		; set to Got_SBZ2_Boundary
 		clr.b	(f_lockctrl).w				; unlock controls
 		move.w	#bgm_FZ,d0				; set FZ music
 		jmp	(QueueSound1).l				; play it
@@ -305,7 +306,6 @@ Got_SBZ2_Boundary: ; Routine $10
 ; End title card element setup data. Format:
 ; - start X-position, target X-position
 ; - Y-position
-; - base routine number
 ; - frame ID
 ; ---------------------------------------------------------------------------
 ; Got_Config:
@@ -313,42 +313,35 @@ Got_ItemData:
 		; "SONIC HAS"
 		dc.w $004, $124
 		dc.w $BC
-		dc.b 2
-		dc.b 0
+		dc.w 0
 
 		; "PASSED"
 		dc.w -$120, $120
 		dc.w $D0
-		dc.b 2
-		dc.b 1
+		dc.w 1
 
 		; "ACT" 1/2/3
 		dc.w $40C, $14C
 		dc.w $D6
-		dc.b 2
-		dc.b 6	; dynamic frame ID (see Got_Loop)
+		dc.w 6	; dynamic frame ID (see Got_Loop)
 
 		; Score tally
 		dc.w $520, $120
 		dc.w $126
-		dc.b 2
-		dc.b 2
+		dc.w 2
 
 		; Time Bonus tally
 		dc.w $540, $120
 		dc.w $F6
-		dc.b 2
-		dc.b 3
+		dc.w 3
 
 		; Ring Bonus tally
 		dc.w $560, $120
 		dc.w $106
-		dc.b 2
-		dc.b 4
+		dc.w 4
 
 		; Blue oval
 		dc.w $20C, $14C
 		dc.w $CC
-		dc.b 2
-		dc.b 5
+		dc.w 5
 ; ===========================================================================
