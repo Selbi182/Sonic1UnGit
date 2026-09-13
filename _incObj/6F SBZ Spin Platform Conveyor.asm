@@ -2,40 +2,11 @@
 ; ---------------------------------------------------------------------------
 ; Object 6F - spinning platforms that move around a conveyor belt (SBZ)
 ; 
-; Note: this is pretty much an edited copy-paste of Object 63 (LZ conveyor)!
-; ---------------------------------------------------------------------------
-
-SpinConvey:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	SpinC_Index(pc,d0.w),d1
-		jsr	SpinC_Index(pc,d1.w)
-
-		out_of_range.s	.outOfRange,spinc_baseX(a0)	; has platform gone out of range? if yes, branch
-
-	.display:
-		DisplaySprite
-		rts			; display platform object
-; ---------------------------------------------------------------------------
-
-.outOfRange:
-		move.b	spinc_groupid(a0),d0			; get initial group ID
-		bpl.s	.delete					; if this isn't the spawner object, just delete platform
-		andi.w	#$7F,d0					; mask out spawner bit 7
-		lea	(v_obj63).w,a2				; load flags storing the "conveyor group loaded" states per set
-		bclr	#0,(a2,d0.w)				; clear flag that this group had been loaded to allow reloading it
-
-	.delete:
-		jmp	(DeleteObject).l			; delete spawner or platform object
-
-; ===========================================================================
-SpinC_Index:	dc.w SpinC_Main-SpinC_Index
-		dc.w SpinC_Solid-SpinC_Index
-
 ; Note: This entire object is pretty much a modified copy-paste job of
 ; the LZ conveyor belt (Object 63), even calling some of its subroutines.
 ; As such not only are all its SSTs reused, some of them also MUST stay
 ; the same to function properly!
+; ---------------------------------------------------------------------------
 spinc_groupid:		equ objoff_33	; copy of obSubtype from the initial group spawner
 spinc_baseX:		equ objoff_30	; initial X-position for entire group (roughly in the center)
 spinc_nextX:		equ lcon_nextX	; next target X-position (=objoff_34)
@@ -44,19 +15,19 @@ spinc_posindex:		equ objoff_38	; index of next corner
 spinc_count:		equ objoff_39	; number of entries in group (multiplied by 4)
 spinc_increment:	equ objoff_3A	; value to increment to next entry in group (+4 or -4)
 spinc_targetdata:	equ objoff_3C	; pointer to corner data for group
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-SpinC_Main:	; Routine 0
+SpinConvey:
 		move.b	obSubtype(a0),d0			; is this the initial spawner object?
 		bmi.w	SpinC_Main_Spawner			; if yes, branch
 
 		; Object is a platform (from custom objpos data)
-		addq.b	#2,obRoutine(a0)			; advance to SpinC_Solid
+		move.l	#SpinC_Solid,obID(a0)			; advance to SpinC_Solid
 		move.l	#Map_Spin,obMap(a0)			; set mappings
 		move.w	#ArtTile_SBZ_Spinning_Platform,obGfx(a0) ; set art tile
 		move.b	#32/2,obActWid(a0)			; set sprite display width
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 
 		moveq	#0,d0					; clear d0
 		move.b	obSubtype(a0),d0			; get subtype of platform (stored in custom objpos data)
@@ -94,7 +65,6 @@ SpinC_Main_Spawner:
 		lea	(v_obj63).w,a2				; load flags storing the "conveyor group loaded" states per set
 		bset	#0,(a2,d0.w)				; set flag that this conveyor group has been loaded
 		beq.s	.spawn					; if it wasn't already set, branch
-		addq.l	#4,sp					; skip returning to "SpinConvey"
 		jmp	(DeleteObject).l			; delete spawner object
 ; ---------------------------------------------------------------------------
 
@@ -114,7 +84,6 @@ SpinC_Main_Spawner:
 
 	; SpinC_LoadPform:
 	.makePlatform:
-		; Note: obRoutine is implicitly left at 0, so all platforms will run through SpinC_Main again!
 		move.l	#SpinConvey,obID(a1)			; load SBZ conveyor platform object
 		move.w	(a2)+,obX(a1)				; get next X-position
 		move.w	(a2)+,obY(a1)				; get next Y-position
@@ -125,21 +94,41 @@ SpinC_Main_Spawner:
 	.next:
 		dbf	d1,.loopMakePlatforms			; loop for number of platforms in objpos data
 
-		addq.l	#4,sp					; skip returning to "SpinConvey"
 		rts						; exit object
+; ===========================================================================
+
+SpinC_Delete:
+		move.b	spinc_groupid(a0),d0			; get initial group ID
+		bpl.s	.delete					; if this isn't the spawner object, just delete platform
+		andi.w	#$7F,d0					; mask out spawner bit 7
+		lea	(v_obj63).w,a2				; load flags storing the "conveyor group loaded" states per set
+		bclr	#0,(a2,d0.w)				; clear flag that this group had been loaded to allow reloading it
+
+	.delete:
+		jmp	(DeleteObject).l			; delete spawner or platform object
 ; ===========================================================================
 
 ; Unlike its copy-pasted original Object 63 (LZ conveyor belt platforms),
 ; the SBZ conveyor platforms are solid from ALL sides, not just from above.
 
 SpinC_Solid:	; Routine 2
+		out_of_range.s	SpinC_Delete,spinc_baseX(a0)	; has platform gone out of range? if yes, branch
+
 		lea	(Ani_SpinConvey).l,a1			; load animation scripts for spinning SBZ platforms
 		jsr	(AnimateSprite).l			; advance animation
-		tst.b	obFrame(a0)				; is new frame = 0? (platform upright)
-		bne.s	.spinning				; if not, make platform non-solid
+		DisplaySprite
 
+		; Originally, the platforms would be solid on upright frames even during the spinning animation,
+		; which was kinda wonky. But who knows, maybe that was the original intention. Either way, here
+		; I've changed it to specifically check for the animation ID so it's always non-solid during spins.
+		tst.b	obAnim(a0)				; is platform set to spinning animation? (0 = spinning, 1 = still)
+		beq.s	SpinC_Solid_Spinning			; if yes, make platform non-solid
+	;	tst.b	obFrame(a0)				; is new frame = 0? (platform upright)
+	;	bne.s	SpinC_Solid_Spinning			; if not, make platform non-solid
+
+SpinC_Solid_Still:
 		move.w	obX(a0),-(sp)				; backup previous X-position before calling SpinC_Platform_Update
-		bsr.w	SpinC_Platform_Update			; update platform target movement, if necessary
+		bsr.s	SpinC_Platform_Update			; update platform target movement, if necessary
 		move.w	#32/2+sonic_solid_width,d1		; set platform collision width plus Sonic's own collision width
 		move.w	#14/2,d2				; set platform collision height (initial)
 		move.w	d2,d3					; set platform collision height (stood-on)
@@ -148,7 +137,7 @@ SpinC_Solid:	; Routine 2
 		jmp	(SolidObject).l				; make platform solid
 ; ---------------------------------------------------------------------------
 
-.spinning:
+SpinC_Solid_Spinning:
 		btst	#3,obStatus(a0)				; was Sonic on platform as it started spinning?
 		beq.s	SpinC_Platform_Update			; if not, branch
 		lea	(v_player).w,a1				; load Sonic player object

@@ -2,27 +2,6 @@
 ; ---------------------------------------------------------------------------
 ; Object 30 - large green glass pillars (MZ)
 ; ---------------------------------------------------------------------------
-
-GlassBlock:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Glass_Index(pc,d0.w),d1
-		jsr	Glass_Index(pc,d1.w)
-
-		out_of_range.w	.delete
-		DisplaySprite
-		rts
-
-	.delete:
-		bra.w	DeleteObject
-
-; ===========================================================================
-Glass_Index:	dc.w Glass_Main-Glass_Index			; 0
-		dc.w Glass_Pillar_UpDown-Glass_Index		; 2
-		dc.w Glass_Sheen_UpDown-Glass_Index		; 4
-		dc.w Glass_Pillar_Triggered-Glass_Index		; 6
-		dc.w Glass_Sheen_Triggered-Glass_Index		; 8
-
 glass_origY:		equ objoff_30	; initial Y-position (can be changed)
 glass_distanceY:	equ objoff_32	; Y-distance pillar can move down from origin, stops at 0
 glass_switch_flag:	equ objoff_34	; subtype 4 (switch pillar) set to 1 if switch was pressed
@@ -33,15 +12,19 @@ glass_stomp_delay:	equ objoff_38	; frames to delay moving down after stomp
 glass_parent:		equ objoff_3C	; address of parent object
 ; ===========================================================================
 
-; routine, y-axis dist (unused), frame num
-Glass_Vars1:	dc.b 2,	0, 0	; tall block
-		dc.b 4,	0, 1	; shine
+; routine, frame num
+Glass_Vars1:	dc.l Glass_Pillar_UpDown
+		dc.w 0	; tall block
+		dc.l Glass_Sheen_UpDown
+		dc.w 1	; shine
 
-Glass_Vars2:	dc.b 6,	0, 2	; short block
-		dc.b 8,	0, 1	; shine
+Glass_Vars2:	dc.l Glass_Pillar_Triggered
+		dc.w 2	; short block
+		dc.l Glass_Sheen_Triggered
+		dc.w 1	; shine
 ; ===========================================================================
 
-Glass_Main:	; Routine 0
+GlassBlock:
 		lea	(Glass_Vars1).l,a2			; use default values (tall pillar)
 		moveq	#2-1,d1					; spawn two objects
 		move.b	#144/2,obHeight(a0)			; set object height
@@ -62,14 +45,10 @@ Glass_Main:	; Routine 0
 		bne.s	.finalizePillar				; if object RAM is full, branch
 
 	.makePillar:
-		move.b	(a2)+,obRoutine(a1)			; set routine for object (2/4/6/8)
-		move.l	#GlassBlock,obID(a1)			; load another glass block object
+		move.l	(a2)+,obID(a1)				; set routine for object (2/4/6/8)
 
 		move.w	obX(a0),obX(a1)				; copy X-position from parent
-		move.b	(a2)+,d0				; get relative Y-offset (this is always 0)
-		ext.w	d0					; extend to word
-		add.w	obY(a0),d0				; add base Y-position
-		move.w	d0,obY(a1)				; set adjusted Y-position
+		move.w	obY(a0),obY(a1)				; copy Y-position from parent
 
 		move.l	#Map_Glass,obMap(a1)			; set mappings
 		move.w	#ArtTile_MZ_Glass_Pillar|Tile_Pal3|Tile_Prio,obGfx(a1) ; set art tile, palette line, and high-priority flag
@@ -77,13 +56,14 @@ Glass_Main:	; Routine 0
 		move.w	obY(a1),glass_origY(a1)			; remember initial Y-position
 		move.b	obSubtype(a0),obSubtype(a1)		; copy subtype from parent
 		move.b	#64/2,obActWid(a1)			; set sprite display width for pillar
-		move.w	#spr_prio4,obPriority(a1)			; set sprite priority for pillar
-		move.b	(a2)+,obFrame(a1)			; load frame number (0/1/2)
+		move.w	#spr_prio4,obPriority(a1)		; set sprite priority for pillar
+		move.w	(a2)+,d0
+		move.b	d0,obFrame(a1)				; load frame number (0/1/2)
 		move.l	a0,glass_parent(a1)			; remember parent object
 		dbf	d1,.loop				; repeat once to load "reflection object"
 
 		move.b	#32/2,obActWid(a1)			; use smaller sprite display width for shine
-		move.w	#spr_prio3,obPriority(a1)			; use higher sprite priority for shine
+		move.w	#spr_prio3,obPriority(a1)		; use higher sprite priority for shine
 		addq.b	#1<<3,obSubtype(a1)			; add 8 to sheen subtype to treat it separately in Glass_Types
 		andi.b	#$F,obSubtype(a1)			; clear upper digit in sheen subtype (used for switch)
 
@@ -100,7 +80,8 @@ Glass_Pillar_UpDown: ; Routine 2
 		move.w	#144/2,d2				; collision height (initial)
 		move.w	#146/2,d3				; collision height (stood-on)
 		move.w	obX(a0),d4				; collision X-position (stood-on)
-		bra.w	SolidObject				; make glass pillar solid
+		bsr.w	SolidObject				; make glass pillar solid
+		bra.s	Glass_ChkDel
 ; ===========================================================================
 
 ; Glass_Reflect012:
@@ -108,7 +89,8 @@ Glass_Sheen_UpDown: ; Routine 4
 		movea.l	glass_parent(a0),a1			; load parent glass pillar object
 		move.w	glass_distanceY(a1),glass_distanceY(a0)	; copy parent's Y-distance
 
-		bra.w	Glass_Types				; handle sheen behavior
+		bsr.w	Glass_Types				; handle sheen behavior
+		bra.s	Glass_ChkDel
 ; ===========================================================================
 
 ; Glass_Block34:
@@ -119,7 +101,8 @@ Glass_Pillar_Triggered: ; Routine 6
 		move.w	#112/2,d2				; collision height (initial)
 		move.w	#114/2,d3				; collision height (stood-on)
 		move.w	obX(a0),d4				; collision X-position (stood-on)
-		bra.w	SolidObject				; make glass pillar solid
+		bsr.w	SolidObject				; make glass pillar solid
+		bra.s	Glass_ChkDel
 ; ===========================================================================
 
 ; Glass_Reflect34:
@@ -127,8 +110,17 @@ Glass_Sheen_Triggered: ; Routine 8
 		movea.l	glass_parent(a0),a1			; load parent glass pillar object
 		move.w	glass_distanceY(a1),glass_distanceY(a0)	; copy parent's Y-distance
 		move.w	obY(a1),glass_origY(a0)			; copy parent's Y-position for Y-origin
+		bsr.s	Glass_Types				; handle sheen behavior
+		; continue to Glass_ChkDel
+; ===========================================================================
 
-		bra.w	Glass_Types				; handle sheen behavior
+Glass_ChkDel:
+		out_of_range_with_y_check.s	.delete,obX(a0),glass_origY(a0)
+		DisplaySprite
+		rts
+	.delete:
+		bra.w	DeleteObject
+
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

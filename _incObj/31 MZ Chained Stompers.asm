@@ -2,19 +2,6 @@
 ; ---------------------------------------------------------------------------
 ; Object 31 - stomping metal blocks on chains (MZ)
 ; ---------------------------------------------------------------------------
-
-ChainStomp:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	CStom_Index(pc,d0.w),d1
-		jmp	CStom_Index(pc,d1.w)
-; ===========================================================================
-CStom_Index:	dc.w CStom_Main-CStom_Index		; 0
-		dc.w CStom_MainBlock-CStom_Index	; 2
-		dc.w CStom_Spikes-CStom_Index		; 4
-		dc.w CStom_Ceiling-CStom_Index		; 6
-		dc.w CStom_Chain-CStom_Index		; 8
-
 cstom_origY:	equ objoff_30		; initial Y-position
 cstom_current:	equ objoff_32		; current distance the stomper is extended
 cstom_length:	equ objoff_34		; maximum distance the stomper can be extended (set from CStom_Lengths)
@@ -29,10 +16,17 @@ CStom_SwchNums:	; switch number, obj number
 		dc.b 1, 0	; $81 - unused
 
 CStom_Var:	; routine, relative y-pos, frame
-		dc.b 2,   0, 0	; Block
-		dc.b 4, $1C, 1	; Spikes
-		dc.b 8, $CC, 3	; Chain
-		dc.b 6, $F0, 2	; Base attached to ceiling
+		dc.l CStom_MainBlock
+		dc.b 0, 0	; Block
+
+		dc.l CStom_Spikes
+		dc.b $1C, 1	; Spikes
+
+		dc.l CStom_Chain
+		dc.b $CC, 3	; Chain
+
+		dc.l CStom_Ceiling
+		dc.b $F0, 2	; Base attached to ceiling
 
 CStom_Lengths:	; chain lengths
 		dc.w $7000	; $x0
@@ -44,7 +38,7 @@ CStom_Lengths:	; chain lengths
 		dc.w $B800	; $x6
 ; ===========================================================================
 
-CStom_Main:	; Routine 0
+ChainStomp:
 		moveq	#0,d0					; clear d0
 		move.b	obSubtype(a0),d0			; get stomper subtype
 		bpl.s	.loadChainLength			; if it's not switch-activated, branch (bit 7 clear)
@@ -77,8 +71,7 @@ CStom_Main:	; Routine 0
 		bne.w	.setupMainBlock				; if object RAM is full, branch
 
 	.makeStomper:
-		move.b	(a2)+,obRoutine(a1)			; load routine for object
-		move.l	#ChainStomp,obID(a1)			; create stomper object
+		move.l	(a2)+,obID(a1)				; load routine for object
 		move.w	obX(a0),obX(a1)				; copy X-position from parent
 		move.b	(a2)+,d0				; load relative Y-position for object
 		ext.w	d0					; make word-sized
@@ -92,7 +85,7 @@ CStom_Main:	; Routine 0
 		move.b	obSubtype(a0),obSubtype(a1)		; copy subtype from parent
 		move.b	#32/2,obActWid(a1)			; set sprite display width
 		move.w	d2,cstom_length(a1)			; write stomper length fetched from CStom_Lengths
-		move.w	#spr_prio4,obPriority(a1)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a1)		; set sprite priority
 		move.b	(a2)+,obFrame(a1)			; set frame ID (0-3)
 
 		cmpi.b	#1,obFrame(a1)				; are we spawning the spikes object?
@@ -109,7 +102,7 @@ CStom_Main:	; Routine 0
 		move.l	a0,cstom_parent(a1)			; remember parent object (block)
 		dbf	d1,.loopMakeStomper			; repeat sequence 3 more times
 
-		move.w	#spr_prio3,obPriority(a1)			; make base at the ceiling higher priority
+		move.w	#spr_prio3,obPriority(a1)		; make base at the ceiling higher priority
 
 .setupMainBlock:
 		moveq	#0,d0					; clear d0
@@ -176,7 +169,7 @@ CStom_Ceiling:	; Routine 6
 CStom_ChkDel:
 		out_of_range.w	DeleteObject			; has object gone out of range? if yes, delete it
 		DisplaySprite
-		rts				; display sprite
+		rts						; display sprite
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

@@ -2,43 +2,6 @@
 ; ---------------------------------------------------------------------------
 ; Object 63 - platforms on a conveyor belt (LZ)
 ; ---------------------------------------------------------------------------
-
-LabyrinthConvey:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	LCon_Index(pc,d0.w),d1
-		jsr	LCon_Index(pc,d1.w)
-
-		out_of_range.s	.outOfRange,lcon_baseX(a0)	; has platform object gone out of range? if yes, branch
-
-	.display:
-		DisplaySprite
-		rts				; display platform object
-; ---------------------------------------------------------------------------
-
-.outOfRange:
-		; This check prevents conveyor platforms specifically in LZ3 from despawning
-		; after crossing one coarse X-position ($80 pixels) beyond the left edge of
-		; the normal range, which fixes a pop-in bug for the wide platform group 4.
-		cmpi.b	#act3,(v_act).w				; are we in act 3?
-		bne.s	.delete					; if not, branch
-		cmpi.w	#$FF80,d0				; has it BARELY gone out of range? (d0 is result from out_of_range)
-		bhs.s	.display				; if yes, don't delete platform just yet
-
-	.delete:
-		move.b	lcon_groupid(a0),d0			; get initial group ID
-		bpl.w	DeleteObject				; if this isn't the spawner object, just delete platform
-		andi.w	#$7F,d0					; mask out spawner bit 7
-		lea	(v_obj63).w,a2				; load flags storing the "conveyor group loaded" states per set
-		bclr	#0,(a2,d0.w)				; clear flag that this group had been loaded to allow reloading it
-		bra.w	DeleteObject				; delete spawner object
-
-; ===========================================================================
-LCon_Index:	dc.w LCon_Main-LCon_Index		; 0
-		dc.w LCon_Platform-LCon_Index		; 2
-		dc.w LCon_OnPlatform-LCon_Index		; 4
-		dc.w LCon_Wheel-LCon_Index		; 6
-
 lcon_groupid:	equ objoff_33	; copy of obSubtype from the initial group spawner
 lcon_baseX:	equ objoff_30	; base X-position for entire group (roughly in the center)
 lcon_nextX:	equ objoff_34	; next target X-position for platform
@@ -48,25 +11,25 @@ lcon_count:	equ objoff_39	; number of entries in group (multiplied by 4)
 lcon_increment:	equ objoff_3A	; value to increment to next entry in group (+4 or -4)
 lcon_reversed:	equ objoff_3B	; flag set if conveyor direction is currently reversed
 lcon_targetdata:equ objoff_3C	; pointer to corner data for group
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-LCon_Main:	; Routine 0
+LabyrinthConvey:
 		move.b	obSubtype(a0),d0			; is this the initial spawner object?
 		bmi.w	LCon_Main_Spawner			; if yes, branch
 
 		; Object is a platform (from custom objpos data) or a decorative wheel (from normal objpos data)
-		addq.b	#2,obRoutine(a0)			; advance to LCon_Platform
+		move.l	#LCon_Platform,obID(a0)			; advance to LCon_Platform
 		move.l	#Map_LConv,obMap(a0)			; set mappings
 		move.w	#ArtTile_LZ_Conveyor_Belt|Tile_Pal3,obGfx(a0) ; set art tile and palette line
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	#32/2,obActWid(a0)			; set sprite display width and platform collision width
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 
 		cmpi.b	#$7F,obSubtype(a0)			; is this the decorative wheel object?
 		bne.s	LCon_Main_Platform			; if not, branch
-		addq.b	#4,obRoutine(a0)			; advance to LCon_Wheel
+		move.l	#LCon_Wheel,obID(a0)			; advance to LCon_Wheel
 		move.w	#ArtTile_LZ_Conveyor_Belt,obGfx(a0)	; use palette line 1
-		move.w	#spr_prio1,obPriority(a0)			; set sprite priority above other conveyor objects and Sonic
+		move.w	#spr_prio1,obPriority(a0)		; set sprite priority above other conveyor objects and Sonic
 		bra.w	LCon_Wheel				; go straight to wheel logic
 ; ---------------------------------------------------------------------------
 
@@ -124,7 +87,6 @@ LCon_Main_Spawner:
 		lea	(v_obj63).w,a2				; load flags storing the "conveyor group loaded" states per set
 		bset	#0,(a2,d0.w)				; set flag that this conveyor group has been loaded
 		beq.s	.spawn					; if it wasn't already set, branch
-		addq.l	#4,sp					; skip returning to "LabyrinthConvey"
 		bra.w	DeleteObject				; delete spawner object
 ; ---------------------------------------------------------------------------
 
@@ -143,7 +105,6 @@ LCon_Main_Spawner:
 		bne.s	.next					; if object RAM is full, branch
 
 	.makePlatform:
-		; Note: obRoutine is implicitly left at 0, so all platforms will run through LCon_Main again!
 		move.l	#LabyrinthConvey,obID(a1)		; load LZ conveyor platform object
 		move.w	(a2)+,obX(a1)				; get next X-position
 		move.w	(a2)+,obY(a1)				; get next Y-position
@@ -152,7 +113,6 @@ LCon_Main_Spawner:
 	.next:
 		dbf	d1,.loopMakePlatforms			; loop for number of platforms in objpos data
 
-		addq.l	#4,sp					; skip returning to "LabyrinthConvey"
 		rts						; exit object
 ; ===========================================================================
 
@@ -160,19 +120,53 @@ LCon_Platform:	; Routine 2
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as platform solidity width
 		jsr	(PlatformObject).l			; allow Sonic entering platform (sets obRoutine = 4 (LCon_OnPlatform) on enter)
+		btst	#3,obStatus(a0)
+		beq.s	.notOn
+		move.l	#LCon_OnPlatform,obID(a0)
+	.notOn:
+		bsr.w	LCon_Platform_Update			; update platform target movement, if necessary
+; ---------------------------------------------------------------------------
 
-		bra.w	LCon_Platform_Update			; update platform target movement, if necessary
+LCon_ChkDel:
+		out_of_range.s	.outOfRange,lcon_baseX(a0)	; has platform object gone out of range? if yes, branch
+	.display:
+		DisplaySprite
+		rts						; display platform object
+
+.outOfRange:
+		; This check prevents conveyor platforms specifically in LZ3 from despawning
+		; after crossing one coarse X-position ($80 pixels) beyond the left edge of
+		; the normal range, which fixes a pop-in bug for the wide platform group 4.
+		cmpi.b	#act3,(v_act).w				; are we in act 3?
+		bne.s	.delete					; if not, branch
+		move.w	lcon_baseX(a0),d0			; get object X position
+		andi.w	#$FF80,d0				; round down to nearest $80
+		sub.w	(Camera_X_Coarse_Back).w,d0		; approx distance between object and screen
+		cmpi.w	#$FF00,d0				; has it BARELY gone out of range? (changed from $FF80 to account for extended camera)
+		bhs.s	.display				; if yes, don't delete platform just yet
+
+	.delete:
+		move.b	lcon_groupid(a0),d0			; get initial group ID
+		bpl.w	DeleteObject				; if this isn't the spawner object, just delete platform
+		andi.w	#$7F,d0					; mask out spawner bit 7
+		lea	(v_obj63).w,a2				; load flags storing the "conveyor group loaded" states per set
+		bclr	#0,(a2,d0.w)				; clear flag that this group had been loaded to allow reloading it
+		bra.w	DeleteObject				; delete spawner object
 ; ===========================================================================
 
 LCon_OnPlatform: ; Routine 4
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as platform solidity width
 		jsr	(ExitPlatform).l			; allow Sonic exiting platform (sets obRoutine = 2 (LCon_Platform) on exit)
-
+		btst	#3,obStatus(a0)
+		bne.s	.stillOn
+		move.l	#LCon_Platform,obID(a0)
+	.stillOn:
 		move.w	obX(a0),-(sp)				; backup previous X-position before calling LCon_Platform_Update
 		bsr.w	LCon_Platform_Update			; update platform target movement, if necessary
 		move.w	(sp)+,d2				; restore previous X-position as input for MvSonicOnPtfm2
-		jmp	(MvSonicOnPtfm2).l			; move Sonic with platform as it moves along conveyor belt
+		jsr	(MvSonicOnPtfm2).l			; move Sonic with platform as it moves along conveyor belt
+		bra.w	LCon_ChkDel
 ; ===========================================================================
 
 LCon_Wheel:	; Routine 6
@@ -189,8 +183,7 @@ LCon_Wheel:	; Routine 6
 		andi.b	#3,obFrame(a0)				; limit to frame IDs 0-3
 
 	.display:
-		addq.l	#4,sp					; skip returning to "LabyrinthConvey:" to avoid its custom deletion logic
-		RememberState
+		RememberStateXY
 		rts				; just display and delete the wheel sprite normally
 
 

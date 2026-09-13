@@ -109,7 +109,7 @@ But_MZBlock:
 	.findBlock:
 		tst.b	obRender(a1)				; is object on screen?
 		bpl.s	.nextObject				; if not, branch
-		cmpi.l	#PushBlock,obID(a1)			; is object a pushable green MZ block?
+		cmpi.l	#PushB_Action,obID(a1)			; is object a pushable green MZ block?
 		beq.s	.blockFound				; if yes, branch
 	; loc_BE4E:
 	.nextObject:
@@ -121,9 +121,6 @@ But_MZBlock:
 
 	.return:
 		rts						; return
-
-; ===========================================================================
-.mzBlock_sizes:	dc.b $10, $10	; x/y radius
 ; ===========================================================================
 
 ; loc_BE5E:
