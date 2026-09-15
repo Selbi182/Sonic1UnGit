@@ -558,10 +558,6 @@ VBlank_Index:	dc.w VBlank_Lag-VBlank_Index			; $00 - (lag frame)
 VBlank_Lag:
 		cmpi.b	#$80+id_Level,(v_gamemode).w		; is pre level sequence active?
 		beq.s	VBlank_Lag_Go				; if not, just update sound driver and resume operation
-		cmpi.b	#id_Level,(v_gamemode).w		; is game on a level?
-		bne.w	VBlank_Exit				; if not, just update sound driver and resume operation
-
-.isLevel:
 	if LagFrameCounter
 		addq.w	#1,(v_lagframes).w
 		bset	#7,(v_lagframes).w
@@ -579,6 +575,8 @@ VBlank_Lag:
 			rts			
 		endif
 	endif
+		cmpi.b	#id_Level,(v_gamemode).w		; is game on a level?
+		bne.w	VBlank_Exit				; if not, just update sound driver and resume operation
 
 VBlank_Lag_Go:
 		cmpi.b	#id_LZ,(v_zone).w			; is level LZ?
@@ -711,8 +709,11 @@ VBlank_SpecialStage:
 		jsr	ProcessDMAQueue(pc)
 
 		bsr.w	PalCycle_SS				; advance special stage palette cycle and animate bird/fish graphics
-
 		jsr	(SS_LoadWalls).l			; update graphics for square blocks in VRAM
+
+	if LagFrameCounter
+		jsr	(HUD_Update).l				; update HUD numbers
+	endif
 
 		tst.w	(v_generictimer).w			; is generic timer set?
 		beq.w	.end					; if not, branch
@@ -3057,6 +3058,13 @@ GM_Special:		; white fade-out from previous game mode
 	.noDebug:
 	endif
 
+	if LagFrameCounter
+		jsr	(Hud_Base).l
+		move.w	#$8000,(v_lagframes).w
+		move.b	#1,(v_draw_hud).w			; enable HUD drawing (and allow flashing)
+	endif
+
+
 		enable_display					; enable screen out-put
 		bsr.w	PaletteWhiteIn				; fade-in from white
 
@@ -3070,8 +3078,10 @@ SS_MainLoop:
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
 		move.w	(v_jpadhold1).w,(v_jpadhold2).w		; copy controller 1 inputs to Sonic player object inputs
 
-		jsr	(ExecuteObjects).l			; execute Special Stage object
-		jsr	(BuildSprites).l			; build sprites
+		lea	(v_player).w,a0
+		movea.l	obID(a0),a1
+		jsr	(a1)					; run the object's code
+
 		jsr	(SS_ShowLayout).l			; render Special Stage layout
 		bsr.w	LoadRingFrame_SS
 		bsr.w	SS_BGAnimate				; animate Special Stage background
@@ -3082,6 +3092,9 @@ SS_ChkEnd:
 ; ---------------------------------------------------------------------------
 
 		; Exiting Special Stage...
+	if LagFrameCounter
+		clr.b	(v_draw_hud).w
+	endif
 		move.b	#id_Level,(v_gamemode).w		; set screen mode to $0C (level)
 		cmpi.w	#id_FZ+1,(v_zone_act).w			; is level number higher than FZ (0502)?
 		blo.s	SS_Finish				; if not, branch

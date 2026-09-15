@@ -21,6 +21,10 @@ HUD_Update:
 		bsr.w	Hud_Write_8x8Digits_WithLeading_Alt
 
 .lagdone:
+		cmpi.b	#id_Special,(v_gamemode).w		; lag frame counter in SS?
+		bne.s	.notSS					; if not, branch
+		rts						; don't do other HUD to prevent glitching
+.notSS:
 	endif
 
 	if DebugHUDAlways

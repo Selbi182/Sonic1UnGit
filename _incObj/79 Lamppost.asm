@@ -2,32 +2,19 @@
 ; ---------------------------------------------------------------------------
 ; Object 79 - lamppost
 ; ---------------------------------------------------------------------------
-
-Lamppost:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Lamp_Index(pc,d0.w),d1
-		jsr	Lamp_Index(pc,d1.w)
-		RememberStateXY
-		rts
-; ===========================================================================
-Lamp_Index:	dc.w Lamp_Main-Lamp_Index			; 0 - init
-		dc.w Lamp_Blue-Lamp_Index			; 2 - idle, not touched
-		dc.w Lamp_Finish-Lamp_Index			; 4 - idle, touched
-		dc.w Lamp_Twirl-Lamp_Index			; 6 - twirling head on touch
-
 lamp_origX:	equ objoff_30		; original x-axis position
 lamp_origY:	equ objoff_32		; original y-axis position
 lamp_time:	equ objoff_36		; length of time to twirl the lamp
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-Lamp_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; advance to Lamp_Blue
+Lamppost:
+		move.l	#Lamp_Blue,obID(a0)			; advance to Lamp_Blue
 		move.l	#Map_Lamp,obMap(a0)			; set mappings
 		move.w	#ArtTile_Lamppost,obGfx(a0)		; set art tile
-		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
+		move.b	#sprite_cam_field|sprite_customheight,obRender(a0) ; set to playfield-positioned mode and enable custom render height
 		move.b	#16/2,obActWid(a0)			; set sprite display width
-		move.w	#spr_prio5,obPriority(a0)			; set sprite priority
+		move.b	#88/2,obHeight(a0)			; set sprite display height (otherwise lamppost culls too early below)
+		move.w	#spr_prio5,obPriority(a0)		; set sprite priority
 
 		respawn_entry.s	.fail
 		btst	#0,(a2)
@@ -43,9 +30,9 @@ Lamp_Main:	; Routine 0
 	.red:
 		bset	#0,(a2)
 	.fail:
-		move.b	#4,obRoutine(a0)			; goto Lamp_Finish next
+		move.l	#Lamp_Finish,obID(a0)			; goto Lamp_Finish next
 		move.b	#3,obFrame(a0)				; use red lamppost frame
-		rts						; return
+		bra.w	Lamp_Finish
 ; ===========================================================================
 
 Lamp_Blue:	; Routine 2
@@ -64,9 +51,9 @@ Lamp_Blue:	; Routine 2
 		respawn_entry.s	.noEntry
 		bset	#0,(a2)
 .noEntry:
-		move.b	#4,obRoutine(a0)			; goto Lamp_Finish next
+		move.l	#Lamp_Finish,obID(a0)			; goto Lamp_Finish next
 		move.b	#3,obFrame(a0)				; use red lamppost frame
-		rts
+		bra.w	Lamp_Finish
 ; ===========================================================================
 
 .chkhit:
@@ -84,12 +71,11 @@ Lamp_Blue:	; Routine 2
 
 		move.w	#sfx_Lamppost,d0			; set lamppost sound
 		jsr	(QueueSound2).l				; play its
-		addq.b	#2,obRoutine(a0)			; goto Lamp_Finish next
+		move.l	#Lamp_Finish,obID(a0)			; goto Lamp_Finish next
 
 		jsr	(FindFreeObj).l				; find a free object slot
 		bne.s	.storeInfo				; if object RAM is full, branch
-		move.l	#Lamppost,obID(a1)			; load twirling lamp object
-		move.b	#6,obRoutine(a1)			; set object to Lamp_Twirl routine
+		move.l	#Lamp_Twirl,obID(a1)			; load twirling lamp object
 		move.w	obX(a0),lamp_origX(a1)			; remember base X-position
 		move.w	obY(a0),lamp_origY(a1)			; remember base Y-position
 		subi.w	#$18,lamp_origY(a1)			; move twirling object up a bit to align it
@@ -97,7 +83,7 @@ Lamp_Blue:	; Routine 2
 		move.w	#ArtTile_Lamppost,obGfx(a1)		; set art tile
 		move.b	#sprite_cam_field,obRender(a1)		; set to playfield positioning mode
 		move.b	#16/2,obActWid(a1)			; set sprite display width
-		move.w	#spr_prio4,obPriority(a1)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a1)		; set sprite priority
 		move.b	#2,obFrame(a1)				; use twirling object to "red ball only" frame
 		move.w	#32,lamp_time(a1)			; set twirling time to 32 frames
 
@@ -111,17 +97,16 @@ Lamp_Blue:	; Routine 2
 		bset	#0,(a2)
 
 	.donothing:
-		rts						; return
-; ===========================================================================
 
 Lamp_Finish:	; Routine 4
+		RememberStateXY
 		rts						; just return
 ; ===========================================================================
 
 Lamp_Twirl:	; Routine 6
 		subq.w	#1,lamp_time(a0)			; decrement timer
 		bpl.s	.twirl					; if time remains, keep twirling
-		move.b	#4,obRoutine(a0)			; goto Lamp_Finish next
+		move.l	#Lamp_Finish,obID(a0)			; goto Lamp_Finish next
 
 	.twirl:
 		move.b	obAngle(a0),d0				; load current twirl angle
@@ -136,7 +121,9 @@ Lamp_Twirl:	; Routine 6
 		swap	d0					; use upper word from multiplication result
 		add.w	lamp_origY(a0),d0			; add lamppost base's Y-position
 		move.w	d0,obY(a0)				; set new Y-position for twirling object
-		rts						; return
+
+		bra.w	Lamp_Finish
+
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Subroutine to store information when you hit a lamppost
@@ -208,18 +195,6 @@ Lamp_LoadInfo:
 		move.b	(v_lamp_wtrrout).w,(v_wtr_routine).w	; routine counter for water
 		move.b	(v_lamp_wtrstat).w,(f_wtr_state).w 	; water direction
 	.notlabyrinth:
-
-		; This sets the left level boundary to be just before the respawn position, if the last lamp ID
-		; had bit 7 set. However, not only is this not used anywhere in the game, it's also not possible
-		; because bit 7 is cleared through an ANDI $7F when lampposts are loaded. Perhaps this once was
-		; used to prevent backtracking before bosses by manually setting that bit through code.
-		tst.b	(v_lastlamp).w				; was last hit lamppost ID $80 or above?
-		bpl.s	.return					; if not, branch
-		move.w	(v_lamp_xpos).w,d0			; get stored X-position
-		subi.w	#320/2,d0				; subtract half a screen's width from it
-		move.w	d0,(v_limitleft2).w			; set that as left level boundary
-
-	.return:
 		rts						; return
 ; End of function Lamp_LoadInfo
 ; ===========================================================================

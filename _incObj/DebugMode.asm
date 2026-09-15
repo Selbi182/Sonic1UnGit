@@ -218,6 +218,9 @@ Debug_Move:
 ; ---------------------------------------------------------------------------
 
 Debug_ChgItem:
+		cmpi.b	#1,d6					; does list only contain one entry (or none)?
+		bls.s	.checkCreateItem			; if yes, prevent cycling
+
 		; Cycle back one item in list when holding A and pressing C
 		btst	#bitA,(v_jpadhold1).w			; is button A held?
 		beq.s	.checkCreateItem			; if not, branch

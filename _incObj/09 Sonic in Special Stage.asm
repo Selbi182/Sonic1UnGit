@@ -8,44 +8,23 @@ sonss_deceleration:	equ	$40		; Sonic's deceleration
 sonss_jumpspeed:	equ	$680		; Sonic's jump force
 sonss_gravity:		equ	gravity-$E	; Sonic's gravity (=$2A, $E lower than main level gravity)
 ; ---------------------------------------------------------------------------
-
-; Obj09:
-SonicSpecial:
-		tst.w	(v_debuguse).w				; is debug mode being used?
-		beq.s	SonicSS_Normal				; if not, branch
-		bsr.w	SS_FixCamera				; keep camera centered while in debug mode
-		bra.w	DebugMode				; run debug mode instead of Sonic object
-; ===========================================================================
-
-; Obj09_Normal:
-SonicSS_Normal:
-		moveq	#0,d0					; clear d0
-		move.b	obRoutine(a0),d0			; get current routine number
-		move.w	SonicSS_Index(pc,d0.w),d1		; find appropriate entry in jump table
-		jmp	SonicSS_Index(pc,d1.w)			; jump there
-; ===========================================================================
-; Obj09_Index:
-SonicSS_Index:	dc.w SonicSS_Main-SonicSS_Index			; 0 - object init
-		dc.w SonicSS_Control-SonicSS_Index		; 2 - main mode
-		dc.w SonicSS_ExitStage-SonicSS_Index		; 4 - rotate stage while exiting
-
 sonss_touchedblock_id:	equ	objoff_30	; ID of currently touched block (byte)
 sonss_touchedblock_ram: equ	objoff_32	; RAM address of currently touched block (longword)
 sonss_timeout_updown:	equ	objoff_36	; timeout before an UP/DOWN block can be triggered again (byte)
 sonss_timeout_r:	equ	objoff_37	; timeout before an R block can be triggered again (byte)
 sonss_ghoststate:	equ	objoff_3A	; current solidity state of ghost blocks (byte)
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
-; Obj09_Main:
-SonicSS_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; set to SonicSS_Control
+; Obj09:
+SonicSpecial:
+		move.l	#SonicSS_Control,obID(a0)		; set to SonicSS_Control
 		move.b	#sonic_roll_height,obHeight(a0)		; set rolling height
 		move.b	#sonic_roll_width,obWidth(a0)		; set rolling width
 		move.b	#sonic_roll_width,obActWid(a0)		; set sprite display width
 		move.l	#Map_Sonic,obMap(a0)			; set mappings
 		move.w	#ArtTile_Sonic,obGfx(a0)		; set VRAM location
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio0,obPriority(a0)			; set sprite priority to top
+		move.w	#spr_prio0,obPriority(a0)		; set sprite priority to top
 
 		move.b	#id_Roll,obAnim(a0)			; set to rolling animation
 		bset	#2,obStatus(a0)				; set rolling flag
@@ -54,6 +33,12 @@ SonicSS_Main:	; Routine 0
 
 ; Obj09_ChkDebug: SonicSS_ChkDebug:
 SonicSS_Control: ; Routine 2
+		tst.w	(v_debuguse).w				; is debug mode being used?
+		beq.s	.noDebug				; if not, branch
+		bsr.w	SS_FixCamera				; keep camera centered while in debug mode
+		bra.w	DebugMode				; run debug mode instead of Sonic object
+
+	.noDebug:
 		tst.w	(f_debugmode).w				; is debug mode cheat enabled?
 		beq.s	SonicSS_NoDebug				; if not, branch
 		btst	#bitB,(v_jpadpress1).w			; is button B pressed?
@@ -64,30 +49,13 @@ SonicSS_Control: ; Routine 2
 ; Obj09_NoDebug:
 SonicSS_NoDebug:
 		move.b	#0,sonss_touchedblock_id(a0)		; reset currently touched block to none (blank)
-
-		moveq	#0,d0					; clear d0
-		move.b	obStatus(a0),d0				; get Sonic's status flags
-		andi.w	#%0010,d0				; limit to "is in air" flag
-		move.w	SonicSS_Modes(pc,d0.w),d1		; use that as routine counter for the correct mode
-		jsr	SonicSS_Modes(pc,d1.w)			; jump to that mode
-
-		jsr	(Sonic_LoadGfx).l			; update Sonic's graphics if necessary (accessing Obj01)
-		DisplaySprite
-		rts
-
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Modes for controlling Sonic in Special Stages
-; ---------------------------------------------------------------------------
-; Obj09_Modes:
-SonicSS_Modes:	dc.w SonicSS_OnWall-SonicSS_Modes		; 0 - while touching a block
-		dc.w SonicSS_InAir-SonicSS_Modes		; 2 - while airborne
-; ===========================================================================
+		
+		btst	#1,obStatus(a0)
+		bne.s	SonicSS_InAir
 
 ; Obj09_OnWall:
 SonicSS_OnWall:	; While Sonic is touching a solid block
-		bclr	#7,obStatus(a0)	; clear "Sonic has jumped" flag
+		bclr	#7,obStatus(a0)				; clear "Sonic has jumped" flag
 		bsr.w	SonicSS_Jump				; allow Sonic to jump from walls
 		bsr.w	SonicSS_Move				; update position based on button inputs
 		bsr.w	SonicSS_Fall				; apply gravity based on stage rotation
@@ -113,7 +81,8 @@ SonicSS_Display:
 		add.w	(v_ssrotate).w,d0			; apply current rotation speed
 		move.w	d0,(v_ssangle).w			; save new angle
 
-		jmp	(Sonic_Animate).l			; animate Sonic (accessing Obj01)
+		jsr	(Sonic_Animate).l			; animate Sonic (accessing Obj01)
+		jmp	(Sonic_LoadGfx).l			; update Sonic's graphics if necessary (accessing Obj01)
 ; End of function SonicSS_Control
 
 
@@ -287,7 +256,7 @@ SonicSS_Jump:
 		move.w	d0,obVelY(a0)				; set result as new Y speed
 
 		bset	#1,obStatus(a0)				; set in-air flag
-		bset	#7,obStatus(a0)	; set "Sonic has jumped" flag
+		bset	#7,obStatus(a0)				; set "Sonic has jumped" flag
 
 		move.w	#sfx_Jump,d0				; set jump sound
 		jsr	(QueueSound2).l				; play jumping sound
@@ -389,9 +358,7 @@ SonicSS_ExitStage:
 
 		jsr	(Sonic_Animate).l			; animate Sonic (accessing Obj01)
 		jsr	(Sonic_LoadGfx).l			; update Sonic's graphics if necessary (accessing Obj01)
-		bsr.w	SS_FixCamera				; keep camera centered on Sonic
-		DisplaySprite
-		rts
+		bra.w	SS_FixCamera				; keep camera centered on Sonic
 ; End of function SonicSS_ExitStage
 
 
@@ -571,7 +538,10 @@ SonicSS_ChkItems_NonSolidActionBlock:
 		bne.s	SonicSS_ChkRing				; if yes, check which one it was
 
 		tst.b	sonss_ghoststate(a0)			; has ghost block or its trigger been passed?
-		bne.w	SonicSS_MakeGhostSolid			; if yes, branch
+		beq.s	.return					; if not, branch
+		bsr.w	SonicSS_MakeGhostSolid			; (changed to bsr to detach it in MD profiler)
+
+	.return:
 		rts						; return
 ; ===========================================================================
 
@@ -682,11 +652,12 @@ SonicSS_MakeGhostSolid:
 		lea	(v_sslayout_actual).l,a1		; get start location of actual stage layout
 		moveq	#(v_sslayout_end-v_sslayout_actual)/ss_layout_rowlength-1,d1 ; iterate through all rows
 .nextrow:	moveq	#(ss_layout_rowlength/2)-1,d2		; iterate through all blocks in row
-.checkblock:	cmpi.b	#id_SS_Ghost,(a1)			; is the item a ghost block?
+.checkblock:	move.b	(a1)+,d0				; get next block
+		ble.s	.nextblock				; if blank or obviously invalid, skip
+		cmpi.b	#id_SS_Ghost,d0				; is the item a ghost block?
 		bne.s	.nextblock				; if not, branch
-		move.b	#id_SS_RedWhite,(a1)			; replace ghost block with a solid red/white block
-.nextblock:	addq.w	#1,a1					; advance to next block in row
-		dbf	d2,.checkblock				; loop until row is done
+		move.b	#id_SS_RedWhite,-1(a1)			; replace ghost block with a solid red/white block
+.nextblock:	dbf	d2,.checkblock				; loop until row is done
 		lea	ss_layout_rowlength/2(a1),a1		; advance to next row
 		dbf	d1,.nextrow				; loop until all rows are done
 
@@ -772,7 +743,7 @@ SonicSS_ChkGOAL:
 		cmpi.b	#id_SS_GOAL,d0				; is the item a "GOAL"?
 		bne.s	SonicSS_ChkUP				; if not, branch
 
-		addq.b	#2,obRoutine(a0)			; run routine "SonicSS_ExitStage"
+		move.l	#SonicSS_ExitStage,obID(a0)		; run routine "SonicSS_ExitStage"
 
 		move.w	#sfx_SSGoal,d0				; set "GOAL" sound
 		jmp	(QueueSound2).l				; play it

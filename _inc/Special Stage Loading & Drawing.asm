@@ -3,13 +3,15 @@
 ; Subroutine to show the special stage layout
 ; ---------------------------------------------------------------------------
 
-SS_ShowLayout:
-		movem.w	d5/d7,-(sp)				; backup sprites already rendered in BuildSprites (which was called before SS_ShowLayout)
-
+SS_ShowLayout:	; put into subroutines to make them easier to see in MD profiler
 		bsr.w	SS_AnimateBlocks			; animate walls, rings, and other blocks
 		bsr.w	SS_ExecuteAnimationQueue		; animate queued events for touched blocks
-; ---------------------------------------------------------------------------
+		bsr.s	SS_RotateMatrix				; rotate matrixx
+		bsr.w	SS_BuildSprites				; build sprites
+		rts						; return
+; ===========================================================================
 
+SS_RotateMatrix:
 	; --- Calculate the rotated position of the layout grid ---
 
 		lea	(v_ss_rotationmatrix).w,a1		; set start of rotation buffer (each entry is two words per cell, X/Y axis)
@@ -26,14 +28,14 @@ SS_ShowLayout:
 		divu.w	#ss_blocksize,d2			; divide camera X-position by block size
 		swap	d2					; get remainder (modulo part)
 		neg.w	d2					; make remainder negative
-		addi.w	#-(ss_matrixsize-1)*ss_blocksize/2,d2	; d2 = base X-offset for all cells (-$B4)
+		addi.w	#-$B4,d2	; d2 = base X-offset for all cells (-$B4)
 
 		moveq	#0,d3					; clear d3
 		move.w	(v_screenposy).w,d3			; get current camera Y-position
 		divu.w	#ss_blocksize,d3			; divide camera X-position by block size
 		swap	d3					; get remainder (modulo part)
 		neg.w	d3					; make remainder negative
-		addi.w	#-(ss_matrixsize-1)*ss_blocksize/2,d3	; d3 = base Y-offset for all cells (-$B4)
+		addi.w	#-$B4,d3	; d3 = base Y-offset for all cells (-$B4)
 
 		move.w	#ss_matrixsize-1,d7			; calculate rotated positions for all rows
 	.rotateRows:
@@ -68,7 +70,52 @@ SS_ShowLayout:
 		addi.w	#ss_blocksize,d3			; increase base Y-position by block height
 		dbf	d7,.rotateRows				; loop until all rows have been calculated
 
-		movem.w	(sp)+,d5/d7				; restore number of rendered sprites in BuildSprites
+		rts
+
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Subroutine to draw sprites in Special Stages
+; (Modified copy of BuildSprites, heavily optimized for this purpose)
+; ---------------------------------------------------------------------------
+
+SS_BuildSprites:
+		lea	(v_spritequeue).w,a4			; a4 = input sprite layers (i.e. set from DisplaySprite)
+		lea	(v_spritetablebuffer).w,a2		; a2 = target linked sprite list (transferred in VBlank)
+		moveq	#0,d5					; d5 = will be used as counter for the sprite linking
+		moveq	#sprites_max,d7				; d7 = will be used to abort the process if sprite queue is full
+		lea	(v_screenposx).w,a5			; load camera pointers for coordinate system
+
+	; --- Layer -0.5 ---
+	if LagFrameCounter
+		tst.b	(v_draw_hud).w				; is HUD rendering on? (Level_started_flag in S2)
+		beq.s	.noHud					; if not, branch
+		move.l	#($FF80+HUD_BaseY)<<16+$0C01,(a2)+	; transfer Y-position and WH+Link
+		move.l	#($8000+ArtTile_HUDLagFrame)<<16+$0108+HUD_BaseX,(a2)+ ; transfer VRAM settings and X-position
+		addq.w	#1,d5					; increase sprite link counter
+		subq.w	#1,d7					; decrease remaining sprite counter
+	.noHud:
+	endif
+
+	; --- Layer 0 (just Sonic for Special Stages) ---
+		lea	(v_player).w,a0				; load object into to address register
+		move.w	obY(a0),d2				; load object Y-position
+		sub.w	4(a5),d2				; subtract camera Y-position from object Y-position
+		addi.w	#$80,d2					; add VDP sprite start to Y-position
+		move.w	obX(a0),d3				; load object X-position
+		sub.w	(a5),d3					; subtract camera X-position from object X-position
+		addi.w	#$80,d3					; add VDP sprite start to X-position
+
+		movea.l	obMap(a0),a1				; load object mappings into address register
+		moveq	#0,d1
+		move.b	obFrame(a0),d1
+		add.w	d1,d1					; MJ: changed from byte to word (we want more than 7F sprites)
+		adda.w	(a1,d1.w),a1				; get mappings frame address
+		move.w	(a1)+,d1				; get number of sprite pieces in frame
+		subq.w	#1,d1					; subtract 1 for dbf
+		bmi.s	.sonicDone
+		move.b	obRender(a0),d4
+		jsr	(BuildSpr_Draw).l
+	.sonicDone:
 
 	; --- Insert block types into rotated grid and render them as sprites ---
 		lea	(v_sslayout_base).l,a0			; get base pointer for stage layout
@@ -98,11 +145,17 @@ SS_ShowLayout:
 
 		move.w	(a4),d3					; get rotated X-position for this cell
 		addi.w	#128+(320/2),d3				; d3 = sprite X-position
+	if SS_Widescreen
+		cmpi.w	#128-16-48,d3				; is sprite offscreen to the left?
+		blo.s	.nextBlock				; if yes, skip drawing
+		cmpi.w	#128+320+16+48,d3			; is sprite offscreen to the right?
+		bhs.s	.nextBlock				; if yes, skip drawing
+	else
 		cmpi.w	#128-16,d3				; is sprite offscreen to the left?
 		blo.s	.nextBlock				; if yes, skip drawing
 		cmpi.w	#128+320+16,d3				; is sprite offscreen to the right?
 		bhs.s	.nextBlock				; if yes, skip drawing
-
+	endif
 		move.w	2(a4),d2				; get rotated Y-position for this cell
 		addi.w	#128+(224/2),d2				; d2 = sprite Y-position
 		cmpi.w	#128-16,d2				; is sprite offscreen to the top?
@@ -121,7 +174,25 @@ SS_ShowLayout:
 		move.w	(a1)+,d1				; get number of sprite pieces in frame
 		subq.w	#1,d1					; subtract 1 for dbf
 		bmi.s	.nextBlock				; if result underflowed, this is was blank frame mapping, branch
-		bsr.s	DrawSprite_SS				; write data from sprite pieces to buffer (never flipped)
+
+	; DrawSprite_SS
+	.loop:
+		subq.b	#1,d7					; check sprite limit
+		ble.s	BuildSprites_SS_Finalize		; if all sprite slots are taken up, abort process
+		move.w	(a1)+,d0				; get relative Y-offset
+		add.w	d2,d0					; add base Y-position
+		swap	d0					; write together with next (optimization)
+		move.w	(a1)+,d0				; get dimensions of sprite piece (WWHH) (preshifted <<8)
+		addq.b	#1,d5					; increase total sprites counter
+		move.b	d5,d0					; set sprite link number
+		move.l	d0,(a2)+				; write Y-position, dimension, and link number to sprite buffer
+		move.w	(a1)+,d0				; get base VRAM settings
+		add.w	a3,d0					; add base art tile offset of object
+		swap	d0					; write together with next (optimization)
+		move.w	(a1)+,d0				; get relative X-offset
+		add.w	d3,d0					; add X-position
+		move.l	d0,(a2)+				; write VRAM settings and X-position to sprite buffer
+		dbf	d1,.loop				; loop for all pieces in mapping
 
 	.nextBlock:
 		addq.w	#4,a4					; advance to next entry in rotation matrix
@@ -144,44 +215,6 @@ BuildSprites_SS_Finalize:
 		move.b	#0,-5(a2)				; unlink penultimate sprite
 		rts						; return
 ; End of function SS_ShowLayout
-
-
-; ---------------------------------------------------------------------------
-; Subroutine to draw a single Special Stage layout sprite
-; (Modified copy of BuildSpr_Normal)
-; ---------------------------------------------------------------------------
-
-DrawSprite_SS:
-		subq.b	#1,d7					; check sprite limit
-		ble.s	.abort					; if all sprite slots are taken up, abort process
-
-		move.w	(a1)+,d0				; get relative Y-offset
-		add.w	d2,d0					; add base Y-position
-		swap	d0					; write together with next (optimization)
-
-		move.w	(a1)+,d0				; get dimensions of sprite piece (WWHH) (preshifted <<8)
-		addq.b	#1,d5					; increase total sprites counter
-		move.b	d5,d0					; set sprite link number
-		move.l	d0,(a2)+				; write Y-position, dimension, and link number to sprite buffer
-
-		move.w	(a1)+,d0				; get base VRAM settings
-		add.w	a3,d0					; add base art tile offset of object
-		swap	d0					; write together with next (optimization)
-
-		move.w	(a1)+,d0				; get relative X-offset
-		add.w	d3,d0					; add X-position
-		bne.s	.x					; if non-zero, branch
-		addq.w	#1,d0					; force zero X-position to non-zero (avoid unwanted sprite masking)
-	.x:	move.l	d0,(a2)+				; write VRAM settings and X-position to sprite buffer
-
-		dbf	d1,DrawSprite_SS			; loop for all pieces in mapping
-		rts						; done
-	
-.abort:
-		addq.b	#1,d5					; sprite limit exhausted
-		addq.w	#4,sp					; don't return to sprite render loop
-		bra.s	BuildSprites_SS_Finalize		; skip straight to finalization
-; End of function DrawSprite_SS
 
 
 ; ===========================================================================
@@ -506,7 +539,7 @@ SS_AniEmeraldSparks:
 		clr.l	(a0)					; clear animation event slot
 		clr.l	ss_ani_block(a0)			; ''
 
-		move.b	#4,(v_player+obRoutine).w		; set object 09 to SonicSS_ExitStage (this triggers the actual exit)
+		move.l	#SonicSS_ExitStage,(v_player+obID).w	; set object 09 to SonicSS_ExitStage (this triggers the actual exit)
 		move.w	#sfx_SSGoal,d0				; set special stage GOAL sound
 		jsr	(QueueSound2).l				; play it
 

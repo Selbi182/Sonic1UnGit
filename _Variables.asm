@@ -509,11 +509,17 @@ v_ram_end:
 	endif
 
 ; Special stage
+SS_Widescreen: equ 0
+
 	obj	$FF0000
 ss_layout_padding:	equ $20
 ss_layout_rowlength:	equ $80
 ss_layout_rows:		equ $40
+	if SS_Widescreen
+ss_matrixsize:		equ 18
+	else
 ss_matrixsize:		equ 16
+	endif
 
 	obj	$FF0000
 v_sslayout_base:	ds.b	(ss_layout_rowlength*ss_layout_padding)+ss_layout_padding ; SS layout start, with top and left padding ($20 cells each)
