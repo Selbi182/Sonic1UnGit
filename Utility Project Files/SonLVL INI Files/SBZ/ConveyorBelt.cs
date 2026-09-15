@@ -13,7 +13,7 @@ namespace S1ObjectDefinitions.SBZ
 
 		public override void Init(ObjectData data)
 		{
-			byte[] artfile = ObjectHelper.OpenArtFile("../../artnem/Monitors.nem", CompressionType.Nemesis);
+			byte[] artfile = ObjectHelper.OpenArtFile("../../artkospm/Monitors.kospm", CompressionType.KosinskiPlusM);
 			img = ObjectHelper.MapASMToBmp(artfile, "../../_maps/Invisible Barriers.asm", 0, 0);
 
 			properties[0] = new PropertySpec("Direction", typeof(int), "Extended",

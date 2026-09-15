@@ -12,7 +12,7 @@ namespace S1ObjectDefinitions.GHZ
 
 		public override void Init(ObjectData data)
 		{
-			byte[] artfile = ObjectHelper.OpenArtFile("../../artnem/GHZ Bridge.nem", CompressionType.Nemesis);
+			byte[] artfile = ObjectHelper.OpenArtFile("../../artkospm/GHZ Bridge.kospm", CompressionType.KosinskiPlusM);
 			img = ObjectHelper.MapASMToBmp(artfile, "../../_maps/Bridge.asm", 0, 2);
 		}
 

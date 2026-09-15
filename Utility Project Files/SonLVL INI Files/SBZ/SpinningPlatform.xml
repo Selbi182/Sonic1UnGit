@@ -2,11 +2,11 @@
 <ObjDef xmlns="http://www.sonicretro.org" Name="Trapdoor/Spinning Platform" Image="spin">
   <Images>
     <ImageFromMappings id="spin">
-      <ArtFile filename="../../artnem/SBZ Spinning Platform.nem"/>
+      <ArtFile filename="../../artkospm/SBZ Spinning Platform.kospm"/>
       <MapFile type="ASM" filename="../../_maps/SBZ Spinning Platforms.asm" frame="0" startpal="0" />
     </ImageFromMappings>
     <ImageFromMappings id="trapdoor">
-      <ArtFile filename="../../artnem/SBZ Trapdoor.nem"/>
+      <ArtFile filename="../../artkospm/SBZ Trapdoor.kospm"/>
       <MapFile type="ASM" filename="../../_maps/Trapdoor.asm" frame="0" startpal="2" />
     </ImageFromMappings>
   </Images>
