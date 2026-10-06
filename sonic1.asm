@@ -406,8 +406,6 @@ CheckSumOk:
 		btst	#6,(v_megadrive).w			; is Mega Drive PAL?
 		sne.b	(v_pal).w				; remember flag if so
 
-		move.l	#'init',(v_init).w			; set flag so checksum won't run again
-
 GameInit:
 		lea	(v_ram_start).l,a6			; load start location of RAM
 		moveq	#0,d7					; overwrite with 0
@@ -453,6 +451,9 @@ GameInit:
 		enable_display	
 	endif
 
+InitDone:
+		move.l	#'init',(v_init).w			; set flag that game init has been completed (skips the checksum check next time)
+
 MainGameLoop:
 		moveq	#$3C,d0					; limit Game Mode value to $1C max (change to a maximum of 7C to add more game modes)
 		and.b	(v_gamemode).w,d0			; load Game Mode
@@ -487,10 +488,12 @@ id_Credits:	gmptr	GM_Credits				; Credits ($1C)
 ; ---------------------------------------------------------------------------
 
 Debugger_RecoverFromException:
-		movea.l	(0).w,sp		; reset Stack Pointer (sp)
-		bsr.w	VDPSetupGame		; restore Sonic 1 VDP settings
-		enable_display			; make sure display is enabled
-		bra.w	MainGameLoop		; return to main game loop and try resuming operation
+		movea.l	(0).w,sp				; reset Stack Pointer (sp)
+		bsr.w	VDPSetupGame				; restore Sonic 1 VDP settings
+		enable_display					; make sure display is enabled
+		cmpi.l	#'init',(v_init).w			; has game previously already been initialized?
+		beq.w	MainGameLoop				; if yes, resume from main game loop
+		bra.w	EntryPoint				; otherwise, do a cold reboot
 ; End of function Debugger_RecoverFromException
 
 
