@@ -454,9 +454,10 @@ GameInit:
 	endif
 
 MainGameLoop:
-		move.b	(v_gamemode).w,d0			; load Game Mode
-		andi.w	#$3C,d0					; limit Game Mode value to $1C max (change to a maximum of 7C to add more game modes)
-		jsr	GameModeArray(pc,d0.w)			; jump to apt location in ROM
+		moveq	#$3C,d0					; limit Game Mode value to $1C max (change to a maximum of 7C to add more game modes)
+		and.b	(v_gamemode).w,d0			; load Game Mode
+		move.l	GameModeArray(pc,d0.w),a1		; get game mode entry point ROM location
+		jsr	(a1)					; jump there (and return here on exit)
 		bra.s	MainGameLoop				; loop indefinitely
 
 ; ---------------------------------------------------------------------------
@@ -467,7 +468,7 @@ GameModeArray:
 
 gmptr:		macro *,gamemode
 \*:	equ	(*-GameModeArray)
-		bra.w	gamemode
+		dc.l	gamemode
 		endm
 
 id_Sega:	gmptr	GM_Sega					; Sega Screen ($00)
@@ -528,7 +529,7 @@ VBlank:
 
 		tst.b	(v_vblank_routine).w			; was a VBlank routine set?
 		beq.s	VBlank_Lag				; if not, this is a lag frame, branch
-		bmi.s	VBlank_Exit				; if marked as id_VBlank_MusicOnly, only run Sound Driver updates
+		bmi.w	VBlank_MusicOnly			; if marked as id_VBlank_MusicOnly, only run Sound Driver updates and water HBlank
 
 		move.w	(vdp_control_port).l,d0			; clear write-pending flag in VDP (prevents issues if 68k was reset while writing a command to VDP)
 		move.l	#$40000010,(vdp_control_port).l		; set VDP to VSRAM write mode
@@ -634,6 +635,8 @@ VBlank_Lag_Go:
 	.waterAbove:
 		writeCRAM	v_palette_water,0		; write water palette buffer to CRAM
 	.waterBelow:
+
+VBlank_MusicOnly:
 		move.w	(v_hblank_hreg).w,d0			; get HBlank interrupt counter
 		move.w	d0,(a5)					; write to VDP register ($8Axx)
 		move.b	d0,(v_waterline).w			; copy target scan line ($xx)
