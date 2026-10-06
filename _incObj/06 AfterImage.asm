@@ -21,8 +21,8 @@ After_CheckVisible:
 		beq.s	After_Delete			; delay expired: delete
 
 	.show:
-		cmpi.b	#2,(v_player+obRoutine).w	; is Sonic in "Sonic_Control" routine?
-		beq.s	After_Show
+		cmpi.b	#sonic_state_control,(v_player+obRoutine).w ; is Sonic in "Sonic_Control" routine?
+		beq.s	After_Show			; if yes, branch
 
 	.hide:
 		rts

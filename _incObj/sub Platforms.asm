@@ -54,7 +54,7 @@ PlatformObject:
 		bne.w	Plat_Exit				; if yes, prevent getting stuck to platform
 		tst.b	(f_playerctrl).w			; is object collision off?
 		bmi.w	Plat_Exit				; if yes, branch
-		cmpi.b	#6,obRoutine(a1)			; is Sonic dying?
+		cmpi.b	#sonic_state_death,obRoutine(a1)	; is Sonic dying?
 		bhs.w	Plat_Exit				; if yes, branch
 		add.w	d0,d2
 		addq.w	#3,d2
@@ -279,7 +279,7 @@ MvSonicOnPtfm2:	; assume platform height (fixed to 9px)
 MoveWithPlatform:
 		tst.b	(f_playerctrl).w			; is object interaction disabled?
 		bmi.s	.return					; if yes, branch
-		cmpi.b	#6,(v_player+obRoutine).w		; is Sonic dying?
+		cmpi.b	#sonic_state_death,(v_player+obRoutine).w ; is Sonic dying?
 		bhs.s	.return					; if yes, branch
 		tst.w	(v_debuguse).w				; is debug mode in use?
 		bne.s	.return					; if yes, branch

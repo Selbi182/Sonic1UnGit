@@ -97,7 +97,7 @@ Spikes_Hurt:
 		move.l	a0,-(sp)				; backup spikes RAM location
 		movea.l	a0,a2					; move spikes RAM location to a2 (input for HurtSonic)
 		lea	(v_player).w,a0				; load Sonic player object to a0
-		cmpi.b	#4,obRoutine(a0)			; is Sonic currently in a hurt state or dying?
+		cmpi.b	#sonic_state_hurt,obRoutine(a0)		; is Sonic currently in a hurt state or dying?
 		bhs.s	Spikes_NoHurt				; if yes, avoid taking damage (restore a0 first)
 
 		move.l	obY(a0),d3				; get Sonic's Y-position (with subpixels)

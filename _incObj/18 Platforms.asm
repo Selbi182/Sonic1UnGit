@@ -231,7 +231,7 @@ Plat_FallingDown:
 		; Note: a1 was set to v_player when calling ExitPlatform earlier
 		bset	#1,obStatus(a1)				; set Sonic in-air
 		bclr	#3,obStatus(a1)				; clear Sonic's on-platform flag
-		move.b	#2,obRoutine(a1)			; force Sonic to Sonic_Control routine
+		move.b	#sonic_state_control,obRoutine(a1)	; force Sonic to Sonic_Control routine
 		bclr	#3,obStatus(a0)				; clear platform's stood-on flag
 		clr.b	obSolid(a0)				; clear platform's solidity flag
 		move.w	obVelY(a0),obVelY(a1)			; set Sonic to continue falling on his own at the platform's current speed

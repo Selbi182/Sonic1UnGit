@@ -2875,7 +2875,7 @@ InitRingFrame:
 ; ---------------------------------------------------------------------------
 
 LoadRingFrame:
-		cmpi.b	#6,(v_player+obRoutine).w	; Is Sonic dead?
+		cmpi.b	#sonic_state_death,(v_player+obRoutine).w ; Is Sonic dead?
 		bhs.s	.noring				; If so, branch
 
 		moveq	#0,d1				; Get ring frame offset for regular rings
@@ -3499,7 +3499,7 @@ End_AllEmlds:		; during the slow white-in
 		bsr.w	WhiteOut_ToWhite			; brighten palette further
 
 End_SlowFade:
-		cmpi.b	#6,(v_player+obRoutine).w		; has Sonic died?
+		cmpi.b	#sonic_state_death,(v_player+obRoutine).w ; has Sonic died?
 		bhs.s	End_GoToCredits				; if yes, abort sequence, go straight to credits
 		tst.w	(f_restart).w				; has flag been set signaling that the emeralds have disappeared?
 		beq.w	End_AllEmlds				; if not, loop
@@ -3568,7 +3568,7 @@ End_MoveSon3:
 		addq.b	#2,(v_sonicend).w			; advance ending cutscene routine number
 		move.w	#320/2,(v_player+obX).w			; force Sonic to the middle of the screen
 		move.l	#EndSonic,(v_player+obID).w		; replace real Sonic object with a fake ending sequence Sonic object
-		clr.w	(v_player+obRoutine).w			; reset routine counter to initialize fake ending Sonic
+		move.w	#sonic_state_main,(v_player+obRoutine).w ; reset routine counter to initialize fake ending Sonic
 
 End_MoveSonExit:
 		rts						; return

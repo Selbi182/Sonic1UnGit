@@ -272,7 +272,7 @@ See_Spikeball_InAir_FallingDown:
 		bclr	#3,obStatus(a2)				; clear Sonic's on-platform flag
 		clr.b	jumping(a2)				; clear Sonic's jumping flag
 		move.b	#id_Spring,obAnim(a2)			; change Sonic's animation to "spring" ($10)
-		move.b	#2,obRoutine(a2)			; force Sonic to Sonic_Control routine
+		move.b	#sonic_state_control,obRoutine(a2)	; force Sonic to Sonic_Control routine
 		move.w	#sfx_Spring,d0				; set spring sound
 		jsr	(QueueSound2).l				; play it
 

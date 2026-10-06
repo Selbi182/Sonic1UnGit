@@ -43,7 +43,7 @@ OscillateNumInit:
 ; ---------------------------------------------------------------------------
 
 OscillateNumDo:
-		cmpi.b	#6,(v_player+obRoutine).w		; has Sonic just died?
+		cmpi.b	#sonic_state_death,(v_player+obRoutine).w ; has Sonic just died?
 		bhs.s	.end					; if yes, branch
 
 		lea	(v_oscillate).w,a1

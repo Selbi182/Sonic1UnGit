@@ -166,7 +166,7 @@ Solid_SkipRenderChk:
 Solid_Collision:
 		tst.b	(f_playerctrl).w			; are controls locked?
 		bmi.w	Solid_NoCollision			; if yes, branch
-		cmpi.b	#6,(v_player+obRoutine).w		; is Sonic dying?
+		cmpi.b	#sonic_state_death,(v_player+obRoutine).w ; is Sonic dying?
 		bhs.w	Solid_Debug
 		tst.w	(v_debuguse).w				; is debug mode being used?
 		bne.w	Solid_Debug				; if yes, branch

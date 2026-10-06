@@ -27,18 +27,25 @@ Sonic_Normal:
 		jmp	Sonic_Index(pc,d1.w)			; jump there
 ; ===========================================================================
 ; Obj01_Index:
-Sonic_Index:	dc.w Sonic_Main-Sonic_Index			; 0 - object init
-		dc.w Sonic_Control-Sonic_Index			; 2 - main mode
-		dc.w Sonic_Hurt-Sonic_Index			; 4 - while being knocked back from damage
-		dc.w Sonic_Death-Sonic_Index			; 6 - while dying and falling off screen
-		dc.w Sonic_ResetLevel-Sonic_Index		; 8 - after having died and waiting for the level to restart
+Sonic_Index:
+
+sonicroutine	macro	*,target
+\*:	equ	*-Sonic_Index
+		dc.w	\target-Sonic_Index
+		endm
+
+sonic_state_main:	sonicroutine	Sonic_Main			; 0 - object init
+sonic_state_control:	sonicroutine	Sonic_Control			; 2 - main mode
+sonic_state_hurt:	sonicroutine	Sonic_Hurt			; 4 - while being knocked back from damage
+sonic_state_death:	sonicroutine	Sonic_Death			; 6 - while dying and falling off screen
+sonic_state_reset:	sonicroutine	Sonic_ResetLevel		; 8 - after having died and waiting for the level to restart
 
 ; Note: Sonic's SST aliases are defined in _Constants.asm
 ; ===========================================================================
 
 ; Obj01_Main:
 Sonic_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)			; set to Sonic_Control
+		move.b	#sonic_state_control,obRoutine(a0)	; set to Sonic_Control
 		move.b	#sonic_height,obHeight(a0)		; set default height
 		move.b	#sonic_width,obWidth(a0)		; set default width
 		move.l	#Map_Sonic,obMap(a0)			; set mappings
@@ -1760,7 +1767,7 @@ Sonic_HurtStop:
 		move.w	d0,obVelX(a0)				; set X-speed to 0
 		move.w	d0,obInertia(a0)			; set ground speed to 0
 		move.b	#id_Walk,obAnim(a0)			; set to walking animation
-		subq.b	#2,obRoutine(a0)			; set routine back to Sonic_Control
+		move.b	#sonic_state_control,obRoutine(a0)	; set routine back to Sonic_Control
 		move.b	#2*60,flashtime(a0)			; set flash time to 2 seconds of invulnerability frames
 
 ; locret_13860:
@@ -1808,7 +1815,7 @@ Sonic_HandleDeath:
 
 		; Bottom reached, remove a life and check if game over was triggered
 		move.w	#-gravity,obVelY(a0)			; set to -$38 to cancel ObjectFall gravity (freeze Sonic in place)
-		addq.b	#2,obRoutine(a0)			; go to Sonic_ResetLevel
+		move.b	#sonic_state_reset,obRoutine(a0)	; go to Sonic_ResetLevel
 		clr.b	(f_timecount).w				; stop time counter
 
 	if Enable_InfiniteLives

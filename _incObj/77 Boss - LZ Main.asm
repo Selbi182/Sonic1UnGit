@@ -399,7 +399,7 @@ BossLabyrinth_FaceMain:	; Routine 4
 
 ; loc_18196:
 .checkSonicState:
-		cmpi.b	#4,(v_player+obRoutine).w		; is Sonic in his hurt state?
+		cmpi.b	#sonic_state_hurt,(v_player+obRoutine).w ; is Sonic in his hurt state?
 		blo.s	.writeAnim				; if not, branch
 		moveq	#4,d1					; set animation to facelaugh
 

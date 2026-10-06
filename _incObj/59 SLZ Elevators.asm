@@ -224,7 +224,7 @@ Elev_FromSpawner:
 		beq.s	.delete					; if not, branch
 		bset	#1,obStatus(a1)				; set Sonic's in-air flag
 		bclr	#3,obStatus(a1)				; clear Sonic's on-platform flag
-		move.b	#2,obRoutine(a1)			; force Sonic to Sonic_Control routine
+		move.b	#sonic_state_control,obRoutine(a1)	; force Sonic to Sonic_Control routine
 
 	.delete:
 		bra.w	DeleteObject				; delete platform

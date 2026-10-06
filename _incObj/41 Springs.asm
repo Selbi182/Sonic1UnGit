@@ -75,7 +75,7 @@ Spring_Up:	; Routine 2
 		bset	#1,obStatus(a1)				; set Sonic's airborne flag
 		bclr	#3,obStatus(a1)				; clear Sonic's on-platform flag
 		move.b	#id_Spring,obAnim(a1)			; use "bouncing" animation
-		move.b	#2,obRoutine(a1)			; set Sonic to Sonic_Control routine
+		move.b	#sonic_state_control,obRoutine(a1)	; set Sonic to Sonic_Control routine
 		bclr	#3,obStatus(a0)				; clear spring's Sonic touch flag
 		clr.b	obSolid(a0)				; clear spring's solidity flag
 		move.w	#sfx_Spring,d0
@@ -194,7 +194,7 @@ Spring_Down:	; Routine $E
 		neg.w	obVelY(a1)				; negate it to move Sonic downwards
 		bset	#1,obStatus(a1)				; set Sonic's airborne flag
 		bclr	#3,obStatus(a1)				; clear Sonic's on-platform flag
-		move.b	#2,obRoutine(a1)			; set Sonic to Sonic_Control routine
+		move.b	#sonic_state_control,obRoutine(a1)	; set Sonic to Sonic_Control routine
 		bclr	#3,obStatus(a0)				; clear spring's Sonic touch flag
 		clr.b	obSolid(a0)				; clear spring's solidity flag
 		move.w	#sfx_Spring,d0				; set spring sound

@@ -425,7 +425,7 @@ BossStarLight_FaceMain:	; Routine 4
 
 ; loc_18C10:
 .checkSonicState:
-		cmpi.b	#4,(v_player+obRoutine).w		; is Sonic in his hurt state?
+		cmpi.b	#sonic_state_hurt,(v_player+obRoutine).w ; is Sonic in his hurt state?
 		blo.s	.writeAnim				; if not, branch
 		moveq	#4,d1					; set animation to facelaugh
 
@@ -828,7 +828,7 @@ BossSpikeball_LaunchSonic:
 		lea	(a2),a0					; load Sonic's object RAM into a0
 		jsr	(Sonic_ChkRoll).l			; check roll, Sonic must be in a0 for this
 		movea.l	(sp)+,a0				; restore a0 and increment the stack
-		move.b	#2,obRoutine(a2)			; set Sonic's routine state to airbourne control
+		move.b	#sonic_state_control,obRoutine(a2)	; set Sonic's routine state to airbourne control
 		move.w	#sfx_Spring,d0
 		jsr	(QueueSound2).l				; play "spring" sound
 

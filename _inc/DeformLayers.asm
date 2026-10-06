@@ -15,7 +15,7 @@ DeformLayers:
 		clr.w	(v_bg2_scroll_flags).w
 		clr.w	(v_bg3_scroll_flags).w
 
-		cmpi.b	#6,(v_player+obRoutine).w		; has Sonic just died?
+		cmpi.b	#sonic_state_death,(v_player+obRoutine).w ; has Sonic just died?
 		bhs.s	.skipScroll				; if yes, don't do plane scrolling
 		bsr.w	ScrollHoriz				; update camera position & redraw flags
 		bsr.w	ScrollVertical

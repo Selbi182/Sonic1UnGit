@@ -78,7 +78,7 @@ Pole_Action:
 		cmp.w	obX(a1),d0				; is Sonic in range of pole?
 		bhs.s	Pole_Display				; if not, branch
 		clr.b	obColProp(a0)				; clear grab flag from ReactToItem
-		cmpi.b	#4,obRoutine(a1)			; is Sonic hurt or dying?
+		cmpi.b	#sonic_state_hurt,obRoutine(a1)		; is Sonic hurt or dying?
 		bhs.s	Pole_Display				; if yes, branch
 
 		clr.w	obVelX(a1)				; stop Sonic moving horizontally

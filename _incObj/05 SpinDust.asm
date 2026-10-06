@@ -18,7 +18,7 @@ SpinDust_Main:
 		beq.s	.hide					; if not, don't make dust
 		btst	#1,obStatus(a2)				; is Sonic airborne?
 		bne.s	.hide					; if yes, don't make dust
-		cmpi.b	#4,obRoutine(a2)			; is Sonic hurt or dying?
+		cmpi.b	#sonic_state_hurt,obRoutine(a2)		; is Sonic hurt or dying?
 		bhs.s	.hide					; if yes, don't make dust
 
 		move.w	obX(a2),obX(a0)				; copy Sonic's X-position to the dust object

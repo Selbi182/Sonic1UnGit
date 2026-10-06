@@ -602,7 +602,7 @@ BSYZ_Face_ChkHit:
 
 ; loc_1957E:
 .checkSonicState:
-		cmpi.b	#4,(v_player+obRoutine).w		; is sonic in his hurt state?
+		cmpi.b	#sonic_state_hurt,(v_player+obRoutine).w ; is sonic in his hurt state?
 		blo.s	.exit					; if not, branch
 		moveq	#4,d1					; set animation to facelaugh
 

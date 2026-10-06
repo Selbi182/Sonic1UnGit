@@ -45,7 +45,7 @@ Smab_Solid:	; Routine 2
 		move.w	#-$300,obVelY(a1)			; rebound Sonic
 		bset	#1,obStatus(a1)				; set Sonic's airborne flag
 		bclr	#3,obStatus(a1)				; clear Sonic's on-platform flag
-		move.b	#2,obRoutine(a1)			; force Sonic to Sonic_Control routine
+		move.b	#sonic_state_control,obRoutine(a1)	; force Sonic to Sonic_Control routine
 		bclr	#3,obStatus(a0)				; clear block's stood-on flag
 		clr.b	obSolid(a0)				; clear block's solidity status
 		clr.b	doublejump(a1)				; reset homing attack flag so we can do another one

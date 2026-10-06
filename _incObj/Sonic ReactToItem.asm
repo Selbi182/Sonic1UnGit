@@ -361,7 +361,7 @@ HurtSonic:
 	; .hasshield:
 	.bounceSonicAway:
 		clr.b	(v_shield).w				; remove a potential shield
-		move.b	#4,obRoutine(a0)			; set Sonic to "Sonic_Hurt" routine
+		move.b	#sonic_state_hurt,obRoutine(a0)		; set Sonic to "Sonic_Hurt" routine
 		bsr.w	Sonic_ResetOnFloor			; reset airborne state
 		bset	#1,obStatus(a0)				; force airborne flag again
 
@@ -421,7 +421,7 @@ KillSonic:
 		bne.w	.return					; if yes, branch
 
 		move.b	#0,(v_invinc).w				; remove invincibility
-		move.b	#6,obRoutine(a0)			; set Sonic to "Sonic_Death" routine
+		move.b	#sonic_state_death,obRoutine(a0)	; set Sonic to "Sonic_Death" routine
 		bsr.w	Sonic_ResetOnFloor			; reset airborne state
 		bset	#1,obStatus(a0)				; force airborne flag again
 

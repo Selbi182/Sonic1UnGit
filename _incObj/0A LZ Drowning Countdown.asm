@@ -183,7 +183,7 @@ Drown_Countdown:; Routine $A
 		tst.w	drown_restarttime(a0)			; has Sonic already in drowning state?
 		bne.w	.sonicIsDrowning			; if yes, go to drowning handler
 
-		cmpi.b	#6,(v_player+obRoutine).w		; has Sonic already died?
+		cmpi.b	#sonic_state_death,(v_player+obRoutine).w ; has Sonic already died?
 		bhs.w	.return					; if yes, branch
 		btst	#6,(v_player+obStatus).w		; is Sonic underwater?
 		beq.w	.return					; if not, branch
@@ -285,7 +285,7 @@ Drown_Countdown:; Routine $A
 	.noDebug:	
 		subq.w	#1,drown_restarttime(a0)		; decrement timer before triggering actual death
 		bne.s	.sinking				; if time remains, branch
-		move.b	#6,(v_player+obRoutine).w		; set Sonic to Sonic_Death to deduct life and restart level
+		move.b	#sonic_state_death,(v_player+obRoutine).w ; set Sonic to Sonic_Death to deduct life and restart level
 		rts						; return
 ; ---------------------------------------------------------------------------
 

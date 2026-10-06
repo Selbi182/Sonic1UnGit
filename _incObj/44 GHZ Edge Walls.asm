@@ -55,7 +55,7 @@ Edge_Solid:	; Routine 2
 
 		tst.b	(f_playerctrl).w			; are controls locked?
 		bmi.s	.no_collision				; if yes, branch
-		cmpi.b	#6,(v_player+obRoutine).w		; is Sonic dying?
+		cmpi.b	#sonic_state_death,(v_player+obRoutine).w ; is Sonic dying?
 		bhs.s	.no_collision				; if yes, branch
 		tst.w	(v_debuguse).w				; is debug mode being used?
 		bne.s	.no_collision				; if yes, branch

@@ -9,7 +9,7 @@ LZWaterFeatures:
 
 		tst.b   (f_nobgscroll).w			; is Sonic drowning? (BG no-scroll flag)
 		bne.s	.setWaterHeight				; if yes, skip other effects
-		cmpi.b	#6,(v_player+obRoutine).w		; has Sonic just died?
+		cmpi.b	#sonic_state_death,(v_player+obRoutine).w ; has Sonic just died?
 		bhs.s	.setWaterHeight				; if yes, skip other effects
 
 		bsr.w	LZWindTunnels				; run wind tunnels
@@ -365,7 +365,7 @@ LZWindTunnels:
 
 		tst.b	(f_wtunneldisallow).w			; are wind tunnels disabled?
 		bne.w	.return					; if yes, branch
-		cmpi.b	#4,obRoutine(a1)			; is Sonic hurt/dying?
+		cmpi.b	#sonic_state_hurt,obRoutine(a1)		; is Sonic hurt/dying?
 		bhs.s	.disableTunnel				; if yes, branch
 		move.b	#1,(f_wtunnelmode).w			; set flag that Sonic is in a wind tunnel
 

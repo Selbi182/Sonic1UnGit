@@ -158,7 +158,7 @@ RingLoss:
 		bhs.s	.renderLostRingSprite			; if yes, disallow collecting ring
 		tst.b	(v_debuguse).w				; is debug mode in use?
 		bne.s	.renderLostRingSprite			; if yes, prevent ring collection
-		cmpi.b	#2,(v_player+obRoutine).w		; is Sonic in his normal mode? (Sonic_Control)
+		cmpi.b	#sonic_state_control,(v_player+obRoutine).w ; is Sonic in his normal mode? (Sonic_Control)
 		beq.w	Ring_Collect				; if yes, collect lost ring
 
 ; Lost ring is on screen but not touched, queue for custom sprite rendering

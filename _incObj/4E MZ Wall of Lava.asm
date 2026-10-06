@@ -80,7 +80,7 @@ LWall_Solid:	; Routine 2
 		lea	(Ani_LWall).l,a1			; load animation script
 		bsr.w	AnimateSprite				; animate lava wall
 
-		cmpi.b	#4,(v_player+obRoutine).w		; is Sonic in a hurt state or dying?
+		cmpi.b	#sonic_state_hurt,(v_player+obRoutine).w ; is Sonic in a hurt state or dying?
 		bhs.s	.displayOrDelete			; if yes, temporarily stop moving lava wall
 		bsr.w	SpeedToPos				; update lava wall's position to make it move
 

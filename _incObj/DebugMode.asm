@@ -30,7 +30,7 @@ DebugMode:
 		move.b	#id_Walk,obAnim(a0)			; set Sonic's animation to walk (0)
 
 		bset	#1,obStatus(a0)				; force airborne state to speed up vertical camera
-		move.b	#2,obRoutine(a0)			; force to Sonic_Control routine
+		move.b	#sonic_state_control,obRoutine(a0)	; force to Sonic_Control routine
 		move.w	#$60,(v_lookshift).w			; reset up/down camera shift
 		move.w	#(320/2),(v_camera_pan).w		; Reset the horizontal camera pan value to half screen width
 
