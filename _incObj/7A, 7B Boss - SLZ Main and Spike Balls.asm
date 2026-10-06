@@ -42,23 +42,21 @@ BossStarLight_ObjData:
 BossStarLight_Main:
 		lea	(v_lvlobjspace).w,a1 			; load level object space address
 		lea	BossStarLight_SeesawList(a0),a2 	; load some scratch RAM from the boss object into a2 to keep track of seesaws
-		move.l	#Seesaw,d0
+		move.l	#Map_Seesaw,d0
 		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d1
+		moveq	#3,d2					; number of seesays required
 
 .checkSeesaws:
-		cmp.l	obID(a1),d0 				; is the object a seesaw?
-		bne.s	.skip 					; no, skip
+		cmp.l	obMap(a1),d0				; is the object a seesaw? (NOTE: changed to check mappings since the S3K pointer change)
+		bne.s	.skip 					; if not, skip
 		tst.b	obSubtype(a1) 				; does the seesaw have a ball on it? (object subtype 00 contains a ball)
-		beq.s	.skip 					; yes, skip
+		beq.s	.skip 					; if yes, skip
 		move.w	a1,(a2)+ 				; no ball, so move object address into the scratch RAM and increment, we are storing pointers to seesaws with no balls
-.skip:		adda.w	#object_size,a1 			; move the pointer forward one object size ($40 bytes, this means scanning all of the lvlobjspace to look for seesaws)
+		subq.b	#1,d2					; reduce number of remaining seesaws to find
+		beq.s	.seesawsOkay				; if all three have been found, exit loop
+.skip:		lea	object_size(a1),a1 			; move the pointer forward one object size ($40 bytes, this means scanning all of the lvlobjspace to look for seesaws)
 		dbf	d1,.checkSeesaws 			; keep looking for saws
-
-		; Fix: Do not load boss until all three seesaws are spawned
-		suba.w	a0,a2
-		cmpa.w	#BossStarLight_SeesawList+(2*3),a2
-		beq.s	.seesawsOkay
-		rts
+		rts						; if code lands here, not all three seesaws have been found yet -- exit and try again next frame
 		
 .seesawsOkay:
 		move.w	#boss_slz_x+$188,obX(a0) 		; set render position based on screen position + offset
