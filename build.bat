@@ -32,6 +32,11 @@ REM //   sonic.log    >>  console output redirected to log file
 REM // Still print redirected log output to console (Batch doesn't suppport tee).
 type sonic.log
 
+REM // Fix checksum (only if output was generated).
+if exist s1built.bin (
+    "build_tools\fixheadr.exe" s1built.bin
+)
+
 REM // Append symbol table to the ROM.
 "build_tools\convsym.exe" s1built.sym s1built.bin -a -range 0 FFFFFF -inopt "/localSign=." -exclude -filter "(SMPS_(Track|RAM).*)|(.+_(END|End|end))"
 

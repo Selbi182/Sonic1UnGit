@@ -60,6 +60,9 @@ RingsCollect32: = 1
 DisableSound: = 0
 ;	| If 1, sound driver is never updated (use this for benchmarking, SMPS is very expensive)
 
+SkipChecksumCheck = 0
+;	| If 1, skips the checksum check (note that it has been greatly optimized, so it's smart to keep this at 0)
+
 ; ===========================================================================
 ; Simplifying macros and functions
 	include	"Macros.asm"
@@ -346,7 +349,6 @@ SetupValues:	dc.w $8000					; VDP register start number
 	SetupValues_PSG_End:
 ; End of SetupValues
 
-
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Proper game entry point for Sonic the Hedgehog after initialization
@@ -355,9 +357,40 @@ SetupValues:	dc.w $8000					; VDP register start number
 GameProgram:
 		tst.w	(vdp_control_port).l			; clear write-pending flag in VDP (prevents issues if 68k was reset while writing a command to VDP)
 		btst	#6,(expansion_control).l		; has port C been initialized?
-		beq.s	CheckSumOk				; if not, branch
+		beq.s	CheckSumCheck				; if not, branch
 		cmpi.l	#'init',(v_init).w			; has checksum routine already run?
 		beq.w	GameInit				; if yes, branch
+
+CheckSumCheck:
+	if SkipChecksumCheck=0
+		; Greaty optimized checksum check by vladikcomper
+		lea	(EndOfHeader).l,a0
+		moveq	#0,d1
+		move.l	#EndOfRom,d2
+		sub.l	a0,d2
+		move.l	d2,d3
+		lsr.l	#8,d3
+		subq.w	#1,d3
+		bsr.s	.calc_checksum
+
+		moveq	#0,d3
+		andi.w	#$FE,d2
+		neg.w	d2
+		addi.w	#$100,d2
+		jsr	.calc_checksum(pc,d2.w)
+		cmp.w	(Checksum).w,d1
+		beq.w	CheckSumOk
+
+	.CheckSumError:
+		RaiseError "ChecksumError: Expected %<.w (Checksum).w>, got %<.w d1>"
+
+	.calc_checksum:
+		rept 128
+			add.w	(a0)+,d1
+		endr
+		dbf	d3,.calc_checksum
+		rts
+	endif
 
 CheckSumOk:
 		lea	(v_crossresetram).w,a6			; load cross-reset RAM location
