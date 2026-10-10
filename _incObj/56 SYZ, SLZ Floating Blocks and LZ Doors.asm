@@ -7,6 +7,7 @@ fb_origX:	equ objoff_34		; original x-axis position
 fb_moving:	equ objoff_38		; flag set if object is currently moving
 fb_distance:	equ objoff_3A		; total distance to move
 fb_switch:	equ objoff_3C		; switch ID that triggers action behavior
+fb_windtoggle:	equ objoff_3D		; flag set to remember this door has previously set f_wtunneldisallow
 ; ---------------------------------------------------------------------------
 
 FBlock_Var:	;     width, height
@@ -129,10 +130,15 @@ FBlock_Action:	; Routine 2
 		bsr.w	SolidObject				; make object solid and handle squash kills
 
 .chkDel:
-		out_of_range_with_y_check.s	.checkSYZSpecial,fb_origX(a0),fb_origY(a0)	; has object gone out of range? if yes, branch
+		out_of_range_with_y_check.s	.outOfRange,fb_origX(a0),fb_origY(a0)	; has object gone out of range? if yes, branch
 	.display:
 		DisplaySprite
 		rts				; display object
+
+	.outOfRange:
+		tst.b	fb_windtoggle(a0)			; did this door previously set f_wtunneldisallow?
+		beq.s	.checkSYZSpecial			; if not, branch
+		clr.b	(f_wtunneldisallow).w			; clear flag again
 
 	.checkSYZSpecial:
 		cmpi.b	#$37,obSubtype(a0)			; is this the special horizontally moving block in SYZ3?
@@ -238,6 +244,7 @@ FBlock_LZSmallDoor_Open:
 		cmp.w	obX(a0),d0				; is Sonic right of the door?
 		bhs.s	.checkSwitch				; if not, branch
 		move.b	#1,(f_wtunneldisallow).w		; disable wind tunnel while left of door
+		move.b	#1,fb_windtoggle(a0)			; remember that this door set f_wtunneldisallow
 
 	.checkSwitch:
 		lea	(f_switch).w,a2				; load switch status array

@@ -135,6 +135,7 @@ Elev_TypeIndex:	dc.w Elev_Stationary-Elev_TypeIndex		; 0
 		dc.w Elev_NextOnTouch-Elev_TypeIndex		; 7
 		dc.w Elev_DescendLeft-Elev_TypeIndex		; 8
 		dc.w Elev_FromSpawner-Elev_TypeIndex		; 9
+		dc.w Elev_Falling-Elev_TypeIndex		; A
 ; ===========================================================================
 
 ; Type 0 - stationary
@@ -227,7 +228,22 @@ Elev_FromSpawner:
 		move.b	#sonic_state_control,obRoutine(a1)	; force Sonic to Sonic_Control routine
 
 	.delete:
-		bra.w	DeleteObject				; delete platform
+		move.b	#$A,obSubtype(a0)			; set to Elev_Falling
+		rts						; return
+; ===========================================================================
+
+; Type A - falls down and despawns once offscreen beyond initial Y-position (created from Type 9)
+
+Elev_Falling:
+		jsr	ObjectFall				; make platform fall increasingly faster
+		
+		move.w	elev_origY(a0),d0			; get initial Y-position
+		cmp.w	obY(a0),d0				; did platform drop below its origin?
+		bcc.s	.return					; if not, keep it alive
+		tst.b	obRender(a0)				; has platform gone off screen?
+		bpl.w	DeleteObject				; if yes, delete it
+	.return:
+		rts						; return
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

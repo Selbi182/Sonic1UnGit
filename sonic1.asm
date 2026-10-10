@@ -2156,7 +2156,7 @@ Tit_CountC:
 
 ; loc_3230:
 Tit_ChkStartOrDemo:
-		andi.b	#btnStart,(v_jpadpress1).w		; check if Start is pressed
+		andi.b	#btnStart|btnC,(v_jpadpress1).w		; check if Start or C is pressed
 		beq.w	Tit_MainLoop				; if not, continue looping title screen
 
 Tit_ChkLevSel:

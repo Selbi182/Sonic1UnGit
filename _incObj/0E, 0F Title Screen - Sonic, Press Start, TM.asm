@@ -90,7 +90,8 @@ PSB_PrsStart:	; Routine 2
 		tst.b	ob2ndRout(a0)				; has menu already been activated?
 		bne.s	PSB_TitleMenu				; if yes, branch
 
-		btst	#bitStart,(v_jpadpress1).w		; was START button pressed?
+		move.b	#btnStart|btnC,d0			; was START or C button...
+		and.b	(v_jpadpress1).w,d0			; ...pressed?
 		bne.s	.activateMenu				; if yes, branch
 		lea	(Ani_PSBTM).l,a1			; "PRESS START" is animated
 		bsr.w	AnimateSprite				; flash PSB object

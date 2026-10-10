@@ -314,7 +314,7 @@ Plat_ChangeMotion:
 ; ===========================================================================
 
 Plat_ChkDel:
-		out_of_range_with_y_check.s	Plat_Delete,plat_origX(a0),plat_origY(a0)	; has platform gone out of range? if yes, delete it
+		out_of_range_with_y_check.s	Plat_Delete,plat_origX(a0),plat_rawY(a0)	; has platform gone out of range? if yes, delete it
 		DisplaySprite
 		rts				; display platform sprite
 ; ===========================================================================

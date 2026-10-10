@@ -155,7 +155,7 @@ PLC_SLZ:	plcheader
 		plcm	KosPM_Orbinaut,		ArtTile_SLZ_Orbinaut		; orbinaut enemy
 		plcm	KosPM_MzFire,		ArtTile_SLZ_Fireball		; fireballs
 		plcm	KosPM_SlzBlock,		ArtTile_SLZ_Collapsing_Floor	; block
-		plcm	KosPM_SlzWall,		ArtTile_GHZ_SLZ_Smashable_Wall+4 ; breakable wall
+		plcm	KosPM_SlzWall,		ArtTile_GHZ_SLZ_Smashable_Wall	; breakable wall
 		plcm	KosPM_Spikes,		ArtTile_Spikes			; spikes
 		plcm	KosPM_HSpring,		ArtTile_Spring_Horizontal	; horizontal spring
 		plcm	KosPM_VSpring,		ArtTile_Spring_Vertical		; vertical spring
@@ -212,7 +212,7 @@ PLC_SBZ:	plcheader
 		plcm	KosPM_SbzDoor2,		ArtTile_SBZ_Horizontal_Door	; horizontal door
 		plcm	KosPM_Electric,		ArtTile_SBZ_Electric_Orb	; electric orb
 		plcm	KosPM_TrapDoor,		ArtTile_SBZ_Trap_Door		; trapdoor
-		plcm	KosPM_SbzFloor,		ArtTile_SBZ_Collapsing_Floor+4	; collapsing floor
+		plcm	KosPM_SbzFloor,		ArtTile_SBZ_Collapsing_Floor	; collapsing floor
 		plcm	KosPM_SpinPform,	ArtTile_SBZ_Spinning_Platform	; small spinning platform
 		plcm	KosPM_LzSwitch,		ArtTile_Button			; switch
 		plcm	KosPM_Spikes,		ArtTile_Spikes			; spikes

@@ -2,19 +2,19 @@
 ; Sprite mappings - collapsing floors (MZ, SLZ, SBZ)
 ; ---------------------------------------------------------------------------
 Map_CFlo_internal:	mappingsTable
-	mappingsTableEntry.w	.leftfacing
-	mappingsTableEntry.w	.rightfacing
-	mappingsTableEntry.w	.leftsmash
-	mappingsTableEntry.w	.rightsmash
+	mappingsTableEntry.w	.idle_generic
+	mappingsTableEntry.w	.collapse_generic
+	mappingsTableEntry.w	.idle_slz
+	mappingsTableEntry.w	.collapse_slz
 
-.leftfacing:	spriteHeader
-	spritePiece	-$20, -8, 4, 2, 0, 0, 0, 0, 0	; MZ and SBZ blocks
+.idle_generic:	spriteHeader
+	spritePiece	-$20, -8, 4, 2, 0, 0, 0, 0, 0	; MZ and SBZ blocks (identical 16x16 pixel blocks)
 	spritePiece	-$20, 8, 4, 2, 0, 0, 0, 0, 0
 	spritePiece	0, -8, 4, 2, 0, 0, 0, 0, 0
 	spritePiece	0, 8, 4, 2, 0, 0, 0, 0, 0
-.leftfacing_End
+.idle_generic_End
 
-.rightfacing:	spriteHeader
+.collapse_generic:	spriteHeader
 	spritePiece	-$20, -8, 2, 2, 0, 0, 0, 0, 0
 	spritePiece	-$10, -8, 2, 2, 0, 0, 0, 0, 0
 	spritePiece	0, -8, 2, 2, 0, 0, 0, 0, 0
@@ -23,16 +23,16 @@ Map_CFlo_internal:	mappingsTable
 	spritePiece	-$10, 8, 2, 2, 0, 0, 0, 0, 0
 	spritePiece	0, 8, 2, 2, 0, 0, 0, 0, 0
 	spritePiece	$10, 8, 2, 2, 0, 0, 0, 0, 0
-.rightfacing_End
+.collapse_generic_End
 
-.leftsmash:	spriteHeader
-	spritePiece	-$20, -8, 4, 2, 0, 0, 0, 0, 0	; SLZ blocks
+.idle_slz:	spriteHeader
+	spritePiece	-$20, -8, 4, 2, 0, 0, 0, 0, 0	; SLZ blocks (mirrored in the middle)
 	spritePiece	-$20, 8, 4, 2, 8, 0, 0, 0, 0
 	spritePiece	0, -8, 4, 2, 0, 0, 0, 0, 0
 	spritePiece	0, 8, 4, 2, 8, 0, 0, 0, 0
-.leftsmash_End
+.idle_slz_End
 
-.rightsmash:	spriteHeader
+.collapse_slz:	spriteHeader
 	spritePiece	-$20, -8, 2, 2, 0, 0, 0, 0, 0
 	spritePiece	-$10, -8, 2, 2, 4, 0, 0, 0, 0
 	spritePiece	0, -8, 2, 2, 0, 0, 0, 0, 0
@@ -41,6 +41,6 @@ Map_CFlo_internal:	mappingsTable
 	spritePiece	-$10, 8, 2, 2, $C, 0, 0, 0, 0
 	spritePiece	0, 8, 2, 2, 8, 0, 0, 0, 0
 	spritePiece	$10, 8, 2, 2, $C, 0, 0, 0, 0
-.rightsmash_End
+.collapse_slz_End
 
 	even

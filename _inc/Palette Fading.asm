@@ -15,7 +15,7 @@ PalFadeIn_Playable_Alt:				; start position and size are already set
 		moveq	#$00,d6					; MJ: clear d6
 
 .mainloop:
-		move.b	#id_VBlank_PaletteFade,(v_vblank_routine).w	; set VBlank routine to $08
+		move.b	#id_VBlank_Levels,(v_vblank_routine).w	; set VBlank routine to $08
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
 		addq.w	#1,(v_framecount).w			; add 1 to level timer
 
@@ -23,6 +23,7 @@ PalFadeIn_Playable_Alt:				; start position and size are already set
 		bsr.w	LZWaterFeatures				; apply water features if in Labyrinth Zone
 		jsr	(ExecuteObjects).l			; execute all objects in object RAM
 		bsr.w	DeformLayers				; scroll planes and do background deformation
+		bsr.w	LoadTilesAsYouMove			; update level tiles while screen is moving
 		jsr	(BuildSprites).l			; build sprite table
 		jsr	(ObjPosLoad).l				; run the object manager to load level objects
 		jsr	(RingsManager).l			; execute S3K Rings Manager
@@ -35,7 +36,7 @@ PalFadeIn_Playable_Alt:				; start position and size are already set
 		bsr.s	FadeIn_FromBlack
 		subq.b	#$02,d4					; MJ: decrease colour check
 		bne.s	.mainloop				; MJ: if it has not reached null, branch
-		move.b	#id_VBlank_PaletteFade,(v_vblank_routine).w ; MJ: wait for V-blank again (so colours transfer)
+		move.b	#id_VBlank_Levels,(v_vblank_routine).w ; MJ: wait for V-blank again (so colours transfer)
 		bra.w	WaitForVBlank				; MJ: ''
 ; End of function PaletteFadeIn_Playable
 
