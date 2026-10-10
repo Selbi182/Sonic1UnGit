@@ -1352,25 +1352,32 @@ Tilemap_Cell:
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Subroutine to add all entries from a PLC list to the PLC queue
-; ---------------------------------------------------------------------------
+;
 ; Input:
 ;    d0 = index of PLC list
 ; ---------------------------------------------------------------------------
 
-NewPLC:
-		bsr.s	ClearPLC				; like AddPLC, but clear the PLC queue first
+AddPLC_Direct:	; a1 = already points to the start of a PLC list (skip PLC ID system)
+		movem.l	a1-a2,-(sp)				; store register data
+		bra.s	AddPLC_ListSet				; PLC list was already set in a1
 ; ---------------------------------------------------------------------------
 
-AddPLC:
+NewPLC:		; like AddPLC, but clear the PLC queue first
+		bsr.s	ClearPLC				; clear previous PLC list
+; ---------------------------------------------------------------------------
+
+AddPLC:		; load a PLC list via the regular PLC ID system
 		movem.l	a1-a2,-(sp)				; store register data
 		lea	(ArtLoadCues).l,a1			; load PLC list address
 		add.w	d0,d0					; double for word-based indexing
 		move.w	(a1,d0.w),d0				; load correct relative add address
 		lea	(a1,d0.w),a1				; add and load actual address of list
+
+AddPLC_ListSet:
 		move.w	(a1)+,d0				; load size of list
 		bmi.s	.return					; if there is no list, branch
 
-		lea	(v_plc_buffer).w,a2			; load PLC process list		
+		lea	(v_plc_buffer).w,a2			; load PLC process list
 	.findspace:
 		tst.l	(a2)					; is this slot taken?
 		beq.s	.fillQueue				; if not, branch
@@ -1390,11 +1397,12 @@ AddPLC:
 ; ---------------------------------------------------------------------------
 
 .overflow:
-		; WARNING: This will just silently drop the new PLC request and move on
-		; like nothing happened. Ideally, you would raise an error here or some
-		; other debugging functionality to troubleshoot any queue overflows!
-		RaiseError "PLC queue overflow"			; comment this in if you have vladikcomper's Debugger
+	if def(RaiseError)
+		RaiseError "PLC queue overflow"			; show a proper error message if vladikcomper's debugger is installed
+	else
+		; WARNING: This will just silently drop the new PLC request and move on like nothing happened!
 		bra.s	.return					; otherwise, just silently return...
+	endif
 ; End of function AddPLC
 
 ; ===========================================================================

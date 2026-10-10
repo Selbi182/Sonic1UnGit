@@ -9,17 +9,7 @@ plcptr:		macro *,plc
 		dc.w	plc-ArtLoadCues
 		endm
 
-; Macro for the header of a PLC list
-plcheader:	macro *
-\*:
-		dc.w ((\*_end-\*-2)/6)-1
-		endm
-
-; Macro for single pattern load cue entry
-plcm:	macro gfx,vram
-	dc.l gfx
-	dc.w (vram)*tile_size
-	endm
+; Note: plcheader and plcm macros have been moved to _Macros.asm!
 
 ; ---------------------------------------------------------------------------
 
