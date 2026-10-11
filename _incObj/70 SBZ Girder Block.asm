@@ -52,7 +52,7 @@ Gird_Action:	; Routine 2
 ; ---------------------------------------------------------------------------
 
 	.chkdel:
-		out_of_range_with_y_check.s	.delete,gird_origX(a0),gird_origY(a0)		; has object gone out of range (initial X-position)? if yes, branch
+		out_of_range.s	.delete,gird_origX(a0)		; has object gone out of range (initial X-position)? if yes, branch
 		DisplaySprite
 		rts			; display girder block
 
