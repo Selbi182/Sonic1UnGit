@@ -2,11 +2,11 @@
 ; ---------------------------------------------------------------------------
 ; Object 52 - moving platform blocks (MZ, LZ, SBZ)
 ; ---------------------------------------------------------------------------
-mblock_raft:		equ objoff_2F	; flag set for hidden LZ1 raft
 mblock_origX:		equ objoff_30	; initial X-position
 mblock_origY:		equ objoff_32	; initial Y-position
 mblock_slide_wait:	equ objoff_34	; (subtype 9/A only) delay before red sliding floor moves back
 mblock_slide_goback:	equ objoff_36	; (subtype 9/A only) set if red sliding floor is currently moving back
+mblock_raft:		equ objoff_37	; flag set for hidden LZ1 raft
 mblock_fix_storeX:	equ objoff_38	; stores X-position around MBlock_Move to avoid stack pointer corruption
 ; ---------------------------------------------------------------------------
 
@@ -49,7 +49,7 @@ MovingBlock:
 		move.b	(a2)+,obActWid(a0)			; set sprite display width and solidity width
 		move.b	(a2)+,obFrame(a0)			; set frame ID
 
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 		move.w	obX(a0),mblock_origX(a0)		; remember initial X-position
 		move.w	obY(a0),mblock_origY(a0)		; remember initial Y-position
 		andi.b	#$F,obSubtype(a0)			; mask out upper subtype digit
@@ -137,8 +137,10 @@ MBlock_LeftRight:
 
 ; Type 2/4/9 - stationary, advances to next subtype when stood on (3/5/A)
 MBlock_NextWhenStoodOn:
-		tst.b	(mblock_raft).w				; is this the hidden LZ1 raft?
+		tst.b	mblock_raft(a0)				; is this the hidden LZ1 raft?
 		beq.s	.noRaft					; if not, branch
+		tst.b	(f_water).w
+		beq.s	.noRaft
 		move.w	(v_waterpos1).w,d0			; get water height
 		addq.w	#8,d0					; move platform 8px down
 		move.w	d0,obY(a0)				; align platform to water
@@ -171,8 +173,10 @@ MBlock_Right_StopOnWall:
 
 ; Type 5 (set from Type 4) - moves right, advances to Type 6 on wall hit (falling down)
 MBlock_Right_FallOnWall:
-		tst.b	(mblock_raft).w				; is this the hidden LZ1 raft?
+		tst.b	mblock_raft(a0)				; is this the hidden LZ1 raft?
 		beq.s	.noRaft					; if not, branch
+		tst.b	(f_water).w
+		beq.s	.noRaft
 		move.w	(v_waterpos1).w,d0			; get water height
 		addq.w	#8,d0					; move platform 8px down
 		move.w	d0,obY(a0)				; align platform to water
@@ -219,7 +223,7 @@ MBlock_SecretLZ1Raft:
 		beq.s	.hidePlatform				; if not, branch
 	.spawn:
 		subq.b	#3,obSubtype(a0)			; change platform to type 04 (stationary, moves right when stood on, drops on wall hit)
-		st.b	(mblock_raft).w				; set raft flag
+		st.b	mblock_raft(a0)				; set raft flag
 		st.b	(f_obj56).w				; set flag to force respawn
 
 	.hidePlatform:
@@ -260,7 +264,7 @@ MBlock_SlideFast:
 		neg.w	d3					; check target distance to the left instead
 
 	.slide:
-		tst.w	mblock_slide_goback(a0)			; is platform set to move back?
+		tst.b	mblock_slide_goback(a0)			; is platform set to move back?
 		bne.s	.goingBack				; if yes, branch
 
 		move.w	obX(a0),d0				; get current platform X-position as it slides
@@ -275,7 +279,7 @@ MBlock_SlideFast:
 .waiting:
 		subq.w	#1,mblock_slide_wait(a0)		; decrement from time delay before moving back
 		bne.s	.return					; if time remains, branch
-		move.w	#1,mblock_slide_goback(a0)		; set platform to move back to its original position
+		move.b	#1,mblock_slide_goback(a0)		; set platform to move back to its original position
 
 	.return:
 		rts						; return
@@ -290,7 +294,7 @@ MBlock_SlideFast:
 ; ---------------------------------------------------------------------------
 
 .reset:
-		clr.w	mblock_slide_goback(a0)			; set platform as moved back to its original position
+		clr.b	mblock_slide_goback(a0)			; set platform as moved back to its original position
 		subq.b	#1,obSubtype(a0)			; change type back to 09 to wait for Sonic to step on platform again
 		rts						; return
 ; End of function MBlock_Move
