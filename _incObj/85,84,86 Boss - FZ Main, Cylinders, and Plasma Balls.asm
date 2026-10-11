@@ -286,8 +286,10 @@ BossFinal_Eggman_Crush:
 
 ; loc_19FBC:
 .defeated:
-		moveq	#100,d0
+		moveq	#100,d0					; add 1000 points
 		jsr	(AddPoints).l
+		move.b	#0,(f_timecount).w			; stop time counter
+
 		move.b	#6,BossFinal_ParentObj(a0)		; set routine to BossFinal_Eggman_Fall
 		move.w	#boss_fz_x+$170,obX(a0)			; set location to fall from
 		move.w	#boss_fz_y+$2C,obY(a0)
@@ -500,7 +502,6 @@ BossFinal_Eggman_Escape:
 		move.w	#30,BossFinal_EscapeTimer(a0) 		; set a timer for 30 frames
 		move.w	#sfx_HitBoss,d0
 		jsr	(QueueSound2).l				; play boss damage sound
-		move.b	#0,(f_timecount).w			; stop time counter
 
 ; loc_1A1FC:
 .shipHover:
