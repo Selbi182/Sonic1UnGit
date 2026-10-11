@@ -135,6 +135,11 @@ BossFinal_Eggman:	; Routine 2
 		move.w	BossFinal_Eggman_Index(pc,d0.w),d0	; use the object routine index and Eggman_Index to calculate our offset
 		jsr	BossFinal_Eggman_Index(pc,d0.w)		; jump into the index table using the calculated offset
 		DisplaySprite
+
+		cmpi.w	#boss_fz_end+$E0,(v_player+obX).w	; has Sonic reached the ledge?
+		blt.s	.noLedge				; if not, branch
+		move.w	#boss_fz_end+$E0,(v_player+obX).w	; set Sonic to the ledge
+	.noLedge:
 		rts
 ; ===========================================================================
 BossFinal_Eggman_Index:
@@ -495,6 +500,7 @@ BossFinal_Eggman_Escape:
 		move.w	#30,BossFinal_EscapeTimer(a0) 		; set a timer for 30 frames
 		move.w	#sfx_HitBoss,d0
 		jsr	(QueueSound2).l				; play boss damage sound
+		move.b	#0,(f_timecount).w			; stop time counter
 
 ; loc_1A1FC:
 .shipHover:
@@ -525,9 +531,9 @@ BossFinal_Eggman_Escape:
 
 ; loc_1A23A:
 .ledge:
-		cmpi.w	#boss_fz_end+$E0,(v_player+obX).w	; has Sonic reached the ledge?
-		blt.s	.ending					; if not, branch
-		move.w	#boss_fz_end+$E0,(v_player+obX).w	; set Sonic to the ledge
+	;	cmpi.w	#boss_fz_end+$E0,(v_player+obX).w	; has Sonic reached the ledge?
+	;	blt.s	.ending					; if not, branch
+	;	move.w	#boss_fz_end+$E0,(v_player+obX).w	; set Sonic to the ledge
 
 ; loc_1A248:
 .ending:
