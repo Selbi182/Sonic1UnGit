@@ -194,6 +194,7 @@ cMagenta:		equ cBlue+cRed				; color magenta
 ; Joypad input
 bitUp:			equ 0
 bitDn:			equ 1
+bitDown:		equ bitDn				; (the idiot who named this Dn instead of Down deserves getting punched)
 bitL:			equ 2
 bitR:			equ 3
 bitB:			equ 4
@@ -202,6 +203,7 @@ bitA:			equ 6
 bitStart:		equ 7
 btnUp:			equ 1<<bitUp				; ($01)
 btnDn:			equ 1<<bitDn				; ($02)
+btnDown:		equ btnDn				; ($02)
 btnL:			equ 1<<bitL				; ($04)
 btnR:			equ 1<<bitR				; ($08)
 btnB:			equ 1<<bitB				; ($10)
@@ -210,6 +212,19 @@ btnA:			equ 1<<bitA				; ($40)
 btnStart:		equ 1<<bitStart				; ($80)
 btnDir:			equ btnUp|btnDn|btnL|btnR		; ($0F)
 btnABC:			equ btnA|btnB|btnC			; ($70)
+btnAB:			equ btnA|btnB				; ($50)
+btnAC:			equ btnA|btnC				; ($60)
+btnBC:			equ btnB|btnC				; ($30)
+
+; Joypad input - extra buttons on 6-button controller inputs
+bitZ:		equ 0
+bitY:		equ 1
+bitX:		equ 2
+bitMode:	equ 3
+btnZ:		equ 1<<bitZ
+btnY:		equ 1<<bitY
+btnX:		equ 1<<bitX
+btnMode:	equ 1<<bitMode
 
 ; Flags used by obRender and BuildSprites
 sprite_xflip_bit:	equ 0					; flip sprite mappings horizontally (X-axis)

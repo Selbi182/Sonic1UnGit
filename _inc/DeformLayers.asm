@@ -21,7 +21,8 @@ DeformLayers:
 		bsr.w	ScrollVertical
 		bsr.w	DynamicLevelEvents			; update level boundaries, load bosses etc.
 	.skipScroll:
-
+		bsr.w	GenerateCameraShake			; apply camera shake now (needs to be done after the above scroll routines)
+ 
 		move.w	(v_screenposy).w,(v_scrposy_vdp).w	; v_scrposy_vdp is sent to VSRAM during VBlank
 		move.w	(v_bgscreenposy).w,(v_bgscrposy_vdp).w
 
@@ -910,3 +911,71 @@ BGScroll_Block3:
 	.return:
 		rts
 ; End of function BGScroll_Block3
+
+
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Camera shaking
+; ---------------------------------------------------------------------------
+CamShake_Max:	equ	7
+; ---------------------------------------------------------------------------
+
+GenerateCameraShake:
+		tst.b	(CameraShake).w			; is camera shake currently active?
+		beq.w	.end				; if not, nothing to do
+
+		moveq	#0,d0				; clear d0
+		moveq	#0,d1				; clear d1
+
+		bsr.w	RandomNumber			; get random numbers in d0 and d1
+		move.w	d0,d1
+		swap	d0
+
+		moveq	#0,d2
+		move.b	(CameraShake).w,d2
+		asr.w	#1,d2
+		cmpi.b	#CamShake_Max,d2
+		blo.s	.ok
+		moveq	#CamShake_Max-1,d2
+	
+	.ok:
+		moveq	#0,d3				; clear d3
+		move.b	d2,d3				; copy intensity
+		lsr.b	#1,d3				; half the copy
+
+		and.w	d2,d0				; limit random number by intensity (this is now the Y offset)
+		sub.w	d3,d0				; make 50% of the numbers negative
+		and.w	d2,d1				; limit random number by intensity (this is now the X offset)
+		sub.w	d3,d1				; make 50% of the numbers negative
+
+		add.w	d0,(v_screenposx).w		; add X shake offset to camera X position
+		bpl.s	.xgood				; if not, branch
+		add.w	(v_screenposx).w,d0
+		move.w	#0,(v_screenposx).w
+.xgood:
+		add.w	d1,(v_screenposy).w		; add Y shake offset to camera Y position
+		bpl.s	.remember			; if not, branch
+		add.w	(v_screenposy).w,d1
+		move.w	#0,(v_screenposy).w
+
+.remember:
+		move.w	d0,(CameraShake_XOffset).w	; remember X shake offset for later
+		move.w	d1,(CameraShake_YOffset).w	; remember Y shake offset for later
+.end:		rts
+; ===========================================================================
+
+; called after level and sprites rendering is done
+UndoCameraShake:
+		tst.b	(CameraShake).w			; is camera shake currently active?
+		bne.s	.undocamshake			; if not, nothing to do
+		rts
+; ---------------------------------------------------------------------------
+
+.undocamshake:
+		subq.b	#1,(CameraShake).w		; subtract one from timer
+
+		move.w	(CameraShake_XOffset).w,d0	; get X shake offset for this frame
+		sub.w	d0,(v_screenposx).w		; undo X shake
+		move.w	(CameraShake_YOffset).w,d0	; get Y shake offset for this frame
+		sub.w	d0,(v_screenposy).w		; undo shake
+		rts

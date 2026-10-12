@@ -10,7 +10,7 @@ MotoBug:
 		move.l	#Map_Moto,obMap(a0)			; set mappings
 		move.w	#ArtTile_Moto_Bug,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 		move.b	#40/2,obActWid(a0)			; set sprite display width
 
 		tst.b	obAnim(a0)				; is this a smoke particle object?
@@ -20,19 +20,18 @@ MotoBug:
 		move.b	#col_40x32|col_badnik,obColType(a0)	; set collision type for ReactToItem
 
 		; Make the Motobug fall until it has collided with the floor (while invisible)
-		bsr.w	ObjectFall				; increase gravity and update position
-		jsr	(ObjFloorDist).l			; get distance between Motobug and floor
-		tst.w	d1					; has Motobug hit the floor?
-		bpl.s	.hide					; if not, branch
+	.matchFloor:
+		addq.w	#8,obY(a0)				; move badnik down until it hits floor
+		cmpi.w	#$7FF,obY(a0)				; has object fallen below max level height?
+		bhi.w	DeleteObject				; if yes, delete it
+		jsr	(ObjFloorDist).l			; get distance between badnik and floor
+		tst.w	d1					; has badnik hit the floor?
+		bpl.s	.matchFloor				; if not, loop
 		add.w	d1,obY(a0)				; match object's position with the floor
 		move.w	#0,obVelY(a0)				; clear falling speed
 		move.l	#Moto_Action,obID(a0)			; advance to Moto_Action
 		bchg	#status_xflip_bit,obStatus(a0)		; make Motobug face to the left on spawn
-	.hide:
-
-		cmpi.w	#$7FF,obY(a0)				; has object fallen below max level height?
-		bhi.w	DeleteObject				; if yes, delete it
-		rts						; return (and do NOT display sprite yet)
+		bra.s	Moto_Action
 ; ---------------------------------------------------------------------------
 
 	.smoke:

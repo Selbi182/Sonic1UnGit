@@ -21,9 +21,8 @@ CalcSine:
 ; End of function CalcSine
 
 ; ===========================================================================
-; Precalculated Sinewave data. Do note that because two entries are $100,
-; only reading a byte for the retrieved return value can result in those
-; being interpreted as $00. It would be safer to change those values to $FF.
+; Precalculated Sinewave data.
+; ($100 entries were changed to $FF to stay in byte range.)
 
 Sine_Data:
 		dc.w    $0,  $6,  $C, $12, $19, $1F, $25, $2B	;          -=--
@@ -34,7 +33,7 @@ Sine_Data:
 		dc.w   $D4, $D8, $DB, $DE, $E1, $E4, $E7, $EA	;                  =-
 		dc.w   $EC, $EE, $F1, $F3, $F4, $F6, $F8, $F9	;                  -=
 		dc.w   $FB, $FC, $FD, $FE, $FE, $FF, $FF, $FF	;                   =
-		dc.w  $100, $FF, $FF, $FF, $FE, $FE, $FD, $FC	;                   =
+		dc.w   $FF, $FF, $FF, $FF, $FE, $FE, $FD, $FC	;                   =
 		dc.w   $FB, $F9, $F8, $F6, $F4, $F3, $F1, $EE	;                  -=
 		dc.w   $EC, $EA, $E7, $E4, $E1, $DE, $DB, $D8	;                  =-
 		dc.w   $D4, $D1, $CD, $C9, $C5, $C1, $BD, $B9	;                 -=
@@ -50,7 +49,7 @@ Sine_Data:
 		dc.w  -$D4,-$D8,-$DB,-$DE,-$E1,-$E4,-$E7,-$EA	; -=
 		dc.w  -$EC,-$EE,-$F1,-$F3,-$F4,-$F6,-$F8,-$F9	; =-
 		dc.w  -$FB,-$FC,-$FD,-$FE,-$FE,-$FF,-$FF,-$FF	; =
-		dc.w -$100,-$FF,-$FF,-$FF,-$FE,-$FE,-$FD,-$FC	; =
+		dc.w  -$FF,-$FF,-$FF,-$FF,-$FE,-$FE,-$FD,-$FC	; =
 		dc.w  -$FB,-$F9,-$F8,-$F6,-$F4,-$F3,-$F1,-$EE	; =-
 		dc.w  -$EC,-$EA,-$E7,-$E4,-$E1,-$DE,-$DB,-$D8	; -=
 		dc.w  -$D4,-$D1,-$CD,-$C9,-$C5,-$C1,-$BD,-$B9	;  =-

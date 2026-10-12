@@ -84,7 +84,7 @@ Swing_CreateLinks:
 		subi.b	#$10,d3					; reduce radius for next child object
 		bcc.s	.next					; is this the anchor (no radius)? if not, branch
 		move.b	#2,obFrame(a1)				; use "anchor" frame
-		move.w	#spr_prio3,obPriority(a1)			; use higher sprite priority than chains
+		move.w	#spr_prio3,obPriority(a1)		; use higher sprite priority than chains
 		bset	#6,obGfx(a1)				; force palette line 3
 	.next:
 		dbf	d1,.loopMakeChain			; repeat d1 times (chain length)
@@ -104,8 +104,9 @@ Swing_CreateLinks:
 		beq.s	.checkSBZ				; if not, branch
 		move.l	#Map_GBall,obMap(a0)			; use GHZ ball mappings
 		move.w	#ArtTile_GHZ_Giant_Ball|Tile_Pal3,obGfx(a0) ; set alternate art tile
+		move.b	#128/2,obActWid(a0)			; set sprite display width
 		move.b	#1,obFrame(a0)				; use checkered frame ID
-		move.w	#spr_prio2,obPriority(a0)			; set alternate sprite priority (above chains)
+		move.w	#spr_prio2,obPriority(a0)		; set alternate sprite priority (above chains)
 		move.b	#col_40x40|col_hurt,obColType(a0)	; make ball harmful on touch
 
 	.checkSBZ:

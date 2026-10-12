@@ -189,7 +189,7 @@ React_CollisionDetected:
 		beq.s	React_Monitor				; if yes, branch
 
 React_Ring:
-		cmpi.l	#GRing_Display,obID(a1)			; was collected object a giant ring?
+		cmpi.l	#Map_GRing,obMap(a1)			; was collected object a giant ring?
 		beq.s	.giantRing				; if yes, branch
 
 		; Object was a regular ring (lost ring, attraction-lost ring, or placed-in-debug ring)
@@ -387,9 +387,9 @@ HurtSonic:
 		tst.b	(f_ringcount).w				; have lost rings been spawned?
 		bmi.s	.return					; if yes, do not play regular damage sound
 		move.w	#sfx_HitSpikes,d0			; use spike damage sound
-		cmpi.l	#Spikes,obID(a2)			; was damage caused by spikes?
+		cmpi.l	#Map_Spike,obMap(a2)			; was damage caused by spikes?
 		beq.s	.sound					; if yes, branch
-		cmpi.l	#Harpoon,obID(a2)			; was damage caused by LZ harpoon?
+		cmpi.l	#Map_Harp,obMap(a2)			; was damage caused by LZ harpoon?
 		beq.s	.sound					; if yes, branch
 		move.w	#sfx_Death,d0				; use generic damage sound
 	.sound:
@@ -447,9 +447,9 @@ KillSonic:
 		clr.b	(f_timecount).w				; stop time counter
 
 		move.w	#sfx_HitSpikes,d0			; play spikes death sound
-		cmpi.l	#Spikes,obID(a2)			; check if you were killed by spikes
+		cmpi.l	#Map_Spike,obMap(a2)			; check if you were killed by spikes
 		beq.s	.sound					; if yes, branch
-		cmpi.l	#Harpoon,obID(a2)			; check if you were killed by a harpoon
+		cmpi.l	#Map_Harp,obMap(a2)			; check if you were killed by a harpoon
 		beq.s	.sound					; if yes, branch
 		move.w	#sfx_Death,d0				; play normal death sound
 

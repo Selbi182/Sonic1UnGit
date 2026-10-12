@@ -7,23 +7,16 @@ debug_startspeed: equ 15	; initial movement speed when first holding D-Pad
 ; ---------------------------------------------------------------------------
 
 DebugMode:
-		tst.b	(v_debuguse).w
-		bne.w	Debug_Action
+		tst.w	(v_debuguse).w				; was debug mode already activated last frame?
+		bmi.w	Debug_Action				; if yes, skip init
 
-;Debug_Init:
-		addq.b	#2,(v_debuguse).w			; set to Debug_Action
+; Debug_Init:
+		move.w	#-1,(v_debuguse).w			; set to Debug_Action
 
-	;	move.w	(v_limittop2).w,(v_limittopdb).w	; buffer level x-boundary
-	;	move.w	(v_limitbtm1).w,(v_limitbtmdb).w	; buffer level y-boundary
 		cmpi.b	#id_Special,(v_gamemode).w		; are we in a Special Stage?
 		beq.s	.wrapDone				; if yes, skip wrapping
-	;	move.w	#0,(v_limittop2).w			; unlock top screen boundary
-	;	move.w	#$800-224,(v_limitbtm1).w		; unlock bottom level boundary, minus screen height
-
-		; Do vertical wrapping in LZ3 and SBZ2
 		andi.w	#$7FF,(v_player+obY).w			; wrap Sonic's Y-position
 		andi.w	#$7FF,(v_screenposy).w			; wrap screen Y-position
-	;	andi.w	#$3FF,(v_bgscreenposy).w		; wrap background Y-position
 	.wrapDone:
 
 		move.b	#fr_Null,obFrame(a0)			; set Sonic's frame to null (blank)
@@ -276,9 +269,12 @@ Debug_ChgItem:
 ; ---------------------------------------------------------------------------
 
 Debug_ExitDebugMode:
+		tst.w	(f_debugmode).w				; was debug mode somehow entered despite the flag not being on?
+		beq.s	.doExit					; if yes, force exit
 		btst	#bitB,(v_jpadpress1).w			; is button B pressed?
 		beq.s	.return					; if not, stay in debug mode
 
+	.doExit:
 		moveq	#0,d0					; prepare 0 value
 		move.w	d0,(v_debuguse).w			; deactivate debug mode
 		move.l	#Map_Sonic,(v_player+obMap).w		; reset Sonic's mappings
@@ -286,9 +282,6 @@ Debug_ExitDebugMode:
 		move.b	d0,(v_player+obAnim).w			; reset Sonic's animation to walking
 		move.w	d0,obSubpixelX(a0)			; clear Sonic's X subpixel portion
 		move.w	d0,obSubpixelY(a0)			; clear Sonic's Y subpixel portion
-
-	;	move.w	(v_limittopdb).w,(v_limittop2).w	; restore top level boundary
-	;	move.w	(v_limitbtmdb).w,(v_limitbtm1).w	; restore bottom level boundary
 
 		cmpi.b	#id_Special,(v_gamemode).w		; are you in the Special Stage?
 		bne.s	.notSS					; if not, branch

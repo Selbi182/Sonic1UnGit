@@ -12,25 +12,23 @@ Crabmeat:
 		move.l	#Map_Crab,obMap(a0)			; set mappings
 		move.w	#ArtTile_Crabmeat,obGfx(a0)		; set art tile
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)		; set sprite priority
 		move.b	#col_badnik|col_32x32,obColType(a0)	; set collision type ($06)
 		move.b	#42/2,obActWid(a0)			; set sprite display width
 
 		; Make the Crabmeat fall until it has collided with the floor (while invisible)
-		bsr.w	ObjectFall				; increase gravity and update position
-		jsr	(ObjFloorDist).l			; get distance between Crabmeat and floor
-		tst.w	d1					; has Crabmeat hit the floor?
-		bpl.s	.hide					; if not, branch
+	.matchFloor:
+		addq.w	#8,obY(a0)				; move badnik down until it hits floor
+		cmpi.w	#$7FF,obY(a0)				; has object fallen below max level height?
+		bhi.w	DeleteObject				; if yes, delete it
+		jsr	(ObjFloorDist).l			; get distance between badnik and floor
+		tst.w	d1					; has badnik hit the floor?
+		bpl.s	.matchFloor				; if not, loop
 		add.w	d1,obY(a0)				; match object's position with the floor
 		move.b	d3,obAngle(a0)				; update angle to floor
 		move.w	#0,obVelY(a0)				; clear falling speed
 		move.l	#Crab_Action,obID(a0)			; advance to Crab_Action
-	.hide:
-
-		cmpi.w	#$7FF,obY(a0)				; has object fallen below max level height?
-		bhi.w	DeleteObject				; if yes, delete it
-		rts						; return (and do NOT display sprite yet)
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
 Crab_Action:	; Routine 2
 		moveq	#0,d0					; clear d0 (ob2ndRout is a byte, but we need word-addressing)

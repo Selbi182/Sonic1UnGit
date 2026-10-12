@@ -26,22 +26,18 @@ cat_parent:	equ objoff_1C	; address of parent object (4 bytes - high byte is cat
 cat_segmentpos:	equ cat_parent	; segment position - starts as 0/4/8/$A, increments as it moves
 ; ===========================================================================
 
-; Cat_Return:
-Cat_HideForInit:
-		cmpi.w	#$7FF,obY(a0)				; has object fallen below max level height?
-		bhi.w	Cat_Delete				; if yes, delete it
-		rts						; return
-; ===========================================================================
-
 Cat_Main:	; Routine 0
 		move.b	#14/2,obHeight(a0)			; set height
 		move.b	#16/2,obWidth(a0)			; set width
 
 		; Make the Caterkiller fall until it has collided with the floor (while invisible)
-		jsr	(ObjectFall).l				; increase gravity and update position
-		jsr	(ObjFloorDist).l			; get distance between Caterkiller and floor
-		tst.w	d1					; has Caterkiller hit the floor?
-		bpl.s	Cat_HideForInit				; if not, branch
+	.matchFloor:
+		addq.w	#8,obY(a0)				; move badnik down until it hits floor
+		cmpi.w	#$7FF,obY(a0)				; has object fallen below max level height?
+		bhi.w	Cat_Delete				; if yes, delete it
+		jsr	(ObjFloorDist).l			; get distance between badnik and floor
+		tst.w	d1					; has badnik hit the floor?
+		bpl.s	.matchFloor				; if not, loop
 		add.w	d1,obY(a0)				; match object's position with the floor
 		clr.w	obVelY(a0)				; clear falling speed
 		addq.b	#2,obRoutine(a0)			; advance to Cat_Head
@@ -56,7 +52,7 @@ Cat_Main:	; Routine 0
 		andi.b	#sprite_xflip|sprite_yflip,obRender(a0)	; clear render flags except X/Y-flip
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.b	obRender(a0),obStatus(a0)		; copy render flags to status flags
-		move.w	#spr_prio4,obPriority(a0)			; set to sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set to sprite priority
 		move.b	#16/2,obActWid(a0)			; set sprite display width
 		move.b	#col_16x16|col_badnik,obColType(a0)	; set ReactToItem type for head to be destroyable ($B)
 

@@ -16,20 +16,18 @@ Yadrin:
 		move.b	#col_40x32|col_special,obColType(a0)	; set hitbox size to 40x32 (special collision response type for Yadrins to make the harmful on top)
 
 		; Make the Yadrin fall until it has collided with the floor (while invisible)
-		bsr.w	ObjectFall				; increase gravity and update position
-		bsr.w	ObjFloorDist				; get distance between Yadrin and floor
-		tst.w	d1					; has Yadrin hit the floor?
-		bpl.s	.hide					; if not, branch
+	.matchFloor:
+		addq.w	#8,obY(a0)				; move badnik down until it hits floor
+		cmpi.w	#$7FF,obY(a0)				; has object fallen below max level height?
+		bhi.w	DeleteObject				; if yes, delete it
+		jsr	(ObjFloorDist).l			; get distance between badnik and floor
+		tst.w	d1					; has badnik hit the floor?
+		bpl.s	.matchFloor				; if not, loop
 		add.w	d1,obY(a0)				; match object's position with the floor
 		move.w	#0,obVelY(a0)				; clear falling speed
 		move.l	#Yad_Action,obID(a0)			; advance to Moto_Action
 		bchg	#status_xflip_bit,obStatus(a0)		; make Yadrin face to the left on spawn
-	.hide:
-
-		cmpi.w	#$7FF,obY(a0)				; has object fallen below max level height?
-		bhi.w	DeleteObject				; if yes, delete it
-		rts						; return (and do NOT display sprite yet)
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
 Yad_Action:	; Routine 2
 		bsr.s	Yad_Action_Wait

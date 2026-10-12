@@ -60,7 +60,7 @@ DebugSurviveNoRings: = 1
 OneHitBosses: = 0
 ;	| If 1, all bosses will only take a single hit to defeat
 
-RingsCollect32: = 0
+RingsCollect32: = 1
 ;	| If 1, each collected ring is worth 32 rings for quick testing of ring loss
 
 ; ===========================================================================
@@ -446,6 +446,20 @@ GameInit:
 		endif
 .SampleTableOk:
 
+		; Emulator detection for Kega Fusion (Inspired by: https://github.com/DevsArchive/genesis-emulator-detector)
+		clr.b	(v_kega).w	; you are cool
+		lea	($C0001C).l,a0		; VDP_Debug
+		move.w	#1,(a0)			; Write to the VDP debug register
+		ori.b	#0,d0
+		move.w	(a0),d0			; Read VDP debug register
+		move.w	#0,(a0)			; Reset VDP debug register
+		ori.b	#0,d0
+		cmpi.w	#-1,d0			; Did it return -1?
+		bne.s	.notKega		; If so, then Kega Fusion has been detected
+		move.b	#1,(v_kega).w	; you disgust me
+	.notKega:
+
+
 	if (BootToLevel>=0)
 		move.b	#id_Level,(v_gamemode).w
 		move.w	#BootToLevel,(v_zone_act).w
@@ -637,6 +651,12 @@ VBlank_Lag_Go:
 		dbf	d0,*					; loop until cycles have been wasted
 
 .paletteTransfer:
+		tst.b	(WhiteFlash).w
+		beq.s	.noFlash
+		subq.b	#1,(WhiteFlash).w
+		writeCRAM	WhitePalette,0
+		bra.s	.waterBelow
+	.noFlash:
 		tst.b	(f_wtr_state).w				; is the screen completely underwater?
 		bne.s	.waterAbove 				; if not, branch
 		writeCRAM	v_palette,0			; write regular palette buffer to CRAM
@@ -684,6 +704,8 @@ VBlank_Title:
 		bsr.w	VBlank_StandardTransfers		; do standard screen transfers
 		bsr.w	TransferLevelDrawRequests		; update background tiles as title screen scrolls
 
+		jsr	(HUD_Update).l				; update HUD data
+
 		tst.w	(v_generictimer).w			; is generic timer set?
 		beq.w	.end					; if not, branch
 		subq.w	#1,(v_generictimer).w			; decrement generic timer
@@ -718,6 +740,12 @@ VBlank_Paused:
 VBlank_Levels:
 		bsr.w	ReadJoypads				; read joypads and update buffered inputs in RAM
 
+		tst.b	(WhiteFlash).w
+		beq.s	.noFlash
+		subq.b	#1,(WhiteFlash).w
+		writeCRAM	WhitePalette,0
+		bra.s	.waterBelow
+	.noFlash:
 		tst.b	(f_wtr_state).w				; is the screen completely underwater?
 		bne.s	.waterAbove 				; if not, branch
 		writeCRAM	v_palette,0			; write regular palette buffer to CRAM
@@ -777,6 +805,12 @@ VBlank_TitleCards:
 VBlank_Ending:
 		bsr.w	ReadJoypads				; read joypads and update buffered inputs in RAM
 
+		tst.b	(WhiteFlash).w
+		beq.s	.noFlash
+		subq.b	#1,(WhiteFlash).w
+		writeCRAM	WhitePalette,0
+		bra.s	.waterBelow
+	.noFlash:
 		tst.b	(f_wtr_state).w				; is the screen completely underwater?
 		bne.s	.waterAbove 				; if not, branch
 		writeCRAM	v_palette,0			; write regular palette buffer to CRAM
@@ -853,6 +887,12 @@ VBlank_Continue:
 VBlank_StandardTransfers:
 		bsr.w	ReadJoypads				; read joypads and update buffered inputs in RAM
 
+		tst.b	(WhiteFlash).w
+		beq.s	.noFlash
+		subq.b	#1,(WhiteFlash).w
+		writeCRAM	WhitePalette,0
+		bra.s	.waterBelow
+	.noFlash:
 		tst.b	(f_wtr_state).w				; is the screen completely underwater?
 		bne.s	.waterAbove 				; if not, branch
 		writeCRAM	v_palette,0			; write regular palette buffer to CRAM
@@ -1210,6 +1250,7 @@ ClearScreen:
 
 		clr.b	(v_draw_hud).w
 		clr.b	(v_skipspriteculling).w
+		clr.w	(v_drawbuffer_count).w
 
 		ResetDMAQueue
 		rts						; return
@@ -1265,6 +1306,8 @@ PauseGame:
 		tst.b	(v_lives).w				; do you have any lives left?
 		beq.s	.unpauseGame				; if not, branch (prevents pausing during a game over)
 	endif
+		tst.l	(v_player+obID).w
+		beq.w	.unpauseGame
 		tst.w	(f_pause).w				; is game already paused?
 		bne.s	.startPause				; if yes, branch
 		btst	#bitStart,(v_jpadpress1).w		; has Start button been pressed?
@@ -2026,7 +2069,7 @@ Tit_LoadText:
 		bsr.w	PalLoad_Fade				; ...to fade-in buffer
 		move.b	#bgm_Title,d0				; set title screen music
 		bsr.w	QueueSound2				; play title screen music
-		move.b	#0,(f_debugmode).w			; disable debug mode (cheat remains active though)
+		clr.w	(f_debugmode).w				; disable debug mode (cheat remains active though)
 		move.w	#376,(v_generictimer).w			; run title screen for 376 frames (6 seconds plus some change)
 		tst.b	(v_pal).w				; is Mega Drive set to PAL region?
 		beq.s	.notPAL					; if not, branch
@@ -2753,7 +2796,7 @@ Level_ChkDebug:
 		beq.s	Level_LoadObj				; if not, branch
 		btst	#bitA,(v_jpadhold1).w			; is A button held?
 		beq.s	Level_LoadObj				; if not, branch
-		move.b	#1,(f_debugmode).w			; enable debug mode
+		move.w	#1,(f_debugmode).w			; enable debug mode
 
 Level_LoadObj:
 		cmpi.b	#id_SLZ,(v_zone).w			; are we in SLZ?
@@ -2797,7 +2840,7 @@ Level_SkipClr:
 	endif
 
 	if CheatsEnabled>=2
-		move.b	#1,(f_debugmode).w			; enable debug mode automatically
+		move.w	#1,(f_debugmode).w			; enable debug mode automatically
 	endif
 
 Level_ChkWaterPal:
@@ -2820,13 +2863,7 @@ Level_Delay:
 
 ; ---------------------------------------------------------------------------
 
-		; level has faded in, make title cards move and enter main loop
-		move.l	#Card_Wait,(v_ttlcardname+obID).w	; make title card move (name)
-		move.l	#Card_Wait,(v_ttlcardzone+obID).w	; make title card move ("ZONE")
-		move.l	#Card_Wait,(v_ttlcardact+obID).w	; make title card move ("ACT")
-		move.l	#Card_Wait,(v_ttlcardoval+obID).w	; make title card move (blue oval)
-
-Level_StartGame:
+Level_StartGame: ; level has faded in, make title cards move and enter main loop
 		bclr	#7,(v_gamemode).w			; subtract $80 from mode to end pre-level stuff
 		; enter main loop...
 
@@ -2834,6 +2871,7 @@ Level_StartGame:
 ; Main level loop (when all title card and loading sequences are finished)
 ; ---------------------------------------------------------------------------
 
+; Level_MainLoop::: <-- for quick search
 Level_MainLoop:
 		bsr.w	PauseGame				; handle pausing the game when pressing start
 		move.b	#id_VBlank_Levels,(v_vblank_routine).w	; set VBlank routine to $08
@@ -2845,9 +2883,12 @@ Level_MainLoop:
 
 		tst.w	(f_restart).w				; is the level set to restart?
 		bne.s	Level_CheckRestart			; if yes, branch to check restart condition
-		bsr.w	DeformLayers				; scroll planes and do background deformation
-		bsr.w	LoadTilesAsYouMove			; update level tiles while screen is moving
+		bsr.w	DeformLayers				; scroll planes and do background deformation (GenerateCameraShake is inside here)
+
 		jsr	(BuildSprites).l			; build sprite table
+		bsr.w	UndoCameraShake				; undo potential camera shake now that the rendering is done
+		bsr.w	LoadTilesAsYouMove			; update level tiles while screen is moving
+
 		jsr	(ObjPosLoad).l				; run the object manager to load level objects
 		jsr	(RingsManager).l			; execute S3K Rings Manager
 		bsr.w	PaletteCycle				; run palette cycles
@@ -3101,13 +3142,13 @@ GM_Special:		; white fade-out from previous game mode
 		move.w	#0,(v_debuguse).w			; exit debug mode if necessary
 
 	if CheatsEnabled>=2
-		move.b	#1,(f_debugmode).w			; enable debug mode automatically
+		move.w	#1,(f_debugmode).w			; enable debug mode automatically
 	else
 		tst.b	(f_debugcheat).w			; has debug cheat been entered?
 		beq.s	.noDebug				; if not, branch
 		btst	#bitA,(v_jpadhold1).w			; is A button held?
 		beq.s	.noDebug				; if not, branch
-		move.b	#1,(f_debugmode).w			; enable debug mode
+		move.w	#1,(f_debugmode).w			; enable debug mode
 	.noDebug:
 	endif
 
@@ -3403,13 +3444,13 @@ End_LoadData:
 		bsr.w	LZWaterFeatures				; initialize water features if zone is LZ
 
 	if CheatsEnabled>=2
-		move.b	#1,(f_debugmode).w			; enable debug mode automatically
+		move.w	#1,(f_debugmode).w			; enable debug mode automatically
 	else
 		tst.b	(f_debugcheat).w			; has debug cheat been entered?
 		beq.s	End_LoadSonic				; if not, branch
 		btst	#bitA,(v_jpadhold1).w			; was button A held while entering ending sequence?
 		beq.s	End_LoadSonic				; if not, branch
-		move.b	#1,(f_debugmode).w			; enable debug mode
+		move.w	#1,(f_debugmode).w			; enable debug mode
 	endif
 
 End_LoadSonic:

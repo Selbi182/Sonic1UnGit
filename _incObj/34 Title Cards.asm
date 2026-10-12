@@ -71,18 +71,25 @@ Card_MoveIn:	; Routine 2
 		cmpi.w	#$80+320+64,d0				; has card moved beyond $200 on x-axis (to the right)?
 		bgt.s	.return					; if yes, branch
 		cmpi.w	#$80-64+16,d0				; has card moved beyond $50 on the x-axis (to the left)?
-		bgt.s	.display				; if not, display card
+		bgt.s	.checkMoveOut				; if not, display card
 
 	; locret_C3D8:
 	.return:
 		rts						; don't display card
+
+.checkMoveOut:
+		tst.b	(v_gamemode).w				; has pre-level sequence finished?
+		bmi.s	.display				; if not, branch
+		move.l	#Card_MoveOut_Delay,obID(a0)		; begin moving out cards
+		bra.s	Card_MoveOut_Delay			; go there immediately
 
 	.display:
 		DisplaySprite
 		rts
 ; ===========================================================================
 
-Card_Wait:	; Routine 4/6
+; Card_Wait:
+Card_MoveOut_Delay:	; Routine 4/6
 		tst.w	obTimeFrame(a0)				; is time remaining zero?
 		beq.s	Card_MoveOut				; if yes, move out card
 		subq.w	#1,obTimeFrame(a0)			; subtract 1 from time

@@ -1,5 +1,10 @@
+; ---------------------------------------------------------------------------
+; Custom version of PaletteFadeIn to process level during fade-in
+; ---------------------------------------------------------------------------
+
 PaletteFadeIn_Playable:
 		move.w	#$003F,(v_pfade_start).w ; set start position = 0; size = $40
+; ---------------------------------------------------------------------------
 
 PalFadeIn_Playable_Alt:				; start position and size are already set
 		moveq	#0,d0
@@ -41,9 +46,9 @@ PalFadeIn_Playable_Alt:				; start position and size are already set
 ; End of function PaletteFadeIn_Playable
 
 
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
+; ---------------------------------------------------------------------------
+; Subroutine to fade in from black
+; ---------------------------------------------------------------------------
 
 PaletteFadeIn:
 		move.w	#$003F,(v_pfade_start).w ; set start position = 0; size = $40
@@ -75,9 +80,7 @@ PalFadeIn_Alt:				; start position and size are already set
 		bra.w	WaitForVBlank				; MJ: ''
 ; End of function PaletteFadeIn
 
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
+; ---------------------------------------------------------------------------
 
 FadeIn_FromBlack:
 		moveq	#0,d0
@@ -111,9 +114,7 @@ FadeIn_FromBlack:
 		rts
 ; End of function FadeIn_FromBlack
 
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
+; ---------------------------------------------------------------------------
 
 FadeIn_AddColour:
 		move.b	(a1),d5					; MJ: load blue
@@ -146,10 +147,6 @@ FCI_NoRed:
 ; Subroutine to fade out to black
 ; ---------------------------------------------------------------------------
 
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-
 PaletteFadeOut:
 		move.w	#$003F,(v_pfade_start).w ; start position = 0; size = $40
 
@@ -179,9 +176,7 @@ PaletteFadeOut:
 		rts
 ; End of function PaletteFadeOut
 
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
+; ---------------------------------------------------------------------------
 
 FadeOut_ToBlack:
 		moveq	#0,d0
@@ -206,9 +201,7 @@ FadeOut_ToBlack:
 		rts
 ; End of function FadeOut_ToBlack
 
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
+; ---------------------------------------------------------------------------
 
 FadeOut_DecColour:
 		move.w	(a0),d5					; MJ: load colour
@@ -235,17 +228,20 @@ FCO_NoRed:
 ; End of function FadeOut_DecColour
 
 
+; ---------------------------------------------------------------------------
+; Subroutine to fade in from white (Special Stage)
+; ---------------------------------------------------------------------------
+
 PaletteWhiteIn:
 		move.w	#$003F,(v_pfade_start).w ; start position = 0; size = $40
+
 		moveq	#0,d0
 		lea	(v_palette).w,a0
 		move.b	(v_pfade_start).w,d0
 		adda.w	d0,a0
 		move.w	#cWhite,d1
 		move.b	(v_pfade_size).w,d0
-
-.fill:
-		move.w	d1,(a0)+
+	.fill:	move.w	d1,(a0)+
 		dbf	d0,.fill 	; fill palette with white
 
 		moveq	#$0F-1,d4				; MJ: prepare maximum colour check
@@ -263,9 +259,7 @@ PaletteWhiteIn:
 		bsr.w	WaitForVBlank				; MJ: ''
 ; End of function PaletteWhiteIn
 
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
+; ---------------------------------------------------------------------------
 
 WhiteIn_FromWhite:
 		moveq	#0,d0
@@ -275,13 +269,12 @@ WhiteIn_FromWhite:
 		adda.w	d0,a0
 		adda.w	d0,a1
 		move.b	(v_pfade_size).w,d0
-
-.decolour:
+	.decolour:
 		bsr.s	WhiteIn_DecColour ; decrease colour
 		dbf	d0,.decolour	; repeat for size of palette
 
 		cmpi.b	#id_LZ,(v_zone).w	; is level Labyrinth?
-		bne.s	.exit		; if not, branch
+		bne.s	.exit			; if not, branch
 		moveq	#0,d0
 		lea	(v_palette_water).w,a0
 		lea	(v_palette_water_fading).w,a1
@@ -289,18 +282,15 @@ WhiteIn_FromWhite:
 		adda.w	d0,a0
 		adda.w	d0,a1
 		move.b	(v_pfade_size).w,d0
-
-.decolour2:
+	.decolour2:
 		bsr.s	WhiteIn_DecColour
 		dbf	d0,.decolour2
 
-.exit:
+	.exit:
 		rts
 ; End of function WhiteIn_FromWhite
 
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
+; ---------------------------------------------------------------------------
 
 WhiteIn_DecColour:
 		move.b	(a1),d5					; MJ: load blue
@@ -328,12 +318,10 @@ FWI_NoRed:
 		rts						; MJ: return
 ; End of function WhiteIn_DecColour
 
-; ---------------------------------------------------------------------------
-; Subroutine to fade to white (Special Stage)
-; ---------------------------------------------------------------------------
 
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
+; ---------------------------------------------------------------------------
+; Subroutine to fade out to white (Special Stage)
+; ---------------------------------------------------------------------------
 
 PaletteWhiteOut:
 		move.w	#$003F,(v_pfade_start).w ; start position = 0; size = $40
@@ -351,9 +339,7 @@ PaletteWhiteOut:
 		rts
 ; End of function PaletteWhiteOut
 
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
+; ---------------------------------------------------------------------------
 
 WhiteOut_ToWhite:
 		moveq	#0,d0
@@ -378,9 +364,7 @@ WhiteOut_ToWhite:
 		rts
 ; End of function WhiteOut_ToWhite
 
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
+; ---------------------------------------------------------------------------
 
 WhiteOut_AddColour:
 		move.w	(a0),d5					; MJ: load colour
@@ -408,3 +392,77 @@ FWO_NoRed:
 		move.w	d5,(a0)+				; MJ: save new colour
 		rts
 ; End of function WhiteOut_AddColour
+
+
+; ---------------------------------------------------------------------------
+; Subroutine to convert the active palette to grayscale.
+; ---------------------------------------------------------------------------
+
+Pal_MakeBlackWhite:
+		lea	(v_palette).w,a3 	; get palette index
+		moveq	#$40-1,d4		; set d3 to $3F (+1 for the first run)
+
+	.loop:
+		moveq	#0,d0			; clear d0
+		move.w	(a3),d0			; get colour
+		bsr.s	Pal_AsGrayscale		; convert current color to grayscale
+		move.w	d0,(a3)+		; set new colour
+		
+		dbf	d4,.loop		; loop for each colour
+		rts
+; ---------------------------------------------------------------------------
+
+; Turn the given color into grayscale
+; input/output = d0
+Pal_AsGrayscale:
+		moveq	#0,d1			; clear d1
+		moveq	#0,d2			; clear d2
+
+		; sum up the values of the individual RGB channels
+		move.b	d0,d1			; copy Green and Red of colour to d1
+		lsr.b	#4,d1			; get only Green amount
+		move.b	d0,d2			; copy Green and Red of colour to d2
+		andi.b	#$E,d2			; get only Red amount
+		lsr.w	#8,d0			; get only Blue amount of d0
+		add.b	d1,d0			; add Green amount to Blue amount
+		add.b	d2,d0			; then add Red to the amount
+		
+		; calculate average
+		divu.w	#3,d0			; divide by 3
+		andi.b	#$E,d0			; keep it an even value (Keep 9-bit VDP)
+		move.b	d0,d1			; copy to d1
+
+		; copy average to all three channels
+		lsl.b	#4,d1			; shift to left nybble
+		add.b	d1,d0			; add to d0 (Setting the green)
+		lsl.w	#4,d1			; shift to next left nybble
+		add.w	d1,d0			; add to d0 (Setting the blue)
+
+		rts
+; End of function Pal_MakeBlackWhite
+
+; ---------------------------------------------------------------------------
+; Subroutine to instantly fill the entire palette with a specific color.
+; ---------------------------------------------------------------------------
+
+Pal_CutToWhite:
+		move.w	#cWhite,d1
+		bra.s	Pal_CutTo
+; ---------------------------------------------------------------------------
+
+Pal_CutToBlack:
+		moveq	#cBlack,d1
+
+Pal_CutTo:
+		moveq	#$40-1,d0
+		lea	(v_palette).w,a1
+	.fill:	move.l	d1,(a1)+
+		dbf	d0,.fill
+		rts
+; End of function Pal_CutTo
+
+
+WhitePalette:
+		dcb.b	4*$10*2,cWhite
+WhitePalette_end:
+		even

@@ -380,12 +380,16 @@ Sonic_Move:
 		bne.w	Sonic_ResetScr				; if yes, ignore D-Pad input
 		btst	#bitL,(v_jpadhold2).w			; is left being held?
 		beq.s	.notleft				; if not, branch
+		cmpi.b	#id_Duck,obAnim(a0)			; is Sonic ducking?
+		beq.s	.notleft				; if yes, prevent movement
 		bsr.w	Sonic_MoveLeft				; apply left side movement updates
 
 ; Obj01_NotLeft:
 .notleft:
 		btst	#bitR,(v_jpadhold2).w			; is right being held?
 		beq.s	.notright				; if not, branch
+		cmpi.b	#id_Duck,obAnim(a0)			; is Sonic ducking?
+		beq.s	.notright				; if yes, prevent movement
 		bsr.w	Sonic_MoveRight				; apply right side movement updates
 
 ; Obj01_NotRight:
@@ -409,6 +413,8 @@ Sonic_Move:
 		lea	(a1,d0.w),a1				; load stood-on object
 		tst.b	obStatus(a1)				; was the object an enemy/boss that was destroyed? (see React_Enemy)
 		bmi.s	Sonic_LookUp				; if yes, skip over balance check
+		cmpi.w	#ArtTile_GHZ_Bridge|Tile_Pal3,obGfx(a1)	; is stood-on object a GHZ bridge?
+		beq.w	Sonic_LookUp				; if yes, never show balance animation
 
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a1),d1				; get physical width of stood-on object
@@ -1084,6 +1090,8 @@ Sonic_Roll:
 	;	bne.s	.noroll					; if yes, prevent rolling (some kind of fat-fingering convenience feature?)
 		btst	#bitDn,(v_jpadhold2).w			; is down being held?
 		beq.s	.noroll					; if not, branch
+		cmpi.b	#id_Duck,obAnim(a0)			; is Sonic ducking?
+		beq.s	.noroll					; if yes, prevent movement
 
 		move.w	obInertia(a0),d0			; get Sonic's current ground speed
 		bpl.s	.ispositive				; is it positive? if yes, branch
@@ -2355,7 +2363,7 @@ Sonic_HomingAttack_Action:
 		move.b	#1,doublejump(a0)	; set the homing attack flag
 		move.w	#sfx_Teleport,d0	; play dash sound
 		jsr	(QueueSound2).l
-
+		
 		bsr.s	FindHomingTarget	; check if any homing targets are in range
 		beq.s	RegularJumpdash		; if not, do a regular jumpdash instead
 

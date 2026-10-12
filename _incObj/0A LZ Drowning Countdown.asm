@@ -275,7 +275,7 @@ Drown_Countdown:; Routine $A
 
 .sonicIsDrowning:
 		; Allow escaping drowning through debug mode
-		tst.b	(v_debuguse).w
+		tst.w	(v_debuguse).w
 		beq.s	.noDebug
 		clr.w	drown_restarttime(a0)
 		bra.w	Drown_Countdown

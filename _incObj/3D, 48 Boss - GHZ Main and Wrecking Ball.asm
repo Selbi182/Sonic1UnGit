@@ -481,16 +481,17 @@ GBall_LinkSetup:
 		move.b	d5,(a2)+				; set this index as the subtype and increment address
 		move.b	#sprite_cam_field,obRender(a1)		; set render flags to normal level/playfield coordinates (not screen relative)
 		move.b	#16/2,obActWid(a1)			; set radius of object in pixels (used for hiding sprites off screen)
-		move.w	#spr_prio6,obPriority(a1)			; set object render priority to 6 (lower priority)
+		move.w	#spr_prio6,obPriority(a1)		; set object render priority to 6 (lower priority)
 		move.l	BGHZ_ParentObj(a0),BGHZ_ParentObj(a1)	; copy parent boss object pointer to link's parent object pointer
 		dbf	d1,GBall_MakeLinks 			; repeat sequence 5 more times
 
 GBall_MakeBall:
 		move.b	#8,obRoutine(a1)			; set object routine to GBall_Ball
 		move.l	#Map_GBall,obMap(a1) 			; load different mappings for final link
+		move.b	#64/2,obActWid(a1)			; set sprite display width
 		move.w	#ArtTile_GHZ_Giant_Ball|Tile_Pal3,obGfx(a1) ; use different graphics
 		move.b	#1,obFrame(a1)				; set current animation frame
-		move.w	#spr_prio5,obPriority(a1)			; set object render priority to 5 (lower priority, but covers the links)
+		move.w	#spr_prio5,obPriority(a1)		; set object render priority to 5 (lower priority, but covers the links)
 		move.b	#col_40x40|col_hurt,obColType(a1) 	; make object hurt Sonic
 		rts
 ; ===========================================================================

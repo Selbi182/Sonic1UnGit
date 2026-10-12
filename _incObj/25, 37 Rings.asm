@@ -156,7 +156,7 @@ RingLoss:
 	;	cmpi.b	#90,(v_player+flashtime).w		; are more than 1.5s of invulnerability time from getting hurt left?
 		cmpi.b	#(2*60)-15,(v_player+flashtime).w	; are more than 1.75s of invulnerability time from getting hurt left?
 		bhs.s	.renderLostRingSprite			; if yes, disallow collecting ring
-		tst.b	(v_debuguse).w				; is debug mode in use?
+		tst.w	(v_debuguse).w				; is debug mode in use?
 		bne.s	.renderLostRingSprite			; if yes, prevent ring collection
 		cmpi.b	#sonic_state_control,(v_player+obRoutine).w ; is Sonic in his normal mode? (Sonic_Control)
 		beq.w	Ring_Collect				; if yes, collect lost ring
@@ -182,6 +182,7 @@ RingLoss:
 		; In-lined and trimmed-down ObjFloorDist
 		move.w	obX(a0),d3				; get ring's current X-position
 		move.w	obY(a0),d2				; get ring's current Y-position
+		andi.w	#$7FF,d2				; apply Y-wrap
 		addq.w	#16/2,d2				; add ring height (8px)
 		move.w	d2,d0					; get Y-position of bottom edge of object
 		andi.w	#$700,d0				; read only high byte of Y-position (because each level chunk is 256px tall and level height wraps at $7FF)
@@ -300,7 +301,7 @@ SpillRingData:
 		dc.l   -$6200,-$1F600,   $6200,-$1F600,  -$11C00,-$1A800,  $11C00,-$1A800  ; 20
 		dc.l  -$1A800,-$11C00,  $1A800,-$11C00,  -$1F600, -$6200,  $1F600, -$6200  ; 24
 		dc.l  -$1F600,  $6200,  $1F600,  $6200,  -$1A800, $11C00,  $1A800, $11C00  ; 28
-		dc.l  -$11C00, $1A800,  $11C00, $1A800,   -$6200, $15600,   $6200, $15600  ; 32
+		dc.l  -$11C00, $1A800,  $11C00, $1A800,   -$6200, $1F600,   $6200, $1F600  ; 32
 ; End of function RLoss_SpawnRings
 
 

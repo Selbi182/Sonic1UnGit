@@ -460,17 +460,17 @@ v_ani3_buf:		ds.w	1				; synchronised sprite animation 3 - info buffer
 v_ani1_prev:		ds.b	1				; synchronised sprite animation 1 - previous frame
 v_ani2_prev:		ds.b	1				; synchronised sprite animation 2 - previous frame
 v_ani3_prev:		ds.b	1				; synchronised sprite animation 3 - previous frame
-			ds.b	$23				; unused (used to be $26, three were taken for the above variables)
-v_limittopdb:		ds.w	1				; level upper boundary, buffered for debug mode
-v_limitbtmdb:		ds.w	1				; level bottom boundary, buffered for debug mode
-			ds.b	$C				; unused
+			ds.b	1				; unused
 v_timingvariables_end:
-			ds.w	1				; unused (v_chunk0collision in normal disassemblies)
-			ds.b	$E				; unused
-			ds.b	$28				; unused
-			ds.b	$48				; unused
 v_timingandscreenvariables_end:
+			ds.b	$A0				; unused
 
+CameraShake_XOffset:	ds.w	1
+CameraShake_YOffset:	ds.w	1
+CameraShake:		ds.b	1
+WhiteFlash:		ds.b	1
+
+			ds.b	$C				; unused
 v_levseldelay:		ds.w	1				; level select - time until change when up/down is held
 v_levselitem:		ds.w	1				; level select - item selected
 v_levselsound:		ds.w	1				; level select - sound selected
@@ -490,7 +490,8 @@ v_title_ccount:		ds.w	1				; number of times C is pressed on title screen
 			ds.b	1				; unused
 			ds.b	1				; unused
 			ds.w	1				; unused
-			ds.w	1				; unused
+			ds.b	1				; unused
+v_kega:			ds.b	1				; set if current emulator is detected to be Kega Fusion (ew)
 v_creditsnum:		ds.w	1				; credits index number
 v_levelmusic:		ds.b	1				; stores the music ID for the current level music
 v_smpsrunning:		ds.b	1				; flag set while SMPS is running to avoid double updates
