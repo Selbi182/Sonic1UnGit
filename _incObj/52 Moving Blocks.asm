@@ -227,9 +227,6 @@ MBlock_SecretLZ1Raft:
 		st.b	(f_obj56).w				; set flag to force respawn
 
 	.hidePlatform:
-		; This line, combined with the coordinate being pushed
-		; to the stack in MBlock_StandOn, can be disastrous.
-		; See the notes for the fix in MBlock_StandOn.
 		addq.l	#4,sp					; skip returning to MBlock_Platform to disable platform interaction and sprite rendering
 
 		out_of_range.w	DeleteObject,mblock_origX(a0)	; has invisible platform object gone out of range? if yes, delete it

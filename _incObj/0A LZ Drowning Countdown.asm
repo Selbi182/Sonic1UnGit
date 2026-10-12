@@ -41,8 +41,6 @@ Drown_Main:	; Routine 0
 		move.b	obSubtype(a0),d0			; get bubble type
 		bpl.s	.numberBubble				; is this the special countdown object (set from Obj01_InWater)? if not, branch
 		addq.b	#8,obRoutine(a0)			; advance to Drown_Countdown
-		move.l	#Map_Drown,obMap(a0)			; set drown numbers mappings
-		move.w	#ArtTile_LZ_Sonic_Drowning,obGfx(a0)	; set drown numbers art tile
 		andi.w	#$7F,d0					; clear drown countdown bit from subtype
 		move.b	d0,drown_type(a0)			; set bubble type
 		bra.w	Drown_Countdown				; skip directly to countdown logic
@@ -352,7 +350,6 @@ Drown_Countdown:; Routine $A
 ; ===========================================================================
 
 		include	"_anim/Drowning Countdown.asm"
-Map_Drown:	include	"_maps/Drowning Countdown.asm"
 
 
 ; ===========================================================================

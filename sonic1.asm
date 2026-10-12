@@ -91,7 +91,7 @@ SonicDplcVer = 1
 
 StartOfRom:
 	if * <> 0
-		fatal "StartOfRom was $\{*} but it should be 0"
+		inform 2, "StartOfRom was %d but it should be 0",*
 	endif
 
 Vectors:
@@ -188,6 +188,10 @@ RomEndLoc:	dc.l EndOfRom-1					; End address of ROM
 		dc.b "            "				; Modem support
 		dc.b "                                        " ; Notes (unused, anything can be put in this space, but it has to be 40 bytes)
 		dc.b "JUE             "				; Region (Country code)
+
+	if * <> 512
+		inform 2, "Header size was %d but it should be exactly 512",*
+	endif
 EndOfHeader:
 
 ; ===========================================================================
@@ -273,7 +277,7 @@ SkipSetup:
 		bra.s	GameProgram				; begin actual game
 ; ===========================================================================
 
-SetupValues:	dc.w $8000					; VDP register start number
+SetupValues:	dc.w vreg_mode1					; VDP register start number
 		dc.w (v_ram_end-v_ram_start_def/4)-1		; size of RAM/4 ($3FFF)
 		dc.w $100					; VDP register diff
 
@@ -285,23 +289,23 @@ SetupValues:	dc.w $8000					; VDP register start number
 
 	SetupValues_VDP:
 		; Note that most of these are immediately overwritten again in VDPSetupArray
-		dc.b 4						; VDP $80 - 8-colour mode
-		dc.b $14					; VDP $81 - Mega Drive mode, DMA enable
+		dc.b %000100					; VDP $80 - 8-colour mode
+		dc.b %00010100					; VDP $81 - Mega Drive mode, DMA enable
 		dc.b ($C000>>10)				; VDP $82 - foreground nametable address
 		dc.b ($F000>>10)				; VDP $83 - window nametable address
 		dc.b ($E000>>13)				; VDP $84 - background nametable address
 		dc.b ($D800>>9)					; VDP $85 - sprite table address
 		dc.b 0						; VDP $86 - unused
-		dc.b 0						; VDP $87 - background colour
+		dc.b 0<<4|0					; VDP $87 - background colour
 		dc.b 0						; VDP $88 - unused
 		dc.b 0						; VDP $89 - unused
 		dc.b 255					; VDP $8A - HBlank register
-		dc.b 0						; VDP $8B - full screen scroll
-		dc.b $81					; VDP $8C - 40 cell display
+		dc.b %0000					; VDP $8B - full screen scroll
+		dc.b %10000001					; VDP $8C - 40 cell display
 		dc.b ($DC00>>10)				; VDP $8D - h-scroll table address
 		dc.b 0						; VDP $8E - unused
 		dc.b 1						; VDP $8F - VDP increment
-		dc.b 1						; VDP $90 - 64 cell h-scroll size
+		dc.b %000001					; VDP $90 - 64 cell h-scroll size
 		dc.b 0						; VDP $91 - window h position
 		dc.b 0						; VDP $92 - window v position
 		dc.w $FFFF					; VDP $93/94 - DMA length
@@ -339,8 +343,8 @@ SetupValues:	dc.w $8000					; VDP register start number
 		dc.b $E9					; jp	(hl)
 	SetupValues_Z80_End:
 
-		dc.w $8104					; VDP display mode
-		dc.w $8F02					; VDP increment
+		dc.w vreg_mode2|%00000100			; VDP display mode
+		dc.w vreg_autoinc|2				; VDP increment
 		dc.l $C0000000					; CRAM write mode
 		dc.l $40000010					; VSRAM address 0
 
@@ -891,7 +895,7 @@ HBlank_WaterSurface:
 		movem.l	d0-d2/a0-a2,-(sp)			; backup registers
 
 		lea	(vdp_data_port).l,a1			; load VDP data port to a1
-		move.w	#$8A00+223,4(a1)			; reset horizontal interrupt counter
+		move.w	#vreg_hintrate|223,4(a1)		; reset horizontal interrupt counter
 
 		lea	HBlank_LZWater(pc),a2			; get water transition LUT
 		move.w	#(HBlank_LZWater_End-HBlank_LZWater)/2-1,d1 ; get number of entries in list
@@ -1094,7 +1098,7 @@ VDPSetupGame:
 		move.w	(VDPSetupArray+2).l,d0			; get second entry of VDPSetupArray
 		move.w	d0,(v_vdp_buffer1).w			; buffer register $81 (used for enabling/disabling display)
 
-		move.w	#$8A00+223,(v_hblank_hreg).w		; HBlank every 224th scanline
+		move.w	#vreg_hintrate|223,(v_hblank_hreg).w	; HBlank every 224th scanline
 
 		moveq	#cBlack,d0				; set d0 to 0 (black)
 		move.l	#$C0000000,(vdp_control_port).l		; set VDP to CRAM write
@@ -1121,25 +1125,25 @@ VDPSetupGame:
 ; ---------------------------------------------------------------------------
 
 VDPSetupArray:
-		dc.w $8000|%00000100				; 8-color mode
-		dc.w $8100|%00110100				; vertical interrupts, DMA, Mega Drive display
-		dc.w $8200|(vram_fg>>10)			; foreground nametable address
-		dc.w $8300|($A000>>10)				; window nametable address
-		dc.w $8400|(vram_bg>>13)			; background nametable address
-		dc.w $8500|(vram_sprites>>9)			; sprite table address
+		dc.w vreg_mode1|%000100				; 8-color mode
+		dc.w vreg_mode2|%00110100			; vertical interrupts, DMA, Mega Drive display
+		dc.w vreg_fgvram|(vram_fg>>10)			; foreground nametable address
+		dc.w vreg_winvram|(vram_win>>10)		; window nametable address
+		dc.w vreg_bgvram|(vram_bg>>13)			; background nametable address
+		dc.w vreg_spritevram|(vram_sprites>>9)		; sprite table address
 		dc.w $8600					; (unused, only relevant for 128KB VRAM mode)
-		dc.w $8700|$00					; background colour (palette line 0, entry 0)
+		dc.w vreg_bgcolor|0<<4|0			; background colour (palette line 0, entry 0)
 		dc.w $8800					; (unused, only relevant for Master System)
 		dc.w $8900					; (unused, only relevant for Master System)
-		dc.w $8A00|$00					; horizontal interrupt register
-		dc.w $8B00|%00000000				; full-screen vertical scrolling
-		dc.w $8C00|%10000001				; 40-cell display mode
-		dc.w $8D00|(vram_hscroll>>10)			; background H-scroll address
+		dc.w vreg_hintrate|$00				; horizontal interrupt register
+		dc.w vreg_mode3|%0000				; full-screen vertical scrolling
+		dc.w vreg_mode4|%10000001			; 40-cell display mode
+		dc.w vreg_hscrollvram|(vram_hscroll>>10)	; background H-scroll address
 		dc.w $8E00					; (unused, only relevant for 128KB VRAM mode)
-		dc.w $8F00|$02					; VDP auto-increment size (2)
-		dc.w $9000|%00000001				; 64-cell H-scroll size
-		dc.w $9100					; window horizontal position
-		dc.w $9200					; window vertical position
+		dc.w vreg_autoinc|2				; VDP auto-increment size (2)
+		dc.w vreg_planesize|%000001			; 64-cell H-scroll size
+		dc.w vreg_winxpos|0				; window horizontal position
+		dc.w vreg_winypos|0				; window vertical position
 VDPSetupArray_End:
 
 ; ===========================================================================
@@ -1841,11 +1845,11 @@ GM_Sega:
 
 		; screen setup and loading patterns
 		lea	(vdp_control_port).l,a6			; load VDP control port
-		move.w	#$8004,(a6)				; use 8-colour mode
-		move.w	#$8200+(vram_fg>>10),(a6)		; set foreground nametable address
-		move.w	#$8400+(vram_bg>>13),(a6)		; set background nametable address
-		move.w	#$8700,(a6)				; set background colour (palette entry 0)
-		move.w	#$8B00,(a6)				; full-screen vertical scrolling
+		move.w	#vreg_mode1|%000100,(a6)		; use 8-colour mode
+		move.w	#vreg_fgvram|(vram_fg>>10),(a6)		; set foreground nametable address
+		move.w	#vreg_bgvram|(vram_bg>>13),(a6)		; set background nametable address
+		move.w	#vreg_bgcolor|0<<4|0,(a6)		; set background colour (palette entry 0)
+		move.w	#vreg_mode3|%0000,(a6)			; full-screen vertical scrolling
 		clr.b	(f_wtr_state).w				; clear water state
 
 		disable_ints					; disable interrupts
@@ -1926,13 +1930,13 @@ GM_Title:		; fading out from previous game mode
 		; screen setup and loading "SONIC TEAM PRESENTS" (STP) patterns
 		disable_ints					; disable ints while accessing the VDP
 		lea	(vdp_control_port).l,a6			; load VDP control port
-		move.w	#$8004,(a6)				; 8-colour mode
-		move.w	#$8200+(vram_fg>>10),(a6)		; set foreground nametable address
-		move.w	#$8400+(vram_bg>>13),(a6)		; set background nametable address
-		move.w	#$9001,(a6)				; 64-cell hscroll size
-		move.w	#$9200,(a6)				; window vertical position
-		move.w	#$8B03,(a6)				; line scroll mode (per-row horizontally, full-screen vertically)
-		move.w	#$8720,(a6)				; set background colour (palette line 2, entry 0)
+		move.w	#vreg_mode1|%000100,(a6)		; use 8-colour mode
+		move.w	#vreg_fgvram|(vram_fg>>10),(a6)		; set foreground nametable address
+		move.w	#vreg_bgvram|(vram_bg>>13),(a6)		; set background nametable address
+		move.w	#vreg_planesize|%000001,(a6)		; 64-cell hscroll size
+		move.w	#vreg_winypos|0,(a6)			; window vertical position
+		move.w	#vreg_mode3|%0011,(a6)			; line scroll mode (per-row horizontally, full-screen vertically)
+		move.w	#vreg_bgcolor|2<<4|0,(a6)		; set background colour (palette line 2, entry 0)
 		clr.b	(f_wtr_state).w				; clear water state
 		bsr.w	ClearScreen				; wipe the screen
 		clearRAM v_objspace				; clear object RAM
@@ -2653,14 +2657,14 @@ Level_ClrRam:
 		disable_ints					; disable interrupts
 		bsr.w	ClearScreen				; wipe the screen
 		lea	(vdp_control_port).l,a6			; load VDP control port
-		move.w	#$8B03,(a6)				; line scroll mode (per-row horizontally, full-screen vertically)
-		move.w	#$8200+(vram_fg>>10),(a6)		; set foreground nametable address
-		move.w	#$8400+(vram_bg>>13),(a6)		; set background nametable address
-		move.w	#$8500+(vram_sprites>>9),(a6)		; set sprite table address
-		move.w	#$9001,(a6)				; 64-cell hscroll size
-		move.w	#$8004,(a6)				; 8-colour mode, disable horizontal interrupts
-		move.w	#$8720,(a6)				; set background colour (line 3; colour 0)
-		move.w	#$8A00+223,(v_hblank_hreg).w		; set palette change position (for water)
+		move.w	#vreg_mode3|%0011,(a6)			; line scroll mode (per-row horizontally, full-screen vertically)
+		move.w	#vreg_fgvram|(vram_fg>>10),(a6)		; set foreground nametable address
+		move.w	#vreg_bgvram|(vram_bg>>13),(a6)		; set background nametable address
+		move.w	#vreg_spritevram|(vram_sprites>>9),(a6)	; set sprite table address
+		move.w	#vreg_planesize|%000001,(a6)		; 64-cell hscroll size
+		move.w	#vreg_mode1|%000100,(a6)		; use 8-colour mode
+		move.w	#vreg_bgcolor|2<<4|0,(a6)		; set background colour (line 3; colour 0)
+		move.w	#vreg_hintrate|223,(v_hblank_hreg).w	; set palette change position (for water)
 		move.w	(v_hblank_hreg).w,(a6)			; write to VDP
 
 		move.w	#$4E73,(HBlankHndl).w			; override HBlank handler with "rte"
@@ -2668,7 +2672,7 @@ Level_ClrRam:
 		cmpi.b	#id_LZ,(v_zone).w			; is level LZ?
 		bne.s	Level_LoadPal				; if not, branch
 		move.w	#HBlank_WaterSurface,(HBlankSubW).w	; target HBlank water palette swap handler
-		move.w	#$8014,(a6)				; enable horizontal interrupts (HBlank)
+		move.w	#vreg_mode1|%010100,(a6)		; enable horizontal interrupts (HBlank)
 		moveq	#0,d0					; clear d0
 		move.b	(v_act).w,d0				; get current LZ act
 		add.w	d0,d0					; double for word-based indexing
@@ -3052,10 +3056,10 @@ GM_Special:		; white fade-out from previous game mode
 		; load special stage patterns
 		disable_ints					; disable interrupts
 		lea	(vdp_control_port).l,a6			; load VDP control port
-		move.w	#$8B03,(a6)				; line scroll mode (per-row horizontally, full-screen vertically)
-		move.w	#$8004,(a6)				; 8-colour mode
-		move.w	#$8A00+175,(v_hblank_hreg).w		; set HBlank counter to scanline 175 (even though horizontal interrupts aren't used here...)
-		move.w	#$9011,(a6)				; 128-cell hscroll size
+		move.w	#vreg_mode3|%0011,(a6)			; line scroll mode (per-row horizontally, full-screen vertically)
+		move.w	#vreg_mode1|%000100,(a6)		; use 8-colour mode
+		move.w	#vreg_hintrate|175,(v_hblank_hreg).w	; set HBlank counter to scanline 175 (even though horizontal interrupts aren't used here...)
+		move.w	#vreg_planesize|$11,(a6)		; 128-cell hscroll size
 		disable_display					; disable screen output
 		bsr.w	ClearScreen				; wipe screen
 		enable_ints					; enable interrupts
@@ -3177,9 +3181,9 @@ SS_FinLoop_NoBrighten:
 		; Fade-out done, load Special Stage Results screen
 		disable_ints					; disable interrupts
 		lea	(vdp_control_port).l,a6			; load VDP control port
-		move.w	#$8200+(vram_fg>>10),(a6)		; set foreground nametable address
-		move.w	#$8400+(vram_bg>>13),(a6)		; set background nametable address
-		move.w	#$9001,(a6)				; 64-cell hscroll size
+		move.w	#vreg_fgvram|(vram_fg>>10),(a6)		; set foreground nametable address
+		move.w	#vreg_bgvram|(vram_bg>>13),(a6)		; set background nametable address
+		move.w	#vreg_planesize|%000001,(a6)		; 64-cell hscroll size
 		bsr.w	ClearScreen				; wipe screen
 
 		jsr	(SpecStagResults_LoadArt).l		; load SSR title card graphics
@@ -3245,8 +3249,8 @@ GM_Continue:
 		disable_ints					; disable interrupts
 		disable_display					; disable screen output
 		lea	(vdp_control_port).l,a6			; load VDP control port
-		move.w	#$8004,(a6)				; 8 colour mode
-		move.w	#$8700,(a6)				; background colour
+		move.w	#vreg_mode1|%000100,(a6)		; use 8-colour mode
+		move.w	#vreg_bgcolor|0<<4|0,(a6)		; background colour
 		bsr.w	ClearScreen				; wipe screen
 
 		clearRAM v_objspace				; clear object RAM
@@ -3358,14 +3362,14 @@ GM_Ending:
 		disable_display					; disable screen output
 		bsr.w	ClearScreen				; wipe the screen
 		lea	(vdp_control_port).l,a6			; load VDP control port
-		move.w	#$8B03,(a6)				; line scroll mode (per-row horizontally, full-screen vertically)
-		move.w	#$8200+(vram_fg>>10),(a6)		; set foreground nametable address
-		move.w	#$8400+(vram_bg>>13),(a6)		; set background nametable address
-		move.w	#$8500+(vram_sprites>>9),(a6)		; set sprite table address
-		move.w	#$9001,(a6)				; 64-cell hscroll size
-		move.w	#$8004,(a6)				; 8-colour mode
-		move.w	#$8720,(a6)				; set background colour (line 3; colour 0)
-		move.w	#$8A00+223,(v_hblank_hreg).w		; set palette change position (for water)
+		move.w	#vreg_mode3|%0011,(a6)			; line scroll mode (per-row horizontally, full-screen vertically)
+		move.w	#vreg_fgvram|(vram_fg>>10),(a6)		; set foreground nametable address
+		move.w	#vreg_bgvram|(vram_bg>>13),(a6)		; set background nametable address
+		move.w	#vreg_spritevram|(vram_sprites>>9),(a6)	; set sprite table address
+		move.w	#vreg_planesize|%000001,(a6)		; 64-cell hscroll size
+		move.w	#vreg_mode1|%000100,(a6)		; use 8-colour mode
+		move.w	#vreg_bgcolor|2<<4|0,(a6)		; set background colour (line 3; colour 0)
+		move.w	#vreg_hintrate|223,(v_hblank_hreg).w	; set palette change position (for water)
 		move.w	(v_hblank_hreg).w,(a6)			; write to VDP
 		move.w	#30,(v_air).w				; replenish air
 		move.w	#$4E73,(HBlankHndl).w			; override HBlank handler with "rte"
@@ -3609,13 +3613,13 @@ GM_Credits:
 
 		; screen setup and loading patterns
 		lea	(vdp_control_port).l,a6			; load VDP control port
-		move.w	#$8004,(a6)				; use 8-colour mode
-		move.w	#$8200+(vram_fg>>10),(a6)		; set foreground nametable address
-		move.w	#$8400+(vram_bg>>13),(a6)		; set background nametable address
-		move.w	#$9001,(a6)				; 64-cell hscroll size
-		move.w	#$9200,(a6)				; window vertical position
-		move.w	#$8B03,(a6)				; line scroll mode (per-row horizontally, full-screen vertically)
-		move.w	#$8720,(a6)				; set background colour (line 3; colour 0)
+		move.w	#vreg_mode1|%000100,(a6)		; use 8-colour mode
+		move.w	#vreg_fgvram|(vram_fg>>10),(a6)		; set foreground nametable address
+		move.w	#vreg_bgvram|(vram_bg>>13),(a6)		; set background nametable address
+		move.w	#vreg_planesize|%000001,(a6)		; 64-cell hscroll size
+		move.w	#vreg_winypos|0,(a6)			; window vertical position
+		move.w	#vreg_mode3|%0011,(a6)			; line scroll mode (per-row horizontally, full-screen vertically)
+		move.w	#vreg_bgcolor|2<<4|0,(a6)		; set background colour (line 3; colour 0)
 		clr.b	(f_wtr_state).w				; clear water state
 		bsr.w	ClearScreen				; wipe the screen
 
@@ -3671,13 +3675,13 @@ TryAgainEnd:		; fading out from previous game mode
 
 		; screen setup and loading patterns
 		lea	(vdp_control_port).l,a6			; load VDP control port
-		move.w	#$8004,(a6)				; use 8-colour mode
-		move.w	#$8200+(vram_fg>>10),(a6)		; set foreground nametable address
-		move.w	#$8400+(vram_bg>>13),(a6)		; set background nametable address
-		move.w	#$9001,(a6)				; 64-cell hscroll size
-		move.w	#$9200,(a6)				; window vertical position
-		move.w	#$8B03,(a6)				; line scroll mode (per-row horizontally, full-screen vertically)
-		move.w	#$8720,(a6)				; set background colour (line 3; colour 0)
+		move.w	#vreg_mode1|%000100,(a6)		; use 8-colour mode
+		move.w	#vreg_fgvram|(vram_fg>>10),(a6)		; set foreground nametable address
+		move.w	#vreg_bgvram|(vram_bg>>13),(a6)		; set background nametable address
+		move.w	#vreg_planesize|%000001,(a6)		; 64-cell hscroll size
+		move.w	#vreg_winypos|0,(a6)			; window vertical position
+		move.w	#vreg_mode3|%0011,(a6)			; line scroll mode (per-row horizontally, full-screen vertically)
+		move.w	#vreg_bgcolor|2<<4|0,(a6)		; set background colour (line 3; colour 0)
 		clr.b	(f_wtr_state).w				; clear water state
 		bsr.w	ClearScreen				; wipe the screen
 
