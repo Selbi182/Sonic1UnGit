@@ -54,7 +54,7 @@ BossLabyrinth_Loop:
 		move.w	obY(a0),obY(a1)
 
 BossLabyrinth_LoadBoss:
-		bclr	#0,obStatus(a0)				; clear X flip
+		bclr	#status_xflip_bit,obStatus(a0)		; clear X flip
 		clr.b	ob2ndRout(a1)				; clear secondary object routine
 		move.b	(a2)+,obRoutine(a1)			; load objdata table into boss' copy routine table and increment
 		move.b	(a2)+,obAnim(a1)			; load animation into boss' copy and increment
@@ -232,13 +232,13 @@ BLZ_ShipMove3:
 
 ; loc_1804E:
 .setDirection:
-		bset	#0,obStatus(a0)				; make Eggman face to the right
+		bset	#status_xflip_bit,obStatus(a0)		; make Eggman face to the right
 		addq.b	#2,BossLabyrinth_SineCounter(a0)	; increment sine counter
 		move.b	BossLabyrinth_SineCounter(a0),d0	; copy and go to calculate vertical bob
 		jsr	(CalcSine).l
 		tst.w	d1					; check cosine sign
 		bpl.s	.trackDistance				; if positive, we are moving to the right
-		bclr	#0,obStatus(a0)				; if negative, we are moving to the left, so make Eggman face left
+		bclr	#status_xflip_bit,obStatus(a0)		; if negative, we are moving to the left, so make Eggman face left
 
 ; loc_1806C:
 .trackDistance:
@@ -298,7 +298,7 @@ BLZ_ShipAtTop:
 .checkConditions:
 		bne.s	.moveBoss				; have we met BOTH conditions? if not, branch and keep moving
 		addq.b	#2,ob2ndRout(a0)			; increment secound routine counter
-		bclr	#0,obStatus(a0)				; clear X flip (face to the left)
+		bclr	#status_xflip_bit,obStatus(a0)		; clear X flip (face to the left)
 
 ; loc_180F2:
 .moveBoss:
@@ -319,7 +319,7 @@ BLZ_ShipWait:
 .startEscape:
 		jsr	(PlayCurrentActMusic).l			; restart level music after boss defeat
 		clr.b	(f_lockscreen).w
-		bset	#0,obStatus(a0)				; face to the right
+		bset	#status_xflip_bit,obStatus(a0)		; face to the right
 		addq.b	#2,ob2ndRout(a0)			; increment second routine counter
 
 ; loc_18126:

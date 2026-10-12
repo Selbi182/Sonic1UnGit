@@ -54,7 +54,7 @@ Orbinaut:
 
 .finishSpikeBalls:
 		moveq	#1,d0					; circle clockwise by default
-		btst	#0,obStatus(a0)				; is Orbinaut facing left?
+		btst	#status_xflip_bit,obStatus(a0)		; is Orbinaut facing left?
 		beq.s	.dir					; if not, branch
 		neg.w	d0					; circle counter-clockwise instead
 	.dir:	move.b	d0,orb_circledir(a0)			; set circling direction
@@ -67,7 +67,7 @@ Orbinaut:
 		move.l	d0,obID(a0)				; set chosen type
 
 		move.w	#-$40,obVelX(a0)			; move Orbinaut to the left
-		btst	#0,obStatus(a0)				; is Orbinaut facing left?
+		btst	#status_xflip_bit,obStatus(a0)		; is Orbinaut facing left?
 		beq.s	.return					; if not, branch
 		neg.w	obVelX(a0)				; move Orbinaut to the right
 
@@ -151,7 +151,7 @@ Orb_CircleSpikeball: ; Routine 6
 
 	.fireSpikeball:
 		move.w	#-$200,obVelX(a0)			; shoot spikeball to the left
-		btst	#0,obStatus(a1)				; is Orbinaut facing to the right?
+		btst	#status_xflip_bit,obStatus(a1)		; is Orbinaut facing to the right?
 		beq.s	.display				; if not, branch
 		neg.w	obVelX(a0)				; shoot spikeball to the right instead
 

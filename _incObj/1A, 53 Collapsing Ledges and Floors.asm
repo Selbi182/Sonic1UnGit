@@ -36,7 +36,7 @@ Ledge_ChkTouch:	; Routine 2
 		move.w	#96/2,d1
 		lea	(Ledge_SlopeData).l,a2
 		bsr.w	SlopeObject				; sets obRoutine to 4 on touch (Ledge_OnPlatform)
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		beq.s	.notOn
 		move.l	#Ledge_OnPlatform,obID(a0)
 	.notOn:
@@ -54,7 +54,7 @@ Ledge_OnPlatform:	; Routine 4
 Ledge_WalkOff:	; Routine $A
 		move.w	#96/2,d1
 		bsr.w	ExitPlatform				; sets obRoutine back to 2 on exit (Ledge_ChkTouch)
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		bne.s	.stillOn
 		move.l	#Ledge_ChkTouch,obID(a0)
 	.stillOn:
@@ -84,12 +84,12 @@ Ledge_FragmentPiece:	; Routine 6
 		bsr.w	Ledge_WalkOff				; allow Sonic to move off the platform
 
 		lea	(v_player).w,a1				; load Sonic object
-		btst	#3,obStatus(a1)				; is Sonic standing on platform?
+		btst	#status_on_object_bit,obStatus(a1)	; is Sonic standing on platform?
 		beq.s	.startCollapse				; if not, branch
 		tst.b	collapsible_timedelay(a0)		; has time delay reached zero?
 		bne.s	.return					; if not, branch
-		bclr	#3,obStatus(a1)				; clear Sonic's on-platform flag
-		bclr	#5,obStatus(a1)				; clear Sonic's pushing flag
+		bclr	#status_on_object_bit,obStatus(a1)	; clear Sonic's on-platform flag
+		bclr	#status_pushing_bit,obStatus(a1)	; clear Sonic's pushing flag
 		move.b	#id_Run,obPrevAni(a1)			; restart Sonic's animation
 
 	.startCollapse:
@@ -145,7 +145,7 @@ CFlo_ChkTouch:	; Routine 2
 	.solid:
 		move.w	#64/2,d1
 		bsr.w	PlatformObject				; sets obRoutine to 4 on touch (CFlo_OnPlatform)
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		beq.s	.notOn
 		move.l	#CFlo_OnPlatform,obID(a0)
 	.notOn:
@@ -154,7 +154,7 @@ CFlo_ChkTouch:	; Routine 2
 		; to invert their collapsing pattern depending on which side was touched.
 		tst.b	obSubtype(a0)				; is MSB in subtype set? (>= $80)
 		bpl.s	.display				; if not, branch
-		btst	#3,obStatus(a1)				; is Sonic standing on platform?
+		btst	#status_on_object_bit,obStatus(a1)	; is Sonic standing on platform?
 		beq.s	.display				; if not, branch
 		bclr	#sprite_xflip_bit,obRender(a0)		; clear X-flip flag
 		move.w	obX(a1),d0				; get Sonic's X-position
@@ -177,7 +177,7 @@ CFlo_OnPlatform:	; Routine 4
 CFlo_WalkOff:	; Routine $A
 		move.w	#64/2,d1
 		bsr.w	ExitPlatform				; sets obRoutine back to 2 on exit (CFlo_ChkTouch)
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		bne.s	.stillOn
 		move.l	#CFlo_ChkTouch,obID(a0)
 	.stillOn:
@@ -204,12 +204,12 @@ CFlo_FragmentPiece:	; Routine 6
 		bsr.w	CFlo_WalkOff				; allow Sonic to walk off the platform
 
 		lea	(v_player).w,a1				; load Sonic object
-		btst	#3,obStatus(a1)				; is Sonic standing on platform?
+		btst	#status_on_object_bit,obStatus(a1)	; is Sonic standing on platform?
 		beq.s	.startCollapse				; if not, branch
 		tst.b	collapsible_timedelay(a0)		; has time delay reached zero?
 		bne.s	.return					; if not, branch
-		bclr	#3,obStatus(a1)				; clear Sonic's on-platform flag
-		bclr	#5,obStatus(a1)				; clear Sonic's pushing flag
+		bclr	#status_on_object_bit,obStatus(a1)	; clear Sonic's on-platform flag
+		bclr	#status_pushing_bit,obStatus(a1)	; clear Sonic's pushing flag
 		move.b	#id_Run,obPrevAni(a1)			; restart Sonic's animation
 
 	.startCollapse:

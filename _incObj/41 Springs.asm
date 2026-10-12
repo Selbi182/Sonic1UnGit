@@ -28,7 +28,7 @@ Springs:
 		btst	#5,d0					; does the spring face downwards?
 		beq.s	.checkYellow				; if not, branch
 		move.l	#Spring_Down,obID(a0)			; use "Spring_Down" routine
-		bset	#1,obStatus(a0)				; set Y-flip flag
+		bset	#status_yflip_bit,obStatus(a0)		; set Y-flip flag
 
 	; Spring_NotDown:
 	.checkYellow:
@@ -72,11 +72,11 @@ Spring_Up:	; Routine 2
 		move.l	#Spring_AniUp,obID(a0)			; set to "Spring_AniUp"
 		addq.w	#8,obY(a1)				; push Sonic a few pixels into the spring
 		move.w	spring_pow(a0),obVelY(a1)		; bounce Sonic upwards
-		bset	#1,obStatus(a1)				; set Sonic's airborne flag
-		bclr	#3,obStatus(a1)				; clear Sonic's on-platform flag
+		bset	#status_in_air_bit,obStatus(a1)		; set Sonic's airborne flag
+		bclr	#status_on_object_bit,obStatus(a1)	; clear Sonic's on-platform flag
 		move.b	#id_Spring,obAnim(a1)			; use "bouncing" animation
 		move.b	#sonic_state_control,obRoutine(a1)	; set Sonic to Sonic_Control routine
-		bclr	#3,obStatus(a0)				; clear spring's Sonic touch flag
+		bclr	#status_on_object_bit,obStatus(a0)	; clear spring's Sonic touch flag
 		clr.b	obSolid(a0)				; clear spring's solidity flag
 		move.w	#sfx_Spring,d0
 		jsr	(QueueSound2).l				; play spring sound
@@ -110,7 +110,7 @@ Spring_LR:	; Routine 8
 		ble.s	.return					; if not, branch
 		move.w	obX(a1),d0				; get Sonic's X-position
 		sub.w	obX(a0),d0				; subtract spring's X-position
-		btst	#0,obStatus(a0) 			; is spring facing to the left?
+		btst	#status_xflip_bit,obStatus(a0) 		; is spring facing to the left?
 		beq.s	.checkTouch				; if not, branch
 		neg.w	d0					; negate difference to check other side
 	.checkTouch:
@@ -126,7 +126,7 @@ Spring_LR:	; Routine 8
 		move.l	#Spring_AniLR,obID(a0)			; advance to Spring_AniLR
 		move.w	spring_pow(a0),obVelX(a1)		; bounce Sonic to the left
 		addq.w	#8,obX(a1)				; push Sonic a few pixels into the spring (to the right)
-		btst	#0,obStatus(a0)				; is spring facing to the left?
+		btst	#status_xflip_bit,obStatus(a0)		; is spring facing to the left?
 		bne.s	.doBounce				; if not, branch
 		subi.w	#8+8,obX(a1)				; push Sonic a few pixels into the spring (to the left)
 		neg.w	obVelX(a1)				; bounce Sonic to the right
@@ -135,15 +135,15 @@ Spring_LR:	; Routine 8
 	.doBounce:
 		move.w	#15,locktime(a1)			; disable Sonic's D-Pad inputs for 15 frames
 		move.w	obVelX(a1),obInertia(a1)		; copy X-speed to ground speed
-		bchg	#0,obStatus(a1)				; flip Sonic's X-orientation
-		btst	#2,obStatus(a1)				; is Sonic rolling?
+		bchg	#status_xflip_bit,obStatus(a1)		; flip Sonic's X-orientation
+		btst	#status_rolling_bit,obStatus(a1)	; is Sonic rolling?
 		bne.s	.clearPush				; if yes, don't change animation
 		move.b	#id_Walk,obAnim(a1)			; use walking animation
 
 	; loc_DC56:
 	.clearPush:
-		bclr	#5,obStatus(a0)				; clear spring's pushed flag
-		bclr	#5,obStatus(a1)				; clear Sonic's pushing flag
+		bclr	#status_pushing_bit,obStatus(a0)	; clear spring's pushed flag
+		bclr	#status_pushing_bit,obStatus(a1)	; clear Sonic's pushing flag
 		move.w	#sfx_Spring,d0				; set spring sound
 		jsr	(QueueSound2).l				; play it
 ; ---------------------------------------------------------------------------
@@ -192,10 +192,10 @@ Spring_Down:	; Routine $E
 		subq.w	#8,obY(a1)				; push Sonic a few pixels into the spring
 		move.w	spring_pow(a0),obVelY(a1)		; get spring force
 		neg.w	obVelY(a1)				; negate it to move Sonic downwards
-		bset	#1,obStatus(a1)				; set Sonic's airborne flag
-		bclr	#3,obStatus(a1)				; clear Sonic's on-platform flag
+		bset	#status_in_air_bit,obStatus(a1)		; set Sonic's airborne flag
+		bclr	#status_on_object_bit,obStatus(a1)	; clear Sonic's on-platform flag
 		move.b	#sonic_state_control,obRoutine(a1)	; set Sonic to Sonic_Control routine
-		bclr	#3,obStatus(a0)				; clear spring's Sonic touch flag
+		bclr	#status_on_object_bit,obStatus(a0)	; clear spring's Sonic touch flag
 		clr.b	obSolid(a0)				; clear spring's solidity flag
 		move.w	#sfx_Spring,d0				; set spring sound
 		jsr	(QueueSound2).l				; play it

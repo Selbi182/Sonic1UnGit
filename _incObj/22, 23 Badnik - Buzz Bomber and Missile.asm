@@ -38,7 +38,7 @@ Buzz_Action_Wait:
 		move.w	#128-1,buzz_timedelay(a0)		; set flight time to just over 2 seconds
 		move.w	#$400,obVelX(a0)			; move Buzz Bomber to the right
 		move.b	#1,obAnim(a0)				; use "flying" animation
-		btst	#0,obStatus(a0)				; is Buzz Bomber facing left?
+		btst	#status_xflip_bit,obStatus(a0)		; is Buzz Bomber facing left?
 		bne.s	.return					; if not, branch
 		neg.w	obVelX(a0)				; move Buzz Bomber to the left instead
 
@@ -57,7 +57,7 @@ Buzz_Action_Fire:
 		move.w	#$200,obVelY(a1)			; move missile downwards
 		move.w	#$200,obVelX(a1)			; move missile to the right
 		moveq	#$18-4,d0				; set horizontal alignment offset (corrected)
-		btst	#0,obStatus(a0)				; is Buzz Bomber facing left?
+		btst	#status_xflip_bit,obStatus(a0)		; is Buzz Bomber facing left?
 		bne.s	.alignX					; if not, branch
 		neg.w	d0					; invert X-alignment offset
 		neg.w	obVelX(a1)				; move missile to the left
@@ -102,7 +102,7 @@ Buzz_Action_Move:
 
 .changeDirection:
 		move.b	#0,buzz_buzzstate(a0)			; set Buzz Bomber state to "normal" (no firing)
-		bchg	#0,obStatus(a0)				; reverse direction
+		bchg	#status_xflip_bit,obStatus(a0)		; reverse direction
 		move.w	#60-1,buzz_timedelay(a0)		; set delay before starting to move again to 1 second
 
 	.stopMoving:
@@ -133,7 +133,7 @@ Missile:
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
 		move.w	#spr_prio3,obPriority(a0)		; set sprite priority
 		move.b	#16/2,obActWid(a0)			; set sprite display width
-		andi.b	#3,obStatus(a0)				; clear status flags except X/Y-flip flags
+		andi.b	#status_xflip|status_yflip,obStatus(a0)	; clear status flags except X/Y-flip flags
 
 		tst.b	obSubtype(a0)				; was object created by a Newtron?
 		beq.s	Msl_Animate				; if not, branch

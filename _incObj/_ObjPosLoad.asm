@@ -325,7 +325,7 @@ OPLBack8:	; check if current object needs to be loaded
 	else
 		rol.w	#3,d2
 	endif
-		andi.w	#3,d2				; get object's render flags and status
+		andi.w	#sprite_xflip|sprite_yflip,d2	; get object's render flags and status
 		move.b	d2,obRender(a1)
 		move.b	d2,obStatus(a1)
 		moveq	#0,d0
@@ -406,7 +406,7 @@ LoadObj_YWrap:
 	else
 		rol.w	#3,d2				; rotate y-check, y-flip, and x-flip flags to lower bits
 	endif
-		andi.w	#3,d2				; get render flags and status
+		andi.w	#sprite_xflip|sprite_yflip,d2	; get render flags and status
 		move.b	d2,obRender(a1)
 		move.b	d2,obStatus(a1)
 		moveq	#0,d0
@@ -461,7 +461,7 @@ LoadObj:
 	else
 		rol.w	#3,d2				; rotate y-check, y-flip, and x-flip flags to lower bits
 	endif
-		andi.w	#3,d2				; get render flags and status
+		andi.w	#sprite_xflip|sprite_yflip,d2	; get render flags and status
 		move.b	d2,obRender(a1)
 		move.b	d2,obStatus(a1)
 		moveq	#0,d0

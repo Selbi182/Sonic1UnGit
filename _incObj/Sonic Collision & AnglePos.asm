@@ -57,7 +57,7 @@ Sonic_CalcRoomAhead:
 		andi.b	#$38,d1
 		bne.s	.find_wall_lr
 		addq.w	#8,d2
-		btst	#2,obStatus(a0)				; is Sonic rolling?
+		btst	#status_rolling_bit,obStatus(a0)	; is Sonic rolling?
 		beq.s	.find_wall_lr				; if not, branch
 		subq.w	#5,d2					; if so, move push sensor up a bit
 
@@ -584,7 +584,7 @@ ObjHitWallLeft:
 ; ---------------------------------------------------------------------------
 
 Sonic_AnglePos:
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		beq.s	.not_on_platform			; branch if Sonic isn't on a platform
 		moveq	#0,d0
 		move.b	d0,(v_anglebuffer).w			; clear angle hotspots
@@ -690,8 +690,8 @@ Sonic_AnglePos:
 .in_air:
 		tst.b	sticktoconvex(a0)
 		bne.s	.on_disc				; branch if Sonic is on a SBZ disc
-		bset	#1,obStatus(a0)
-		bclr	#5,obStatus(a0)
+		bset	#status_in_air_bit,obStatus(a0)
+		bclr	#status_pushing_bit,obStatus(a0)
 		move.b	#id_Run,obPrevAni(a0)			; restart Sonic's animation
 		rts
 ; ===========================================================================
@@ -853,8 +853,8 @@ Sonic_WalkVertR:
 .in_air:
 		tst.b	sticktoconvex(a0)
 		bne.s	.on_disc				; branch if Sonic is on a SBZ disc
-		bset	#1,obStatus(a0)
-		bclr	#5,obStatus(a0)
+		bset	#status_in_air_bit,obStatus(a0)
+		bclr	#status_pushing_bit,obStatus(a0)
 		move.b	#id_Run,obPrevAni(a0)			; restart Sonic's animation
 		rts
 ; End of function Sonic_WalkVertR
@@ -926,8 +926,8 @@ Sonic_WalkCeiling:
 .in_air:
 		tst.b	sticktoconvex(a0)
 		bne.s	.on_disc				; branch if Sonic is on a SBZ disc
-		bset	#1,obStatus(a0)
-		bclr	#5,obStatus(a0)
+		bset	#status_in_air_bit,obStatus(a0)
+		bclr	#status_pushing_bit,obStatus(a0)
 		move.b	#id_Run,obPrevAni(a0)			; restart Sonic's animation
 		rts
 ; End of function Sonic_WalkCeiling
@@ -999,8 +999,8 @@ Sonic_WalkVertL:
 .in_air:
 		tst.b	sticktoconvex(a0)
 		bne.s	.on_disc				; branch if Sonic is on a SBZ disc
-		bset	#1,obStatus(a0)
-		bclr	#5,obStatus(a0)
+		bset	#status_in_air_bit,obStatus(a0)
+		bclr	#status_pushing_bit,obStatus(a0)
 		move.b	#id_Run,obPrevAni(a0)			; restart Sonic's animation
 		rts
 ; End of function Sonic_WalkVertL

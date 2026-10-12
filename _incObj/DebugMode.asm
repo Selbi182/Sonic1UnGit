@@ -29,7 +29,7 @@ DebugMode:
 		move.b	#fr_Null,obFrame(a0)			; set Sonic's frame to null (blank)
 		move.b	#id_Walk,obAnim(a0)			; set Sonic's animation to walk (0)
 
-		bset	#1,obStatus(a0)				; force airborne state to speed up vertical camera
+		bset	#status_in_air_bit,obStatus(a0)		; force airborne state to speed up vertical camera
 		move.b	#sonic_state_control,obRoutine(a0)	; force to Sonic_Control routine
 		move.w	#$60,(v_lookshift).w			; reset up/down camera shift
 		move.w	#(320/2),(v_camera_pan).w		; Reset the horizontal camera pan value to half screen width
@@ -49,20 +49,20 @@ DebugMode:
 		; Debug Mode makes no attempt to check if Sonic was standing on any
 		; object before entering it, causing behavior such as being stuck to
 		; platforms or warped back down to an object previously stood on.
-		btst	#3,obStatus(a0)				; is Sonic standing on an object?
+		btst	#status_on_object_bit,obStatus(a0)	; is Sonic standing on an object?
 		beq.s	.notOnObject				; if not, branch
-		bclr	#3,obStatus(a0)				; clear Sonic's standing flag
+		bclr	#status_on_object_bit,obStatus(a0)	; clear Sonic's standing flag
 		move.b	standonobject(a0),d0			; get object ID
 		clr.b	standonobject(a0)			; clear object ID
 		lsl.w	#object_size_bits,d0			; multiply by $40 (object_size)
 		addi.l	#v_objspace&$FFFFFF,d0			; add base object RAM location
 		movea.l	d0,a2					; a2 = address of stood-on object
-		bclr	#3,obStatus(a2)				; clear object's standing flag
+		bclr	#status_on_object_bit,obStatus(a2)	; clear object's standing flag
 		clr.b	obSolid(a2)				; clear object's solid state
 	.notOnObject:
 
 		; Exit underwater state if applicable
-		bclr	#6,obStatus(a0)				; clear underwater status
+		bclr	#status_underwater_bit,obStatus(a0)	; clear underwater status
 		beq.s	.notUnderwater				; if Sonic wasn't underwater, branch
 		jsr	(ResumeMusic).l				; resume music after a countdown
 		move.w  #son_maxspeed,(v_sonspeedmax).w		; restore Sonic's speed
@@ -261,7 +261,7 @@ Debug_ChgItem:
 		move.w	obY(a0),obY(a1)				; set new object's Y-position
 		move.b	obRender(a0),obRender(a1)		; set new object's render flags
 		move.b	obRender(a0),obStatus(a1)		; set new object's status flags
-		andi.b	#$7F,obStatus(a1)			; make sure bit 7 in status flag is clear
+		andi.b	#~status_defeated&$FF,obStatus(a1)	; make sure bit 7 in status flag is clear
 
 		moveq	#0,d0					; clear d0
 		move.b	(v_debugitem).w,d0			; get index of currently selected debug item
@@ -295,8 +295,8 @@ Debug_ExitDebugMode:
 		clr.w	(v_ssangle).w				; make Special Stage "upright"
 		move.w	#ss_rotatespeed,(v_ssrotate).w		; restart maze rotation
 		move.b	#id_Roll,(v_player+obAnim).w		; reset Sonic's animation to rolling
-		bset	#2,(v_player+obStatus).w		; force rolling state
-		bset	#1,(v_player+obStatus).w		; force in-air state
+		bset	#status_rolling_bit,(v_player+obStatus).w ; force rolling state
+		bset	#status_in_air_bit,(v_player+obStatus).w ; force in-air state
 
 	.return:
 		rts						; return

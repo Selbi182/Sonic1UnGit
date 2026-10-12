@@ -74,7 +74,7 @@ Bridge:
 
 Bri_Action:	; Routine 2
 		bsr.s	Bri_CheckOnBridge			; allow stepping on bridge (sets obRoutine = 4 (Bri_StoodOn) on enter)
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		beq.s	.notOn
 		move.l	#Bri_StoodOn,obID(a0)
 .notOn:
@@ -118,7 +118,7 @@ Bri_CheckOnBridge:
 ; Bri_Platform:
 Bri_StoodOn:	; Routine 4
 		bsr.s	Bri_WalkOff				; allow exiting bridge (sets obRoutine = 2 (Bri_Action) on exit)
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		bne.s	.stillOn
 		move.l	#Bri_Action,obID(a0)
 .stillOn:
@@ -378,7 +378,7 @@ BriOpti_ChkTouch:
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; get interactable bridge width
 		bsr.w	PlatformObject				; check if Sonic has walked onto the bridge
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		beq.s	.notOn
 		move.l	#BriOpti_StoodOn,obID(a0)
 .notOn:
@@ -389,7 +389,7 @@ BriOpti_StoodOn:
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; get interactable bridge width
 		bsr.w	ExitPlatform				; check if Sonic has walked off the bridge
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		bne.s	.stillOn
 		move.l	#BriOpti_Action,obID(a0)
 .stillOn:

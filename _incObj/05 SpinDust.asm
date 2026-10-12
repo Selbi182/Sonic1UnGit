@@ -16,7 +16,7 @@ SpinDust_Main:
 		lea	(v_player).w,a2				; load Sonic object to a2
 		tst.b	spindash_flag(a2)			; is a Spin Dash currently active?
 		beq.s	.hide					; if not, don't make dust
-		btst	#1,obStatus(a2)				; is Sonic airborne?
+		btst	#status_in_air_bit,obStatus(a2)		; is Sonic airborne?
 		bne.s	.hide					; if yes, don't make dust
 		cmpi.b	#sonic_state_hurt,obRoutine(a2)		; is Sonic hurt or dying?
 		bhs.s	.hide					; if yes, don't make dust

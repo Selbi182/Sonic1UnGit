@@ -78,7 +78,7 @@ Elev_Platform:	; Routine 2
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as solidity width
 		jsr	(PlatformObject).l			; make object a platform (can set obRoutine to 4 = Elev_StoodOn)
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		beq.s	.notOn
 		move.l	#Elev_StoodOn,obID(a0)
 	.notOn:
@@ -95,7 +95,7 @@ Elev_StoodOn:	; Routine 4
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as solidity width
 		jsr	(ExitPlatform).l			; allow exiting platform (can set obRoutine to 2 = Elev_Platform on exit)
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		bne.s	.stillOn
 		move.l	#Elev_Platform,obID(a0)
 .stillOn:
@@ -145,7 +145,7 @@ Elev_Stationary:
 
 ; Type 1/3/5/7 - go to next action type in list when Sonic stands on the platform
 Elev_NextOnTouch:
-		btst	#3,obStatus(a0)				; check if Sonic is standing on the object
+		btst	#status_on_object_bit,obStatus(a0)	; check if Sonic is standing on the object
 		beq.s	.return					; if not, branch
 		addq.b	#1,obSubtype(a0)			; if yes, go to next type in list
 
@@ -221,10 +221,10 @@ Elev_FromSpawner:
 ; ---------------------------------------------------------------------------
 
 .vanishPlatform:
-		btst	#3,obStatus(a0)				; was Sonic standing on platform as it reached peak?
+		btst	#status_on_object_bit,obStatus(a0)	; was Sonic standing on platform as it reached peak?
 		beq.s	.delete					; if not, branch
-		bset	#1,obStatus(a1)				; set Sonic's in-air flag
-		bclr	#3,obStatus(a1)				; clear Sonic's on-platform flag
+		bset	#status_in_air_bit,obStatus(a1)		; set Sonic's in-air flag
+		bclr	#status_on_object_bit,obStatus(a1)	; clear Sonic's on-platform flag
 		move.b	#sonic_state_control,obRoutine(a1)	; force Sonic to Sonic_Control routine
 
 	.delete:

@@ -23,7 +23,7 @@ Yadrin:
 		add.w	d1,obY(a0)				; match object's position with the floor
 		move.w	#0,obVelY(a0)				; clear falling speed
 		move.l	#Yad_Action,obID(a0)			; advance to Moto_Action
-		bchg	#0,obStatus(a0)				; make Yadrin face to the left on spawn
+		bchg	#status_xflip_bit,obStatus(a0)		; make Yadrin face to the left on spawn
 	.hide:
 
 		cmpi.w	#$7FF,obY(a0)				; has object fallen below max level height?
@@ -50,7 +50,7 @@ Yad_Action_Wait:
 		addq.b	#2,ob2ndRout(a0)			; advance to Yad_Action_Move
 		move.w	#-$100,obVelX(a0)			; move Yadrin to the left
 		move.b	#1,obAnim(a0)				; set to walk animation
-		bchg	#0,obStatus(a0)				; invert horizontal orientation
+		bchg	#status_xflip_bit,obStatus(a0)		; invert horizontal orientation
 		bne.s	.return					; if looking left nowallhit, branch
 		neg.w	obVelX(a0)				; move Yadrin to the right instead
 

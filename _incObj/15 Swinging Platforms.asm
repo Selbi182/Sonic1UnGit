@@ -120,7 +120,7 @@ Swing_Platform:	; Routine 2
 		moveq	#0,d3					; clear d3
 		move.b	obHeight(a0),d3				; set custom platform solidity height as input
 		bsr.w	PlatformObject_CustomHeight		; enable platform behavior (sets obRoutine = 4 (Swing_StoodOn) when stood on)
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		beq.s	Swing_Swinging
 		move.l	#Swing_StoodOn,obID(a0)
 ; ---------------------------------------------------------------------------
@@ -136,7 +136,7 @@ Swing_StoodOn:	; Routine 4
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as platform solidity width
 		bsr.w	ExitPlatform				; allow Sonic exiting platform (sets obRoutine = 2 (Swing_Platform) on exit)
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		bne.s	.stillOn
 		move.l	#Swing_Platform,obID(a0)
 .stillOn:
@@ -160,7 +160,7 @@ Swing_StoodOn:	; Routine 4
 Swing_Move:
 		move.b	(v_oscillate+$1A).w,d0			; get oscillation value (frequency 8, middle value $40)
 		move.w	#$40*2,d1				; keep in same range if movement is reversed
-		btst	#0,obStatus(a0)				; is platform X-flipped?
+		btst	#status_xflip_bit,obStatus(a0)		; is platform X-flipped?
 		beq.s	.swing					; if not, branch
 		neg.w	d0					; reverse movement direction
 		add.w	d1,d0					; keep in the same general range

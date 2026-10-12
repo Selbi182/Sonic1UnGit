@@ -25,7 +25,7 @@ Spikes:
 		move.l	#Map_Spike,obMap(a0)			; load mappings
 		move.w	#ArtTile_Spikes,obGfx(a0)		; set art tile
 		ori.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioning mode
-		move.w	#spr_prio4,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio4,obPriority(a0)		; set sprite priority
 
 		move.b	obSubtype(a0),d0			; get spikes subtype
 		andi.b	#$F,obSubtype(a0)			; clear upper nybble in subtype (lower nybble is for movement)
@@ -60,7 +60,7 @@ Spikes_SideWays:
 		ble.w	Spikes_Display				; branch if not touched at all (0) or top/bottom touched (-1)
 		move.w	(v_player+obX).w,d0			; load Sonic's X position into d0
 		sub.w	obX(a0),d0				; subtract spikes' X position
-		btst	#0,obStatus(a0)				; are spikes facing left? (X-flip flag clear)
+		btst	#status_xflip_bit,obStatus(a0)		; are spikes facing left? (X-flip flag clear)
 		beq.s	.chkHurt				; if yes, branch
 		neg.w	d0					; invert difference to check opposite end for right spikes
 .chkHurt:	tst.w	d0					; is Sonic touching the "pointy" end of the spikes?
@@ -77,13 +77,13 @@ Spikes_Upright:
 		move.w	#(32/2)+1,d3				; secondary collision height is +1
 		move.w	obX(a0),d4				; set base X-position for collision detection
 		bsr.w	SolidObject				; check if Sonic touched the spikes
-		btst	#3,obStatus(a0)				; does Sonic stand on the spikes? (landing on it after taking damage)
+		btst	#status_on_object_bit,obStatus(a0)	; does Sonic stand on the spikes? (landing on it after taking damage)
 		bne.s	.chkAnyway				; if yes, check for collision anyway
 		tst.w	d4					; check response value from SolidObject
 		bge.s	Spikes_Display				; branch if not touched at all (0) or touched from the sides (+1)
 .chkAnyway:	move.w	(v_player+obY).w,d0			; load Sonic's Y position into d0
 		sub.w	obY(a0),d0				; subtract spikes' Y position
-		btst	#1,obStatus(a0)				; are spikes facing up? (Y-flip flag clear)
+		btst	#status_yflip_bit,obStatus(a0)		; are spikes facing up? (Y-flip flag clear)
 		beq.s	.chkHurt				; if yes, branch
 		neg.w	d0					; invert difference to check opposite end for upside-down spikes
 .chkHurt:	tst.w	d0					; is Sonic touching the "pointy" end of the spikes?

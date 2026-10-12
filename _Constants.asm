@@ -229,6 +229,33 @@ sprite_customheight:	equ 1<<sprite_customheight_bit
 sprite_rawmappings:	equ 1<<sprite_rawmappings_bit
 sprite_rendered:	equ 1<<sprite_rendered_bit
 
+; Flags used by obStatus for most objects
+status_xflip_bit:	equ 0					; object's X-orientation. Does not affect sprite rendering
+status_yflip_bit:	equ 1					; object's Y-orientation. Does not affect sprite rendering
+;			equ 2					; unused
+status_on_object_bit:	equ 3					; set when Sonic is standing on the object
+;			equ 4					; unused
+status_pushing_bit:	equ 5					; set when Sonic is pushing the object
+;			equ 6					; unused
+status_defeated_bit:	equ 7					; set when the object is destroyed/defeated
+
+status_xflip:		equ 1<<status_xflip_bit
+status_yflip:		equ 1<<status_yflip_bit
+status_on_object:	equ 1<<status_on_object_bit
+status_pushing:		equ 1<<status_on_object_bit
+status_defeated:	equ 1<<status_defeated_bit
+
+; Flags used differently by Sonic's obStatus
+status_in_air_bit:	equ status_yflip_bit			; Sonic is in the air. Also used by block that floats in lava in MZ (see PushBlock and GeyserMaker)
+status_rolling_bit:	equ 2					; Sonic is in ball form, such as from jumping or rolling
+status_underwater_bit:	equ 6					; Sonic is under water
+status_loop_bit:	equ status_defeated_bit
+
+status_in_air:		equ 1<<status_in_air_bit
+status_rolling:		equ 1<<status_rolling_bit
+status_underwater:	equ 1<<status_underwater_bit
+status_loop:		equ 1<<status_loop_bit
+
 ; Object variables
 obID:			equ 0					; object ID number
 obRender:		equ $2C					; bitfield for x/y flip, display mode

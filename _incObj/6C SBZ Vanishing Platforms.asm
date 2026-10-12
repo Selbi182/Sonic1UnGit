@@ -77,7 +77,7 @@ VanP_StoodOn:	; Routine 4
 		btst	#1,obFrame(a0)				; is platform visible? (frame IDs 1 and 3)
 		bne.w	.notSolid				; if not, don't make solid
 
-		btst	#3,obStatus(a0)				; is Sonic already standing on platform?
+		btst	#status_on_object_bit,obStatus(a0)	; is Sonic already standing on platform?
 		bne.w	.sonicOnPlatform			; if yes, branch
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as solidity width
@@ -98,11 +98,11 @@ VanP_StoodOn:	; Routine 4
 ; ===========================================================================
 
 .notSolid:
-		btst	#3,obStatus(a0)				; was Sonic standing on platform as it went invisible?
+		btst	#status_on_object_bit,obStatus(a0)	; was Sonic standing on platform as it went invisible?
 		beq.s	.display				; if not, branch
 		lea	(v_player).w,a1				; load Sonic player object
-		bclr	#3,obStatus(a1)				; clear Sonic's on-platform flag
-		bclr	#3,obStatus(a0)				; clear platform's stood-on flag
+		bclr	#status_on_object_bit,obStatus(a1)	; clear Sonic's on-platform flag
+		bclr	#status_on_object_bit,obStatus(a0)	; clear platform's stood-on flag
 		move.l	#VanP_Detect,obID(a0)			; set platform back to VanP_Detect
 		clr.b	obSolid(a0)				; clear platform solidity flag
 

@@ -21,7 +21,7 @@ Circ_ChkTouch:	; Routine 2
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as platform solidity width
 		jsr	(PlatformObject).l			; sets obRoutine to 4 on touch (Circ_OnPlatform)
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		beq.s	.notOn
 		move.l	#Circ_OnPlatform,obID(a0)
 	.notOn:
@@ -33,7 +33,7 @@ Circ_OnPlatform: ; Routine 4
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as platform solidity width
 		jsr	(ExitPlatform).l			; allow Sonic to exit the platform again
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		bne.s	.stillOn
 		move.l	#Circ_ChkTouch,obID(a0)
 	.stillOn:

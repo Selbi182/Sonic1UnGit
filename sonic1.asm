@@ -3414,7 +3414,7 @@ End_LoadData:
 
 End_LoadSonic:
 		move.l	#SonicPlayer,(v_player+obID).w		; load Sonic object
-		bset	#0,(v_player+obStatus).w		; make Sonic face left
+		bset	#status_xflip_bit,(v_player+obStatus).w	; make Sonic face left
 		move.b	#1,(f_lockctrl).w			; lock controls to keep simulating D-Pad
 		move.w	#(btnL<<8),(v_jpadhold2).w		; simulate holding down the left D-Pad button to move Sonic (and clear v_jpadpress2)
 		move.w	#-$600,(v_player+obInertia).w		; set Sonic's initial speed (speed cap immediately limits this to -$600)

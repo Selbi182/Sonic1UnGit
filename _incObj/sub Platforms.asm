@@ -61,14 +61,14 @@ PlatformObject:
 		move.w	d2,obY(a1)
 
 Plat_NoCheck:							; jump here to skip all checks
-		btst	#3,obStatus(a1)				; is Sonic on a platform already?
+		btst	#status_on_object_bit,obStatus(a1)	; is Sonic on a platform already?
 		beq.s	.no					; if not, branch
 		moveq	#0,d0
 		move.b	standonobject(a1),d0			; get OST index for that platform
 		lsl.w	#object_size_bits,d0
 		addi.l	#v_objspace&$FFFFFF,d0			; convert index to RAM address
 		movea.l	d0,a2					; point a2 to that address
-		bclr	#3,obStatus(a2)				; clear platform bit for the other platform
+		bclr	#status_on_object_bit,obStatus(a2)	; clear platform bit for the other platform
 		clr.b	ob2ndRout(a2)
 
 	.no:
@@ -80,7 +80,7 @@ Plat_NoCheck:							; jump here to skip all checks
 		move.b	#0,obAngle(a1)
 		move.w	#0,obVelY(a1)
 		move.w	obVelX(a1),obInertia(a1)
-		btst	#1,obStatus(a1)				; is Sonic in the air/jumping?
+		btst	#status_in_air_bit,obStatus(a1)		; is Sonic in the air/jumping?
 		beq.s	.notinair				; if not, branch
 		move.l	a0,-(sp)
 		movea.l	a1,a0
@@ -88,8 +88,8 @@ Plat_NoCheck:							; jump here to skip all checks
 		movea.l	(sp)+,a0
 
 	.notinair:
-		bset	#3,obStatus(a1)
-		bset	#3,obStatus(a0)
+		bset	#status_on_object_bit,obStatus(a1)
+		bset	#status_on_object_bit,obStatus(a0)
 
 Plat_Exit:
 		rts
@@ -157,7 +157,7 @@ SlopeObject:
 ; SlopeObject2:
 SlopeObject_AssumeStoodOn:
 		lea	(v_player).w,a1				; get Sonic object
-		btst	#3,obStatus(a1)				; is Sonic standing on a platform object?
+		btst	#status_on_object_bit,obStatus(a1)	; is Sonic standing on a platform object?
 		beq.s	.return					; if not, branch
 
 		move.w	obX(a1),d0
@@ -233,7 +233,7 @@ ExitPlatform2:	; input width is already in d2
 		lea	(v_player).w,a1				; load Sonic player object
 		tst.w	(v_debuguse).w				; is debug mode active?
 		bne.s	.exitedPlatform				; if yes, exit platform right away
-		btst	#1,obStatus(a1)				; is Sonic airborne?
+		btst	#status_in_air_bit,obStatus(a1)		; is Sonic airborne?
 		bne.s	.exitedPlatform				; if yes, exit platform right away
 
 		move.w	obX(a1),d0				; get Sonic's X-position
@@ -244,8 +244,8 @@ ExitPlatform2:	; input width is already in d2
 		blo.s	.return					; if not, stay on platform
 
 	.exitedPlatform:
-		bclr	#3,obStatus(a1)				; clear Sonic's on-platform flag
-		bclr	#3,obStatus(a0)				; clear platform's stood-on flag
+		bclr	#status_on_object_bit,obStatus(a1)	; clear Sonic's on-platform flag
+		bclr	#status_on_object_bit,obStatus(a0)	; clear platform's stood-on flag
 
 	.return:
 		rts						; return

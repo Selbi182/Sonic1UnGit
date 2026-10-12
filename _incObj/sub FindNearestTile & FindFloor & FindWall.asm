@@ -94,7 +94,7 @@ FindNearestTile:
 		andi.w	#$7F,d1
 		cmpi.l	#SonicPlayer,obID(a0)			; is object Sonic?
 		bne.s	.treatasnormal				; if not, branch
-		btst	#7,obStatus(a0) 			; is Sonic "behind a loop"?
+		btst	#status_loop_bit,obStatus(a0)		; is Sonic "behind a loop"?
 		beq.s	.treatasnormal				; if not, branch
 		addq.w	#1,d1
 		cmpi.w	#$29,d1					; is 256x256 chunk number $28?

@@ -120,7 +120,7 @@ LCon_Platform:	; Routine 2
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as platform solidity width
 		jsr	(PlatformObject).l			; allow Sonic entering platform (sets obRoutine = 4 (LCon_OnPlatform) on enter)
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		beq.s	.notOn
 		move.l	#LCon_OnPlatform,obID(a0)
 	.notOn:
@@ -158,7 +158,7 @@ LCon_OnPlatform: ; Routine 4
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as platform solidity width
 		jsr	(ExitPlatform).l			; allow Sonic exiting platform (sets obRoutine = 2 (LCon_Platform) on exit)
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		bne.s	.stillOn
 		move.l	#LCon_Platform,obID(a0)
 	.stillOn:

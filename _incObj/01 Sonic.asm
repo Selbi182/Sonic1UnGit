@@ -84,7 +84,7 @@ Sonic_Control:	; Routine 2
 
 		moveq	#0,d0					; clear d0
 		move.b	obStatus(a0),d0				; get Sonic's status flags
-		andi.w	#%0110,d0				; limit to "is in air" and "rolling" flags
+		andi.w	#status_in_air|status_rolling,d0	; limit to "is in air" and "rolling" flags
 		move.w	Sonic_Modes(pc,d0.w),d1			; use the those as routine counter for the correct mode
 		jsr	Sonic_Modes(pc,d1.w)			; jump to that mode
 
@@ -179,7 +179,7 @@ Sonic_Display:
 		move.w	#son_maxspeed,(v_sonspeedmax).w		; restore Sonic's max speed
 		move.w	#son_acceleration,(v_sonspeedacc).w	; restore Sonic's acceleration
 		move.w	#son_deceleration,(v_sonspeeddec).w	; restore Sonic's deceleration
-		btst	#6,obStatus(a0)				; is Sonic underwater?
+		btst	#status_underwater_bit,obStatus(a0)	; is Sonic underwater?
 		beq.s	.notunderwater				; if not, branch
 		move.w	#son_maxspeed/2,(v_sonspeedmax).w	; change Sonic's top speed (half of regular)
 		move.w	#son_acceleration/2,(v_sonspeedacc).w	; change Sonic's acceleration (half or regular)
@@ -235,7 +235,7 @@ Sonic_Water:
 		move.w	(v_waterpos1).w,d0			; get current water height
 		cmp.w	obY(a0),d0				; is Sonic above the water?
 		bge.s	.abovewater				; if yes, branch
-		bset	#6,obStatus(a0)				; set underwater flag
+		bset	#status_underwater_bit,obStatus(a0)	; set underwater flag
 		bne.s	.return					; was Sonic already underwater? if yes, nothing to do
 
 		bsr.w	ResumeMusic				; replenish air (music won't resume here, we've only just entered water...)
@@ -261,7 +261,7 @@ Sonic_Water:
 
 ; Obj01_OutWater:
 .abovewater:
-		bclr	#6,obStatus(a0)				; clear underwater flag
+		bclr	#status_underwater_bit,obStatus(a0)	; clear underwater flag
 		beq.s	.return					; was Sonic already above water? if yes, nothing to do
 
 		bsr.w	ResumeMusic				; replenish air and resume music if necessary
@@ -319,7 +319,7 @@ Sonic_MdJump:	; While Sonic is in the air but not rolling
 		bsr.w	Sonic_JumpDirection			; handle midair direction adjustments while jumping
 		bsr.w	Sonic_LevelBound			; make sure Sonic stays within level bounds and handle bottomless pits
 		jsr	(ObjectFall).l				; apply gravity and update Sonic's position based on his current velocities
-		btst	#6,obStatus(a0)				; is Sonic underwater?
+		btst	#status_underwater_bit,obStatus(a0)	; is Sonic underwater?
 		beq.s	.notunderwater				; if not, branch
 		subi.w	#gravity-$10,obVelY(a0)			; reduce falling speed (ObjectFall applies $38, so this subtraction makes it $10)
 
@@ -353,7 +353,7 @@ Sonic_MdJump2:	; While Sonic is in the air and rolling (usually, but not limited
 		bsr.w	Sonic_JumpDirection			; handle midair direction adjustments while jumping
 		bsr.w	Sonic_LevelBound			; make sure Sonic stays within level bounds and handle bottomless pits
 		jsr	(ObjectFall).l				; apply gravity and update Sonic's position based on his current velocities
-		btst	#6,obStatus(a0)				; is Sonic underwater?
+		btst	#status_underwater_bit,obStatus(a0)	; is Sonic underwater?
 		beq.s	.notunderwater				; if not, branch
 		subi.w	#gravity-$10,obVelY(a0)			; reduce falling speed (ObjectFall applies $38, so this subtraction makes it $10)
 
@@ -397,9 +397,9 @@ Sonic_Move:
 
 		tst.w	obInertia(a0)				; is Sonic standing still?
 		bne.w	Sonic_ResetScr				; if not, branch
-		bclr	#5,obStatus(a0)				; clear pushing flag
+		bclr	#status_pushing_bit,obStatus(a0)	; clear pushing flag
 		move.b	#id_Wait,obAnim(a0)			; use "standing" animation
-		btst	#3,obStatus(a0)				; is Sonic standing on a platform object?
+		btst	#status_on_object_bit,obStatus(a0)	; is Sonic standing on a platform object?
 		beq.s	.chkbalance				; if not, branch
 
 		moveq	#0,d0					; clear d0
@@ -436,7 +436,7 @@ Sonic_Move:
 
 ; loc_12F5A:
 .rightbalance:
-		bclr	#0,obStatus(a0)				; clear X-flip flag (make Sonic face right)
+		bclr	#status_xflip_bit,obStatus(a0)		; clear X-flip flag (make Sonic face right)
 		bra.s	.balance				; do balance animation
 ; ===========================================================================
 
@@ -447,7 +447,7 @@ Sonic_Move:
 
 ; loc_12F6A:
 .leftbalance:
-		bset	#0,obStatus(a0)				; set X-flip flag (make Sonic face left)
+		bset	#status_xflip_bit,obStatus(a0)		; set X-flip flag (make Sonic face left)
 
 ; loc_12F70:
 .balance:
@@ -577,9 +577,9 @@ Sonic_WallSpeedAdjust:
 .hitright:	; d0 is $C0, Sonic is facing right
 		add.w	d1,obVelX(a0)				; adjust X-velocity to prevent Sonic from walking into the wall
 		move.w	#0,obInertia(a0)			; clear ground speed
-		btst	#0,obStatus(a0)				; is Sonic facing the wall?
+		btst	#status_xflip_bit,obStatus(a0)		; is Sonic facing the wall?
 		bne.s	.awayright				; if not, branch
-		bset	#5,obStatus(a0)				; set pushing flag
+		bset	#status_pushing_bit,obStatus(a0)	; set pushing flag
 
 .awayright:
 		rts						; return
@@ -595,9 +595,9 @@ Sonic_WallSpeedAdjust:
 .hitleft:	; d0 is $40, Sonic is facing left
 		sub.w	d1,obVelX(a0)				; adjust X-velocity to prevent Sonic from walking into the wall
 		move.w	#0,obInertia(a0)			; clear ground speed
-		btst	#0,obStatus(a0)				; is Sonic facing the wall?
+		btst	#status_xflip_bit,obStatus(a0)		; is Sonic facing the wall?
 		beq.s	.awayleft				; if not, branch
-		bset	#5,obStatus(a0)				; set pushing flag
+		bset	#status_pushing_bit,obStatus(a0)	; set pushing flag
 
 .awayleft:
 		rts						; return
@@ -624,9 +624,9 @@ Sonic_MoveLeft:
 
 ; loc_13086:
 .still:
-		bset	#0,obStatus(a0)				; set X-flip flag (Sonic is facing left)
+		bset	#status_xflip_bit,obStatus(a0)		; set X-flip flag (Sonic is facing left)
 		bne.s	.alreadyleft				; if he already was facing left, branch
-		bclr	#5,obStatus(a0)				; clear pushing flag
+		bclr	#status_pushing_bit,obStatus(a0)	; clear pushing flag
 		move.b	#id_Run,obPrevAni(a0)			; restart Sonic's animation
 
 ; loc_1309A:
@@ -664,7 +664,7 @@ Sonic_MoveLeft:
 		cmpi.w	#$400,d0				; has Sonic changed direction while being really fast?
 		blt.s	.nostopping				; if not, don't play skidding animation/sound
 		move.b	#id_Stop,obAnim(a0)			; use "stopping" animation
-		bclr	#0,obStatus(a0)				; clear X-flip flag (Sonic is now facing right)
+		bclr	#status_xflip_bit,obStatus(a0)		; clear X-flip flag (Sonic is now facing right)
 		move.w	#sfx_Skid,d0				; set skidding sound
 		jsr	(QueueSound2).l				; play it
 
@@ -681,9 +681,9 @@ Sonic_MoveLeft:
 Sonic_MoveRight:
 		move.w	obInertia(a0),d0			; get Sonic's current ground speed
 		bmi.s	.changedirection			; has Sonic changed direction? if yes, branch
-		bclr	#0,obStatus(a0)				; clear X-flip flag (Sonic is facing right)
+		bclr	#status_xflip_bit,obStatus(a0)		; clear X-flip flag (Sonic is facing right)
 		beq.s	.alreadyright				; if he already was facing right, branch
-		bclr	#5,obStatus(a0)				; clear pushing flag
+		bclr	#status_pushing_bit,obStatus(a0)	; clear pushing flag
 		move.b	#id_Run,obPrevAni(a0)			; restart Sonic's animation
 
 ; loc_13104:
@@ -720,7 +720,7 @@ Sonic_MoveRight:
 		bgt.s	.nostopping				; if not, don't play skidding animation/sound
 
 		move.b	#id_Stop,obAnim(a0)			; use "stopping" animation
-		bset	#0,obStatus(a0)				; set X-flip flag (Sonic is now facing left)
+		bset	#status_xflip_bit,obStatus(a0)		; set X-flip flag (Sonic is now facing left)
 		move.w	#sfx_Skid,d0				; set skidding sound
 		jsr	(QueueSound2).l				; play it
 
@@ -789,7 +789,7 @@ Sonic_RollSlowdownDone:
 		tst.w	obInertia(a0)				; is Sonic standing still?
 		bne.s	Sonic_AngledRollSpeed			; if not, branch
 
-		bclr	#2,obStatus(a0)				; clear rolling flag
+		bclr	#status_rolling_bit,obStatus(a0)	; clear rolling flag
 		move.b	#sonic_height,obHeight(a0)		; reset Sonic's hitbox height to default
 		move.b	#sonic_width,obWidth(a0)		; reset Sonic's hitbox width to default
 		move.b	#id_Wait,obAnim(a0)			; use "standing" animation
@@ -860,7 +860,7 @@ Sonic_RollLeft:
 
 ; loc_1320A:
 .still:
-		bset	#0,obStatus(a0)				; set X-flip flag (Sonic is facing left)
+		bset	#status_xflip_bit,obStatus(a0)		; set X-flip flag (Sonic is facing left)
 		move.b	#id_Roll,obAnim(a0)			; use "rolling" animation
 		rts						; return
 ; ===========================================================================
@@ -885,7 +885,7 @@ Sonic_RollLeft:
 Sonic_RollRight:
 		move.w	obInertia(a0),d0			; get Sonic's current ground speed
 		bmi.s	.changedirection			; has Sonic changed direction? if yes, branch
-		bclr	#0,obStatus(a0)				; clear X-flip flag (Sonic is facing right)
+		bclr	#status_xflip_bit,obStatus(a0)		; clear X-flip flag (Sonic is facing right)
 		move.b	#id_Roll,obAnim(a0)			; use "rolling" animation
 		rts						; return
 ; ===========================================================================
@@ -917,7 +917,7 @@ Sonic_JumpDirection:
 		move.w	obVelX(a0),d0				; get Sonic's current X-velocity
 		btst	#bitL,(v_jpadhold2).w			; is left being held?
 		beq.s	.notleft				; if not, branch
-		bset	#0,obStatus(a0)				; set X-flip flag (Sonic is facing left)
+		bset	#status_xflip_bit,obStatus(a0)		; set X-flip flag (Sonic is facing left)
 		sub.w	d5,d0					; increase leftward movement speed
 		move.w	d6,d1					; copy top speed
 		neg.w	d1					; negate it for leftward movement check
@@ -932,7 +932,7 @@ Sonic_JumpDirection:
 .notleft:
 		btst	#bitR,(v_jpadhold2).w			; is right being held?
 		beq.s	Sonic_JumpMove				; if not, branch
-		bclr	#0,obStatus(a0)				; clear X-flip flag (Sonic is facing right)
+		bclr	#status_xflip_bit,obStatus(a0)		; clear X-flip flag (Sonic is facing right)
 		add.w	d5,d0					; increase rightward movement speed
 		cmp.w	d6,d0					; is new speed exceeding maximum?
 		blt.s	Sonic_JumpMove				; if not, branch
@@ -1101,14 +1101,14 @@ Sonic_Roll:
 
 ; Obj01_ChkRoll:
 Sonic_ChkRoll:
-		btst	#2,obStatus(a0)				; is Sonic already rolling?
+		btst	#status_rolling_bit,obStatus(a0)	; is Sonic already rolling?
 		beq.s	.roll					; if not, branch to initiate a roll
 		rts						; otherwise, do nothing
 ; ===========================================================================
 
 ; Obj01_DoRoll:
 .roll:
-		bset	#2,obStatus(a0)				; set rolling flag
+		bset	#status_rolling_bit,obStatus(a0)	; set rolling flag
 		move.b	#sonic_roll_height,obHeight(a0)		; set Sonic's hitbox height to rolling size
 		move.b	#sonic_roll_width,obWidth(a0)		; set Sonic's hitbox width to rolling size
 		move.b	#id_Roll,obAnim(a0)			; use "rolling" animation
@@ -1130,7 +1130,7 @@ Sonic_Unroll:
 		btst	#bitUp,(v_jpadpress2).w
 		beq.s	.return
 		clr.b	obAnim(a0)
-		bclr	#2,obStatus(a0)				; clear ball flag
+		bclr	#status_rolling_bit,obStatus(a0)	; clear ball flag
 		move.b	#sonic_height,obHeight(a0)		; set Sonic's hitbox height to standing
 		move.b	#sonic_width,obWidth(a0)		; set Sonic's hitbox width to standing
 		subq.w	#sonic_height-sonic_roll_height,obY(a0)	; raise Sonic up 5 pixels so he's not inside the ground
@@ -1157,7 +1157,7 @@ Sonic_Jump:
 	;	blt.w	.return					; if yes, prevent jumping
 
 		move.w	#son_jumpspeed,d2			; set initial jump force
-		btst	#6,obStatus(a0)				; is Sonic underwater?
+		btst	#status_underwater_bit,obStatus(a0)	; is Sonic underwater?
 		beq.s	.notunderwater				; if not, continue
 		move.w	#son_jumpspeed-$300,d2			; set underwater jump force
 ; loc_1341C:
@@ -1172,19 +1172,19 @@ Sonic_Jump:
 		muls.w	d2,d0					; apply jump force to the sine angle
 		asr.l	#8,d0					; shift it to upper word
 		add.w	d0,obVelY(a0)				; apply to Y speed
-		bset	#1,obStatus(a0)				; set in-air flag
-		bclr	#5,obStatus(a0)				; clear pushing flag
+		bset	#status_in_air_bit,obStatus(a0)		; set in-air flag
+		bclr	#status_pushing_bit,obStatus(a0)	; clear pushing flag
 		addq.l	#4,sp					; run in-air subroutines when we return
 		move.b	#1,jumping(a0)				; set jump flag
 		clr.b	sticktoconvex(a0)			; detach Sonic from the gears in SBZ
 		move.w	#sfx_Jump,d0				; set jump sound
 		jsr	(QueueSound2).l				; play jumping sound
-		btst	#2,obStatus(a0)				; is Sonic already in a ball state?
+		btst	#status_rolling_bit,obStatus(a0)	; is Sonic already in a ball state?
 		bne.s	.return					; if so, branch
 		move.b	#sonic_roll_height,obHeight(a0)		; set height to rolling size
 		move.b	#sonic_roll_width,obWidth(a0)		; set width to rolling size
 		move.b	#id_Roll,obAnim(a0)			; use "jumping" animation
-		bset	#2,obStatus(a0)				; set rolling flag
+		bset	#status_rolling_bit,obStatus(a0)	; set rolling flag
 		addq.w	#sonic_height-sonic_roll_height,obY(a0)	; adjust Y-position to align Sonic to the floor
 
 ; locret_1348E:
@@ -1202,7 +1202,7 @@ Sonic_JumpHeight:
 		tst.b	jumping(a0)				; is Sonic airborne specifically from a jump?
 		beq.s	.capyvel				; if not, just cap Y speed normally
 		move.w	#-$400,d1				; set max jump height
-		btst	#6,obStatus(a0)				; is Sonic underwater?
+		btst	#status_underwater_bit,obStatus(a0)	; is Sonic underwater?
 		beq.s	.notunderwater				; if not, continue
 		move.w	#-$200,d1				; set underwater jump height
 
@@ -1339,7 +1339,7 @@ Sonic_SlopeRepel:
 		cmpi.w	#$280,d0				; is Sonic's ground speed high enough?
 		bhs.s	.return					; if yes, branch
 		clr.w	obInertia(a0)				; clear ground speed
-		bset	#1,obStatus(a0)				; set in-air flag to detach Sonic from wall
+		bset	#status_in_air_bit,obStatus(a0)		; set in-air flag to detach Sonic from wall
 		move.w	#30,locktime(a0)			; disable left/right input for half a second
 
 ; locret_13580:
@@ -1683,15 +1683,14 @@ Sonic_FloorRight:
 ; ---------------------------------------------------------------------------
 
 Sonic_ResetOnFloor:
-		clr.b	doublejump(a0)			; clear homing attack flag
+		clr.b	doublejump(a0)				; clear homing attack flag
 
-		bclr	#5,obStatus(a0)				; clear push flag
-		bclr	#1,obStatus(a0)				; clear in-air flag
-		bclr	#4,obStatus(a0)				; clear roll-jump flag
+		bclr	#status_pushing_bit,obStatus(a0)	; clear push flag
+		bclr	#status_in_air_bit,obStatus(a0)		; clear in-air flag
 		move.b	#id_Walk,obAnim(a0)			; use running/walking animation
-		btst	#2,obStatus(a0)				; check if Sonic is in a ball state
+		btst	#status_rolling_bit,obStatus(a0)	; check if Sonic is in a ball state
 		beq.s	.notball				; if not, skip
-		bclr	#2,obStatus(a0)				; clear ball flag
+		bclr	#status_rolling_bit,obStatus(a0)	; clear ball flag
 		move.b	#sonic_height,obHeight(a0)		; set Sonic's hitbox height to standing
 		move.b	#sonic_width,obWidth(a0)		; set Sonic's hitbox width to standing
 		subq.w	#sonic_height-sonic_roll_height,obY(a0)	; raise Sonic up 5 pixels so he's not inside the ground
@@ -1722,7 +1721,7 @@ Sonic_Hurt:	; Routine 4
 .nodebug:
 		jsr	(SpeedToPos).l				; update Sonic's current position based on his velocities
 		addi.w	#gravity-8,obVelY(a0)			; apply gravity (this is 8 less than the normal gravity of $38)
-		btst	#6,obStatus(a0)				; is Sonic underwater?
+		btst	#status_underwater_bit,obStatus(a0)	; is Sonic underwater?
 		beq.s	.notunderwater				; if not, branch
 		subi.w	#gravity-$18,obVelY(a0)			; reduce gravity to be only $10 while underwater
 ; loc_1380C:
@@ -1759,7 +1758,7 @@ Sonic_HurtStop:
 		blt.w	JumpTo_KillSonic			; if yes, kill Sonic (signed check to not die while leaving the top screen)
 
 		bsr.w	Sonic_Floor				; handle Sonic landing on the floor again
-		btst	#1,obStatus(a0)				; is Sonic still in the air?
+		btst	#status_in_air_bit,obStatus(a0)		; is Sonic still in the air?
 		bne.s	.continuehurt				; if yes, branch
 
 		moveq	#0,d0					; clear d0
@@ -1917,16 +1916,16 @@ Sonic_Loops:
 		cmp.b	(v_256loop2).w,d1			; is Sonic on a loop tile? (type B, entering from/exiting to the right)
 		beq.s	.chkifinair				; if yes, branch
 
-		bclr	#7,obStatus(a0)				; clear loop flag (return Sonic to high plane)
+		bclr	#status_loop_bit,obStatus(a0)		; clear loop flag (return Sonic to high plane)
 		rts
 ; ===========================================================================
 
 ; loc_13966:
 .chkifinair:
-		btst	#1,obStatus(a0)				; is Sonic in the air?
+		btst	#status_in_air_bit,obStatus(a0)		; is Sonic in the air?
 		beq.s	.chkifleft				; if not, branch
 
-		bclr	#7,obStatus(a0)				; clear loop flag (return Sonic to high plane)
+		bclr	#status_loop_bit,obStatus(a0)		; clear loop flag (return Sonic to high plane)
 		rts
 ; ===========================================================================
 
@@ -1936,7 +1935,7 @@ Sonic_Loops:
 		cmpi.b	#44,d2					; is Sonic past the first couple pixels of the loop? (byte check)
 		bhs.s	.chkifright				; if yes, branch
 
-		bclr	#7,obStatus(a0)				; clear loop flag (return Sonic to high plane)
+		bclr	#status_loop_bit,obStatus(a0)		; clear loop flag (return Sonic to high plane)
 		rts						; return
 ; ===========================================================================
 
@@ -1945,20 +1944,20 @@ Sonic_Loops:
 		cmpi.b	#224,d2					; is Sonic past the last couple pixels of the loop? (byte check)
 		blo.s	.chkangle1				; if not, branch
 
-		bset	#7,obStatus(a0)				; set loop flag (send Sonic to low plane)
+		bset	#status_loop_bit,obStatus(a0)		; set loop flag (send Sonic to low plane)
 		rts						; return
 ; ===========================================================================
 
 ; loc_13996:
 .chkangle1:
-		btst	#7,obStatus(a0) 			; is loop flag already set?
+		btst	#status_loop_bit,obStatus(a0)		; is loop flag already set?
 		bne.s	.chkangle2				; if yes, branch
 
 		move.b	obAngle(a0),d1				; get Sonic's current angle
 		beq.s	.return					; if Sonic is on the flat surface of the loop, branch
 		cmpi.b	#$80,d1					; has Sonic crossed the apex of the loop (i.e. is he upside-down)?
 		bhi.s	.return					; if yes, branch
-		bset	#7,obStatus(a0)				; set loop flag (send Sonic to low plane)
+		bset	#status_loop_bit,obStatus(a0)		; set loop flag (send Sonic to low plane)
 		rts						; return
 ; ===========================================================================
 
@@ -1967,7 +1966,7 @@ Sonic_Loops:
 		move.b	obAngle(a0),d1				; get Sonic's current angle
 		cmpi.b	#$80,d1					; has Sonic crossed the apex of the loop (i.e. is he upside-down)?
 		bls.s	.return					; if not, branch
-		bclr	#7,obStatus(a0)				; clear loop flag (return Sonic to high plane)
+		bclr	#status_loop_bit,obStatus(a0)		; clear loop flag (return Sonic to high plane)
 
 ; locret_139C2:
 .return:
@@ -1989,7 +1988,7 @@ Sonic_Animate:
 		move.b	d0,obPrevAni(a0)			; remember new animation
 		move.b	#0,obAniFrame(a0)			; restart animation from beginning
 		move.b	#0,obTimeFrame(a0)			; reset animation frame duration
-		bclr	#5,obStatus(a0)				; clear pushing flag
+		bclr	#status_pushing_bit,obStatus(a0)	; clear pushing flag
 
 ; SAnim_Do:
 .do:
@@ -1999,7 +1998,7 @@ Sonic_Animate:
 		bmi.s	.walkrunroll				; if frame interval is negative, this is a special walk/run/roll/jump animation, branch
 
 		move.b	obStatus(a0),d1				; get Sonic's status bitfield
-		andi.b	#1,d1					; mask out everything but the X-flip flag
+		andi.b	#status_xflip,d1			; mask out everything but the X-flip flag
 		andi.b	#~(sprite_xflip|sprite_yflip),obRender(a0) ; clear X-flip and Y-flip flags in Sonic's render flags
 		or.b	d1,obRender(a0)				; set new X-flip flag state
 
@@ -2082,7 +2081,7 @@ Sonic_Animate:
 		eor.b	d1,d2					; invert flip flags depending on current angle
 		or.b	d2,obRender(a0)				; set new flip flags
 
-		btst	#5,obStatus(a0)				; is Sonic pushing something?
+		btst	#status_pushing_bit,obStatus(a0)	; is Sonic pushing something?
 		bne.w	.push					; if yes, branch
 
 		lsr.b	#4,d0					; divide angle by $10
@@ -2222,7 +2221,7 @@ Sonic_AirRoll:
 		beq.s	.return					; if not, branch
 
 		move.b	#id_Roll,obAnim(a0)			; use "rolling" animation
-		bset	#2,obStatus(a0)				; set rolling flag
+		bset	#status_rolling_bit,obStatus(a0)	; set rolling flag
 		move.b	#sonic_roll_height,obHeight(a0)		; set height to rolling size
 		move.b	#sonic_roll_width,obWidth(a0)		; set width to rolling size
 		addq.w	#sonic_height-sonic_roll_height,obY(a0)	; adjust Y-position to align Sonic to the floor
@@ -2242,13 +2241,13 @@ Sonic_PanCamera:
 
 		tst.b	spindash_flag(a0)	; Is Sonic charging up a spin dash or peelout?
 		beq.s	.NoSpindash		; If not, branch
-		btst	#0,obStatus(a0)		; Check the direction that Sonic is facing
+		btst	#status_xflip_bit,obStatus(a0) ; Check the direction that Sonic is facing
 		beq.s	.MovingRight		; If he's facing right, pan the camera to the right
 		bra.s	.MovingLeft		; Otherwise, pan the camera to the left
 .NoSpindash:
 
 		move.w	obInertia(a0),d0	; Get Sonic's ground speed
-		btst	#1,obStatus(a0)		; Is Sonic airborne?
+		btst	#status_in_air_bit,obStatus(a0) ; Is Sonic airborne?
 		beq.s	.IsGrounded		; If not, branch
 		move.w	obVelX(a0),d0		; Use X velocity instead if airborne
 
@@ -2316,7 +2315,7 @@ Sonic_HomingAttack:
 		move.l	#AfterImage,(v_afterimage+obID).w
 		move.b	#13,(v_afterimage+obDelayAni).w
 
-		btst	#6,obStatus(a0)		; is Sonic underwater?
+		btst	#status_underwater_bit,obStatus(a0) ; is Sonic underwater?
 		beq.s	.done			; if not, continue
 		asr.w	obVelX(a0)		; halve new target X-speed
 		asr.w	obVelY(a0)		; halve new target Y-speed
@@ -2383,7 +2382,7 @@ Sonic_HomingAttack_Action:
 RegularJumpdash:
 		clr.w	obVelY(a0)		; reset Sonic's fall speed (i.e. Y-speed)
 		move.w	#$800,d0		; define our jumpdash X-speed
-		btst	#0,obStatus(a0)		; is Sonic facing left?
+		btst	#status_xflip_bit,obStatus(a0) ; is Sonic facing left?
 		beq.s	.notleft		; if not, branch
 		neg.w	d0			; negate jumpdash speed
 .notleft:
@@ -2427,13 +2426,13 @@ FindHomingTarget:
 		bpl.s	.objright		; branch if positive (d1 = positive if object is to the right of Sonic, negative if to the left)
 
 		; object is to the left of Sonic
-		btst	#0,obStatus(a0)		; is Sonic looking to the left (towards the object)?
+		btst	#status_xflip_bit,obStatus(a0) ; is Sonic looking to the left (towards the object)?
 		beq.s	.next			; if not, branch
 		bra.s	.targetvalid		; if yes, Sonic is looking at the object
 
 .objright:
 		; object is to the right of Sonic
-		btst	#0,obStatus(a0)		; is Sonic looking to the right (towards the object)?
+		btst	#status_xflip_bit,obStatus(a0) ; is Sonic looking to the right (towards the object)?
 		bne.s	.next			; if not, branch
 
 .targetvalid:
@@ -2497,7 +2496,7 @@ Sonic_ReleaseSpindash:
 		move.b	#sonic_roll_width,obWidth(a0)		; set Sonic's hitbox width to rolling size
 		addq.w	#sonic_height-sonic_roll_height,obY(a0)	; add the difference between Sonic's rolling and standing heights
 		move.b	#id_Roll,obAnim(a0)			; set Sonic's animation to rolling
-		bset	#2,obStatus(a0)				; set Sonic's rolling flag
+		bset	#status_rolling_bit,obStatus(a0)	; set Sonic's rolling flag
 		move.w	#sfx_Teleport,d0			; set Spin Dash zoom sound
 		jsr	(QueueSound2).l 			; play it
 
@@ -2507,7 +2506,7 @@ Sonic_ReleaseSpindash:
 		move.w	d0,d1					; copy for camera-delay calculation
 		addi.w	#$800,d0				; add base speed of $800
 
-		btst	#0,obStatus(a0)				; is Sonic looking to the left?
+		btst	#status_xflip_bit,obStatus(a0)		; is Sonic looking to the left?
 		beq.s	.not_left				; if not, branch
 		neg.w	d0					; negate charge direction
 .not_left:	move.w	d0,obInertia(a0)			; apply final speed
@@ -2592,7 +2591,7 @@ Sonic_Peelout:
 		bne.s	.nopeel					; if not, branch
 		bset	#1,spindash_flag(a0)			; set Peel-Out flag
 		clr.b	obAnim(a0)				; reset Sonic's animation
-		bclr	#5,obStatus(a0)				; clear pushing flag
+		bclr	#status_pushing_bit,obStatus(a0)	; clear pushing flag
 		addq.l	#4,sp					; skip rest in MdNormal
 		move.w	#sfx_PeelCharge,d0			; play Peel-Out charge sound
 		jmp	(QueueSound2).l				; play sound
@@ -2618,7 +2617,7 @@ Sonic_Peelout:
 		bsr.w	Sonic_LevelBound			; keep checking for level boundaries
 		bsr.w	Sonic_AnglePos				; make sure Sonic uses the correct angled sprites on a slope
 		move.w	#$60,(v_lookshift).w			; reset looking up/down
-		bclr	#5,obStatus(a0)				; keep pushing flag cleared
+		bclr	#status_pushing_bit,obStatus(a0)	; keep pushing flag cleared
 		addq.l	#4,sp					; skip rest in MdNormal
 		rts
 ; ===========================================================================
@@ -2631,7 +2630,7 @@ Sonic_Peelout:
 		move.w	#sfx_PeelStop,d0			; cancel the Peel-Out charge sound
 		jmp	(QueueSound2).l
 .speedok:
-		btst	#0,obStatus(a0)				; is Sonic looking to the left?
+		btst	#status_xflip_bit,obStatus(a0)		; is Sonic looking to the left?
 		beq.s	.notleft				; if not, branch
 		neg.w	obInertia(a0)				; negate final speed
 .notleft:

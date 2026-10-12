@@ -57,7 +57,7 @@ BossSpringYard_Loop:
 		move.w	obY(a0),obY(a1)
 
 BossSpringYard_LoadBoss:
-		bclr	#0,obStatus(a0)				; clear the X orientation bit
+		bclr	#status_xflip_bit,obStatus(a0)		; clear the X orientation bit
 		clr.b	ob2ndRout(a1)				; clear second routine status (ShipIndex below)
 		move.b	(a2)+,obRoutine(a1)			; load first objData byte and increment
 		move.b	(a2)+,obAnim(a1)
@@ -175,7 +175,7 @@ BSYZ_Defeated:
 BSYZ_ShipMove:
 		move.w	obBossX(a0),d0				; move boss position for later comparison
 		move.w	#$140,obVelX(a0)			; set X velocity (moving right)
-		btst	#0,obStatus(a0)				; is our X flipped?
+		btst	#status_xflip_bit,obStatus(a0)		; is our X flipped?
 		bne.s	.checkRight				; if yes, branch
 		neg.w	obVelX(a0)				; reverse direction
 		cmpi.w	#boss_syz_x+8,d0			; have we reached the left bound?
@@ -190,7 +190,7 @@ BSYZ_ShipMove:
 
 ; loc_19294:
 .flip:
-		bchg	#0,obStatus(a0)				; set X flip bit to 0
+		bchg	#status_xflip_bit,obStatus(a0)		; set X flip bit to 0
 		clr.b	BossSpringYard_PhaseTimer(a0)		; clear phase flag
 
 ; loc_1929E:
@@ -446,8 +446,8 @@ BSYZ_Explode:
 .transition:
 		addq.b	#2,ob2ndRout(a0)			; advance routine to Recover
 		clr.w	obVelY(a0)				; stop vertical movement
-		bset	#0,obStatus(a0)				; set the X flip bit so we are facing right
-		bclr	#7,obStatus(a0)				; clear the defeated flag
+		bset	#status_xflip_bit,obStatus(a0)		; set the X flip bit so we are facing right
+		bclr	#status_defeated_bit,obStatus(a0)	; clear the defeated flag
 		clr.w	obVelX(a0)				; stop horizontal movement
 		move.w	#-1,BossSpringYard_GenericTimer(a0)	; set a timer for 1 frame
 		tst.b	(v_bossstatus).w			; has boss been marked as defeated?

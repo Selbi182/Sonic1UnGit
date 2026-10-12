@@ -32,8 +32,8 @@ Bump_Action:	; Routine 2
 		asr.l	#8,d0					; shift result down a byte
 		move.w	d0,obVelY(a1)				; bounce Sonic away vertically
 
-		bset	#1,obStatus(a1)				; set Sonic to airborne
-		bclr	#5,obStatus(a1)				; clear pushing flag
+		bset	#status_in_air_bit,obStatus(a1)		; set Sonic to airborne
+		bclr	#status_pushing_bit,obStatus(a1)	; clear pushing flag
 		move.b	#1,jumping(a1)
 		clr.b	doublejump(a1)
 

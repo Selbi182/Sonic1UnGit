@@ -41,7 +41,7 @@ Mon_Solid:	; Routine 2
 		move.b	obActWid(a0),d1				; get monitor's display width
 		addi.w	#sonic_solid_width,d1			; add Sonic's collision width for solids ($B)
 		bsr.w	ExitPlatform				; clear platform flags if Sonic was standing on the monitor
-		btst	#3,obStatus(a1)				; is Sonic still on top of the monitor?
+		btst	#status_on_object_bit,obStatus(a1)	; is Sonic still on top of the monitor?
 		bne.w	.ontop					; if yes, branch
 		clr.b	ob2ndRout(a0)				; clear special monitor subroutines
 		bra.w	Mon_Animate				; process monitor normally
@@ -105,22 +105,22 @@ Mon_Solid:	; Routine 2
 
 ; loc_A246:
 .push:
-		btst	#1,obStatus(a1)				; is Sonic airborne?
+		btst	#status_in_air_bit,obStatus(a1)		; is Sonic airborne?
 		bne.s	.stoppushing				; if yes, branch
-		bset	#5,obStatus(a1)				; set Sonic's pushing flag
-		bset	#5,obStatus(a0)				; set monitor's flag that it's being pushed
+		bset	#status_pushing_bit,obStatus(a1)	; set Sonic's pushing flag
+		bset	#status_pushing_bit,obStatus(a0)	; set monitor's flag that it's being pushed
 		bra.s	Mon_Animate				; process monitor normally
 ; ===========================================================================
 
 ; loc_A25C:
 .checkpush:
-		btst	#5,obStatus(a0)				; is Sonic still pushing against the monitor?
+		btst	#status_pushing_bit,obStatus(a0)	; is Sonic still pushing against the monitor?
 		beq.s	Mon_Animate				; if not, branch
 
 ; loc_A26A:
 .stoppushing:
-		bclr	#5,obStatus(a0)				; clear pushing flag for monitor
-		bclr	#5,obStatus(a1)				; clear pushing flag for Sonic
+		bclr	#status_pushing_bit,obStatus(a0)	; clear pushing flag for monitor
+		bclr	#status_pushing_bit,obStatus(a1)	; clear pushing flag for Sonic
 
 Mon_Animate:	; Routine 6
 		lea	(Ani_Monitor).l,a1			; get animation script for monitor
@@ -311,7 +311,7 @@ Pow_ChkShoes:
 		move.w	#son_acceleration*2,(v_sonspeedacc).w	; double Sonic's acceleration
 		move.w	#son_deceleration,(v_sonspeeddec).w 	; set Sonic's deceleration (same as regular)
 
-		btst	#6,(v_player+obStatus).w		; is Sonic underwater?
+		btst	#status_underwater_bit,(v_player+obStatus).w ; is Sonic underwater?
 		beq.s	.notunderwater				; if not, branch
 		move.w	#son_maxspeed,(v_sonspeedmax).w		; initial Sonic's top speed
 		move.w	#son_acceleration,(v_sonspeedacc).w	; initial Sonic's acceleration

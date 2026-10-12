@@ -51,8 +51,8 @@ Pri_BodyMain:	; Routine 2
 		tst.b	obSolid(a0)				; was Sonic standing on the capsule as it opened
 		beq.s	.showOpened				; if not, branch
 		clr.b	obSolid(a0)				; clear capsule's collision flag
-		bclr	#3,(v_player+obStatus).w		; clear Sonic's on-platform flag
-		bset	#1,(v_player+obStatus).w		; set Sonic to be in air
+		bclr	#status_on_object_bit,(v_player+obStatus).w ; clear Sonic's on-platform flag
+		bset	#status_in_air_bit,(v_player+obStatus).w ; set Sonic to be in air
 
 	.showOpened:
 		move.b	#2,obFrame(a0)				; use frame number 2 (destroyed prison)
@@ -98,8 +98,8 @@ Pri_Switch:	; Routine 4
 		move.b	#1,(f_lockctrl).w			; lock controls
 		move.w	#(btnR<<8),(v_jpadhold2).w		; simulate holding down the right D-Pad button to move Sonic
 		clr.b	obSolid(a0)				; clear capsule's collision flag
-		bclr	#3,(v_player+obStatus).w		; clear Sonic's on-platform flag
-		bset	#1,(v_player+obStatus).w		; set Sonic to be in air
+		bclr	#status_on_object_bit,(v_player+obStatus).w ; clear Sonic's on-platform flag
+		bset	#status_in_air_bit,(v_player+obStatus).w ; set Sonic to be in air
 
 	.return:
 		rts						; return

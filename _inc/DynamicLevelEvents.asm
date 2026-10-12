@@ -43,7 +43,7 @@ DynamicLevelEvents:
 		addq.w	#8,d0
 		cmp.w	(v_limitbtm2).w,d0
 		blo.s	.down_2px				; branch if boundary is at least 8px below camera
-		btst	#1,(v_player+obStatus).w
+		btst	#status_in_air_bit,(v_player+obStatus).w
 		beq.s	.down_2px				; branch if Sonic isn't in the air
 		add.w	d1,d1
 		add.w	d1,d1					; boundary moves 8px instead of 2px

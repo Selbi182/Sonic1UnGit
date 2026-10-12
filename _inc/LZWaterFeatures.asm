@@ -385,8 +385,7 @@ LZWindTunnels:
 		move.w	#$400,obVelX(a1)			; set Sonic's X-speed to the right
 		move.w	#0,obVelY(a1)				; clear vertical movement
 		move.b	#id_Float2,obAnim(a1)			; use floating animation
-		bset	#1,obStatus(a1)				; set Sonic's in-air flag
-		bclr	#4,obStatus(a1)				; clear roll-jump flag
+		bset	#status_in_air_bit,obStatus(a1)		; set Sonic's in-air flag
 
 	.chkUp:
 		btst	#bitUp,(v_jpadhold2).w			; is up button being held?
@@ -437,7 +436,7 @@ LZWind_Data:	dc.w $A80, $300, $C10,  $380	; LZ act 1 values (1st set)
 
 LZWaterSlides:
 		lea	(v_player).w,a1				; load Sonic player object?
-		btst	#1,obStatus(a1)				; is Sonic in air?
+		btst	#status_in_air_bit,obStatus(a1)		; is Sonic in air?
 		bne.s	.exitWaterSlide				; if yes, ignore water slides
 
 		move.w	obY(a1),d0				; get Sonic's Y-position
@@ -466,11 +465,11 @@ LZWaterSlides:
 ; ===========================================================================
 
 LZSlide_Move:
-		bclr	#0,obStatus(a1)				; make Sonic face right
+		bclr	#status_xflip_bit,obStatus(a1)		; make Sonic face right
 		move.b	Slide_Speeds(pc,d1.w),d0		; get slide speed for chunk
 		move.b	d0,obInertia(a1)			; set speed as upper ground speed byte
 		bpl.s	.setAnimation				; is slide speed to the left? if not, branch
-		bset	#0,obStatus(a1)				; make Sonic face left
+		bset	#status_xflip_bit,obStatus(a1)		; make Sonic face left
 
 	.setAnimation:
 		clr.b	obInertia+1(a1)				; clear lower ground speed byte

@@ -15,7 +15,7 @@ Bomb:
 		move.w	#spr_prio3,obPriority(a0)		; set sprite priority
 		move.b	#24/2,obActWid(a0)			; set sprite display width
 		move.b	#col_24x24|col_hurt,obColType(a0)	; set ReactToItem type (invincible and damaging)
-		bchg	#0,obStatus(a0)				; face right by default (immediately gets changed to left on spawn)
+		bchg	#status_xflip_bit,obStatus(a0)		; face right by default (immediately gets changed to left on spawn)
 ; ---------------------------------------------------------------------------
 
 Bom_Action:	; Routine 2
@@ -43,7 +43,7 @@ Bom_Action_Waiting:
 		move.w	#(25*60)+36-1,bom_time(a0)		; set time delay before Bomb stops walking to just over 25.5 seconds
 		move.w	#$10,obVelX(a0)				; slowly walk to the right
 		move.b	#1,obAnim(a0)				; use walking animation
-		bchg	#0,obStatus(a0)				; invert X-flip flag
+		bchg	#status_xflip_bit,obStatus(a0)		; invert X-flip flag
 		beq.s	.return					; if Bomb is facing to the right now, branch
 		neg.w	obVelX(a0)				; slowly walk to the left instead
 
@@ -114,7 +114,7 @@ Bom_CheckStartFuse:
 		move.b	#3,obAnim(a1)				; set to fuse animation
 
 		move.w	#$10,obVelY(a1)				; make fuse slowly move down
-		btst	#1,obStatus(a0)				; is bomb upside-down?
+		btst	#status_yflip_bit,obStatus(a0)		; is bomb upside-down?
 		beq.s	.finishFuse				; if not, branch
 		neg.w	obVelY(a1)				; make fuse move up instead
 
@@ -135,7 +135,7 @@ Bom_Fuse_Init:
 		move.w	#spr_prio3,obPriority(a0)		; set sprite priority
 		move.b	#24/2,obActWid(a0)			; set sprite display width
 		move.b	#col_24x24|col_hurt,obColType(a0)	; set ReactToItem type (invincible and damaging)
-		bchg	#0,obStatus(a0)				; face right by default (immediately gets changed to left on spawn)
+		bchg	#status_xflip_bit,obStatus(a0)		; face right by default (immediately gets changed to left on spawn)
 ; ---------------------------------------------------------------------------
 
 Bom_Fuse:	; Routine 4

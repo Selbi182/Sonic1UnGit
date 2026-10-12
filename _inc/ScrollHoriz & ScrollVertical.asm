@@ -118,13 +118,13 @@ ScrollVertical:
 		andi.w	#$7FF,d0				; wrap Y position
 	.noWrap:
 
-		btst	#2,(v_player+obStatus).w		; is Sonic rolling?
+		btst	#status_rolling_bit,(v_player+obStatus).w ; is Sonic rolling?
 		beq.s	.checkInAir				; if not, branch
 		subq.w	#sonic_height-sonic_roll_height,d0	; adjust distance for roll height
 
 	; SV_NotRolling:
 	.checkInAir:
-		btst	#1,(v_player+obStatus).w		; is Sonic in-air?
+		btst	#status_in_air_bit,(v_player+obStatus).w ; is Sonic in-air?
 		beq.s	SV_OnGround				; if not, branch
 
 		addi.w	#32,d0					; lower in-air sweet spot is 32px

@@ -27,7 +27,7 @@ MotoBug:
 		add.w	d1,obY(a0)				; match object's position with the floor
 		move.w	#0,obVelY(a0)				; clear falling speed
 		move.l	#Moto_Action,obID(a0)			; advance to Moto_Action
-		bchg	#0,obStatus(a0)				; make Motobug face to the left on spawn
+		bchg	#status_xflip_bit,obStatus(a0)		; make Motobug face to the left on spawn
 	.hide:
 
 		cmpi.w	#$7FF,obY(a0)				; has object fallen below max level height?
@@ -63,7 +63,7 @@ Moto_Action_Ledge:
 		addq.b	#2,ob2ndRout(a0)			; advance to Moto_Action_Drive
 		move.w	#-$100,obVelX(a0)			; move Motobug to the left
 		move.b	#1,obAnim(a0)				; use "drive" animation
-		bchg	#0,obStatus(a0)				; invert X-flip flag
+		bchg	#status_xflip_bit,obStatus(a0)		; invert X-flip flag
 		bne.s	.wait					; is Motobug facing to the right now? if not, branch
 		neg.w	obVelX(a0)				; change direction to make Motobug move to the right
 	.wait:

@@ -94,7 +94,7 @@ Sign_SonicRun:	; Routine 6
 
 		tst.l	(v_player+obID).w			; has Sonic's object been deleted (because he entered the giant ring)?
 		beq.s	Sign_LoadEndCards			; if yes, skip all other checks
-		btst	#1,(v_player+obStatus).w		; is Sonic airborne?
+		btst	#status_in_air_bit,(v_player+obStatus).w ; is Sonic airborne?
 		bne.w	Sign_Return				; if yes, don't do anything until he has landed
 		move.b	#1,(f_lockctrl).w			; lock controls
 		move.w	#btnR<<8,(v_jpadhold2).w		; make Sonic run to the right

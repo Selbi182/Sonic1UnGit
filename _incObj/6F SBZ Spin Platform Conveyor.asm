@@ -138,11 +138,11 @@ SpinC_Solid_Still:
 ; ---------------------------------------------------------------------------
 
 SpinC_Solid_Spinning:
-		btst	#3,obStatus(a0)				; was Sonic on platform as it started spinning?
+		btst	#status_on_object_bit,obStatus(a0)	; was Sonic on platform as it started spinning?
 		beq.s	SpinC_Platform_Update			; if not, branch
 		lea	(v_player).w,a1				; load Sonic player object
-		bclr	#3,obStatus(a1)				; clear Sonic's on-platform flag
-		bclr	#3,obStatus(a0)				; clear platform's stood-on flag
+		bclr	#status_on_object_bit,obStatus(a1)	; clear Sonic's on-platform flag
+		bclr	#status_on_object_bit,obStatus(a0)	; clear platform's stood-on flag
 		clr.b	obSolid(a0)				; clear platform's solidity state
 
 ; ---------------------------------------------------------------------------

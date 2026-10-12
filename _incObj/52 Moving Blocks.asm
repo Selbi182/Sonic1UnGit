@@ -61,7 +61,7 @@ MBlock_Platform: ; Routine 2
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as platform solidity width
 		jsr	(PlatformObject).l			; enable platform behavior (can set obRoutine = 4, MBlock_StandOn)
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		beq.s	MBlock_DisplayOrDelete
 		move.l	#MBlock_StandOn,obID(a0)
 		bra.s	MBlock_DisplayOrDelete			; display platform
@@ -71,7 +71,7 @@ MBlock_StandOn:	; Routine 4
 		moveq	#0,d1					; clear d1
 		move.b	obActWid(a0),d1				; use sprite display width as platform solidity width
 		jsr	(ExitPlatform).l			; allow exiting platform (can set obRoutine = 2, MBlock_Platform)
-		btst	#3,obStatus(a0)
+		btst	#status_on_object_bit,obStatus(a0)
 		bne.s	.stillOn
 		move.l	#MBlock_Platform,obID(a0)
 .stillOn:
@@ -123,7 +123,7 @@ MBlock_Stationary:
 MBlock_LeftRight:
 		move.b	(v_oscillate+$E).w,d0			; get oscillatory value (frequency 2, middle value $30)
 		move.w	#$60,d1					; adjustment offset for X-flipped platforms (oscillation range * 2)
-		btst	#0,obStatus(a0)				; is platform X-flipped?
+		btst	#status_xflip_bit,obStatus(a0)		; is platform X-flipped?
 		beq.s	.setX					; if not, branch
 		neg.w	d0					; reverse oscillated offset direction
 		add.w	d1,d0					; keep flipped platforms in the same $60px range
@@ -146,7 +146,7 @@ MBlock_NextWhenStoodOn:
 		move.w	d0,obY(a0)				; align platform to water
 	.noRaft:
 
-		btst	#3,obStatus(a0)				; is Sonic standing on the platform?
+		btst	#status_on_object_bit,obStatus(a0)	; is Sonic standing on the platform?
 		beq.s	.return					; if not, branch
 		addq.b	#1,obSubtype(a0)			; if yes, go to next subtype in list
 
@@ -237,7 +237,7 @@ MBlock_SecretLZ1Raft:
 MBlock_UpDown:
 		move.b	(v_oscillate+$1E).w,d0			; get oscillatory value (frequency 4, middle value $40)
 		move.w	#$80,d1					; adjustment offset for X-flipped platforms (oscillation range * 2)
-		btst	#0,obStatus(a0)				; is platform X-flipped?
+		btst	#status_xflip_bit,obStatus(a0)		; is platform X-flipped?
 		beq.s	.setY					; if not, branch
 		neg.w	d0					; reverse oscillated offset direction
 		add.w	d1,d0					; keep flipped platforms in the same $80px range
@@ -255,7 +255,7 @@ MBlock_SlideFast:
 		move.b	obActWid(a0),d3				; get platform half-width
 		add.w	d3,d3					; double to full-width (will be the total slide distance)
 		moveq	#8,d1					; slide platform to the right
-		btst	#0,obStatus(a0)				; is platform X-flipped?
+		btst	#status_xflip_bit,obStatus(a0)		; is platform X-flipped?
 		beq.s	.slide					; if not, branch
 		neg.w	d1					; slide platform to the left instead
 		neg.w	d3					; check target distance to the left instead

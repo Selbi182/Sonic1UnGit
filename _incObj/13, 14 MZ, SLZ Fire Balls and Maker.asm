@@ -67,13 +67,13 @@ LavaBall:
 
 	.continueSetup:
 		move.b	#sprite_cam_field,obRender(a0)		; set to playfield-positioned mode
-		move.w	#spr_prio3,obPriority(a0)			; set sprite priority
+		move.w	#spr_prio3,obPriority(a0)		; set sprite priority
 		move.b	#col_16x16|col_hurt,obColType(a0)	; make lava balls harmful on touch
 		move.w	obY(a0),lball_origY(a0)			; remember initial Y-position (for balls that fall back down)
 
 		tst.b	lball_fromboss(a0)			; was lava ball spawned from MZ boss? (balls that come from lava)
 		beq.s	.setSpeed				; if not, branch
-		addi.w	#spr_prio2,obPriority(a0)			; use lower sprite priority
+		addi.w	#spr_prio2,obPriority(a0)		; use lower sprite priority
 
 	.setSpeed:
 		moveq	#0,d0					; clear d0
@@ -110,7 +110,7 @@ LBall_Action:	; Routine 2
 LBall_ChkDel:
 		out_of_range.w	DeleteObject			; has lava ball gone out of range? if yes, delete it
 		DisplaySprite
-		rts				; display lava ball
+		rts
 
 ; ===========================================================================
 LBall_TypeIndex:dc.w LBall_RiseAndFall-LBall_TypeIndex		; 0
@@ -133,10 +133,10 @@ LBall_RiseAndFall:
 		addq.b	#2,obRoutine(a0)			; set to "LBall_Delete" routine
 
 	.checkYFlip:
-		bclr	#1,obStatus(a0)				; make lava ball face down
+		bclr	#status_yflip_bit,obStatus(a0)		; make lava ball face down
 		tst.w	obVelY(a0)				; is lava ball still going up?
 		bpl.s	.return					; if not, branch
-		bset	#1,obStatus(a0)				; make lava ball face up
+		bset	#status_yflip_bit,obStatus(a0)		; make lava ball face up
 
 	.return:
 		rts						; return
@@ -144,7 +144,7 @@ LBall_RiseAndFall:
 
 ; Type 4 - flies up until it hits the ceiling
 LBall_Up:
-		bset	#1,obStatus(a0)				; set Y-flip flag (face up)
+		bset	#status_yflip_bit,obStatus(a0)		; set Y-flip flag (face up)
 
 		jsr	(ObjHitCeiling).l			; get distance to ceiling
 		tst.w	d1					; has ball hit the ceiling?
@@ -159,9 +159,9 @@ LBall_Up:
 
 ; Type 5 - falls down until it hits the floor
 LBall_Down:
-		bclr	#1,obStatus(a0)				; clear Y-flip flag (face down)
+		bclr	#status_yflip_bit,obStatus(a0)		; clear Y-flip flag (face down)
 
-		jsr	(ObjFloorDist).l				; get distance to floor
+		jsr	(ObjFloorDist).l			; get distance to floor
 		tst.w	d1					; has ball hit the floor?
 		bpl.s	.return					; if not, branch
 		move.b	#8,obSubtype(a0)			; set to LBall_DoNothing (stop moving)
@@ -174,7 +174,7 @@ LBall_Down:
 
 ; Type 6 - moves sideways to the left
 LBall_Left:
-		bset	#0,obStatus(a0)				; set X-flip flag (face left)
+		bset	#status_xflip_bit,obStatus(a0)		; set X-flip flag (face left)
 
 		moveq	#-8,d3					; check 8px ahead to the left
 		jsr	(ObjHitWallLeft).l			; get distance to wall
@@ -190,7 +190,7 @@ LBall_Left:
 
 ; Type 7 - moves sideways to the right
 LBall_Right:
-		bclr	#0,obStatus(a0)				; clear X-flip flag (face right)
+		bclr	#status_xflip_bit,obStatus(a0)		; clear X-flip flag (face right)
 
 		moveq	#8,d3					; check 8px ahead to the right
 		jsr	(ObjHitWallRight).l			; get distance to wall
