@@ -307,7 +307,7 @@ Debug_ExitDebugMode:
 		move.b	#60,(v_timecent).w
 		move.b	#1,(f_scorecount).w			; update score counter
 		move.b	#1,(f_ringcount).w			; update rings counter
-		move.b	#1,(f_timecount).w			; update time counter
+		bset	#7,(f_timecount).w			; update time counter (once)
 		enable_ints
 		rts
 ; End of function Debug_Control

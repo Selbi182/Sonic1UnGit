@@ -64,6 +64,8 @@ HUD_Update:
 		beq.s	.chklives				; if not, branch
 		tst.w	(f_pause).w				; is the game paused?
 		bne.s	.chklives				; if yes, branch
+		bclr	#7,(f_timecount).w			; was flag set to only refresh time VRAM?
+		bne.s	.updatetime				; if yes, don't increase time
 
 		; Each byte in v_time is treated individually in the format "00 0M SS FF", and it's updated right-to-left:
 		;   FF (v_timecent) = frame counter for one second (increments seconds after crossing 60 and resets to 00, used internally only)

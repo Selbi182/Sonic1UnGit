@@ -27,8 +27,8 @@ Enable_AttractRings:	= 1
 Enable_6ButtonControl:	= 0
 
 ; Developer flags:
-OneHitBosses: = 1
-;	| If 1, all bosses will only take a single hit to defeat
+SkipChecksumCheck = 0
+;	| If 1, skips the checksum check (note that it has been greatly optimized, so it's smart to keep this at 0)
 
 LagOMeter: = 0
 ;	| If 1, displays a Lag-o-Meter at the top-right of the screen
@@ -36,6 +36,9 @@ LagOMeter: = 0
 LagFrameCounter: = 2
 ;	| If 1, adds a counter at the top right HUD that counts lag frames
 ;	| If 2, also adds huge recursive calls to "LAGFRAME" to make them easier to spot in MD Profiler
+
+DisableSound: = 0
+;	| If 1, sound driver is never updated (use this for benchmarking, SMPS is very expensive)
 
 BootToLevel: = -1
 ;	| If set, will boot straight to a specified level (e.g. id_GHZ_act1)
@@ -54,14 +57,11 @@ DebugHUDAlways: = 0
 DebugSurviveNoRings: = 1
 ;	| If 1, getting hurt without rings while Debug Mode is on will NOT kill Sonic (default behavior)
 
-RingsCollect32: = 1
+OneHitBosses: = 0
+;	| If 1, all bosses will only take a single hit to defeat
+
+RingsCollect32: = 0
 ;	| If 1, each collected ring is worth 32 rings for quick testing of ring loss
-
-DisableSound: = 0
-;	| If 1, sound driver is never updated (use this for benchmarking, SMPS is very expensive)
-
-SkipChecksumCheck = 0
-;	| If 1, skips the checksum check (note that it has been greatly optimized, so it's smart to keep this at 0)
 
 ; ===========================================================================
 ; Simplifying macros and functions
@@ -593,8 +593,9 @@ VBlank_Index:	dc.w VBlank_Lag-VBlank_Index			; $00 - (lag frame)
 
 ; loc_B88: VBla_00:
 VBlank_Lag:
-		cmpi.b	#$80+id_Level,(v_gamemode).w		; is pre level sequence active?
-		beq.s	VBlank_Lag_Go				; if not, just update sound driver and resume operation
+		tst.b	(v_gamemode).w				; is pre-level sequence active?
+		bmi.s	VBlank_Lag_Go				; if yes, just update sound driver and resume operation
+
 	if LagFrameCounter
 		addq.w	#1,(v_lagframes).w
 		bset	#7,(v_lagframes).w
@@ -612,6 +613,7 @@ VBlank_Lag:
 			rts			
 		endif
 	endif
+
 		cmpi.b	#id_Level,(v_gamemode).w		; is game on a level?
 		bne.w	VBlank_Exit				; if not, just update sound driver and resume operation
 
@@ -3340,6 +3342,7 @@ Cont_GotoLevel:
 ; EndingSequence:
 GM_Ending:
 		; fading out from previous game mode
+		bset	#7,(v_gamemode).w			; add $80 to screen mode (for pre level sequence)
 		move.b	#bgm_Stop,d0				; set stop music command
 		bsr.w	QueueSound2				; stop music
 		bsr.w	PaletteFadeOut				; fade-out previous game mode
@@ -3375,16 +3378,15 @@ GM_Ending:
 
 End_LoadData:
 		bsr.w	InitRingFrame
-		moveq	#plcid_Ending,d0			; load ending sequence patterns (GHZ art, animals, etc.)
-		bsr.w	QuickPLC				; execute PLCs immediately (no queue)
 		jsr	(Hud_Base).l				; load basic HUD graphics
-		enable_ints					; enable interrupts
 
 		moveq	#palid_Sonic,d0				; load Sonic's palette...
 		bsr.w	PalLoad_Fade				; ...to fade-in buffer
 
 		bsr.w	LevelSizeLoad				; load level size and set default level boundaries
 		bsr.w	LevelDataLoad				; load block mappings and palettes
+		moveq	#plcid_Ending,d0			; load ending sequence patterns (GHZ art, animals, etc.)
+		bsr.w	AddPLC				; execute PLCs immediately (no queue)
 
 		bsr.w	DeformLayers				; initialize background deformation
 		move.b	#id_VBlank_MusicOnly,(v_vblank_routine).w ; only run sound driver updates during screen init
@@ -3393,10 +3395,8 @@ End_LoadData:
 		bsr.w	LoadTilesAsYouMove			; draw that left column now
 		clr.b	(v_vblank_routine).w			; allow normal VInt processing again
 
+		enable_ints					; enable interrupts
 		bsr.w	LZWaterFeatures				; initialize water features if zone is LZ
-
-		move.b	#id_VBlank_Levels,(v_vblank_routine).w	; set VBlank routine to $08
-		bsr.w	WaitForVBlank				; wait until VBlank has finished
 
 	if CheatsEnabled>=2
 		move.b	#1,(f_debugmode).w			; enable debug mode automatically
@@ -3433,16 +3433,23 @@ End_LoadSonic:
 		bsr.w	OscillateNumInit			; initialize oscillation values
 		move.b	#1,(f_scorecount).w			; update score counter
 		move.b	#1,(f_ringcount).w			; update rings counter
-		move.b	#0,(f_timecount).w			; stop time counter for the ending sequence
+		move.b	#$80,(f_timecount).w			; stop time counter for the ending sequence (update once)
+	if Enable_ExtendedCamera
+		move.w	#(320/2)+64,(v_camera_pan).w		; init extended camera offset to max left
+	endif
 
+End_PLCLoop:
 		move.b	#id_VBlank_Ending,(v_vblank_routine).w	; set VBlank routine to $18
 		bsr.w	WaitForVBlank				; wait until VBlank has finished
+		tst.l	(v_plc_buffer).w			; have patterns been fully decompressed and loaded?
+		bne.s	End_PLCLoop				; if not, loop until they have
 ; ---------------------------------------------------------------------------
 
 		; fade-in palette and enter main loop
 		bsr.w	PlayCurrentActMusic
 		enable_display					; enable screen output
-		bsr.w	PaletteFadeIn				; fade-in palette
+		bsr.w	PaletteFadeIn_Playable			; fade-in palette
+		bclr	#7,(v_gamemode).w			; subtract $80 from mode to end pre-level stuff
 
 ; ---------------------------------------------------------------------------
 ; Ending sequence main loop
