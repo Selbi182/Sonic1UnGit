@@ -2299,5 +2299,17 @@ cfOpF9:
 
 ; ===========================================================================
 
-		; See "sound/__Sound Definitions.asm"
-		sound_defs_include
+; ---------------------------------------------------------------------------
+; SMPS2ASM - A collection of macros that make SMPS's bytecode human-readable.
+; ---------------------------------------------------------------------------
+SonicDriverVer = 1 ; Tell SMPS2ASM that we're using Sonic 1's driver.
+		include "sound/_smps2asm_inc.asm"
+
+; ---------------------------------------------------------------------------
+; Music/sound data includes
+; See "sound/__Sound Definitions.asm"
+; ---------------------------------------------------------------------------
+		bgm_includes
+		sfx_includes
+		spec_includes
+		even
