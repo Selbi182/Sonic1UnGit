@@ -2116,18 +2116,7 @@ Tit_MainLoop:
 		bsr.w	DeformLayers				; run background deformation
 		bsr.w	LoadTilesAsYouMove_BGOnly		; update background tiles as title screen scrolls
 		jsr	(BuildSprites).l			; display sprites
-
-		lea	(v_spritetablebuffer+4).w,a1		; fetch sprite table buffer, starting from tile IDs
-		moveq	#0,d0					; this will be our X-position
-		moveq	#sprites_max-1,d6			; iterate through the whole sprite table (80-1)
-	.maskLoop:
-		tst.w	(a1)					; does this sprite have tile ID $0000 (indicates either a mask or nothing)?
-		bne.s	.next					; if not, then this is a normal sprite, do not modify its X-position
-		bchg	#2,d0					; alternate between X-position of 0 and 4 (masks need a non X=0 higher priority sprite to mask)
-		move.w	d0,2(a1)				; write to X-position
-	.next:	addq.w	#8,a1					; go to next sprite
-		dbf	d6,.maskLoop				; loop
-
+		bsr.s	Tit_SpriteMasking
 		bsr.w	PalCycle_GHZ				; run GHZ/title palette cycle
 
 		move.w	(v_player+obX).w,d0			; get current title screen position (big Sonic object)
@@ -2138,6 +2127,20 @@ Tit_MainLoop:
 		; Will never happen due to the short title screen generic timer.
 		; This likely was an old failsafe before Demos were introduced.
 		move.b	#id_Sega,(v_gamemode).w			; return to Sega screen
+		rts
+; ===========================================================================
+
+Tit_SpriteMasking:
+		lea	(v_spritetablebuffer+4).w,a1		; fetch sprite table buffer, starting from tile IDs
+		moveq	#0,d0					; this will be our X-position
+		moveq	#sprites_max-1,d6			; iterate through the whole sprite table (80-1)
+	.maskLoop:
+		tst.w	(a1)					; does this sprite have tile ID $0000 (indicates either a mask or nothing)?
+		bne.s	.next					; if not, then this is a normal sprite, do not modify its X-position
+		bchg	#2,d0					; alternate between X-position of 0 and 4 (masks need a non X=0 higher priority sprite to mask)
+		move.w	d0,2(a1)				; write to X-position
+	.next:	addq.w	#8,a1					; go to next sprite
+		dbf	d6,.maskLoop				; loop
 		rts
 ; ===========================================================================
 
@@ -2230,6 +2233,7 @@ Tit_EnterLevelSelect:
 		jsr	(DeleteObject).l
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
+		bsr.w	Tit_SpriteMasking
 
 		move.b	#id_VBlank_Title,(v_vblank_routine).w	; set VBlank routine to $04
 		bsr.w	WaitForVBlank				; run VBlank one extra frame to prevent graphical glitches
