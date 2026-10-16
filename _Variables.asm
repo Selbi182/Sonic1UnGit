@@ -510,13 +510,11 @@ v_ram_end:
 	endif
 
 ; Special stage
-SS_Widescreen: equ 0
-
 	obj	$FF0000
 ss_layout_padding:	equ $20
 ss_layout_rowlength:	equ $80
 ss_layout_rows:		equ $40
-	if SS_Widescreen
+	if def(__WIDESCREEN__)
 ss_matrixsize:		equ 18
 	else
 ss_matrixsize:		equ 16

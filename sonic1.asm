@@ -57,11 +57,30 @@ DebugHUDAlways: = 0
 DebugSurviveNoRings: = 1
 ;	| If 1, getting hurt without rings while Debug Mode is on will NOT kill Sonic (default behavior)
 
-OneHitBosses: = 0
+OneHitBosses: = 1
 ;	| If 1, all bosses will only take a single hit to defeat
 
 RingsCollect32: = 1
 ;	| If 1, each collected ring is worth 32 rings for quick testing of ring loss
+
+; ===========================================================================
+; Widescreen flag (triggered through build_wide.bat)
+	if def(__build_wide__)
+		__WIDESCREEN__: 	equ "ON"		; marker flag for some special widescreen code
+		SCREEN_X_ADD:		equ 16*3		; =48, internal extra screen space (must be multiple of 16)
+		SCREEN_X_ADD_REAL:	equ SCREEN_X_ADD-8	; =40, true extra visible screen space
+	else
+		SCREEN_X_ADD:		equ 0
+		SCREEN_X_ADD_REAL:	equ 0
+	endif
+; ===========================================================================
+
+; MD Debugger and Error Handler macros
+	include	"_inc/Debugger.Def.asm"
+
+;__DEBUG__: equ "DEB"
+; 	| Comment this in to enable extra debugging tools ("KDebug" and "assert").
+; 	| If commented out, extra tools are disabled to avoid performance penalties.
 
 ; ===========================================================================
 ; Simplifying macros and functions
@@ -71,14 +90,6 @@ RingsCollect32: = 1
 ; ===========================================================================
 ; Equates section - Names for variables
 	include	"_Variables.asm"
-
-; ===========================================================================
-; MD Debugger and Error Handler macros
-	include	"_inc/Debugger.Def.asm"
-
-;__DEBUG__: equ "DEB"
-; 	| Comment this in to enable extra debugging tools ("KDebug" and "assert").
-; 	| If commented out, extra tools are disabled to avoid performance penalties.
 
 ; ===========================================================================
 ; Expressing sprite mappings and DPLCs in a portable and human-readable form
@@ -163,11 +174,16 @@ Vectors:
 		dc.b "SEGA MEGA DRIVE "				; Hardware system ID (Console name)
 		dc.b "(C)SEGA 1991.APR"				; Copyright holder and release date (generally year)
 
-	rept 2	; Name (identical for domestic and overseas version)		 
-	    if DisableSound
-		dc.b "Sonic 1 UnGit [SOUND DISABLED]                  "
+	rept 2	; Name (identical for domestic and overseas version)
+	    if def(__WIDESCREEN__)
+		dc.b "Sonic 1 UnGit (Widescreen Edition)   "
 	    else
-		dc.b "Sonic 1 UnGit                                   "	
+		dc.b "Sonic 1 UnGit                        "
+	    endif
+	    if DisableSound
+		dc.b "[SOUND OFF]"
+	    else
+		dc.b "           "
 	    endif
 	endr
 
@@ -3064,8 +3080,8 @@ SyncEnd:
 SignpostArtLoad:
 	;	tst.w	(v_debuguse).w				; is debug mode being used?
 	;	bne.w	.return					; if yes, do not lock screen or load art
-		cmpi.b	#act3,(v_act).w				; is this a third act?
-		beq.s	.return					; if yes, don't load art (due to the boss fight)
+		cmpi.b	#act3,(v_act).w				; is this a third/fourth act?
+		bhs.s	.return					; if yes, don't load art (due to the boss fight)
 
 		move.w	(v_screenposx).w,d0			; get current X-camera position
 		move.w	(v_limitright2).w,d1			; get right level boundary

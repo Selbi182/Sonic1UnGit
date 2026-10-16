@@ -11,6 +11,7 @@ Utility Project Files/SonLVL INI Files/SonLVL.log
 Utility Project Files/SonPLN.log
 Utility Project Files/S1SSEdit.undo
 .idea/
+*.lnk
 
 # Misc. compiler output.
 sonic.lst
@@ -18,12 +19,15 @@ sonic.log
 errors.txt
 sonic.p
 s1built.sym
+s1built-wide.sym
 TODO.txt
 BENCHMARK.bat
 
 # Built ROMs.
 s1built.bin
 s1built.prev.bin
+s1built-wide.bin
+s1built-wide.prev.bin
 
 # Automatically-generated (D)PCM data.
 sound/dac/dpcm/generated/*.inc
@@ -32,4 +36,3 @@ sound/dac/dpcm/generated/hashes.lua
 sound/dac/pcm/generated/*.inc
 sound/dac/pcm/generated/*.pcm
 sound/dac/pcm/generated/hashes.lua
-/*.lnk

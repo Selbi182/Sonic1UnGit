@@ -1025,7 +1025,7 @@ Sonic_LevelBound:
 		addi.w	#320-24,d0				; add screen width - 24px of leeway
 		tst.b	(f_lockscreen).w			; is a boss fight active?
 		bne.s	.screenlocked				; if yes, branch
-		addi.w	#64,d0					; increase leeway by 64px outside of boss fights
+		addi.w	#64+SCREEN_X_ADD_REAL,d0		; increase leeway by 64px outside of boss fights
 
 ; loc_13332:
 .screenlocked:

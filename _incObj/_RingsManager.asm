@@ -36,7 +36,7 @@ RingsManager_Init:
 RingsManager_FindStartAndEnd_Init:
 		lea	(v_ringstates).w,a2			; load ring status table to a2
 		move.w	(v_screenposx).w,d4			; get left-most pixel displayed
-		subq.w	#16/2,d4				; d4 = v_screenposx - 8px (half width of rings)
+		sub.w	#16/2+SCREEN_X_ADD_REAL,d4		; d4 = v_screenposx - 8px (half width of rings)
 
 RingsManager_FindStart_Init:
 		; find first currently visible ring in position data
@@ -54,7 +54,7 @@ RingsManager_FindStart_Init:
 
 RingsManager_FindEnd_Init:
 		; find last currently visible ring in position data
-		addi.w	#320+16,d4				; advance by screen width screen + 16px (ring width)
+		addi.w	#320+16+(SCREEN_X_ADD_REAL*2),d4	; advance by screen width screen + 16px (ring width)
 		bra.s	.start					; begin searching for last visible ring
 	.loop:
 		addq.w	#4,a1					; load next ring from ROM
@@ -108,7 +108,7 @@ RingsManager_FindCurrentStartAndEnd:
 		movea.l	(v_ringwindow_start).w,a1		; load current start of ring layout in ROM
 		movea.w	(v_ringstates_pointer).w,a2		; load current start of ring status table
 		move.w	(v_screenposx).w,d4			; get left-most pixel displayed
-		subq.w	#16/2,d4				; d4 = v_screenposx - 8px (half width of rings)
+		sub.w	#16/2+SCREEN_X_ADD_REAL,d4		; d4 = v_screenposx - 8px (half width of rings)
 
 RingsManager_FindStart_Forwards:
 		; update ring data start address(es) as level scrolls right
@@ -137,7 +137,7 @@ RingsManager_FindStart_Backwards:
 RingsManager_FindEnd_Forwards:
 		; update ring data end address as level scrolls right
 		movea.l	(v_ringwindow_end).w,a2			; load ring layout end address
-		addi.w	#320+16,d4				; advance by screen width screen + 16px (ring width)
+		addi.w	#320+16+(SCREEN_X_ADD_REAL*2),d4	; advance by screen width screen + 16px (ring width)
 		bra.s	.start					; begin searching for last visible ring
 	.loop:
 		addq.w	#4,a2					; load next ring from ROM

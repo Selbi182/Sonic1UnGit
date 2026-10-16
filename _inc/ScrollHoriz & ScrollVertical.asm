@@ -77,6 +77,12 @@ SH_MoveCameraRight:
 
 ; loc_65E4:
 SH_SetScreen:
+	if def(__WIDESCREEN__)
+		cmpi.w	#SCREEN_X_ADD_REAL,d0			; is absolute X-camera position low enough to underflow in widescreen?
+		bgt.s	.wideLeftFine				; if not, branch
+		moveq	#SCREEN_X_ADD_REAL,d0			; force lower bound to prevent underflow in widescreen
+	.wideLeftFine:
+	endif
 		move.w	d0,d1					; copy X-screen position to calculate scroll shift
 		sub.w	(v_screenposx).w,d1			; get just the scroll difference
 		asl.w	#8,d1					; shift scroll difference but a byte (8.8 fixed)

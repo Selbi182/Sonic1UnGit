@@ -145,17 +145,11 @@ SS_BuildSprites:
 
 		move.w	(a4),d3					; get rotated X-position for this cell
 		addi.w	#128+(320/2),d3				; d3 = sprite X-position
-	if SS_Widescreen
-		cmpi.w	#128-16-48,d3				; is sprite offscreen to the left?
-		blo.s	.nextBlock				; if yes, skip drawing
-		cmpi.w	#128+320+16+48,d3			; is sprite offscreen to the right?
-		bhs.s	.nextBlock				; if yes, skip drawing
-	else
-		cmpi.w	#128-16,d3				; is sprite offscreen to the left?
-		blo.s	.nextBlock				; if yes, skip drawing
-		cmpi.w	#128+320+16,d3				; is sprite offscreen to the right?
-		bhs.s	.nextBlock				; if yes, skip drawing
-	endif
+		cmpi.w	#128-16-SCREEN_X_ADD_REAL,d3		; is sprite offscreen to the left?
+		blt.s	.nextBlock				; if yes, skip drawing
+		cmpi.w	#128+320+16+SCREEN_X_ADD_REAL,d3	; is sprite offscreen to the right?
+		bgt.s	.nextBlock				; if yes, skip drawing
+
 		move.w	2(a4),d2				; get rotated Y-position for this cell
 		addi.w	#128+(224/2),d2				; d2 = sprite Y-position
 		cmpi.w	#128-16,d2				; is sprite offscreen to the top?

@@ -25,7 +25,7 @@ lvlsize macro left,right,top,bottom
 		lvlsize     0, $19BF,     0,  $530 ; LZ1
 		lvlsize     0, $10AF,     0,  $720 ; LZ2
 		lvlsize     0, $202F, -$100,  $800 ; LZ3 (level wrapping)
-		lvlsize     0, $20BF,     0,  $720 ; LZ4 (SBZ3)
+		lvlsize     0, $1500,     0,  $720 ; LZ4 (SBZ3)
 		; MZ
 		lvlsize     0, $17BF,     0,  $1D0 ; MZ1
 		lvlsize     0, $17BF,     0,  $520 ; MZ2

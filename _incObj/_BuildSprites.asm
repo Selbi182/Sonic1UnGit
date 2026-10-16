@@ -52,6 +52,15 @@ spritelayer:	macro
 
 	; --- Screen bounds check for X-position ---
 		sub.w	(a5),d3					; subtract camera X-position from object X-position
+	if def(__WIDESCREEN__)
+		moveq	#0,d0
+		move.b	obActWid(a0),d0
+		add.w	d0,d0
+		cmpi.w	#320+SCREEN_X_ADD_REAL+SCREEN_X_ADD_REAL+SCREEN_X_ADD_REAL,d3
+		bgt.s	.setNotVisible\@
+		cmpi.w	#-SCREEN_X_ADD_REAL-SCREEN_X_ADD_REAL-SCREEN_X_ADD_REAL,d3
+		blt.s	.setNotVisible\@
+	else
 		moveq	#0,d0
 		move.b	obActWid(a0),d0				; get sprite display width (Note: there is no such thing as "assumed width"!)
 		move.w	#320,d1					; 320 = SCREEN_WIDTH
@@ -60,6 +69,7 @@ spritelayer:	macro
 		add.w	d3,d0					; d0 = X + obActWid(a0)
 		cmp.w	d1,d0					; is sprite horizontally on screen?
 		bcc.s	.setNotVisible\@			; if not, don't render sprite
+	endif
 
 	; --- Load sprite mappings ---
 	.drawObject\@:
@@ -164,10 +174,16 @@ buildsprite:	macro xflip,yflip
 		add.w	d3,d0					; add X-position
 
 		; X-culling for individual pieces (assuming 32px, max width)
-		cmpi.w	#$80-32,d0
+		cmpi.w	#$80-32-SCREEN_X_ADD_REAL,d0
 		bls.s	.xCull\@
-		cmpi.w	#$80+320+32,d0
+		cmpi.w	#$80+320+32+SCREEN_X_ADD_REAL,d0
 		bhs.s	.xCull\@
+
+	if def(__WIDESCREEN__)
+		; Make sure wrapped sprites don't cause sprite masking in widescreen
+		cmpi.w	#$1FF,d0
+		bhs.s	.xCull\@
+	endif
 
 	.finish\@:
 		; Piece is horizontally on screen
@@ -310,25 +326,25 @@ HUD_BaseX: equ $80+$10
 HUD_BaseY: equ $80+$88
 
 HUD_DirectMaps:		; Y-position			Size+Link	VRAM settings			X-position
-		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0D01,		$8000+ArtTile_HUDScore_SCOR,	$0000+HUD_BaseX	; "SCOR"
-		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0D02,		$8000+ArtTile_HUDScore_E,	$0020+HUD_BaseX	; "E" and first three score digits
-		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0D03,		$8000+ArtTile_HUDScore_E_2,	$0040+HUD_BaseX	; last four score digits
+		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0D01,		$8000+ArtTile_HUDScore_SCOR,	$0000+HUD_BaseX-SCREEN_X_ADD_REAL	; "SCOR"
+		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0D02,		$8000+ArtTile_HUDScore_E,	$0020+HUD_BaseX-SCREEN_X_ADD_REAL	; "E" and first three score digits
+		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0D03,		$8000+ArtTile_HUDScore_E_2,	$0040+HUD_BaseX-SCREEN_X_ADD_REAL	; last four score digits
 								
-		dc.w	($FF90+HUD_BaseY)&$FFFF,	$0D04,		$8000+ArtTile_HUDTime_TIME,	$0000+HUD_BaseX	; "TIME"
-		dc.w	($FF90+HUD_BaseY)&$FFFF,	$0D05,		$8000+ArtTile_HUDTimeMins,	$0028+HUD_BaseX	; minutes and seconds
-		dc.w	($FF90+HUD_BaseY)&$FFFF,	$0906,		$8000+ArtTile_HUDTimeCentis,	$0048+HUD_BaseX	; centiseconds
+		dc.w	($FF90+HUD_BaseY)&$FFFF,	$0D04,		$8000+ArtTile_HUDTime_TIME,	$0000+HUD_BaseX-SCREEN_X_ADD_REAL	; "TIME"
+		dc.w	($FF90+HUD_BaseY)&$FFFF,	$0D05,		$8000+ArtTile_HUDTimeMins,	$0028+HUD_BaseX-SCREEN_X_ADD_REAL	; minutes and seconds
+		dc.w	($FF90+HUD_BaseY)&$FFFF,	$0906,		$8000+ArtTile_HUDTimeCentis,	$0048+HUD_BaseX-SCREEN_X_ADD_REAL	; centiseconds
 								
-		dc.w	($FFA0+HUD_BaseY)&$FFFF,	$0D07,		$8000+ArtTile_HUDRings_RING,	$0000+HUD_BaseX	; "RING"
-		dc.w	($FFA0+HUD_BaseY)&$FFFF,	$0108,		$8000+ArtTile_HUDScore_SCOR,	$0020+HUD_BaseX	; "S" (stolen from Score)
-		dc.w	($FFA0+HUD_BaseY)&$FFFF,	$0909,		$8000+ArtTile_HUDRings,		$0030+HUD_BaseX	; rings counter
+		dc.w	($FFA0+HUD_BaseY)&$FFFF,	$0D07,		$8000+ArtTile_HUDRings_RING,	$0000+HUD_BaseX-SCREEN_X_ADD_REAL	; "RING"
+		dc.w	($FFA0+HUD_BaseY)&$FFFF,	$0108,		$8000+ArtTile_HUDScore_SCOR,	$0020+HUD_BaseX-SCREEN_X_ADD_REAL	; "S" (stolen from Score)
+		dc.w	($FFA0+HUD_BaseY)&$FFFF,	$0909,		$8000+ArtTile_HUDRings,		$0030+HUD_BaseX-SCREEN_X_ADD_REAL	; rings counter
 								
 	if Enable_InfiniteLives=0	                       	
-		dc.w	($0040+HUD_BaseY)&$FFFF,	$050A,		$8000+ArtTile_Lives_Counter,	$0000+HUD_BaseX	; lives counter (Sonic icon)
-		dc.w	($0040+HUD_BaseY)&$FFFF,	$0D0B,		$8000+ArtTile_Lives_Counter_2,	$0010+HUD_BaseX	; lives counter ("SONIC x N" text)
+		dc.w	($0040+HUD_BaseY)&$FFFF,	$050A,		$8000+ArtTile_Lives_Counter,	$0000+HUD_BaseX-SCREEN_X_ADD_REAL	; lives counter (Sonic icon)
+		dc.w	($0040+HUD_BaseY)&$FFFF,	$0D0B,		$8000+ArtTile_Lives_Counter_2,	$0010+HUD_BaseX-SCREEN_X_ADD_REAL	; lives counter ("SONIC x N" text)
 	endif
 
 	if LagFrameCounter
-		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0C0C-(2*Enable_InfiniteLives),	$8000+ArtTile_HUDLagFrame,	$0108+HUD_BaseX	; lag frame counter
+		dc.w	($FF80+HUD_BaseY)&$FFFF,	$0C0C-(2*Enable_InfiniteLives),	$8000+ArtTile_HUDLagFrame,	$0108+HUD_BaseX+SCREEN_X_ADD_REAL	; lag frame counter
 	endif
 HUD_DirectMaps_End:
 
@@ -491,8 +507,13 @@ BuildRings_Loss:
 ChkObjectVisible:
 		move.w	obX(a0),d0				; get object x-position
 		sub.w	(v_screenposx).w,d0			; subtract screen x-position
+	if def(__WIDESCREEN__)
+		cmpi.w	#-SCREEN_X_ADD_REAL,d0
+		blt.s	.offscreen
+	else
 		bmi.s	.offscreen				; branch if object is off screen to the left
-		cmpi.w	#320,d0					; is object on screen?
+	endif
+		cmpi.w	#320+SCREEN_X_ADD_REAL,d0			; is object on screen?
 		bge.s	.offscreen				; if not, object is off screen to the right
 
 		move.w	obY(a0),d1				; get object y-position
@@ -526,10 +547,15 @@ ChkPartiallyVisible:
 		move.w	obX(a0),d0				; get object x-position
 		sub.w	(v_screenposx).w,d0			; subtract screen x-position
 		add.w	d1,d0					; add object display width
+	if def(__WIDESCREEN__)
+		cmpi.w	#-SCREEN_X_ADD_REAL,d0
+		blt.s	.offscreen
+	else
 		bmi.s	.offscreen				; branch if object is off screen to the left
+	endif
 		add.w	d1,d1					; double width for undoing above addition and right-side check
 		sub.w	d1,d0					; sub object display width
-		cmpi.w	#320,d0					; is object on screen?
+		cmpi.w	#320+SCREEN_X_ADD_REAL,d0			; is object on screen?
 		bge.s	.offscreen				; if not, object is off screen to the right
 
 		moveq	#0,d1					; clear d1 (obHeight is byte-sized)

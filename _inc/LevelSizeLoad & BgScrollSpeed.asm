@@ -101,6 +101,12 @@ LevSz_InitCameraPositions:
 		bhs.s	.chkXRight				; is Sonic more than 160px from left edge? if yes, branch
 		moveq	#0,d1					; prevent X-camera from underflowing
 	.chkXRight:
+	if def(__WIDESCREEN__)
+		cmpi.w	#SCREEN_X_ADD_REAL,d1			; is absolute X-camera position low enough to underflow in widescreen?
+		bgt.s	.wideLeftFine				; if not, branch
+		moveq	#SCREEN_X_ADD_REAL,d1			; force lower bound to prevent underflow in widescreen
+	.wideLeftFine:
+	endif
 		move.w	(v_limitright2).w,d2			; get right level boundary
 		cmp.w	d2,d1					; is Sonic inside the right edge?
 		blo.s	.setX					; if yes, branch

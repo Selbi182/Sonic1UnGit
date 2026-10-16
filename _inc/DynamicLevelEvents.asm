@@ -788,6 +788,9 @@ DLE_FZ_Arena:
 ; ===========================================================================
 
 DLE_FZ_Wait:
+	if def(__WIDESCREEN__)
+		move.w	#$2460,(v_limitleft2).w	; set boundary to current position
+	endif
 		rts						; wait until boss is beaten
 ; ===========================================================================
 
