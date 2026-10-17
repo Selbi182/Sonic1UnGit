@@ -35,6 +35,10 @@ Monitor:
 Mon_Solid:	; Routine 2
 		move.b	ob2ndRout(a0),d0			; is monitor set to fall or being stood on?
 		beq.s	.normal					; if not, branch
+	if Enable_S3KMonitorStyle=0
+		subq.b	#2,d0					; is monitor specifically set to fall?
+		bne.s	.fall					; if yes, branch
+	endif
 
 		; 2nd Routine 2
 		moveq	#0,d1					; clear d1
@@ -48,15 +52,30 @@ Mon_Solid:	; Routine 2
 ; ===========================================================================
 
 .ontop:
-		move.w	#32/2,d3				; set solid width
+		moveq	#32/2,d3				; set solid width
 		move.w	obX(a0),d2				; get monitor's X position
 		bsr.w	MvSonicOnPtfm				; make Sonic run along the monitor like a platform
 		bra.w	Mon_Animate				; process monitor normally
 ; ===========================================================================
 
+.fall:		; 2nd Routine 4
+		bsr.w	ObjectFall				; apply gravity and update monitor position
+		jsr	(ObjFloorDist).l			; get distance from monitor to floor
+		tst.w	d1					; has monitor hit the floor?
+		bpl.w	Mon_Animate				; if not, branch
+		add.w	d1,obY(a0)				; align monitor with surface
+		clr.w	obVelY(a0)				; stop monitor from falling
+		clr.b	ob2ndRout(a0)				; clear special monitor subroutines
+		bra.w	Mon_Animate				; process monitor normally
+; ===========================================================================
+
 .normal:	; 2nd Routine 0
-		move.w	#28/2+sonic_solid_width,d1		; width/2 (changed from 30/2 for quick side-breaking)
-		move.w	#30/2,d2				; height/2
+	if Enable_S3KMonitorStyle
+		moveq	#28/2+sonic_solid_width,d1		; width/2 (changed from 30/2 for quick side-breaking)
+	else
+		moveq	#30/2+sonic_solid_width,d1		; width/2
+	endif
+		moveq	#30/2,d2				; height/2
 		bsr.w	Mon_SolidSides				; check collision (0 = none; 1 = side; -1 = top/bottom)
 		beq.w	.checkpush				; if not, branch
 

@@ -24,6 +24,7 @@ Enable_Figure8Sprites:	= 1
 Enable_ExtendedCamera:	= 1
 Enable_InfiniteLives:	= 1
 Enable_AttractRings:	= 1
+Enable_S3KMonitorStyle:	= 1
 Enable_6ButtonControl:	= 0
 
 ; Developer flags:
