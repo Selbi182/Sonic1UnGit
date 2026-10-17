@@ -6,8 +6,6 @@ Map_Pri_internal:	mappingsTable
 	mappingsTableEntry.w	.switch1
 	mappingsTableEntry.w	.broken
 	mappingsTableEntry.w	.switch2
-	mappingsTableEntry.w	.unusedthing1
-	mappingsTableEntry.w	.unusedthing2
 	mappingsTableEntry.w	.blank
 
 .capsule:	spriteHeader
@@ -36,15 +34,6 @@ Map_Pri_internal:	mappingsTable
 .switch2:	spriteHeader
 	spritePiece	-$C, -8, 3, 2, $4F, 0, 0, 0, 0
 .switch2_End
-
-.unusedthing1:	spriteHeader
-	spritePiece	-$10, -$18, 4, 3, $55, 0, 0, 1, 0
-	spritePiece	-$10, 0, 4, 3, $61, 0, 0, 1, 0
-.unusedthing1_End
-
-.unusedthing2:	spriteHeader
-	spritePiece	-8, -$10, 2, 4, $6D, 0, 0, 1, 0
-.unusedthing2_End
 
 .blank:	spriteHeader
 .blank_End

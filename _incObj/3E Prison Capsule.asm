@@ -135,7 +135,7 @@ Pri_Explosion:	; Routine 6
 Pri_SpawnAnimals:
 		move.b	#2,(v_bossstatus).w			; set prison as being opened
 		move.l	#Pri_Animals,obID(a0)			; advance to Pri_Animals (replace explosions with animals)
-		move.b	#6,obFrame(a0)				; 'delete' switch by turning it invisible
+		move.b	#4,obFrame(a0)				; 'delete' switch by turning it invisible
 		move.w	#(2*60)+30,obTimeFrame(a0)		; time delay before starting to check if animals have gone offscreen
 		addi.w	#32,obY(a0)				; load all animals 32px below explosions
 
