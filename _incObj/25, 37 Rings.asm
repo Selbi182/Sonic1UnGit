@@ -120,8 +120,15 @@ RingLoss:
 		move.w	obX(a0),d5				; get ring's current X-position
 		sub.w	(v_screenposx).w,d5			; subtract camera X-position
 		addq.w	#16/2,d5				; add half of ring width (16/2 = 8px)
+	if def(__WIDESCREEN__)
+		cmpi.w	#-SCREEN_X_ADD_REAL,d5
+		ble.s	.checkFloorBounce
+		cmpi.w	#320+16+SCREEN_X_ADD_REAL,d5
+		bge.s	.checkFloorBounce
+	else
 		cmpi.w	#320+16,d5				; is ring horizontally inside visible screen?
 		bcc.s	.checkFloorBounce			; if not, don't render (unsigned check = both sides)
+	endif
 		subi.w	#16-$80,d5				; add VDP sprite start and undo earlier 8px offset
 
 ; Touch check against Sonic, collect if so (this is an in-lined and trimmed-down ReactToItem)
@@ -182,8 +189,8 @@ RingLoss:
 		; In-lined and trimmed-down ObjFloorDist
 		move.w	obX(a0),d3				; get ring's current X-position
 		move.w	obY(a0),d2				; get ring's current Y-position
-		andi.w	#$7FF,d2				; apply Y-wrap
 		addq.w	#16/2,d2				; add ring height (8px)
+		andi.w	#$7FF,d2				; apply Y-wrap
 		move.w	d2,d0					; get Y-position of bottom edge of object
 		andi.w	#$700,d0				; read only high byte of Y-position (because each level chunk is 256px tall and level height wraps at $7FF)
 		move.w	d3,d1					; get X-position of object
@@ -205,6 +212,7 @@ RingLoss:
 		andi.w	#$1E,d0					; d0 = high nybble of low byte of X-position, multiplied by 2
 		add.w	d0,d1					; add to base address
 		add.l	(v_rom_chunks).w,d1			; add ROM chunks pointer
+		andi.w	#$FFFE,d1				; avoid rare address errors
 		movea.l	d1,a1
 		move.w	(a1),d0					; get value for solidness, orientation and 16x16 block number
 		btst	#$D,d0					; is the block solid?

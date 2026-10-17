@@ -54,12 +54,15 @@ spritelayer:	macro
 		sub.w	(a5),d3					; subtract camera X-position from object X-position
 	if def(__WIDESCREEN__)
 		moveq	#0,d0
-		move.b	obActWid(a0),d0
-		add.w	d0,d0
-		cmpi.w	#320+SCREEN_X_ADD_REAL+SCREEN_X_ADD_REAL+SCREEN_X_ADD_REAL,d3
-		bgt.s	.setNotVisible\@
-		cmpi.w	#-SCREEN_X_ADD_REAL-SCREEN_X_ADD_REAL-SCREEN_X_ADD_REAL,d3
-		blt.s	.setNotVisible\@
+		move.b	obActWid(a0),d0				; get display width
+		move.w	d3,d1
+		add.w	d0,d1					; d1 = obX - cameraX + obActWid
+		cmpi.w	#-SCREEN_X_ADD_REAL,d1			; is offscreen to the left?
+		ble.w	.setNotVisible\@			; if yes, left edge is out of bounds
+		move.w	d3,d1
+		sub.w	d0,d1					; d1 = obX - cameraX - obActWid
+		cmpi.w	#320+SCREEN_X_ADD_REAL,d1		; is result greater than screen width?
+		bge.s	.setNotVisible\@			; if yes, right edge is out of bounds
 	else
 		moveq	#0,d0
 		move.b	obActWid(a0),d0				; get sprite display width (Note: there is no such thing as "assumed width"!)
@@ -176,14 +179,14 @@ buildsprite:	macro xflip,yflip
 		; X-culling for individual pieces (assuming 32px, max width)
 		cmpi.w	#$80-32-SCREEN_X_ADD_REAL,d0
 		bls.s	.xCull\@
+	if ($80+320+32+SCREEN_X_ADD_REAL)>$1FF
+		; Make sure sprites don't X-wrap in widescreen
+		cmpi.w	#$1FF,d0
+	else
 		cmpi.w	#$80+320+32+SCREEN_X_ADD_REAL,d0
+	endif
 		bhs.s	.xCull\@
 
-	if def(__WIDESCREEN__)
-		; Make sure wrapped sprites don't cause sprite masking in widescreen
-		cmpi.w	#$1FF,d0
-		bhs.s	.xCull\@
-	endif
 
 	.finish\@:
 		; Piece is horizontally on screen
