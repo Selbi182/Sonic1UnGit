@@ -1,7 +1,11 @@
 @ECHO OFF
 
+REM // Make sure misc output folder exists.
+if not exist "build_tools\generated" (
+    mkdir "build_tools\generated"
+)
 REM // Rename previously successful build if one existed.
-IF EXIST s1built.bin move /Y s1built.bin s1built.prev.bin > NUL
+IF EXIST s1built.bin move /Y s1built.bin "build_tools\generated\s1built.prev.bin" > NUL
 
 REM // Run the ASM68K assembly with the following parameters:
 REM //   k  >>  allow use of ifeq, etc.
@@ -25,23 +29,28 @@ REM // Files:
 REM //   sonic.asm    >>  input assembly file
 REM //   s1built.bin  >>  assembled ROM
 REM //   s1built.sym  >>  symbol file (required for the convsym.exe tool)
-REM //   sonic.lst    >>  listing file
-REM //   sonic.log    >>  console output redirected to log file
-"build_tools\asm68k.exe" /k /m /p /o ae-,c+,l+,ws+,v+,op+,os+,ow+,oz+,oaq+,osq+,omq+ sonic1.asm, s1built.bin, s1built.sym, sonic.lst > sonic.log
+REM //   s1built.lst    >>  listing file
+REM //   s1built.log    >>  console output redirected to log file
+"build_tools\asm68k.exe" /k /m /p /o ae-,c+,l+,ws+,v+,op+,os+,ow+,oz+,oaq+,osq+,omq+ sonic1.asm, s1built.bin, "build_tools\generated\s1built.sym", "build_tools\generated\s1built.lst" > "build_tools\generated\s1built.log"
 
 REM // Still print redirected log output to console (Batch doesn't suppport tee).
-type sonic.log
+type "build_tools\generated\s1built.log"
 
+REM // Fix checksum (only if output was generated).
 if exist s1built.bin (
-    REM // Fix checksum (only if output was generated).
     "build_tools\fixheadr.exe" s1built.bin
+)
 
-    REM // Append symbol table to the ROM.
-    "build_tools\convsym.exe" s1built.sym s1built.bin -a -range 0 FFFFFF -inopt "/localSign=. /processLocals-" -exclude -filter "(SMPS_(Track|RAM).*)|(.+_(END|End|end))"
+REM // Append symbol table to the ROM.
+"build_tools\convsym.exe" "build_tools\generated\s1built.sym" s1built.bin -a -range 0 FFFFFF -inopt "/localSign=. /processLocals-" -exclude -filter "(SMPS_(Track|RAM).*)|(.+_(END|End|end))"
+
+REM // Pad the ROM.
+if exist s1built.bin (
+    rem "build_tools\rompad.exe" s1built.bin 255 0
 )
 
 REM // If assembly produced warnings or errors, pause here so that the user can read them.
-findstr /i /c:"Warning :" /c:"Error :" sonic.log > NUL
+findstr /i /c:"Warning :" /c:"Error :" "build_tools\generated\s1built.log" > NUL
 if not errorlevel 1 (
     echo.
     pause

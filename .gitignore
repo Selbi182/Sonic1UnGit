@@ -22,6 +22,7 @@ s1built.sym
 s1built-wide.sym
 TODO.txt
 BENCHMARK.bat
+build_tools/generated
 
 # Built ROMs.
 s1built.bin
